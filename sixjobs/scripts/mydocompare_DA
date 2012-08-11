@@ -1,0 +1,90 @@
+#!/bin/sh
+# and get the environment for the current study
+. ./dot_env
+# We have been called with no arguments so we use current study etc
+# but we read the parameters w2 and s2, logname2, and name1 and name2
+args=`cat compare_DA_args`
+rm compare_DA_args
+w2=`echo "$args" | cut -d" " -f1`
+ws2=`dirname $w2`
+ws2=`basename $ws2`
+s2=`echo "$args" | cut -d" " -f2`
+w1=$sixdeskhome
+ws1=`dirname $w1`
+ws1=`basename $ws1`
+s1=$LHCDescrip
+l1=$LOGNAME
+l2=`echo "$args" | cut -d" " -f3`
+name1=`echo "$args" | cut -d" " -f4`
+name2=`echo "$args" | cut -d" " -f5`
+nickname=${name1}-${name2}
+mymess 0 "Comparing ($name1) $l1 $s1 in $w1"
+mymess 0 "with      ($name2) $l2 $s2 in $w2"
+mytunes
+itunexx=$itunex
+ituneyy=$ituney
+if test "$ideltax" -eq 0 -a "$ideltay" -eq 0
+then
+  ideltax=1000000
+  ideltay=1000000
+fi
+while test "$itunexx" -le "$itunex1" -a "$ituneyy" -le "$ituney1"
+do
+  tunexx=`echo "$itunexx" | cut -c1-2`"."`echo "$itunexx" | cut -c3-6`
+  tunexx=`echo "$tunexx" | sed -e's/0*$//'`
+  tunexx=`echo "$tunexx" | sed -e's/^0//'`
+  tuneyy=`echo "$ituneyy" | cut -c1-2`"."`echo "$ituneyy" | cut -c3-6`
+  tuneyy=`echo "$tuneyy" | sed -e's/0*$//'`
+  tuneyy=`echo "$tuneyy" | sed -e's/^0//'`
+  sixdesktunes=$tunexx"_"$tuneyy
+  echo ""
+  echo ""
+  echo ""
+  mymess 0 "Processing tunes $sixdesktunes"
+  myname1="DAres.${s1}.${sixdesktunes}.${turnse}"
+  myname2="DAres.${s2}.${sixdesktunes}.${turnse}"
+  myname="DAres.${l1}.${ws1}.${s1}.${sixdesktunes}.${turnse}_${l2}.${ws2}.${s2}"
+  rm -f ${myname}.sum
+  touch ${myname}.sum
+  j=$kinil
+  mymess 0 "Processing angles $kinil to $kendl by $kstep"
+  while test "$j" -le "$kendl"
+  do 
+    skip=0
+    mymess 0 "${myname1}.$j"
+    if test -s "$w1/${myname1}.$j"
+    then
+      rm -f ${myname}.${j}.stable1
+      touch ${myname}.${j}.stable1
+      awk -f stable.awk "$w1/${myname1}.$j" > ${myname}.${j}.stable1
+    else
+      mymess 0 "Skipping Angle $j; DAres.${s1}.${sixdesktunes}.${turnse}.$j missing or empty"
+      skip=1
+    fi
+    mymess 0 "${myname2}.$j"
+    if test -s "$w2/${myname2}.$j"
+    then
+      rm -f "${myname}.${j}.stable2"
+      touch "${myname}.${j}.stable2"
+      awk -f stable.awk "$w2/${myname2}.$j" > ${myname}.${j}.stable2
+    else
+      mymess 0 "Skipping Angle $j; DAres.${s2}.${sixdesktunes}.${turnse}.$j missing or empty"
+      skip=1
+    fi
+# Now combine the two files (and the awk also writes the .sum)
+    if test "$skip" -eq 0
+    then
+      join ${myname}.${j}.stable1 ${myname}.${j}.stable2 > ${myname}.${j}.tmp
+      rm ${myname}.${j}.stable1 
+      rm ${myname}.${j}.stable2
+      awk -f stable2.awk ${myname}.${j}.tmp > ${myname}.${j}.stable
+      ln -sf ${myname}.${j}.stable ${nickname}.${j}.stable
+      rm ${myname}.${j}.tmp
+    fi
+    ((j=j+$kstep))
+  done
+  ln -sf ${myname}.sum ${nickname}.sum
+  itunexx=`expr $itunexx + $ideltax`
+  ituneyy=`expr $ituneyy + $ideltay`
+done
+myexit 0

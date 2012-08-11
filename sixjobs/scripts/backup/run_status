@@ -1,0 +1,691 @@
+#!/bin/sh
+#
+# Gives an overview, and more importantly .......
+# updates the job status for LSF jobs and for the study
+#blsfjobs -u $LOGNAME -w > blsfjobs
+#JOBID   USER    STAT  QUEUE      FROM_HOST   EXEC_HOST   JOB_NAME   SUBMIT_TIME
+#704808  mcintosh RUN   8nm        lxplus079   lxb0204     v64lsftest31s6_8375 Oct 17 20:12
+#704810  mcintosh PEND  8nm        lxplus079      -        v64lsftest31s8_10315 Oct 17 20:12
+#v64lhcpro%1%64.28_59.31%10_12%3%15  => v64lhcpro/1/simul/64.28_59.31/10_12/e3/15
+#
+# See if we have any results or report on a specific task
+#
+. ./dot_env
+
+#MACRO mymess 0 Checking Study $LHCDescrip
+sixdeskmesslevel=0
+sixdeskmess="Checking Study $LHCDescrip"
+sixdeskmess
+#MACRO mymess
+
+# DON'T LOCK unless we are modifying.....
+# at the expense of possibly inconsistent reports
+
+#MACRO mylock $sixdeskwork
+#sixdesklockdir=$sixdeskwork
+#sixdesklock
+#MACRO mylock
+
+cases=0
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+
+#MACRO myunlock $sixdeskwork
+#sixdesklockdir=$sixdeskwork
+#sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO mymess 0 Found $cases cases, $ccases complete ($icases incomplete)
+sixdeskmesslevel=0
+sixdeskmess="Found $cases cases, $ccases complete ($icases incomplete)"
+sixdeskmess
+#MACRO mymess
+
+
+if test $# -le 2
+then
+  if test $sixdeskplatform = "lsf"
+  then
+    if test ! -d "$sixdeskjobs"
+    then
+
+#MACRO mymess 1 No lsf batch jobs submitted yet
+      sixdeskmesslevel=1
+      sixdeskmess="No lsf batch jobs submitted yet"
+      sixdeskmess
+#MACRO mymess
+
+    else
+# now lock the STUDY
+
+#MACRO mylock $sixdeskwork
+      ###sixdesklockdir=$sixdeskwork
+      ###sixdesklock
+#MACRO mylock
+
+
+#MACRO mylock $sixdeskjobs
+      ###sixdesklockdir=$sixdeskjobs
+      ###sixdesklock
+#MACRO mylock
+
+
+#MACRO mylock $sixdeskstudy
+      sixdesklockdir=$sixdeskstudy
+      sixdesklock
+#MACRO mylock
+
+      lsfjobs=0
+      if test -s "$sixdeskjobs/jobs"
+      then
+        lsfjobs=`wc -l "$sixdeskjobs/jobs"`
+        lsfjobs=`echo "$lsfjobs" | sed -e 's? *\([0-9]*\).*?\1?'`
+      fi
+      ijobs=0
+      if test -s $sixdeskjobs/incomplete_jobs
+      then
+        ijobs=`wc -l $sixdeskjobs/incomplete_jobs`
+        ijobs=`echo $ijobs | sed -e 's? *\([0-9]*\).*?\1?'`
+      fi
+
+#MACRO mymess 0 Found $lsfjobs jobs $ijobs incomplete
+      sixdeskmesslevel=0
+      sixdeskmess="Found $lsfjobs jobs $ijobs incomplete"
+      sixdeskmess
+#MACRO mymess
+
+      if test "$lsfjobs" -ne 0 -a "$ijobs" -ne 0 
+      then
+
+#MACRO mymktmpdir lsftmp /tmp/$LOGNAME
+        sixdesktmpdirname=lsftmp
+        sixdesktmpdirarg=/tmp/$LOGNAME
+        sixdeskmktmpdir
+        lsftmp=$sixdesktmpdir
+#MACRO mymktmp
+
+        cd $lsftmp
+
+#MACRO mymktmp tmp 
+        sixdesktmpname=tmp
+        sixdesktmpdirarg=
+        sixdeskmktmp
+        tmp=$sixdesktmp
+#MACRO mymktmp
+
+        find $sixdesktrack/$LHCDesHome -name JOB_NOT_YET_STARTED > $tmp
+        mytmp=`wc -l $tmp`
+        JOBSW=`echo $mytmp | sed -e 's? *\([0-9]*\).*?\1?'`
+
+#MACRO mymess 0 Found $JOBSW JOB_NOT_YET_STARTED
+        sixdeskmesslevel=0
+        sixdeskmess="Found $JOBSW JOB_NOT_YET_STARTED"
+        sixdeskmess
+#MACRO mymess
+
+        rm -f $tmp
+        touch $tmp
+        find $sixdesktrack/$LHCDesHome -name JOB_NOT_YET_COMPLETED > $tmp
+        mytmp=`wc -l $tmp`
+        JOBSI=`echo $mytmp | sed -e 's? *\([0-9]*\).*?\1?'`
+
+#MACRO mymess 0 Found $JOBSI JOB_NOT_YET_COMPLETED
+        sixdeskmesslevel=0
+        sixdeskmess="Found $JOBSI JOB_NOT_YET_COMPLETED"
+        sixdeskmess
+#MACRO mymess
+
+        rm -f $tmp
+        touch $tmp
+        bjobs -u $LOGNAME -w > blsfjobs 2>$tmp
+        grep "End of file" $tmp > /dev/null 2>&1
+        if test $? -eq 0
+        then
+
+#MACRO mymess 0 End of File error on LSF bjobs query: please try later !!!
+          sixdeskmesslevel=0
+          sixdeskmess="End of File error on LSF bjobs query: please try later !!!"
+          sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskjobs
+          ###sixdesklockdir=$sixdeskjobs
+          ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskwork
+          ###sixdesklockdir=$sixdeskwork
+          ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+          sixdesklockdir=$sixdeskstudy
+          sixdeskunlock
+#MACRO myunlock
+
+          rm $tmp
+
+#MACRO myexit 3
+          sixdeskexitparam=3
+          sixdeskexit
+#MACRO myexit
+
+        fi
+        grep " $LHCDesName""%" blsfjobs > $tmp
+        mv $tmp blsfjobs
+        nlsfjobs=`wc -l blsfjobs`
+        nlsfjobs=`echo "$nlsfjobs" | sed -e 's? *\([0-9]*\).*?\1?'`
+        if test "$nlsfjobs" = ""
+        then
+          nlsfjobs="0"
+        fi
+
+#MACRO mymess 0 LSF bjobs found $nlsfjobs batch jobs (running, pending, or suspended)
+        sixdeskmesslevel=0
+        sixdeskmess="LSF bjobs found $nlsfjobs batch jobs (running, pending, or suspended)"
+        sixdeskmess
+#MACRO mymess
+
+        touch $sixdeskjobs/incomplete_jobs
+        cp $sixdeskjobs/incomplete_jobs .
+        touch $sixdeskjobs/completed_jobs
+        cp $sixdeskjobs/completed_jobs .
+        cp incomplete_jobs newcompleted_jobs
+        touch blsfjobs
+        while read qrjob
+        do
+          qrjob=`echo $qrjob | sed -e's/  */ /g'`
+          taskno=`echo $qrjob | cut -d" " -f1`
+          taskid=lsf$taskno
+          Runnam=`echo $qrjob | cut -d" " -f7`
+          if test $? -ne 0
+          then
+
+#MACRO mymess 0 The job $taskid / $Runnam can NOT be found in $sixdeskjobs/jobs!!!
+            sixdeskmesslevel=0
+            sixdeskmess="The job $taskid / $Runnam can NOT be found in $sixdeskjobs/jobs!!!"
+            sixdeskmess
+#MACRO mymess
+
+          else
+            sed -e'/'"$Runnam $taskid"'/d' newcompleted_jobs > $tmp
+            mv $tmp newcompleted_jobs
+          fi   
+        done < blsfjobs
+        ncjobs=`wc -l newcompleted_jobs`
+        ncjobs=`echo "$ncjobs" | sed -e 's? *\([0-9]*\).*?\1?'`
+        if test "$ncjobs" -eq 0
+        then
+          ncjobs="0" 
+        fi
+
+#MACRO mymess 0 Found $ncjobs jobs apparently completed
+        sixdeskmesslevel=0
+        sixdeskmess="Found $ncjobs jobs apparently completed"
+        sixdeskmess
+#MACRO mymess
+
+        rm -f blsfjobs
+        # Now let us look for really completed lsfjobs....
+        rm -f missing_jobs
+        touch missing_jobs
+        rm -f really_completed_jobs
+        while read line
+        do
+          Runnam=`echo $line | cut -d" " -f1`
+          taskid=`echo $line | cut -d" " -f2`
+
+#MACRO myrundir $Runnam Rundir
+          runnamename=$Runnam
+          sixdeskrundir
+          Rundir=$rundirname
+#MACRO myrundir
+
+          where=$sixdesktrack/$Rundir
+          missing=0
+#         echo "Processing $Runnam $taskid"
+          if test "$da" -ne 0
+          then
+            if test ! -s $where/fort.18.gz
+            then
+
+#MACRO mymess 0 $Runnam fort.18.gz is MISSING in $Rundir !!!
+              sixdeskmesslevel=0
+              sixdeskmess="$Runnam fort.18.gz is MISSING in $Rundir !!!"
+              sixdeskmess
+#MACRO mymess
+
+              missing="1"
+            fi
+          else
+           if test "$BNL" = ""
+            then
+              if test ! -s $where/fort.10.gz
+              then
+
+#MACRO mymess 0 $Runnam fort.10.gz is MISSING for $Runnam !!!
+                sixdeskmesslevel=0
+                sixdeskmess="$Runnam fort.10.gz is MISSING for $Runnam !!!"
+                sixdeskmess
+#MACRO mymess
+
+                  missing="1"
+              fi
+            else
+              if test ! -s $where/beambeam-output.dat.gz
+              then
+
+#MACRO mymess 0 $Runnam beambeam-output.dat.gz is MISSING for $Runnam !!!
+                sixdeskmesslevel=0
+                sixdeskmess="$Runnam beambeam-output.dat.gz is MISSING for $Runnam !!!"
+                sixdeskmess
+#MACRO mymess
+
+                missing="1"
+              fi
+            fi
+          fi
+          if test "$missing" -eq 1 
+          then
+            grep '^'$Runnam'$' missing_jobs > /dev/null 2>&1
+            if test $? -ne 0
+            then
+              echo "$Runnam" >> missing_jobs
+
+#MACRO mymess 0 Job $Runnam appears to be missing!!!
+              sixdeskmesslevel=0
+              sixdeskmess="Job $Runnam appears to be missing!!!"
+              sixdeskmess
+#MACRO mymess
+
+            fi
+          else
+            echo "$line" >> really_completed_jobs
+            sed -e'/'"$line"'/d' incomplete_jobs > $tmp
+            mv $tmp incomplete_jobs
+            echo "$line" >> completed_jobs
+          fi
+        done < newcompleted_jobs 
+        sort --unique completed_jobs > $tmp
+        mv $tmp completed_jobs
+        rm -f newcompleted_jobs
+        cp missing_jobs $sixdeskjobs
+        cp completed_jobs $sixdeskjobs
+        cp incomplete_jobs $sixdeskjobs
+        
+        # Finally update the master jobs files (have locks)
+        touch really_completed_jobs
+        touch $sixdeskwork/myincomplete_cases
+        touch $sixdeskwork/mycompleted_cases
+        touch $sixdeskwork/incomplete_cases
+        touch $sixdeskwork/completed_cases
+        cp $sixdeskwork/myincomplete_cases .
+        cp $sixdeskwork/mycompleted_cases .
+        cp $sixdeskwork/incomplete_cases .
+        cp $sixdeskwork/completed_cases .
+        echo "Updating master files of cases"
+        while read line
+        do
+          Runnam=`echo "$line" | cut -d" " -f1`
+          sed -e'/^'$Runnam'$/d' incomplete_cases > $tmp
+          mv $tmp incomplete_cases
+          echo "$Runnam" >> completed_cases
+          echo "$Runnam" >> mycompleted_cases
+          sed -e'/^'$Runnam'$/d' myincomplete_cases > $tmp
+          mv $tmp myincomplete_cases
+        done < really_completed_jobs
+        sort --unique completed_cases > $tmp
+        mv $tmp completed_cases
+        sort --unique mycompleted_cases > $tmp
+        mv $tmp mycompleted_cases
+        rm -f really_completed_jobs
+        cp myincomplete_cases $sixdeskwork
+        cp mycompleted_cases $sixdeskwork
+        cp incomplete_cases $sixdeskwork
+        cp completed_cases $sixdeskwork
+        rm -f $tmp
+        cd $sixdeskhome
+        rm -r $lsftmp
+      fi
+
+#MACRO myunlock $sixdeskjobs
+      ###sixdesklockdir=$sixdeskjobs
+      ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskwork
+      ###sixdesklockdir=$sixdeskwork
+      ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+      sixdesklockdir=$sixdeskstudy
+      sixdeskunlock
+#MACRO myunlock
+
+    fi
+  fi
+  if test -s $sixdeskstudy/TaskGroupId -a -d $sixdeskwork/cpssjobs
+  then
+    sixdeskjobs=$sixdeskwork/cpssjobs
+    sixdesktgid=`cat $sixdeskstudy/TaskGroupId`
+    mysixdesktgid=`echo $sixdesktgid | sed -e 's/TaskGroupID: *//'`
+
+#MACRO mymess 0 Checking TaskGroup $mysixdesktgid, Study $LHCDescrip
+    sixdeskmesslevel=0
+    sixdeskmess="Checking TaskGroup $mysixdesktgid, Study $LHCDescrip"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymktmp tmp $sixdeskjobs
+    sixdesktmpname=tmp
+    sixdesktmpdirarg=$sixdeskjobs
+    sixdeskmktmp
+    tmp=$sixdesktmp
+#MACRO mymktmp
+
+
+#MACRO mymktmp results $sixdeskjobs
+    sixdesktmpname=results
+    sixdesktmpdirarg=$sixdeskjobs
+    sixdeskmktmp
+    results=$sixdesktmp
+#MACRO mymktmp
+
+    perl $sixdeskpath/Bin/queryReadyResults.pl $mysixdesktgid > $tmp
+    stat=$?
+    if test $stat -ne 0
+    then
+
+#MACRO mymess 0 Problem with querying results!!! `cat $tmp`
+      sixdeskmesslevel=0
+      sixdeskmess="Problem with querying results!!! `cat $tmp`"
+      sixdeskmess
+#MACRO mymess
+
+      rm $tmp
+
+#MACRO myexit 2
+      sixdeskexitparam=2
+      sixdeskexit
+#MACRO myexit
+
+    fi
+    # remove the \r's............
+    awk -f $sixdeskpath/scripts/remover $tmp > $results
+    rm $tmp
+    tot=`grep TotalTasks $results | sed -e 's/TotalTasks: *//'`
+    ready=`grep ResultsReady $results | sed -e 's/ResultsReady: *//'`
+
+#MACRO mymess 0 For $tot Tasks in CPSS, $ready Results are available
+    sixdeskmesslevel=0
+    sixdeskmess="For $tot Tasks in CPSS, $ready Results are available"
+    sixdeskmess
+#MACRO mymess
+
+    if test "$ready" -ne 0
+    then
+      tasks=`grep ReadyTasks $results | sed -e 's/ReadyTasks: *//'`
+      echo $tasks
+    fi
+    rm -f $results
+    rm -f $tmp
+  else
+    if test $sixdeskplatform = "cpss"
+    then
+
+#MACRO mymess 1 No CPSS TaskGroup or no tasks submitted
+      sixdeskmesslevel=1
+      sixdeskmess="No CPSS TaskGroup or no tasks submitted"
+      sixdeskmess
+#MACRO mymess
+
+    fi
+  fi
+  sixdeskjobs=$sixdeskwork/boincjobs
+  if test -d $sixdeskjobs
+  then
+    if test -s $sixdeskjobs/tasks
+    then
+
+#MACRO mymktmp tmp $sixdeskjobs
+      sixdesktmpname=tmp
+      sixdesktmpdirarg=$sixdeskjobs
+      sixdeskmktmp
+      tmp=$sixdesktmp
+#MACRO mymktmp
+
+      mkdir -p $sixdeskboincdir/results
+      cd $sixdeskboincdir/results
+      find . -name ${workspace}_${LHCDesName}__[0-9]\*__[0-9.]\*_[0-9.]\*__[0-9.]\*_[0-9.]\*__[0-9]\*__[0-9.]\*_1_sixvf_boinc[0-9]\* > $tmp 2> /dev/null
+      cd $sixdeskhome
+      ready=`sed -f sedboincnames $tmp | wc -l`
+      ready=`echo $ready | sed -e 's? *\([0-9]*\).*?\1?'`
+
+#MACRO mymess 2 For BOINC $ready Results are available
+#     sixdeskmesslevel=2
+#     sixdeskmess="For BOINC $ready Results are available"
+#     sixdeskmess
+#MACRO mymess
+
+      if test "$ready" -ne 0
+      then
+        if test "$sixdesklevel" -ne 0
+        then
+          cat $tmp 
+        fi
+      fi
+      rm $tmp
+
+#MACRO mymess 0 For BOINC $ready Results are available
+      sixdeskmesslevel=0
+      sixdeskmess="For BOINC $ready Results are available"
+      sixdeskmess
+#MACRO mymess
+
+    fi
+  fi
+  if test $sixdeskplatform = "grid"
+  then
+
+#MACRO mymess 0 GRID not implemented yet!!!
+    sixdeskmesslevel=0
+    sixdeskmess="GRID not implemented yet!!!"
+    sixdeskmess
+#MACRO mymess
+
+  fi
+  rm -f $tmp
+  for myplatform in lsf boinc cpss grid
+  do
+    myname=tasks
+    if test "$myplatform" = "lsf"
+    then
+      myname=jobs
+    fi
+    sixdeskjobs=$sixdeskwork/$myplatform"jobs"
+    if test -s "$sixdeskjobs/$myname"
+    then
+
+#MACRO mylock $sixdeskjobs
+#     sixdesklockdir=$sixdeskjobs
+#     sixdesklock
+#MACRO mylock
+
+      lsfjobs=`wc -l "$sixdeskjobs/$myname"`
+      lsfjobs=`echo "$lsfjobs" | sed -e 's? *\([0-9]*\).*?\1?'`
+      ijobs=0
+      if test -s $sixdeskjobs/incomplete_$myname
+      then
+        ijobs=`wc -l $sixdeskjobs/incomplete_$myname`
+        ijobs=`echo "$ijobs" | sed -e 's? *\([0-9]*\).*?\1?'`
+      fi
+      cjobs=0
+      if test -s $sixdeskjobs/completed_$myname
+      then
+        cjobs=`wc -l $sixdeskjobs/completed_$myname`
+        cjobs=`echo "$cjobs" | sed -e 's? *\([0-9]*\).*?\1?'`
+      fi
+      mjobs=0
+      if test -s $sixdeskjobs/missing_$myname
+      then
+        mjobs=`wc -l $sixdeskjobs/missing_$myname`
+        mjobs=`echo "$mjobs" | sed -e 's? *\([0-9]*\).*?\1?'`
+      fi
+
+#MACRO myunlock $sixdeskjobs
+#     sixdesklockdir=$sixdeskjobs
+#     sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO mymess 0 For $myplatform found $lsfjobs $myname, $ijobs incomplete, $cjobs completed, $mjobs missing
+      sixdeskmesslevel=0
+      sixdeskmess="For $myplatform found $lsfjobs $myname, $ijobs incomplete, $cjobs completed, $mjobs missing"
+      sixdeskmess
+#MACRO mymess
+
+    fi
+  done
+  if test -f $sixdeskwork/taskids
+  then
+    cases=`wc -l "$sixdeskwork/taskids"`
+    cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+  fi
+  icases=0
+  if test -s $sixdeskwork/incomplete_cases
+  then
+    icases=`wc -l $sixdeskwork/incomplete_cases`
+    icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+  fi
+  ccases=0
+  if test -s $sixdeskwork/completed_cases
+  then
+    ccases=`wc -l $sixdeskwork/completed_cases`
+    ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+  fi
+
+#MACRO mymess 0 Found $cases cases, $ccases complete ($icases incomplete)
+  sixdeskmesslevel=0
+  sixdeskmess="Found $cases cases, $ccases complete ($icases incomplete)"
+  sixdeskmess
+#MACRO mymess
+
+  echo ""
+  echo "Due to an AFS/Linux bug we maintain another database"
+  echo "with the files myincomplete_cases and mycompleted_cases"
+  echo "to help find the problem"
+  echo ""
+  echo "Please note the new script correct_cases will re-build"
+  echo "completed_cases and incomplete_cases based on fort.10.gz"
+  echo "for all cases in taskids."
+  echo ""
+  icases=0
+  if test -s $sixdeskwork/myincomplete_cases
+  then
+    icases=`wc -l $sixdeskwork/myincomplete_cases`
+    icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+  fi
+  ccases=0
+  if test -s $sixdeskwork/mycompleted_cases
+  then
+    ccases=`wc -l $sixdeskwork/mycompleted_cases`
+    ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+  fi
+
+#MACRO mymess 1 Backup status $cases cases, $ccases complete ($icases incomplete)
+  sixdeskmesslevel=1
+  sixdeskmess="Backup status $cases cases, $ccases complete ($icases incomplete)"
+  sixdeskmess
+#MACRO mymess
+
+
+else
+
+  # we should have a Runnam
+
+#MACRO mylock $sixdeskwork
+# sixdesklockdir=$sixdeskwork
+# sixdesklock
+#MACRO mylock
+
+  Runnam=$1
+  taskid=""
+  found=""
+  found=`grep '^'$Runnam' ' $sixdeskwork/taskids`
+
+#MACRO myunlock $sixdeskwork
+# sixdesklockdir=$sixdeskwork
+# sixdeskunlock
+#MACRO myunlock
+
+  if test "$found" != ""
+  then
+    taskids=`echo "$found" | cut -d" " -f2-`
+    Runnam=`echo $found | cut -d" " -f1`
+
+#MACRO myrundir $Runnam Rundir
+    runnamename=$Runnam
+    sixdeskrundir
+    Rundir=$rundirname
+#MACRO myrundir
+
+    echo "Case $Runnam with $taskids found in $Rundir"
+    where=$sixdesktrack/$Rundir
+    if test ! -d "$where"
+    then
+
+#MACRO mymess 0 Strange the directory $where for job $taskid does NOT exist!!! We shall ignore this for the moment
+      sixdeskmesslevel=0
+      sixdeskmess="Strange the directory $where for job $taskid does NOT exist!!! We shall ignore this for the moment"
+      sixdeskmess
+#MACRO mymess
+
+    else
+      if test "$BNL" = ""
+      then
+        if test -s "$where/fort.10.gz"
+        then
+          echo "Case complete $Runnam with taskids $taskids"
+        else
+          echo "Case incomplete $Runnam with taskids $taskids"
+        fi
+      else
+        if test -s "$where/beambeam-output.dat.gz"
+        then
+          echo "Case complete $Runnam with taskids $taskids"
+        else
+          echo "Case incomplete $Runnam with taskids $taskids"
+        fi
+      fi
+    fi
+  fi
+fi
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

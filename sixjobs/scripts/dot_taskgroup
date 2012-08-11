@@ -1,0 +1,178 @@
+#!/bin/sh
+# This script is called by dot_task to create a TaskGroup
+# and store the TaskId and ProgramId in sixdeskstudy.
+# It keeps a record/log in sixdeskhome/TaskGroups so that they
+# can be re-created if accidentally deleted.
+
+#MACRO mymess 0 Uploading the Program $sixdeskFileName to $sixdeskTargetFileName
+sixdeskmesslevel=0
+sixdeskmess="Uploading the Program $sixdeskFileName to $sixdeskTargetFileName"
+sixdeskmess
+#MACRO mymess
+
+echo "Perl uploadProgram" "$sixdeskProgramName" "$sixdeskFileName" "$sixdeskTargetFileName" "$sixdeskVersion" "$sixdeskAuthor" "$sixdeskDescription"
+perl $sixdeskpath/Bin/uploadProgram.pl "$sixdeskProgramName" "$sixdeskFileName" "$sixdeskTargetFileName" "$sixdeskVersion" "$sixdeskAuthor" "$sixdeskDescription" > $sixdeskstudy/ProgramId 2>&1
+sixdeskstat=$?
+# get rid of \r if any............
+
+#MACRO mymktmp tmp $sixdeskstudy
+sixdesktmpname=tmp
+sixdesktmpdirarg=$sixdeskstudy
+sixdeskmktmp
+tmp=$sixdesktmp
+#MACRO mymktmp
+
+awk -f $sixdeskpath/scripts/remover $sixdeskstudy/ProgramId > $tmp
+mv $tmp $sixdeskstudy/ProgramId
+if test $sixdeskstat -ne 0
+then
+
+#MACRO mymess 0 UploadProgram failed with Status $sixdeskstat `cat $sixdeskstudy/ProgramId`
+  sixdeskmesslevel=0
+  sixdeskmess="UploadProgram failed with Status $sixdeskstat `cat $sixdeskstudy/ProgramId`"
+  sixdeskmess
+#MACRO mymess
+
+  rm -f $sixdeskstudy/ProgramId
+
+#MACRO myexit 10
+  sixdeskexitparam=10
+  sixdeskexit
+#MACRO myexit
+
+else
+  grep "ProgramId: " $sixdeskstudy/ProgramId > /dev/null 2>&1
+  sixdeskstat=$?
+  if test $sixdeskstat -ne 0
+  then
+
+#MACRO mymess 0 Upload Program has NOT produced a ProgramId!!! `cat $sixdeskstudy/ProgramId`
+    sixdeskmesslevel=0
+    sixdeskmess="Upload Program has NOT produced a ProgramId!!! `cat $sixdeskstudy/ProgramId`"
+    sixdeskmess
+#MACRO mymess
+
+    rm -f $sixdeskstudy/ProgramId
+
+#MACRO myexit 11
+    sixdeskexitparam=11
+    sixdeskexit
+#MACRO myexit
+
+  fi
+  sixdeskProgramId=`sed -e's/ProgramId: *//' $sixdeskstudy/ProgramId`
+  sixdeskProgramId=`echo $sixdeskProgramId | sed -e's/[^0-9]//g'`
+  if test "$sixdeskProgramId" = ""
+  then
+
+#MACRO mymess 0 Upload Program has produced a NULL ProgramId!!! `cat $sixdeskstudy/ProgramId`
+    sixdeskmesslevel=0
+    sixdeskmess="Upload Program has produced a NULL ProgramId!!! `cat $sixdeskstudy/ProgramId`"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 15
+    sixdeskexitparam=15
+    sixdeskexit
+#MACRO myexit
+
+  fi
+  mypid=`cat $sixdeskstudy/ProgramId`
+
+#MACRO mymess 0 The assigned `cat $sixdeskstudy/ProgramId` has been stored in $sixdeskstudy/ProgramId
+  sixdeskmesslevel=0
+  sixdeskmess="The assigned `cat $sixdeskstudy/ProgramId` has been stored in $sixdeskstudy/ProgramId"
+  sixdeskmess
+#MACRO mymess
+
+# and now the TaskGroup
+
+#MACRO mymess 0 Creating the TaskGroup $sixdeskTaskGroupName $sixdeskDescription, using ProgramId:$sixdeskProgramId, Status: $sixdeskStatus, Priority: $sixdeskPriority, Comments: $sixdeskComments
+  sixdeskmesslevel=0
+  sixdeskmess="Creating the TaskGroup $sixdeskTaskGroupName $sixdeskDescription, using ProgramId:$sixdeskProgramId, Status: $sixdeskStatus, Priority: $sixdeskPriority, Comments: $sixdeskComments"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymktmp tmpg $sixdeskstudy
+  sixdesktmpname=tmpg
+  sixdesktmpdirarg=$sixdeskstudy
+  sixdeskmktmp
+  tmpg=$sixdesktmp
+#MACRO mymktmp
+
+  echo "Perl createTaskGroup" "$sixdeskTaskGroupName" "$sixdeskDescription" "$sixdeskProgramId" "$sixdeskStatus" "$sixdeskPriority" "$sixdeskComments"
+  perl $sixdeskpath/Bin/createTaskGroup.pl "$sixdeskTaskGroupName" "$sixdeskDescription" "$sixdeskProgramId" "$sixdeskStatus" "$sixdeskPriority" "$sixdeskComments" > $tmpg 2>&1
+  sixdeskstat=$?
+  # get rid of \r if any....I saw it once at least!
+  awk -f $sixdeskpath/scripts/remover $tmpg > $sixdeskstudy/TaskGroupId
+  if test $sixdeskstat -ne 0
+  then
+
+#MACRO mymess 0 createTaskGroup failed with Status $sixdeskstat `cat $sixdeskstudy/TaskGroupId`
+    sixdeskmesslevel=0
+    sixdeskmess="createTaskGroup failed with Status $sixdeskstat `cat $sixdeskstudy/TaskGroupId`"
+    sixdeskmess
+#MACRO mymess
+
+    rm -f $tmpg $sixdeskstudy/TaskGroupId $sixdeskstudy/ProgramId
+
+#MACRO myexit 12
+    sixdeskexitparam=12
+    sixdeskexit
+#MACRO myexit
+
+  else
+    rm -f $tmpg
+    # Note the perl script returns an ID not an Id!
+    grep "TaskGroupID: " $sixdeskstudy/TaskGroupId > /dev/null 2>&1
+    sixdeskstat=$?
+    if test $sixdeskstat -ne 0
+    then
+
+#MACRO mymess 0 createTaskGroup has NOT produced a TaskGroupId!!! `cat $sixdeskstudy/TaskGroupId`
+      sixdeskmesslevel=0
+      sixdeskmess="createTaskGroup has NOT produced a TaskGroupId!!! `cat $sixdeskstudy/TaskGroupId`"
+      sixdeskmess
+#MACRO mymess
+
+      rm -f $sixdeskstudy/TaskGroupId $sixdeskstudy/ProgramId
+
+#MACRO myexit 13
+      sixdeskexitparam=13
+      sixdeskexit
+#MACRO myexit
+
+    fi
+    sixdesktgid=`cat $sixdeskstudy/TaskGroupId | sed -e's/TaskGroupID: //'`
+    sixdesktgid=`echo $sixdesktgid | sed -e's/[^0-9]//g'`
+    if test "$sixdesktgid" = ""
+    then
+      mymess" 0 createTaskGroup.pl has produced a NULL TaskGroupId!!! `cat $sixdeskstudy/TaskGroupId`"
+      rm -f $sixdeskstudy/TaskGroupId $sixdeskstudy/ProgramId
+
+#MACRO myexit 14
+      sixdeskexitparam=14
+      sixdeskexit
+#MACRO myexit
+
+    fi
+    mytid=`cat $sixdeskstudy/TaskGroupId`
+
+#MACRO mymess 0 The TaskGroup with `cat $sixdeskstudy/TaskGroupId` has been created and stored in $sixdeskstudy/TaskGroupId
+    sixdeskmesslevel=0
+    sixdeskmess="The TaskGroup with `cat $sixdeskstudy/TaskGroupId` has been created and stored in $sixdeskstudy/TaskGroupId"
+    sixdeskmess
+#MACRO mymess
+
+    echo "$sixdeskTaskGroupName" "$mytid" "$mypid" >> $sixdeskhome/TaskGroups
+
+#MACRO mymess 0 .....and backup copies in $sixdeskhome/TaskGroups
+    sixdeskmesslevel=0
+    sixdeskmess=".....and backup copies in $sixdeskhome/TaskGroups"
+    sixdeskmess
+#MACRO mymess
+
+  fi
+fi

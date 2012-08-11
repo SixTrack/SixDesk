@@ -1,0 +1,198 @@
+#!/bin/sh
+# A script to do a compare_DA and a plot_DA
+# expects two study letters $1 $2
+#
+# Make a match for the name of the study from the letter.
+#
+if test $# -ne 2
+then
+  echo "Must specify two studies!!!"
+  exit 2
+fi
+echo "compare_studies called with $1 $2"
+user2="mcintosh"
+ws2="w3mass"
+first="true"
+while test $# != 0
+do
+# "Old" SixTrack
+# A	lf95	o1	NO	4206	lhc300_00 in giovanno/w3
+# A	lf95	o1	NO	4206	lhc300_00mass (a copy of A)
+  case $1 in
+  A) par=lhc300_00mass
+     ;; 
+#AA	lf95	o1	NO	4226	lhc300_00eric (repeat of A)
+  AA) par=lhc300_00eric
+     ;; 
+#A0     lf95    o0      NO      4206    lhc300_00eric0 (Just opt 0)
+  A0) par=lhc300_00eric0
+     ;;
+# AD	lf95	o1	YES	4227	lhc300_00ericdble
+  AD) par=lhc300_00ericdble
+     ;; 
+# AI	ifort	O2	NO	4236	lhc300_00ericif
+  AI) par=lhc300_00ericif
+     ;; 
+# AID	ifort	O2	YES	4237	lhc300_00ericifdble
+  AID) par=lhc300_00ericifdble
+     ;; 
+# "New" SixTrack
+# B	lf95    o1	NO	4215	lhc300_00new
+  B) par=lhc300_00new
+     ;; 
+# B0    lf95    o0      NO	4215	lhc300_00lf95opt0
+  B0) par=lhc300_00lf95opt0
+     ;; 
+# BD	lf95    o1	YES	4216	lhc300_00dble
+  BD) par=lhc300_00dble
+     ;; 
+# BD0   lf95	o0      YES	4216	lhc300_00dbleo0
+  BD0) par=lhc300_00dbleo0
+     ;; 
+# BI	ifort	O2	NO	4218	lhc300_00ifortnodble
+  BI) par=lhc300_00ifortnodble
+     ;; 
+# BID  	ifort	O2	YES 	4217	lhc300_00ifortdble
+  BID) par=lhc300_00ifortdble
+     ;; 
+# "New" with errf (affects bb only???) and other changes
+# M	ifort	O2      YES	4308	lhc300_00
+  M) par=lhc300_00
+     ;; 
+#MM     ifort   O2      YES     4313    lhc300_00dense 0.2 amp range
+  MM) par=lhc300_00dense
+     ;; 
+#MC     ifort   O2      YES     4308    lhc300_00chaos more angles 70-90
+  MC) par=lhc300_00chaos
+     ;;
+# M0	ifort	O0      YES	4308	lhc300_00opt0
+  M0) par=lhc300_00opt0
+     ;; 
+# M1	ifort	O1      YES	4308	lhc300_00opt1
+  M1) par=lhc300_00opt1
+     ;; 
+# N      ifort	O2	NO	4312	lhc300_00nodble (corrected name of study)
+  N) par=lhc300_00nodble
+     ;; 
+# O	lf95	o1	YES     4311	lhc300_00lf951  
+  O) par=lhc300_00lf951
+     ;; 
+# P	lf95	o0	YES     4311	lhc300_00lf950  
+  P) par=lhc300_00lf950
+     ;; 
+# Q	lf95	o2	YES     4311	lhc300_00lf952  
+  Q) par=lhc300_00lf952
+     ;; 
+
+# Still to be done (NO crlibm, and NO fp flags to ifort)
+# X	lf95	o1	NO      4228	lhc300_00lahey (NO crlibm)
+  X) par=lhc300_00lahey
+     ;; 
+# Y      ifort	O2	NO	4238	lhc300_00intel (NO crlibm, uses XP)
+  Y) par=lhc300_00intel
+     ;; 
+# and now define the other lhc300_10 to lhc300_90
+# including giovanno and w3
+# L310  ifort   O2      YES     4308    lhc300_10
+  L310) par=lhc300_10
+     ;;
+# L310M lf95    o1      NO      4206    lhc300_10 in giovanno/w3
+  L310M)par=lhc300_10
+        user2="giovanno"
+        ws2="w3" 
+     ;;
+# L320  ifort   O2      YES     4308    lhc300_20
+  L320) par=lhc300_20
+     ;;
+# L320M lf95    o1      NO      4206    lhc300_20 in giovanno/w3
+  L320M)par=lhc300_20
+        user2="giovanno"
+        ws2="w3" 
+     ;;
+# L330  ifort   O2      YES     4308    lhc300_30
+  L330) par=lhc300_30
+     ;;
+# L330M lf95    o1      NO      4206    lhc300_30 in giovanno/w3
+  L330M)par=lhc300_30
+        user2="giovanno"
+        ws2="w3" 
+     ;;
+# L340  ifort   O2      YES     4308    lhc300_40
+  L340) par=lhc300_40
+     ;;
+# L340M lf95    o1      NO      4206    lhc300_40 in giovanno/w3
+  L340M)par=lhc300_40
+        user2="giovanno"
+        ws2="w3" 
+     ;;
+# L350  ifort   O2      YES     4308    lhc300_50
+  L350) par=lhc300_50
+     ;;
+# L350M lf95    o1      NO      4206    lhc300_50 in giovanno/w3
+  L350M)par=lhc300_50
+        user2="giovanno"
+        ws2="w3" 
+     ;;
+# L360  ifort   O2      YES     4308    lhc300_60
+  L360) par=lhc300_60
+     ;;
+# L360M lf95    o1      NO      4206    lhc300_60 in giovanno/w3
+  L360M)par=lhc300_60
+        user2="giovanno"
+        ws2="w3" 
+     ;;
+# L370  ifort   O2      YES     4308    lhc300_70
+  L370) par=lhc300_70
+     ;;
+# L370M lf95    o1      NO      4206    lhc300_70 in giovanno/w3
+  L370M)par=lhc300_70
+        user2="giovanno"
+        ws2="w3" 
+     ;;
+# L380  ifort   O2      YES     4308    lhc300_80
+  L380) par=lhc300_80
+     ;;
+# L380M lf95    o1      NO      4206    lhc300_80 in giovanno/w3
+  L380M)par=lhc300_80
+        user2="giovanno"
+        ws2="w3" 
+     ;;
+# L390  ifort   O2      YES     4308    lhc300_90
+  L390) par=lhc300_90
+     ;;
+# L390M lf95    o1      NO      4206    lhc300_90 in giovanno/w3
+  L390M)par=lhc300_90
+        user2="giovanno"
+        ws2="w3" 
+     ;;
+# L27040M lf95    o1      NO      4206    lhc270_40 in giovanno/w3
+  L27040M) par=lhc270_40
+        user2="giovanno"
+        ws2="w3" 
+     ;;
+# L27040 ifort  O2      NO      4313    lhc270_40
+  L27040) par=lhc270_40
+     ;;
+# L27040n ifort  O2      NO      4312    lhc270_40nodble
+  L27040n) par=lhc270_40nodble
+     ;;
+# L27040d ifort  O2      NO      4313    lhc270_40dense
+  L27040d) par=lhc270_40dense
+     ;;
+  *) echo "Illegal option $1"
+     exit 1
+     ;;
+  esac
+  if test "$first" = "true"
+  then
+    p1=$par
+    name1=$1
+    first="false"
+  else 
+    p2=$par
+    name2=$1
+  fi
+  shift
+done
+echo "compare_studies calling compareDAS with $p1 $p2 $name1/$name2"
+./compare_DAS "$p1" "$user2" "$ws2" "$p2" "$name1" "$name2"

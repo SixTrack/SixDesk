@@ -1,0 +1,93 @@
+#!/bin/sh
+# A script to try and check letter to study mapping
+# and the executable used.
+#
+# add X,Y later perhaps
+for aletter in A AA A0 AD AI AID B B0 BD BD0 BI BID \
+               M MM MC M0 M1 N O P Q
+do
+  case $aletter in
+# "Old" SixTrack
+# A	lf95	o1	NO	4206	lhc300_00 in giovanno/w3
+# A	lf95	o1	NO	4206	lhc300_00mass (a copy of A)
+  A) par=lhc300_00mass
+     ;; 
+#AA	lf95	o1	NO	4226	lhc300_00eric (repeat of A)
+  AA) par=lhc300_00eric
+     ;; 
+#A0     lf95    o0      NO      4206    lhc300_00eric0 (Just opt 0)
+  A0) par=lhc300_00eric0
+     ;;
+# AD	lf95	o1	YES	4227	lhc300_00ericdble
+  AD) par=lhc300_00ericdble
+     ;; 
+# AI	ifort	O2	NO	4236	lhc300_00ericif
+  AI) par=lhc300_00ericif
+     ;; 
+# AID	ifort	O2	YES	4237	lhc300_00ericifdble
+  AID) par=lhc300_00ericifdble
+     ;; 
+# "New" SixTrack
+# B	lf95    o1	NO	4215	lhc300_00new
+  B) par=lhc300_00new
+     ;; 
+# B0    lf95    o0      NO	4215	lhc300_00lf95opt0
+  B0) par=lhc300_00lf95opt0
+     ;; 
+# BD	lf95    o1	YES	4216	lhc300_00dble
+  BD) par=lhc300_00dble
+     ;; 
+# BD0   lf95	o0      YES	4216	lhc300_00dbleo0
+  BD0) par=lhc300_00dbleo0
+     ;; 
+# BI	ifort	O2	NO	4218	lhc300_00ifortnodble
+  BI) par=lhc300_00ifortnodble
+     ;; 
+# BID  	ifort	O2	YES 	4217	lhc300_00ifortdble
+  BID) par=lhc300_00ifortdble
+     ;; 
+# "New" with errf (affects bb only???) and other changes
+# M	ifort	O2      YES	4308	lhc300_00
+  M) par=lhc300_00
+     ;; 
+#MM     ifort   O2      YES     4313    lhc300_00dense 0.2 amp range
+  MM) par=lhc300_00dense
+     ;; 
+#MC     ifort   O2      YES     4308    lhc300_00chaos more angles 70-90
+  MC) par=lhc300_00chaos
+     ;;
+# M0	ifort	O0      YES	4308	lhc300_00opt0
+  M0) par=lhc300_00opt0
+     ;; 
+# M1	ifort	O1      YES	4308	lhc300_00opt1
+  M1) par=lhc300_00opt1
+     ;; 
+# N      ifort	O2	NO	4312	lhc300_00nodble (corrected name of study)
+  N) par=lhc300_00nodble
+     ;; 
+# O	lf95	o1	YES     4311	lhc300_00lf951  
+  O) par=lhc300_00lf951
+     ;; 
+# P	lf95	o0	YES     4311	lhc300_00lf950  
+  P) par=lhc300_00lf950
+     ;; 
+# Q	lf95	o2	YES     4311	lhc300_00lf952  
+  Q) par=lhc300_00lf952
+     ;; 
+
+# Still to be done (NO crlibm, and NO fp flags to ifort)
+# X	lf95	o1	NO      4228	lhc300_00lahey (NO crlibm)
+  X) par=lhc300_00lahey
+     ;; 
+# Y      ifort	O2	NO	4238	lhc300_00intel (NO crlibm, uses XP)
+  Y) par=lhc300_00intel
+     ;; 
+
+  *) echo "Illegal option $aletter"
+     exit 1
+     ;;
+  esac
+  echo "==================="
+  echo $aletter    $par
+  grep SIXTRACKEXE studies/$par/sysenv
+done

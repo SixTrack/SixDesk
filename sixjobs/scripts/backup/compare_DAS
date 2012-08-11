@@ -1,0 +1,15 @@
+#!/bin/sh
+# A script to do a compare_DA and a plot_DA
+#
+s1=$1
+user2=$2
+ws2=$3
+s2=$4
+name1=$5
+name2=$6
+echo "Switching to study $name1 $s1"
+set_env $s1
+echo "Calling compare_DA ($LOGNAME $workspace $s1) $user2 $ws2 $s2 $name1 $name2"
+./compare_DA $user2 $ws2 $s2 $name1 $name2
+echo "Calling plot_DA ($LOGNAME $workspace $s1) $user2 $ws2 $s2 $name1 $name2" 
+./plot_DA $user2 $ws2 $s2 $name1 $name2

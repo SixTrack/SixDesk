@@ -1,0 +1,40 @@
+#!/bin/sh
+# Expand macros in all files beginning "my"xxx
+# and store expanded file as xxx
+# remove "x" executable from dot_* files
+# The files to be processed are listed in allscripts
+# ...First we make a backup copy in backup, for emergencies
+BACKUP=backup
+mkdir -p $BACKUP
+cp allmyseds $BACKUP
+cp allscripts $BACKUP
+while read line
+do
+  if test "$line" != ""
+  then
+    cp $line $BACKUP
+    f2=`echo $line | cut -c1-2`  
+    if test "$f2" = "my"
+    then
+      f3=`echo "$line" | cut -c3-`
+      cp $f3 $BACKUP
+      sed -f allmyseds "$line" > tmp$$
+      mv tmp$$ $f3
+      chmod 755 $f3
+      dot=`echo $f3 | cut -c1-3`
+      if test "$dot" = "dot"
+      then
+        chmod 644 $f3
+      fi
+      cp $f3 ..
+    else
+      c1=`echo "$line" | cut -c1`
+      if test "$c1" != "#"
+      then
+        cp $line ..
+      fi
+    fi    
+  fi
+done < allscripts
+# and now handle recall_workspace which should be in sixjobs/..
+mv ../recall_workspace ../../

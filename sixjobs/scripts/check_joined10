@@ -1,0 +1,17 @@
+#!/bin/sh
+. ./dot_env
+mydir=$PWD
+rm -f joined10
+find track/1/simul/64.31_59.32/8-30 -name fort.10.gz > all_joined
+while read where
+do
+  cp $where my10.gz
+  gunzip my10
+  while read aline
+  do
+  amps=`echo "$aline" | cut -d" " -f7-8,26-27`
+  echo "$amps" >> $mydir/joined10
+  done < my10
+rm my10
+done < all_joined
+rm all_joined

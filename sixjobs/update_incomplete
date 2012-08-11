@@ -1,0 +1,160 @@
+#!/bin/sh
+#
+# Update incomplete_cases, in case of overlap or manual intervention
+#
+. ./dot_env
+if test -s $sixdeskstudy/sixdesklock
+then
+  if test ! -w $sixdeskstudy/sixdesklock
+  then
+
+#MACRO mymess 0 The $sixdeskstudy sixdesklock is ON; giving up!
+    sixdeskmesslevel=0
+    sixdeskmess="The $sixdeskstudy sixdesklock is ON; giving up!"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 0
+    sixdeskexitparam=0
+    sixdeskexit
+#MACRO myexit
+
+  fi
+fi
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+
+#MACRO mylock $sixdeskwork
+###sixdesklockdir=$sixdeskwork
+###sixdesklock
+#MACRO mylock
+
+cases=0
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+
+#MACRO mymess 0 Found $cases cases, $ccases complete ($icases incomplete)
+sixdeskmesslevel=0
+sixdeskmess="Found $cases cases, $ccases complete ($icases incomplete)"
+sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymktmp tmp $sixdeskwork
+sixdesktmpname=tmp
+sixdesktmpdirarg=$sixdeskwork
+sixdeskmktmp
+tmp=$sixdesktmp
+#MACRO mymktmp
+
+
+#MACRO mymktmp copy $sixdeskwork
+sixdesktmpname=copy
+sixdesktmpdirarg=$sixdeskwork
+sixdeskmktmp
+copy=$sixdesktmp
+#MACRO mymktmp
+
+cp $sixdeskwork/incomplete_cases $copy
+while read Runnam
+do
+
+#MACRO myrundir $Runnam Rundir
+  runnamename=$Runnam
+  sixdeskrundir
+  Rundir=$rundirname
+#MACRO myrundir
+
+  where=$sixdesktrack/$Rundir
+  if test -s $where/fort.10.gz
+  then
+
+#MACRO mymess 0 $Runnam in $sixdesktrack/$Rundir is complete
+    sixdeskmesslevel=0
+    sixdeskmess="$Runnam in $sixdesktrack/$Rundir is complete"
+    sixdeskmess
+#MACRO mymess
+
+    sed -e'/^'$Runnam'$/d' $sixdeskwork/incomplete_cases > $tmp
+    mv $tmp $sixdeskwork/incomplete_cases
+    if test -s $sixdeskwork/completed_cases
+    then
+      sed -e'/^'$Runnam'$/d' $sixdeskwork/completed_cases > $tmp
+      mv $tmp $sixdeskwork/completed_cases
+    fi
+    echo $Runnam >> $sixdeskwork/completed_cases
+
+#MACRO mymess 0 $Runnam added to completed_cases
+    sixdeskmesslevel=0
+    sixdeskmess="$Runnam added to completed_cases"
+    sixdeskmess
+#MACRO mymess
+
+    rm -f $where/JOB_NOT_YET_COMPLETED
+  fi
+done < $copy
+rm -f $copy
+rm -f $tmp
+cases=0
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+
+#MACRO mymess 0 Now   $cases cases, $ccases complete ($icases incomplete)
+sixdeskmesslevel=0
+sixdeskmess="Now   $cases cases, $ccases complete ($icases incomplete)"
+sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskwork
+###sixdesklockdir=$sixdeskwork
+###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

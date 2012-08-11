@@ -1,0 +1,232 @@
+% This is  slreport.sty in text format, as of 12 January, 1990.
+%
+%
+% This is an option of LaTeX's article style and is supposed to be
+% suitable for Divisional Reports in CERN SL Division. It is based on
+% the old LEPREPT style and includes the 12pt option
+% of LaTeX article style and thereafter contains only
+% the code for those things which are different.
+% We have tried to keep the changes as few as possible, mainly
+% in the arrangement of the title page and style of section headings.
+% All changes are indicated with a comment line like this:
+%%                         Modified at 12:03:02 on 26 Sep 1988 by JOWETT
+% Additional files needed (beyond standard LaTeX):
+%      a4.sty
+ 
+\typeout{==> slreport style option, version of 20 June 1990}
+\typeout{==> This style option is meant to be suitable for SL Divisional reports.}
+ 
+\input art12.sty   % we start from 12pt article style and change a few
+                   % things.
+ 
+ 
+ 
+\input a4.sty %  changes page dimensions to European and
+              %  repositions text on the page (for IBM3812 printer).
+ 
+% The next part is copied from art12.doc and modified to change the
+% styles of various sorts of headings.
+% Most modifications are clearly marked with comments like this:
+%%                         Modified at 09:37:16 on 11 Oct 1988 by JOWETT
+ 
+%    ****************************************
+%    *             SECTIONS                 *
+%    ****************************************
+%
+ 
+% \secdef{UNSTARCMDS}{STARCMDS} :
+%    When defining a sectionioning command without using
+%    \@startsection, you can use \secdef as follows:
+%       \def\part { ... \secdef \CMDA \CMDB }
+%       \def\CMDA  [#1]#2{ ... }     % Command to define \part[...]{...}
+%       \def\CMDB  #1{ ... }         % Command to define \part*{...}
+ 
+\def\part{\par               % New paragraph
+   \addvspace{4ex}           % Adds vertical space above title.
+   \@afterindentfalse        % Suppresses indent in first paragraph.  Change
+   \secdef\@part\@spart}     % to \@afterindenttrue to have indent.
+ 
+\def\@part[#1]#2{\ifnum \c@secnumdepth >\m@ne    % IF secnumdepth > -1
+        \refstepcounter{part}                    %  THEN step part counter
+        \addcontentsline{toc}{part}{\thepart     %       add toc line
+        \hspace{1em}#1}\else                     %  ELSE add unnumbered line
+      \addcontentsline{toc}{part}{#1}\fi         % FI
+   { \parindent 0pt \raggedright
+    \ifnum \c@secnumdepth >\m@ne   % IF secnumdepth > -1
+      \Large \bf Part \thepart     %   THEN Print 'Part' and
+      \par\nobreak                 %          number in \Large boldface.
+    \fi                            % FI
+    \huge \bf                      % Select \huge boldface.
+    #2\markboth{}{}\par }          % Print title and set heading marks null.
+    \nobreak                       % TeX penalty to prevent page break.
+    \vskip 3ex                     % Space between title and text.
+   \@afterheading                  % Routine called after part and
+    }                              %     section heading.
+ 
+% Heading for \part* command
+\def\@spart#1{{\parindent 0pt \raggedright
+    \huge \bf
+    #1\par}                         % Title.
+    \nobreak                        % TeX penalty to prevent page break.
+    \vskip 3ex                      % Space between title and text.
+    \@afterheading                  % Routine called after part and
+  }                                 %     section heading.
+ 
+% \@startsection {NAME}{LEVEL}{INDENT}{BEFORESKIP}{AFTERSKIP}{STYLE}
+%            optional * [ALTHEADING]{HEADING}
+%    Generic command to start a section.
+%    NAME       : e.g., 'subsection'
+%    LEVEL      : a number, denoting depth of section -- e.g., section=1,
+%                 subsection = 2, etc.  A section number will be printed if
+%                 and only if LEVEL < or = the value of the secnumdepth
+%                 counter.
+%    INDENT     : Indentation of heading from left margin
+%    BEFORESKIP : Absolute value = skip to leave above the heading.
+%                 If negative, then paragraph indent of text following
+%                 heading is suppressed.
+%    AFTERSKIP  : if positive, then skip to leave below heading,
+%                       else - skip to leave to right of run-in heading.
+%    STYLE      : commands to set style
+%  If '*' missing, then increments the counter.  If it is present, then
+%  there should be no [ALTHEADING] argument.  A sectioning command
+%  is normally defined to \@startsection + its first six arguments.
+ 
+\def\section{\@startsection {section}{1}{\z@}{-3.5ex plus -1ex minus
+    -.2ex}{2.3ex plus .2ex}{\large\bf}}
+ 
+\def\subsection{\@startsection{subsection}{2}{\z@}{-3.25ex plus -1ex minus
+   -.2ex}{1.5ex plus .2ex}{\normalsize\bf}}
+ 
+\def\subsubsection{\@startsection{subsubsection}{3}{\z@}{-3.25ex plus
+ -1ex minus -.2ex}{1.5ex plus .2ex}{\normalsize\sc}}
+ 
+\def\paragraph{\@startsection
+   {paragraph}{4}{\z@}{-2.25ex plus 1ex minus .2ex}{1em}{\normalsize\bf}}
+%              * * -3.25ex-> -2.25ex at 17:36:40 on 30 Nov 1987 by JOWETT
+% Sign changes for BEFORE&AFTERSKIP  at 15:09:43 on 30 Nov 1987 by JOWETT
+% Makes unnumbered headings without running in to text (subparagraph will
+% still do that for you).
+ 
+\def\subparagraph{\@startsection
+     {subparagraph}{4}{\parindent}{3.25ex plus 1ex minus
+     .2ex}{-1em}{\normalsize\sl}}
+ 
+ 
+% Default initializations of \...mark commands.  (See below for their
+% use in defining page styles.
+%
+ 
+% \def\sectionmark#1{}           % Preloaded definitions
+% \def\subsectionmark#1{}
+% \def\subsubsectionmark#1{}
+% \def\paragraphmark#1{}
+% \def\subparagraphmark#1{}
+ 
+% The value of the counter secnumdepth gives the depth of the
+% highest-level sectioning command that is to produce section numbers.
+%
+ 
+\setcounter{secnumdepth}{3}
+ 
+% APPENDIX
+%
+% The \appendix command must do the following:
+%    -- reset the section and subsection counters to zero
+%    -- redefine the section counter to produce appendix numbers
+%    -- redefine the \section command if appendix titles and headings are
+%       to look different from section titles and headings.
+ 
+\def\appendix{\par
+  \setcounter{section}{0}
+  \setcounter{subsection}{0}
+  \def\thesection{\Alph{section}}}
+ 
+ 
+%-----------------------------------------------------------------------
+% THE REMAINDER OF THIS FILE CONSISTS OF ADDITIONS TO ART12.DOC RATHER
+% THAN JUST MODIFICATIONS.
+ 
+%************************************************************************
+%************************** TITLE PAGE LAYOUT ***************************
+%************************************************************************
+ 
+% Copy following definition from ARTICLE.DOC so that we can set the
+% whole title page the way we want.
+\def\maketitle{\par
+ \begingroup
+   \def\thefootnote{\fnsymbol{footnote}}
+   \def\@makefnmark{\hbox
+       to 0pt{$^{\@thefnmark}$\hss}}
+     \newpage
+     \global\@topnum\z@    % Prevents figures from going at top of page.
+     \@maketitle \thispagestyle{empty}
+     \@thanks
+ \newpage
+ \endgroup
+ \setcounter{footnote}{0}
+ \let\maketitle\relax
+ \let\@maketitle\relax
+ \gdef\@textofabstract{}                       %just to save memory
+ \gdef\@thanks{}\gdef\@author{}\gdef\@title{}\let\thanks\relax}
+ 
+\def\@maketitle{
+ \begin{center} EUROPEAN ORGANIZATION FOR NUCLEAR RESEARCH \\
+ \end{center}\par
+ \vskip 5mm
+%
+% Here we put the typists name at top left and the document  label at the
+% top right.  Defaults are an empty box for typist and "Preliminary
+% draft" with date and time made for the label.
+% Tabular environments are used to allow for the
+% possibility of multiple line document labels - lines separated by \\
+% in the argument of \documentlabel - and multiple line typists (which
+% could have other uses ...
+%
+  \begin{tabular}{l} \footnotesize\@typist
+  \end{tabular}  \hfill   \begin{tabular}{r} \@documentlabel
+                          \end{tabular}
+  \vspace{\fill}                             %Vertical space above title.
+ \begin{center}
+   \LARGE\bf \@title\\[1.5em] % Title set in \Large, not \LARGE, size.
+%%                         Modified at 11:22:08 on 20 Jun 1990 by JOWETT
+  {\large                       % each author set in \large, in a
+   \lineskip .5em               % tabular environment
+   \begin{tabular}[t]{c}\@author
+   \end{tabular}}\\[2em]
+  {\small\bf Abstract}\\[.5ex]
+ \end{center}
+  \quotation\@textofabstract
+  \vspace{\fill}
+ \begin{center}
+  {\normalsize Geneva, Switzerland}\\[.5em]
+  {\normalsize \@date}
+ \end{center}
+ }
+ 
+% compute the time in hours and minutes; make new variables \timehh and \timemm
+%
+\newcount\timehh\newcount\timemm
+\timehh=\time
+\divide\timehh by 60 \timemm=\time
+\count255=\timehh\multiply\count255 by -60 \advance\timemm by \count255
+%
+\def\timeofday{\ifnum\timehh<10 0\fi\number\timehh:%
+               \ifnum\timemm<10 0\fi\number\timemm
+               }
+ 
+\def\documentlabel#1{\gdef\@documentlabel{#1}}       %see \@maketitle
+\gdef\@documentlabel{\tt Preliminary draft\ \timeofday\ \today}
+%%                         Modified at 17:59:50 on 23 Sep 1988 by JOWETT
+ 
+\def\typist#1{\gdef\@typist{#1}}          % see \@maketitle
+\gdef\@typist{\hbox{}}
+% The \documentlabel and \typist commands do not exist in ordinary LaTeX.
+ 
+% Let abstract work as a declaration instead of an environment.
+\long\def\abstract#1{\global\long\def\@textofabstract{#1}}%see \@maketitle
+\global\long\def\@textofabstract{{\tt Please  supply a concise
+                                      abstract to fill this space!}
+                                }
+ 
+\def\endabstract{}  % to kill the previously defined environment
+ 

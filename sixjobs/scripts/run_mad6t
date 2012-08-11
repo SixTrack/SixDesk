@@ -1,0 +1,38 @@
+#!/bin/ksh
+# Now it just handles the -i parameter for running interactively
+# and then calls dorun_mad6t which expects $1/$2 for dot_env
+# It makes mad6t_interactive non-empty for an interactive run
+# and the dorun_mad6t nullifies it. (Should find a better way.)
+#
+param1=""
+param2=""
+touch mad6t_interactive
+if test $# -ne 0
+then
+  if test "$1" = "-i"
+  then
+    echo "true" > mad6t_interactive
+  else
+    param1=$1
+  fi
+  if test $# -ge 2
+  then
+    if test "$2" = "-i"
+    then
+      echo "true" > mad6t_interactive
+    else
+      param2=$2
+    fi
+  fi
+  if test $# -ge 3
+  then
+    if test "$3" = "-i"
+    then
+      echo "true" > mad6t_interactive
+    else
+      echo "Unrecognisable run_mad6t parameters!!!"
+      exit 1
+    fi
+  fi
+fi
+./dorun_mad6t $param1 $param2

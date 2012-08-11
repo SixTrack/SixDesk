@@ -1,0 +1,40 @@
+#!/bin/sh
+# Unlock current directory or $1
+#
+# Set up some local values
+export sixdeskhostname=`hostname`
+export sixdeskname=`basename $0`
+export sixdeskroot=`basename $PWD`
+export sixdeskwhere=`dirname $PWD`
+export sixdesklevel=1
+export sixdeskhome="."
+export sixdeskecho="yes!"
+if test "$sixdeskroot" != "sixjobs"
+then
+  echo "This script must be run in the directory sixjobs!!!"
+  exit 1
+fi
+if test ! -s dot_profile
+then
+  echo "dot_profile is missing!!!"
+  exit 1
+fi
+. dot_profile
+if test $# -ne 0
+then 
+  sixdesklockdir=$1
+else
+  sixdesklockdir=$PWD
+fi
+lockfile=$sixdesklockdir/sixdesklock
+if test ! -f $lockfile
+then
+   echo "The lockfile $lockfile does not exist!!!"
+else
+  if test ! -w "$lockfile" 
+  then
+    myunlock $sixdesklockdir
+  else
+    echo "The lock $lockfile is not locked!!!"
+  fi
+fi

@@ -1,0 +1,47 @@
+#!/bin/ksh
+#BSUB -J SIXJOBNAME   	# job name
+
+STAGE_HOST=stageslap
+export STAGE_HOST
+junktmp=SIXJUNKTMP
+export junktmp
+TRACKDIR=SIXTRACKDIR
+CASTOR=SIXCASTOR
+CASTORDIR=$CASTOR_HOME/direct_track/SIXJOBDIR
+pwd		# where am I?
+touch $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_COMPLETED
+rm -f $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_STARTED
+# copy compressed fortran files from the designated"job"  directory to our work dir
+# pick up inputfiles
+cp $TRACKDIR/SIXJOBDIR/fort.2.gz .
+cp $TRACKDIR/SIXJOBDIR/fort.3.gz .
+cp $TRACKDIR/SIXJOBDIR/fort.8.gz .
+cp $TRACKDIR/SIXJOBDIR/fort.16.gz .
+gunzip fort.2.gz
+gunzip fort.3.gz
+gunzip fort.8.gz
+gunzip fort.16.gz
+
+#get  sixtrack image
+cp SIXTRACKEXE sixtrack
+ls -al
+./sixtrack > fort.6  
+ls -al
+tail -100 fort.6
+
+if [ ! -s fort.10 ];then
+  rm -f fort.10
+fi
+gzip fort.*
+cp fort.10.gz $TRACKDIR/SIXJOBDIR/
+if test "$CASTOR" = "true"
+then
+  export RFIO_USE_CASTOR_V2="YES"
+  export STAGE_HOST="castorpublic"
+  export STAGE_SVCCLASS="default"
+  nsrm -rf $CASTORDIR
+  nsmkdir -p $CASTORDIR
+  tar cvf SIXJOBNAME.tar fort.*.gz
+  rfcp SIXJOBNAME.tar $CASTORDIR
+fi
+rm -f $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_COMPLETED

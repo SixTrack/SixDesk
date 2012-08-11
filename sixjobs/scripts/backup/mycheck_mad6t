@@ -1,0 +1,110 @@
+#!/bin/sh
+#
+# Do some validity checks on the run_mad6t
+#
+. ./dot_env
+mymess 0 "Checking $LHCDescrip"
+jobs=`bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t`
+if test "$jobs" != ""
+then
+  echo "There appear to be some mad6t jobs still not finished"
+  bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t
+  myexit 1
+fi
+njobs=`expr $iendmad - $istamad`
+njobs=`expr $njobs + 1`
+twos=0
+fours=0
+sixes=0
+eights=0
+i=$istamad
+while test "$i" -le "$iendmad"
+do
+  ls -l $sixtrack_input/fort.2_$i.gz > /dev/null 2>&1
+  if test $? -eq 0
+  then
+    twos=`expr $twos + 1`
+  fi
+  ls -l $sixtrack_input/fort.8_$i.gz > /dev/null 2>&1
+  if test $? -eq 0
+  then
+    eights=`expr $eights + 1`
+  fi
+  ls -l $sixtrack_input/fort.16_$i.gz > /dev/null 2>&1
+  if test $? -eq 0
+  then
+    sixes=`expr $sixes + 1`
+  fi
+  if test "$fort_34" != ""
+  then
+    ls -l $sixtrack_input/fort.34_$i.gz > /dev/null 2>&1
+    if test $? -eq 0
+    then
+      fours=`expr $fours + 1`
+    fi
+  fi
+  i=`expr $i + 1` 
+done
+if test "$twos" -ne "$njobs" -o "$sixes" -ne "$njobs" -o "$eights" -ne "$njobs"
+then
+  mymess 0  "Discrepancy!!! Expected $njobs: found $twos fort.2s, $eights fort.8s and $sixes fort.16s in $sixtrack_input" 
+  myexit 2
+else
+  mess34=""
+  if test "$fort_34" != ""
+  then
+    if test "$fours" -ne "$njobs"
+    then
+      mymess 0  "Discrepancy!!! Expected $njobs: found $fours fort.34s in $sixtrack_input"
+      myexit 2
+    else
+      mess34="fort.34_"
+    fi
+  fi
+  mymess 0 "Found $njobs fort.2_ fort.8_ fort.16_ $mess34"
+fi
+if test ! -s $sixtrack_input/fort.3.mother1 \
+     -o ! -s $sixtrack_input/fort.3.mother2
+then
+  mymess 0 "Could not find fort.3.mother1/2 in $sixtrack_input"
+  myexit 3
+else
+  mymess 0 "....... and fort.3.mother1 and fort.3.mother2"
+fi
+if test "$CORR_TEST" -ne 0 -a ! -s "$sixtrack_input/CORR_TEST"
+then
+  rm -f $sixtrack_input/MCSSX_errors
+  rm -f $sixtrack_input/MCOSX_errors
+  rm -f $sixtrack_input/MCOX_errors
+  rm -f $sixtrack_input/MCSX_errors
+  rm -f $sixtrack_input/MCTX_errors
+  sixdeskmiss=0
+  i=$istamad
+  while test "$i" -le "$iendmad"
+  do
+    for j in MCSSX MCOSX MCOX MCSX MCTX 
+    do
+      if test -f $sixtrack_input/$j"_errors_"$i
+      then
+        cat  $sixtrack_input/$j"_errors_"$i >> $sixtrack_input/$j"_errors"
+      else
+        sixdeskmiss=`expr $sixdeskmiss + 1`
+      fi
+    done
+    i=`expr $i + 1` 
+  done
+  if test "$sixdeskmiss" -eq 0
+  then
+    echo "CORR_TEST MC_error files copied" > "$sixtrack_input/CORR_TEST"
+    mymess 0 "CORR_TEST MC_error files copied"
+  else
+    mymess 0 "$sixdeskmiss MC_error files could not be found!!!"
+    myexit 5
+  fi
+fi
+mymess 0 "All the mad6t jobs appear to have completed successfully"
+mymess 0 "using madx -X Version $MADX in $MADX_PATH"
+mymess 0 "Please check the sixtrack_input directory as the mad6t"
+mymess 0 "runs may have failed and just produced empty files!!!"
+mymess 0 "All jobs/logs/output are in sixtrack_input/mad.run_mad6t directories"
+myexit 0

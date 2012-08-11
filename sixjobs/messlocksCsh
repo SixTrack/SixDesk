@@ -1,0 +1,602 @@
+=====================
+DAsurv.tex
+Files DAsurv.tex and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/DAsurv.tex are identical
+=====================
+README
+Files README and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/README are identical
+=====================
+acrontab.entry
+Files acrontab.entry and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/acrontab.entry are identical
+=====================
+backup.txt
+Files backup.txt and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/backup.txt are identical
+=====================
+backup_study
+Files backup_study and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/backup_study are identical
+=====================
+backup_workspace
+Files backup_workspace and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/backup_workspace are identical
+=====================
+bin (directory)
+=====================
+=====================
+castorbackup
+Files castorbackup and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/castorbackup are identical
+=====================
+castorrecall
+Files castorrecall and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/castorrecall are identical
+=====================
+corr9394
+Files corr9394 and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/corr9394 are identical
+=====================
+correl
+Files correl and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/correl are identical
+=====================
+dalie4
+Files dalie4 and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/dalie4 are identical
+=====================
+dalie6
+Files dalie6 and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/dalie6 are identical
+=====================
+dynsumtunres
+Files dynsumtunres and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/dynsumtunres are identical
+=====================
+joinf10
+Files joinf10 and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/joinf10 are identical
+=====================
+read10
+Files read10 and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/read10 are identical
+=====================
+read10a
+Files read10a and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/read10a are identical
+=====================
+read10b
+Files read10b and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/read10b are identical
+=====================
+readda
+Files readda and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/readda are identical
+=====================
+readdp
+Files readdp and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/readdp are identical
+=====================
+readplot
+Files readplot and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/readplot are identical
+=====================
+readplotb
+Files readplotb and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/readplotb are identical
+=====================
+readweb
+Files readweb and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/readweb are identical
+=====================
+repair
+Files repair and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/repair are identical
+=====================
+resonance
+Files resonance and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/resonance are identical
+=====================
+sixcpin
+Files sixcpin and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/sixcpin are identical
+=====================
+sixcpout
+Files sixcpout and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/sixcpout are identical
+=====================
+sixdir
+Files sixdir and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/sixdir are identical
+=====================
+sixmkdir
+Files sixmkdir and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/sixmkdir are identical
+=====================
+sixrename
+Files sixrename and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/sixrename are identical
+=====================
+sixrm
+Files sixrm and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/sixrm are identical
+=====================
+sixtouch
+Files sixtouch and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/sixtouch are identical
+=====================
+structot
+Files structot and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/structot are identical
+=====================
+sumtunres
+Files sumtunres and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/sumtunres are identical
+=====================
+sussix
+Files sussix and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bin/sussix are identical
+/afs/cern.ch/user/m/mcintosh/w1julpro/sixjobs
+=====================
+bnl_arrays
+Files bnl_arrays and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bnl_arrays are identical
+=====================
+bnl_results
+77,78c77,78
+< #MACRO mymess 2 Before/after this download $cases mycases, $ccases complete ($icases incomplete)
+<   sixdeskmesslevel=2
+---
+> #MACRO mymess 1 Before/after this download $cases mycases, $ccases complete ($icases incomplete)
+>   sixdeskmesslevel=1
+167,168c167,168
+<   sixdesklockdir=$sixdeskwork
+<   sixdesklock
+---
+> ###  sixdesklockdir=$sixdeskwork
+> ###  sixdesklock
+174,175c174,175
+<   sixdesklockdir=$sixdeskwork
+<   sixdeskunlock
+---
+> ###  sixdesklockdir=$sixdeskwork
+> ###  sixdeskunlock
+205,206c205,206
+< sixdesklockdir=$sixdeskwork
+< sixdeskunlock
+---
+> ###sixdesklockdir=$sixdeskwork
+> ###sixdeskunlock
+264,265c264,265
+< #MACRO mymess 0 Checking TaskGroup $mytgid for $LHCDescrip
+<   sixdeskmesslevel=0
+---
+> #MACRO mymess 2 Checking TaskGroup $mytgid for $LHCDescrip
+>   sixdeskmesslevel=2
+275,276c275,276
+< #MACRO mymess 1 Problem with query ReadyResults Status $stat `cat $tmp`
+<     sixdeskmesslevel=1
+---
+> #MACRO mymess 0 Problem with query ReadyResults Status $stat `cat $tmp`
+>     sixdeskmesslevel=0
+310,311c310,311
+< #MACRO mymess 0 Out of $tot Tasks $ready Results are available
+<   sixdeskmesslevel=0
+---
+> #MACRO mymess 1 Out of $tot Tasks $ready Results are available
+>   sixdeskmesslevel=1
+347,348c347,348
+< #MACRO mymess 1 The workspace/LHCDescrip $sixdeskboincdirname are already in use by $sixdeskowner!!!
+<       sixdeskmesslevel=1
+---
+> #MACRO mymess 0 The workspace/LHCDescrip $sixdeskboincdirname are already in use by $sixdeskowner!!!
+>       sixdeskmesslevel=0
+388,389c388,389
+< #MACRO mymess 0 $ready Results are available
+<   sixdeskmesslevel=0
+---
+> #MACRO mymess 1 $ready Results are available
+>   sixdeskmesslevel=1
+440,441c440,441
+< #MACRO mymess 0 Now treating TaskID $taskid
+<   sixdeskmesslevel=0
+---
+> #MACRO mymess 2 Now treating TaskID $taskid
+>   sixdeskmesslevel=2
+547,548c547,548
+< #MACRO mymess 0 Task $taskid for job $Runnam found in $Rundir
+<     sixdeskmesslevel=0
+---
+> #MACRO mymess 1 Task $taskid for job $Runnam found in $Rundir
+>     sixdeskmesslevel=1
+557,558c557,558
+< #MACRO mymess 1 Task $taskid can NOT be found in $sixdeskwork/taskids !!! Deleting result from the server
+<     sixdeskmesslevel=1
+---
+> #MACRO mymess 0 Task $taskid can NOT be found in $sixdeskwork/taskids !!! Deleting result from the server
+>     sixdeskmesslevel=0
+571,572c571,572
+< #MACRO mymess 1 Strange the directory $where for task $taskid does NOT exist!!! We shall ignore this result for the moment
+<       sixdeskmesslevel=1
+---
+> #MACRO mymess 0 Strange the directory $where for task $taskid does NOT exist!!! We shall ignore this result for the moment
+>       sixdeskmesslevel=0
+644,645c644,645
+< #MACRO mymess 1 Cannot find Runnam $Runnam in title.dat !!!; wrong results???
+<             sixdeskmesslevel=1
+---
+> #MACRO mymess 0 Cannot find Runnam $Runnam in title.dat !!!; wrong results???
+>             sixdeskmesslevel=0
+661,662c661,662
+< #MACRO mymess 2 ${bfiles[$i]} appears to be MISSING!!!
+<                 sixdeskmesslevel=2
+---
+> #MACRO mymess 0 ${bfiles[$i]} appears to be MISSING!!!
+>                 sixdeskmesslevel=0
+686,687c686,687
+< #MACRO mymess 2 Checking Duplicates $Runnam
+<               sixdeskmesslevel=2
+---
+> #MACRO mymess 0 Checking Duplicates $Runnam
+>               sixdeskmesslevel=0
+702,703c702,703
+< #MACRO mymess 2 BNL DIFF ${bfiles[$i]} $where!!!
+<                     sixdeskmesslevel=2
+---
+> #MACRO mymess 0 BNL DIFF ${bfiles[$i]} $where!!!
+>                     sixdeskmesslevel=0
+718,719c718,719
+< #MACRO mymess 2 ${bfiles[$i]}.gz is NOT duplicated!
+<                   sixdeskmesslevel=2
+---
+> #MACRO mymess 0 ${bfiles[$i]}.gz is NOT duplicated!
+>                   sixdeskmesslevel=0
+728,729c728,729
+< #MACRO mymess 2 No duplication of beambeam-output.dat
+<               sixdeskmesslevel=2
+---
+> #MACRO mymess 0 No duplication of beambeam-output.dat
+>               sixdeskmesslevel=0
+738,739c738,739
+< #MACRO mymess 2 Seem to have duplicated result $Runnam
+<               sixdeskmesslevel=2
+---
+> #MACRO mymess 0 Seem to have duplicated result $Runnam
+>               sixdeskmesslevel=0
+769,770c769,770
+< #MACRO mymess 1 Download of task $taskid FAILED!!! Status $stat Message `cat down` or empty tar file
+<           sixdeskmesslevel=1
+---
+> #MACRO mymess 0 Download of task $taskid FAILED!!! Status $stat Message `cat down` or empty tar file
+>           sixdeskmesslevel=0
+790,796c790
+< 
+< #MACRO mymess 1 `ls -l sixres.tar.gz`
+<             sixdeskmesslevel=1
+<             sixdeskmess="`ls -l sixres.tar.gz`"
+<             sixdeskmess
+< #MACRO mymess
+< 
+---
+>             mymess00 "`ls -l sixres.tar.gz`"
+816,817c810,811
+< #MACRO mymess 1 Untar of sixres.tar failed!!!
+<               sixdeskmesslevel=1
+---
+> #MACRO mymess 0 Untar of sixres.tar failed!!!
+>               sixdeskmesslevel=0
+823,824c817,818
+< #MACRO mymess 1 `ls -l sixres.tar`
+<               sixdeskmesslevel=1
+---
+> #MACRO mymess 0 `ls -l sixres.tar`
+>               sixdeskmesslevel=0
+830,831c824,825
+< #MACRO mymess 1 `cat $where/mess`
+<               sixdeskmesslevel=1
+---
+> #MACRO mymess 0 `cat $where/mess`
+>               sixdeskmesslevel=0
+846,847c840,841
+< #MACRO mymess 1 Sixtrack untar has not produced a sixtrack directory!!!
+<               sixdeskmesslevel=1
+---
+> #MACRO mymess 0 Sixtrack untar has not produced a sixtrack directory!!!
+>               sixdeskmesslevel=0
+853,854c847,848
+< #MACRO mymess 1 `ls -l sixres.tar`
+<               sixdeskmesslevel=1
+---
+> #MACRO mymess 0 `ls -l sixres.tar`
+>               sixdeskmesslevel=0
+860,861c854,855
+< #MACRO mymess 1 `cat mess`
+<               sixdeskmesslevel=1
+---
+> #MACRO mymess 0 `cat mess`
+>               sixdeskmesslevel=0
+905,906c899,900
+< #MACRO mymess 2 `cat headmess`
+<               sixdeskmesslevel=2
+---
+> #MACRO mymess 1 `cat headmess`
+>               sixdeskmesslevel=1
+915,916c909,910
+< #MACRO mymess 1 Cannot find Runnam $Runnam in fort.6 !!!; wrong results???
+<                 sixdeskmesslevel=1
+---
+> #MACRO mymess 0 Cannot find Runnam $Runnam in fort.6 !!!; wrong results???
+>                 sixdeskmesslevel=0
+932,933c926,927
+< #MACRO mymess 2 ${bforts[$i]} appears to be MISSING!!!
+<                     sixdeskmesslevel=2
+---
+> #MACRO mymess 0 ${bforts[$i]} appears to be MISSING!!!
+>                     sixdeskmesslevel=0
+957,958c951,952
+< #MACRO mymess 2 Checking Duplicates $Runnam
+<                   sixdeskmesslevel=2
+---
+> #MACRO mymess 0 Checking Duplicates $Runnam
+>                   sixdeskmesslevel=0
+973,974c967,968
+< #MACRO mymess 2 BNL DIFF ${bfiles[$i]} $where!!!
+<                         sixdeskmesslevel=2
+---
+> #MACRO mymess 0 BNL DIFF ${bfiles[$i]} $where!!!
+>                         sixdeskmesslevel=0
+990,991c984,985
+< #MACRO mymess 2 ${bfiles[$i]}.gz is NOT duplicated!
+<                       sixdeskmesslevel=2
+---
+> #MACRO mymess 0 ${bfiles[$i]}.gz is NOT duplicated!
+>                       sixdeskmesslevel=0
+1000,1001c994,995
+< #MACRO mymess 2 No duplication of beambeam-output.dat
+<                   sixdeskmesslevel=2
+---
+> #MACRO mymess 0 No duplication of beambeam-output.dat
+>                   sixdeskmesslevel=0
+1010,1011c1004,1005
+< #MACRO mymess 2 Seem to have duplicated result $Runnam
+<                   sixdeskmesslevel=2
+---
+> #MACRO mymess 0 Seem to have duplicated result $Runnam
+>                   sixdeskmesslevel=0
+1043,1044c1037,1038
+< #MACRO mymess 0 CASTOR of $Runnam.tar to $CASTOR
+<                   sixdeskmesslevel=0
+---
+> #MACRO mymess 1 CASTOR of $Runnam.tar to $CASTOR
+>                   sixdeskmesslevel=1
+1066,1067c1060,1061
+< #MACRO mymess 1 Tar $Runnam.tar $where/.*.gz failed!!!
+<                     sixdeskmesslevel=1
+---
+> #MACRO mymess 0 Tar $Runnam.tar $where/.*.gz failed!!!
+>                     sixdeskmesslevel=0
+1073,1074c1067,1068
+< #MACRO mymess 1 `cat $tmp`
+<                     sixdeskmesslevel=1
+---
+> #MACRO mymess 0 `cat $tmp`
+>                     sixdeskmesslevel=0
+1089,1090c1083,1084
+< #MACRO mymess 1 Copy to CASTOR failed!!! rfcp $where/sixtrack/$Runnam.tar $CASTOR
+<                       sixdeskmesslevel=1
+---
+> #MACRO mymess 0 Copy to CASTOR failed!!! rfcp $where/sixtrack/$Runnam.tar $CASTOR
+>                       sixdeskmesslevel=0
+1096,1097c1090,1091
+< #MACRO mymess 1 `cat $tmp`
+<                       sixdeskmesslevel=1
+---
+> #MACRO mymess 0 `cat $tmp`
+>                       sixdeskmesslevel=0
+1135,1136c1129,1130
+< #MACRO mymess 2 BNL download complete, updating completed jobs etc
+<     sixdeskmesslevel=2
+---
+> #MACRO mymess 0 BNL download complete, updating completed jobs etc
+>     sixdeskmesslevel=0
+1143,1144c1137,1138
+<     sixdesklockdir=$sixdeskwork
+<     sixdesklock
+---
+> ###    sixdesklockdir=$sixdeskwork
+> ###    sixdesklock
+1284,1285c1278,1279
+<     sixdesklockdir=$sixdeskwork
+<     sixdeskunlock
+---
+> ###    sixdesklockdir=$sixdeskwork
+> ###    sixdeskunlock
+1318,1319c1312,1313
+<       sixdesklockdir=$sixdeskjobs
+<       sixdesklock
+---
+> ###      sixdesklockdir=$sixdeskjobs
+> ###      sixdesklock
+1329,1330c1323,1324
+<       sixdesklockdir=$sixdeskjobs
+<       sixdeskunlock
+---
+> ###      sixdesklockdir=$sixdeskjobs
+> ###      sixdeskunlock
+1348,1349c1342,1343
+< #MACRO mymess 1 confirmResultDownload failed!!! `cat $tmp`
+<         sixdeskmesslevel=1
+---
+> #MACRO mymess 0 confirmResultDownload failed!!! `cat $tmp`
+>         sixdeskmesslevel=0
+1359,1360c1353,1354
+< #MACRO mymess 0 Deleting result $taskid
+<       sixdeskmesslevel=0
+---
+> #MACRO mymess 2 Deleting result $taskid
+>       sixdeskmesslevel=2
+1378,1379c1372,1373
+< #MACRO mymess 1 Download FAILED for $taskid : $where  !!!
+<       sixdeskmesslevel=1
+---
+> #MACRO mymess 0 Download FAILED for $taskid : $where  !!!
+>       sixdeskmesslevel=0
+1397,1398c1391,1392
+< #MACRO mymess 0 $taskid ignored (duplicate/redundant result)
+<     sixdeskmesslevel=0
+---
+> #MACRO mymess 2 $taskid ignored (duplicate/redundant result)
+>     sixdeskmesslevel=2
+1407,1408c1401,1402
+< #MACRO mymess 0 $taskid downloaded successfully to $where
+<     sixdeskmesslevel=0
+---
+> #MACRO mymess 2 $taskid downloaded successfully to $where
+>     sixdeskmesslevel=2
+1418,1419c1412,1413
+< #MACRO mymess 2 Before this download $cases cases, $ccases complete ($icases incomplete)
+< sixdeskmesslevel=2
+---
+> #MACRO mymess 0 Before this download $cases cases, $ccases complete ($icases incomplete)
+> sixdeskmesslevel=0
+1444,1445c1438,1439
+< sixdesklockdir=$sixdeskstudy
+< sixdeskunlock
+---
+> ###sixdesklockdir=$sixdeskstudy
+> ###sixdeskunlock
+1452,1453c1446,1447
+< sixdesklockdir=$sixdeskwork
+< sixdesklock
+---
+> ###sixdesklockdir=$sixdeskwork
+> ###sixdesklock
+1474,1475c1468,1469
+< #MACRO mymess 2 After  this download $cases cases, $ccases complete ($icases incomplete)
+< sixdeskmesslevel=2
+---
+> #MACRO mymess 0 After  this download $cases cases, $ccases complete ($icases incomplete)
+> sixdeskmesslevel=0
+1482,1483c1476,1477
+< #MACRO myunlock $sixdeskwork
+< sixdesklockdir=$sixdeskwork
+---
+> #MACRO myunlock $sixdeskstudy
+> sixdesklockdir=$sixdeskstudy
+=====================
+bresume_all
+Files bresume_all and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bresume_all are identical
+=====================
+bstop_all
+Files bstop_all and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/bstop_all are identical
+=====================
+check_all_locks
+Files check_all_locks and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/check_all_locks are identical
+=====================
+check_amps10
+Files check_amps10 and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/check_amps10 are identical
+=====================
+check_amps3
+Files check_amps3 and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/check_amps3 are identical
+=====================
+check_envs
+Files check_envs and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/check_envs are identical
+=====================
+check_incomplete
+6,7c6,7
+< #MACRO mymess 2 Checking Study $LHCDescrip
+< sixdeskmesslevel=2
+---
+> #MACRO mymess 0 Checking Study $LHCDescrip
+> sixdeskmesslevel=0
+32,33c32,33
+< #MACRO mymess 2 Found $cases cases, $ccases complete ($icases incomplete)
+< sixdeskmesslevel=2
+---
+> #MACRO mymess 0 Found $cases cases, $ccases complete ($icases incomplete)
+> sixdeskmesslevel=0
+=====================
+check_jobs
+6,7c6,7
+< #MACRO mymess 2 Checking Study $LHCDescrip
+< sixdeskmesslevel=2
+---
+> #MACRO mymess 0 Checking Study $LHCDescrip
+> sixdeskmesslevel=0
+32,33c32,33
+< #MACRO mymess 2 Found $cases cases, $ccases complete ($icases incomplete)
+< sixdeskmesslevel=2
+---
+> #MACRO mymess 0 Found $cases cases, $ccases complete ($icases incomplete)
+> sixdeskmesslevel=0
+=====================
+check_joined10
+Files check_joined10 and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/check_joined10 are identical
+=====================
+check_lock
+11,12c11,12
+< #MACRO mymess 2 check_lock: Checking lockdir $sixdesklockdir
+< sixdeskmesslevel=2
+---
+> #MACRO mymess 0 check_lock: Checking lockdir $sixdesklockdir
+> sixdeskmesslevel=0
+20,21c20,21
+< #MACRO mymess 1 check_lock: The lock directory $sixdesklockdir does not exist!!!
+<   sixdeskmesslevel=1
+---
+> #MACRO mymess 0 check_lock: The lock directory $sixdesklockdir does not exist!!!
+>   sixdeskmesslevel=0
+36,37c36,37
+< #MACRO mymess 1 check_lock: The lockfile $sixdesklockdir/sixdesklock does not exist!!!
+<   sixdeskmesslevel=1
+---
+> #MACRO mymess 0 check_lock: The lockfile $sixdesklockdir/sixdesklock does not exist!!!
+>   sixdeskmesslevel=0
+=====================
+check_locks
+Files check_locks and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/check_locks are identical
+=====================
+check_mad6t
+62,63c62,63
+< #MACRO mymess 1 Discrepancy!!! Expected $njobs: found $twos fort.2s, $eights fort.8s and $sixes fort.16s in $sixtrack_input
+<   sixdeskmesslevel=1
+---
+> #MACRO mymess 0 Discrepancy!!! Expected $njobs: found $twos fort.2s, $eights fort.8s and $sixes fort.16s in $sixtrack_input
+>   sixdeskmesslevel=0
+81,82c81,82
+< #MACRO mymess 1 Discrepancy!!! Expected $njobs: found $fours fort.34s in $sixtrack_input
+<       sixdeskmesslevel=1
+---
+> #MACRO mymess 0 Discrepancy!!! Expected $njobs: found $fours fort.34s in $sixtrack_input
+>       sixdeskmesslevel=0
+98,99c98,99
+< #MACRO mymess 2 Found $njobs fort.2_ fort.8_ fort.16_ $mess34
+<   sixdeskmesslevel=2
+---
+> #MACRO mymess 0 Found $njobs fort.2_ fort.8_ fort.16_ $mess34
+>   sixdeskmesslevel=0
+109,110c109,110
+< #MACRO mymess 1 Could not find fort.3.mother1/2 in $sixtrack_input
+<   sixdeskmesslevel=1
+---
+> #MACRO mymess 0 Could not find fort.3.mother1/2 in $sixtrack_input
+>   sixdeskmesslevel=0
+123,124c123,124
+< #MACRO mymess 2 ....... and fort.3.mother1 and fort.3.mother2
+<   sixdeskmesslevel=2
+---
+> #MACRO mymess 0 ....... and fort.3.mother1 and fort.3.mother2
+>   sixdeskmesslevel=0
+164,165c164,165
+< #MACRO mymess 1 $sixdeskmiss MC_error files could not be found!!!
+<     sixdeskmesslevel=1
+---
+> #MACRO mymess 0 $sixdeskmiss MC_error files could not be found!!!
+>     sixdeskmesslevel=0
+=====================
+check_really
+4,9d3
+< #MACRO mylock $mydir
+< sixdesklockdir=$mydir
+< sixdesklock
+< #MACRO mylock
+< 
+< 
+17,18c11,12
+< sixdesklockdir=$sixdeskwork
+< sixdesklock
+---
+> ###sixdesklockdir=$sixdeskwork
+> ###sixdesklock
+104,105c98,99
+< sixdesklockdir=$sixdeskwork
+< sixdeskunlock
+---
+> ###sixdesklockdir=$sixdeskwork
+> ###sixdeskunlock
+=====================
+check_seds
+Files check_seds and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/check_seds are identical
+=====================
+check_studies
+Files check_studies and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/check_studies are identical
+=====================
+clone_w
+Files clone_w and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/clone_w are identical
+=====================
+compare_DA
+Files compare_DA and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/compare_DA are identical
+=====================
+compare_DAS
+Files compare_DAS and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/compare_DAS are identical
+=====================
+compare_envs
+Files compare_envs and /afs/cern.ch/user/m/mcintosh/w1jul/sixjobs/compare_envs are identical
+=====================
+compare_myscripts

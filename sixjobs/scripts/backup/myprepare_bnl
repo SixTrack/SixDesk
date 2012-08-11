@@ -1,0 +1,91 @@
+#!/bin/ksh
+#
+# This script should be run before run_bnl which submits
+# the jobs or tasks or workunits
+# sixdeskenv (sysenv) should have been edited and
+# the files beambeamdist.dat, fort.2, fort.3.mother,
+# fort.8, and fort.16 put in the directory (link) sixtrack_input
+. ./dot_env
+if test "$BNL" = ""
+then
+  mymess 0 "Something up!! prepare_bnl expects BNL $BNL" to be set
+fi
+dir16=$sixtrack_input
+mymess 1 "Using sixtrack_input $dir16"
+if test ! -d "$dir16" 
+then
+  mymess 0 "The directory $dir16 does not exist!!!" 
+  myexit 1
+fi
+mylock $sixtrack_input
+#
+if test "$bnlsamplee" -lt "$bnlsamples"
+then
+  mymess 0 "A negative number of samples requested!!!"
+  mymess 0 "Please check bnlsamples/bnlsamplee $bnlsamples/$bnlsamplee"
+  myexit 2
+fi
+tree=$sixdesktrack
+if [ ! -d "$tree/$LHCDesHome" ] ;then
+  mkdir -p $tree/$LHCDesHome
+fi
+# set up of beambeamdist.dat (fort.54) for all defined cases
+# main loop
+mymess 1 "Main loop for Study $LHCDescrip, Seeds $bnlseeds to $bnlseede"
+mymess 1 "and Samples $bnlsamples to $bnlsamplee"
+bnlseed=$bnlseeds
+if test ! -d $sixtrack_input/$bnlseed
+then
+  mymess 0 "The directory $sixtrack_input/$bnlseed does NOT exist!!!"
+  myunlock $sixtrack_input
+  myexit 3
+fi
+while test "$bnlseed" -le "$bnlseede"
+do
+  if test ! -f $sixtrack_input/"$bnlseed"/"beambeamdist.dat"
+  then
+    mymess 0 "Seed $bnlseed/beambeamdist.dat is missing!!!"
+    myunlock $sixtrack_input
+    myexit 4
+  fi
+  bnlsample=$bnlsamples
+  bnlpair1=1
+  i=0
+  while read line
+  do
+    bnlpair2=`expr $bnlpair1 + $bnlperjob`
+    bnlpair2=`expr $bnlpair2 - 1`
+    bnlpair=$bnlpair1"_"$bnlpair2
+    bnlperjob2=`expr $bnlperjob \* 2`
+    if test "$i" -eq 0
+    then
+      Runnam=$LHCDesName"%"$bnlseed"%"$bnlsample"%"$bnlpair"%"$bnlturnse
+      Rundir=$LHCDesName/$bnlseed/$bnlsample/$bnlpair/$bnlturnse
+      mymess 2 "Setting up Rundir $Rundir"
+      mkdir -p "$tree"/"$Rundir"
+      # setup the (shorter) beambeamdist.dat and the fort.54 link
+      rm -rf $tree"/"$Rundir"/"$sixdeskbnlin".gz"
+    fi
+    echo "$line" >> $tree"/"$Rundir"/"$sixdeskbnlin
+    i=`expr $i + 1`
+    if test "$i" -eq "$bnlperjob2"
+    then
+      i=0
+      gzip -f $tree"/"$Rundir"/"$sixdeskbnlin
+      ln -sf $tree"/"$Rundir"/"$sixdeskbnlin".gz" $tree"/"$Rundir/beambeamdist.dat.gz
+      bnlpair1=`expr $bnlpair1 + $bnlperjob`
+    fi
+    if test "$bnlpair1" -gt "$bnlpairs"
+    then
+      bnlpair1=1
+      bnlsample=`expr $bnlsample + 1`
+    fi
+  done < $sixtrack_input/"$bnlseed"/"beambeamdist.dat"
+  if test "$bnlsample" -le "$bnlsamplee"
+  then
+    mymess 0 "End beambeamdist.dat, there is NO sample $bnlsample!!!"
+  fi
+  bnlseed=`expr $bnlseed + 1`
+done
+myunlock $sixtrack_input
+myexit 0

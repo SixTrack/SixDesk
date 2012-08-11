@@ -1,0 +1,56 @@
+#!/bin/sh
+#
+. ./dot_env
+if test $# -eq 0
+then
+  sixdesklockdir="."
+else
+  sixdesklockdir=$1
+fi
+
+#MACRO mymess 0 check_lock: Checking lockdir $sixdesklockdir
+sixdeskmesslevel=0
+sixdeskmess="check_lock: Checking lockdir $sixdesklockdir"
+sixdeskmess
+#MACRO mymess
+
+if test ! -d $sixdesklockdir
+then
+
+#MACRO mymess 0 check_lock: The lock directory $sixdesklockdir does not exist!!!
+  sixdeskmesslevel=0
+  sixdeskmess="check_lock: The lock directory $sixdesklockdir does not exist!!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 1
+  sixdeskexitparam=1
+  sixdeskexit
+#MACRO myexit
+
+fi
+if test ! -f $sixdesklockdir/sixdesklock
+then
+
+#MACRO mymess 0 check_lock: The lockfile $sixdesklockdir/sixdesklock does not exist!!!
+  sixdeskmesslevel=0
+  sixdeskmess="check_lock: The lockfile $sixdesklockdir/sixdesklock does not exist!!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 2
+  sixdeskexitparam=2
+  sixdeskexit
+#MACRO myexit
+
+fi
+ls -l $sixdesklockdir/sixdesklock
+cat $sixdesklockdir/sixdesklock
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

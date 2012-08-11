@@ -1,0 +1,139 @@
+#!/bin/sh
+# The little script to do a bsub and the job management
+# using the $1 sixdeskRunnam and the $2 directory sixdeskRundir
+# $3 sixdeskforce=0 mean submit only if not submitted already
+# $3 sixdeskforce=1 means (re-)submit if no fort.10.z exists
+# $3 sixdeskforce=2,3 means (re-)submit anyway ( run_six handles this)
+# The sixdeskRundir is relative to $sixdesktrack
+# It then creates or updates the taskids file to include the new taskid
+# It adds a new job to the incomplete_jobs file
+# In this case the taskid is the string lsf"LSF Job Sequence Number"
+if test "$sixdeskplatform" != "lsf"
+then
+  mymess 0 "You can only bsub if platform=LSF"
+  myexit 20
+fi
+mymess 2 "sixdeskRunnam $sixdeskRunnam sixdeskRundir $sixdeskRundir sideskwork $sixdeskwork"
+if test ! -d $sixdesktrack/$sixdeskRundir
+then
+  mymess 0 "$sixdesktrack/$sixdeskRundir is NOT a directory!!!" 
+  myexit 5
+fi
+# and now put the job in the tree in ALL cases
+mv $sixdeskjobs_logs/"$Runnam".lsf $sixdesktrack/$sixdeskRundir
+sixdeskrunit="true"
+if test -s $sixdesktrack/$sixdeskRundir/fort.10.gz -a $sixdeskforce -lt 2
+then
+  mymess 1 "Job $sixdeskRunnam already completed; we will NOT re-submit"
+  sixdeskrunit="false"
+else
+  if test "$sixdeskforce" -eq 0
+  then
+    if test -s $sixdeskwork/taskids
+    then
+      grep "$sixdeskRunnam " $sixdeskwork/taskids > /dev/null 2>&1
+      sixdeskstat=$?
+      if test $sixdeskstat -eq 0
+      then
+        mymess 1 "Job $sixdeskRunnam already submitted; skipping it"
+        sixdeskrunit="false"
+      fi 
+    fi
+  fi
+fi
+if test $sixdeskrunit = "true"
+then
+  sixdeskexists=0
+  for sixdeski in 2 3 8 16
+  do
+    if test ! -f $sixdesktrack/$sixdeskRundir/fort.$sixdeski.gz
+    then
+      mymess 0 "File $sixdesktrack/$sixdeskRundir/fort.$sixdeski.gz does NOT exist!!!"
+    else
+      sixdeskexists=`expr $sixdeskexists + 1`
+    fi
+  done
+  if test "$sixdeskexists" -ne 4
+  then
+    sixdeskexists=`expr 4 - $sixdeskexists`
+    mymess 0 "There are $sixdeskexists input files missing!!! in $sixdesktrack/$sixdeskRundir"
+    myexit 6
+  fi
+# and now we DELETE any existing fort.10.gz if the platform is LSF
+# and also remove it from completed cases if it is there.........
+  mymktmp tmp
+  if test "$sixdeskplatform" = "LSF"
+  then
+    rm -f $sixdesktrack/$sixdeskRundir/fort.10.gz
+    ###mylock $sixdeskwork
+    if test -s $sixdeskwork/completed_cases
+    then
+      ###mylock $sixdeskwork
+      sed -e'/^'$Runnam'$/d' $sixdeskwork/completed_cases > $tmp
+      cp $tmp $sixdeskwork/completed_cases
+    fi
+    if test -s $sixdeskwork/mycompleted_cases
+    then
+      sed -e'/^'$Runnam'$/d' $sixdeskwork/mycompleted_cases > $tmp
+      cp $tmp $sixdeskwork/mycompleted_cases
+    fi
+    ###myunlock $sixdeskwork
+  fi
+  bsub -q ${qpref}${lsfq} $sixdeskM -o $sixdesktrack/$sixdeskRundir/"$Runnam".log < $sixdesktrack/$sixdeskRundir/"$Runnam".lsf > $tmp 2>&1
+  sixdeskstat=$?
+  cat $tmp
+  if test "$sixdeskstat" -eq 0
+  then
+    sixdesktaskno=`tail -1 $tmp | sed -e's/Job <\([0-9]*\)> is submitted to queue.*/\1/'`
+    if test "$sixdesktaskno" = ""
+    then
+      mymess 0 "bsub did NOT return a taskno !!!"
+      mymess 0 "`cat $tmp`"
+      rm $tmp
+      myexit 21
+    fi
+    sixdesktaskid=lsf$sixdesktaskno
+    touch $sixdesktrack/$sixdeskRundir/JOB_NOT_YET_STARTED
+    rm -f $tmp
+  else
+    rm -f $sixdesktrack/$sixdeskRundir/JOB_NOT_YET_STARTED 
+    mymess 0 "bsub of $sixdesktrack/$sixdeskRundir/${Runnam}.lsf to Queue ${qpref}${longlsfq} failed !!!"
+    mymess 0 "`cat $tmp`"
+    rm $tmp
+    myexit 10
+  fi
+  ###mylock $sixdeskwork
+  sixdeskoldtaskid=""
+  if test -s $sixdeskwork/taskids
+  then
+    grep "$sixdeskRunnam " $sixdeskwork/taskids
+    sixdeskstat=$?
+    if test $sixdeskstat -eq 0
+    then
+      line=`grep "$sixdeskRunnam " $sixdeskwork/taskids`
+      sixdeskoldtaskid=`echo $line | cut -d " " -f2-`
+      sixdesktaskids=$sixdeskoldtaskid" "$sixdesktaskid" "
+      sed -e'/'$sixdeskRunnam' /d' $sixdeskwork/taskids > $tmp
+      mv $tmp $sixdeskwork/taskids
+    fi
+  fi
+  if test "$sixdeskoldtaskid" = ""
+  then
+    sixdesktaskids=$sixdesktaskid" "
+  fi
+  rm -f $tmp
+  echo "$sixdeskRunnam" "$sixdesktaskids" >> $sixdeskwork/taskids
+  if test "$sixdeskoldtaskid" != ""
+  then
+    mymess 1 "Job $sixdeskRunnam re-submitted with taskid $sixdesktaskid; other jobs $sixdeskoldtaskid"
+  else
+    echo $sixdeskRunnam >> $sixdeskwork/incomplete_cases
+    echo $sixdeskRunnam >> $sixdeskwork/myincomplete_cases
+    mymess 1 "Job $sixdeskRunnam submitted with LSF JobId/taskid $sixdesktaskid"
+  fi
+  ###myunlock $sixdeskwork
+  ###mylock $sixdeskjobs
+  echo "$sixdeskRunnam" "$sixdesktaskid" >> $sixdeskjobs/jobs
+  echo "$sixdeskRunnam" "$sixdesktaskid" >> $sixdeskjobs/incomplete_jobs
+  ###myunlock $sixdeskjobs
+fi

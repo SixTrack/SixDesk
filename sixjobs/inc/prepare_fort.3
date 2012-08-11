@@ -1,0 +1,253 @@
+#!/bin/ksh
+POST=POST
+DIFF=DIFF
+chrom=${3}
+if test "$chrom" -eq 1
+then
+  CHROVAL=''
+else
+  CHROVAL='/'
+fi
+tune=${13}
+if test "$tune" -ne 0
+then
+  TUNEVAL=''
+else
+  TUNEVAL='/'
+fi
+
+bunch_charge=${14}
+
+# build fort.3 for momentum scan
+
+#first part
+
+turnss=1
+nss=1
+ax0s=0.
+ax1s=0.
+imc=31
+iclo6=0
+writebins=1
+ratios=0.
+dp1=$7
+dp2=$7
+chromx=${11}
+chromy=${12}
+e0=${10}
+ition=0
+cd "$1"
+
+sed -e 's/%turnss/'$turnss'/g' \
+    -e 's/%nss/'$nss'/g' \
+    -e 's/%ax0s/'$ax0s'/g' \
+    -e 's/%ax1s/'$ax1s'/g' \
+    -e 's/%imc/'$imc'/g' \
+    -e 's/%iclo6/'$iclo6'/g' \
+    -e 's/%writebins/'$writebins'/g' \
+    -e 's/%ratios/'$ratios'/g' \
+    -e 's/%dp1/'$dp1'/g' \
+    -e 's/%dp2/'$dp2'/g' \
+    -e 's/%e0/'$e0'/g' \
+    -e 's/%ition/'$ition'/g' \
+    -e 's/%idfor/'$idfor'/g' \
+    -e 's/%ibtype/'$ibtype'/g' \
+    -e 's/%bunch_charge/'$bunch_charge'/g' \
+    -e 's?%Runnam?%Runnam '"$sixdeskTitle"'?g' \
+        fort.3.mother1 > fort0.3.mask
+echo "Maximum relative energy deviation for momentum scan" $dp1
+
+#add multipole blocks
+
+cat fort.3.mad >> fort0.3.mask 
+
+#second  part
+
+if [ "$5" -eq 1 ] ;then
+  Qx=`awk '{print $1}' resonance`
+  Qy=`awk '{print $2}' resonance`
+  Ax=`awk '{print $3}' resonance`
+  Ay=`awk '{print $4}' resonance`
+  N1=`awk '{print $5}' resonance`
+  N2=`awk '{print $6}' resonance`
+  sed -e 's/%SUB/''/g' \
+      -e 's/%Qx/'$Qx'/g' \
+      -e 's/%Qy/'$Qy'/g' \
+      -e 's/%Ax/'$Ax'/g' \
+      -e 's/%Ay/'$Ay'/g' \
+      -e 's/%chromx/'$chromx'/g' \
+      -e 's/%chromy/'$chromy'/g' \
+      -e 's/%N1/'$N1'/g' \
+      -e 's/%N2/'$N2'/g' fort.3.mother2 >> blah
+      mv blah fort.3.mother2
+else
+  sed -e 's/%SUB/\//g' fort.3.mother2 >> blah
+      mv blah fort.3.mother2
+fi  
+
+ndafi="$imc"
+sed -e 's?%CHRO?'$CHROVAL'?g' \
+    -e 's?%TUNE?'$TUNEVAL'?g' \
+    -e 's/%POST/'$POST'/g' \
+    -e 's/%POS1/''/g' \
+    -e 's/%ndafi/'$nadfi'/g' \
+    -e 's/%chromx/'$chromx'/g' \
+    -e 's/%chromy/'$chromy'/g' \
+    -e 's/%DIFF/\/'$DIFF'/g' \
+    -e 's/%DIF1/\//g' fort.3.mother2 >> fort0.3.mask 
+
+# build fort.3 for detuning run
+
+#first part
+
+if [ "$2" -eq 6 ] ;then
+  imc=1
+  iclo6=2
+  ition=1
+  dp1=$6
+  dp2=$6
+else
+  imc=1
+  iclo6=0
+  ition=0
+  dp1=.000
+  dp2=.000
+fi
+
+sed -e 's/%imc/'$imc'/g' \
+    -e 's/%iclo6/'$iclo6'/g' \
+    -e 's/%dp1/'$dp1'/g' \
+    -e 's/%dp2/'$dp2'/g' \
+    -e 's/%e0/'$e0'/g' \
+    -e 's/%ition/'$ition'/g' \
+    -e 's/%idfor/'$idfor'/g' \
+    -e 's/%ibtype/'$ibtype'/g' \
+    -e 's/%bunch_charge/'$bunch_charge'/g' \
+    -e 's?%Runnam?%Runnam '"$sixdeskTitle"'?g' \
+        fort.3.mother1 > forts.3.mask
+
+#add multipole blocks
+
+cat fort.3.mad >> forts.3.mask 
+
+#second  part
+
+sed -e 's?%CHRO?'$CHROVAL'?g' \
+    -e 's?%TUNE?'$TUNEVAL'?g' \
+    -e 's/%POST/'$POST'/g' \
+    -e 's/%POS1/''/g' \
+    -e 's/%ndafi/%nss/g' \
+    -e 's/%chromx/'$chromx'/g' \
+    -e 's/%chromy/'$chromy'/g' \
+    -e 's/%DIFF/\/'$DIFF'/g' \
+    -e 's/%DIF1/\//g' fort.3.mother2 >> forts.3.mask 
+
+# build fort.3 for longterm run
+
+#first part
+
+nss=$sixdeskpairs
+imc=1
+if [ "$2" -eq 6 ] ;then
+  iclo6=2
+  ition=1
+  dp1=$6
+  dp2=$6
+else
+  iclo6=0
+  ition=0
+  dp1=.0
+  dp2=.0
+fi
+echo "Initial relative energy deviation" $dp1
+
+sed -e 's/%turnss/%turnsl/g' \
+    -e 's/%nss/'$nss'/g' \
+    -e 's/%imc/'$imc'/g' \
+    -e 's/%iclo6/'$iclo6'/g' \
+    -e 's/%ax0s/%ax0l/g' \
+    -e 's/%ax1s/%ax1l/g' \
+    -e 's/%writebins/%writebinl/g' \
+    -e 's/%ratios/%ratiol/g' \
+    -e 's/%dp1/'$dp1'/g' \
+    -e 's/%dp2/'$dp2'/g' \
+    -e 's/%e0/'$e0'/g' \
+    -e 's/%ition/'$ition'/g' \
+    -e 's/%idfor/'$idfor'/g' \
+    -e 's/%ibtype/'$ibtype'/g' \
+    -e 's/%bunch_charge/'$bunch_charge'/g' \
+    -e 's?%Runnam?%Runnam '"$sixdeskTitle"'?g' \
+        fort.3.mother1 > fortl.3.mask
+
+#add multipole blocks
+
+cat fort.3.mad >> fortl.3.mask 
+
+#second  part
+
+ndafi="$nss"
+sed -e 's?%CHRO?'$CHROVAL'?g' \
+    -e 's?%TUNE?'$TUNEVAL'?g' \
+    -e 's/%POST/'$POST'/g' \
+    -e 's/%POS1/''/g' \
+    -e 's/%ndafi/'$ndafi'/g' \
+    -e 's/%chromx/'$chromx'/g' \
+    -e 's/%chromy/'$chromy'/g' \
+    -e 's/%DIFF/\/'$DIFF'/g' \
+    -e 's/%DIF1/\//g' fort.3.mother2 >> fortl.3.mask 
+
+# build fort.3 for da run
+
+#first part
+
+turnss=1
+nss=1
+ax0s=0.
+ax1s=0.
+imc=1
+writebins=0
+ratios=0.
+dp1=.000
+dp2=.000
+if [ "$4" -eq 6 ] ;then
+  iclo6=2
+  ition=1
+  nsix=0
+else
+  iclo6=0
+  ition=0
+  nsix=0
+fi
+sed -e 's/%turnss/'$turnss'/g' \
+    -e 's/%nss/'$nss'/g' \
+    -e 's/%ax0s/'$ax0s'/g' \
+    -e 's/%ax1s/'$ax1s'/g' \
+    -e 's/%imc/'$imc'/g' \
+    -e 's/%iclo6/'$iclo6'/g' \
+    -e 's/%writebins/'$writebins'/g' \
+    -e 's/%ratios/'$ratios'/g' \
+    -e 's/%dp1/'$dp1'/g' \
+    -e 's/%dp2/'$dp2'/g' \
+    -e 's/%e0/'$e0'/g' \
+    -e 's/%ition/'$ition'/g' \
+    -e 's/%idfor/'$idfor'/g' \
+    -e 's/%ibtype/'$ibtype'/g' \
+    -e 's/%bunch_charge/'$bunch_charge'/g' \
+    -e 's?%Runnam?%Runnam '"$sixdeskTitle"'?g' \
+        fort.3.mother1 > fortda.3.mask
+
+#add multipole blocks
+
+cat fort.3.mad >> fortda.3.mask 
+
+#second  part
+
+sed -e 's?%CHRO?'$CHROVAL'?g' \
+    -e 's?%TUNE?'$TUNEVAL'?g' \
+    -e 's/%POST/\/'$POST'/g' \
+    -e 's/%POS1/\//g' \
+    -e 's/%DIFF/'$DIFF'/g' \
+    -e 's/%chromx/'$chromx'/g' \
+    -e 's/%chromy/'$chromy'/g' \
+    -e 's/%nsix/'$nsix'/g' \
+    -e 's/%DIF1//g' fort.3.mother2 >> fortda.3.mask 

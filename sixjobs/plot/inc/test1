@@ -1,0 +1,16 @@
+\documentclass{article}
+\usepackage{here}
+\usepackage{graphics} 
+\usepackage[dvips]{epsfig,rotating}
+\setlength{\oddsidemargin}{0mm}
+\setlength{\evensidemargin}{0mm}
+\setlength{\textwidth}{164mm}
+\setlength{\marginparwidth}{20mm}
+\setlength{\topmargin}{20mm}
+\setlength{\textheight}{210mm}
+\pagestyle{empty}
+
+\batchmode
+\pagestyle{empty}
+
+\begin{document}

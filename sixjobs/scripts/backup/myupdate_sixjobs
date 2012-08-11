@@ -1,0 +1,67 @@
+#!/bin/sh
+# Setting the environment for dot_env or set_env
+# after the files have been changed or for safety
+
+mkdir -p $sixtrack_input
+rm -f sixtrack_input
+ln -s $sixtrack_input sixtrack_input
+mkdir -p $sixdesktrack/$LHCDescrip
+rm -f track
+ln -s $sixdesktrack/$LHCDescrip track
+mkdir -p "$sixdeskwork"
+rm -f work
+ln -s $sixdeskwork work
+rm -f study
+ln -s $sixdeskstudy study
+# and all the logfile stuff
+if test "$sixdesklogdir" != ""
+then
+  mkdir -p $sixdesklogdir
+  if test -s sixdesk.log -a ! -h sixdesk.log
+  then
+    touch $sixdesklogdir/sixdesk.log
+    cat sixdesk.log >> $sixdesklogdir/sixdesk.log
+    rm -f sixdesk.log
+  fi
+  touch  "$sixdesklogdir"/sixdesk.log
+  ln -sf "$sixdesklogdir"/sixdesk.log sixdesk.log
+  if test -s sixdeskerror.log -a ! -h sixdeskerror.log
+  then
+    touch $sixdesklogdir/sixdeskerror.log
+    cat sixdeskerror.log >> $sixdesklogdir/sixdeskerror.log
+    rm -f sixdeskerror.log
+  fi
+  touch $sixdesklogdir/sixdeskerror.log
+  ln -sf "$sixdesklogdir"/sixdeskerror.log sixdeskerror.log
+  if test -s restart.log -a ! -h restart.log
+  then
+    touch $sixdesklogdir/restart.log
+    cat restart.log >> $sixdesklogdir/restart.log
+    rm -f restart.log
+  fi
+  touch "$sixdesklogdir"/restart.log
+  ln -sf "$sixdesklogdir"/restart.log restart.log
+fi
+# and a cronlogdir
+# May be an old study and cronlogdir is undefined.....
+if test "$cronlogdir" != ""
+then
+  mkdir -p $cronlogdir
+  if test -s cron_results.log -a ! -h cron_results.log 
+  then
+    touch $cronlogdir/cron_results.log
+    cat cron_results.log >> $cronlogdir/cron_results.log 
+    rm -f cron_results.log
+  fi
+  touch $cronlogdir/cron_results.log
+  ln -sf $cronlogdir/cron_results.log cron_results.log
+  ln -sf $cronlogs cronlogs 
+fi
+# and try making links (for automatic command completion)
+for mystudy in `ls studies`
+do
+  if test -d studies/$mystudy
+  then
+    touch $mystudy
+  fi
+done

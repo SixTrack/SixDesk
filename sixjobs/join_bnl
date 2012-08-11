@@ -1,0 +1,148 @@
+#!/bin/ksh
+#
+# This script should be run after (all) results are available.
+# It looks for all the beambeam-output.dat files (and beambeam-lostID.dat)
+# and sums up the variables in the correct under to provide a repeatable
+# result. The summation is done in fortran, with the lf95 compiler, using
+# the same compile options as SixTrack itself.
+. ./dot_env
+if test "$BNL" = ""
+then
+
+#MACRO mymess 0 Something up!! join_bnl expects BNL $BNL
+  sixdeskmesslevel=0
+  sixdeskmess="Something up!! join_bnl expects BNL $BNL"
+  sixdeskmess
+#MACRO mymess
+ to be set
+
+#MACRO myexit 1
+  sixdeskexitparam=1
+  sixdeskexit
+#MACRO myexit
+
+fi
+#
+if test "$bnlsamplee" -lt "$bnlsamples"
+then
+
+#MACRO mymess 0 A negative number of samples requested!!!
+  sixdeskmesslevel=0
+  sixdeskmess="A negative number of samples requested!!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 Please check bnlsamples/bnlsamplee $bnlsamples/$bnlsamplee
+  sixdeskmesslevel=0
+  sixdeskmess="Please check bnlsamples/bnlsamplee $bnlsamples/$bnlsamplee"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 2
+  sixdeskexitparam=2
+  sixdeskexit
+#MACRO myexit
+
+fi
+tree=$sixdesktrack
+if [ ! -d "$tree/$LHCDesHome" ] ;then
+
+#MACRO mymess 0 The directory $tree/$LHCDesHome does NOT exist!
+  sixdeskmesslevel=0
+  sixdeskmess="The directory $tree/$LHCDesHome does NOT exist!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 4
+  sixdeskexitparam=4
+  sixdeskexit
+#MACRO myexit
+
+fi
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+# main loop try and join up all pairs (if necessary)
+
+#MACRO mymess 1 Main loop for Study $LHCDescrip, Seeds $bnlseeds to $bnlseede
+sixdeskmesslevel=1
+sixdeskmess="Main loop for Study $LHCDescrip, Seeds $bnlseeds to $bnlseede"
+sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 1 and Samples $bnlsamples to $bnlsamplee
+sixdeskmesslevel=1
+sixdeskmess="and Samples $bnlsamples to $bnlsamplee"
+sixdeskmess
+#MACRO mymess
+
+bnlseed=$bnlseeds
+if test ! -d $sixtrack_input/$bnlseed
+then
+
+#MACRO mymess 0 The directory $sixtrack_input/$bnlseed does NOT exist!!!
+  sixdeskmesslevel=0
+  sixdeskmess="The directory $sixtrack_input/$bnlseed does NOT exist!!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskstudy
+  sixdesklockdir=$sixdeskstudy
+  sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 5
+  sixdeskexitparam=5
+  sixdeskexit
+#MACRO myexit
+
+fi
+
+  bnlsample=$bnlsamples
+  bnlpair1=1
+  i=0
+
+    bnlpair2=`expr $bnlpair1 + $bnlperjob`
+    bnlpair2=`expr $bnlpair2 - 1`
+    bnlpair=$bnlpair1"_"$bnlpair2
+    bnlperjob2=`expr $bnlperjob \* 2`
+    if test "$i" -eq 0
+    then
+      Runnam=$LHCDesName"%"$bnlseed"%"$bnlsample"%"$bnlpair"%"$bnlturnse
+      Rundir=$LHCDesName/$bnlseed/$bnlsample/$bnlpair/$bnlturnse
+    fi
+    i=`expr $i + 1`
+    if test "$i" -eq "$bnlperjob2"
+    then
+      i=0
+      bnlpair1=`expr $bnlpair1 + $bnlperjob`
+    fi
+    if test "$bnlpair1" -gt "$bnlpairs"
+    then
+      bnlpair1=1
+      bnlsample=`expr $bnlsample + 1`
+    fi
+
+  bnlseed=`expr $bnlseed + 1`
+
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

@@ -1,0 +1,35 @@
+#!/bin/sh
+# Tries to implement a comparison of the
+# DA produced by two studies as proposed by Massimo.
+# Expects a LOGNAME, workspace and study
+# Followed (optionally) by the nicknames
+# Uses the DAres for the current study and the one specified.
+# The DAres files, one file per angle, 
+# one line per seed, and we use the 4th column $4
+# as the "last stable amplitude"
+# Produces new files one per angle
+# one line per seed S, stable from first s1, stable from second s2,
+# s1 - s2, (s1 - s2) / s1    
+# and added name1 name2
+if test $# -lt 3 
+then
+  echo "You must specify a LOGNAME, Workspace and LHCDescrip for comparison"
+  echo "(and optionally two names)"
+  exit 2
+fi
+lognam=$1
+initial=`echo $lognam | cut -c 1`
+wspace=$2
+s2=$3
+w2="/afs/cern.ch/user/$initial/$lognam/$wspace/sixjobs"
+if test $# -eq 5
+then
+  name1=$4
+  name2=$5
+else
+  name1=a
+  name2=b
+fi
+echo "Calling compare_DA $w2 $s2 $lognam $name1 $name2"
+echo "$w2 $s2 $lognam $name1 $name2" > compare_DA_args
+./docompare_DA

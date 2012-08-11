@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+. ./dot_env
+if test $sixdeskplatform = "lsf"
+then
+  mymess 0 "run_missing_tasks can NOT be used with LSF !!!"
+  myexit 0
+fi
+while read line
+do
+  sixdeskRunnam=`echo $line | cut -d" " -f1`
+  myrundir $sixdeskRunnam sixdeskRundir
+  sixdeskforce=2
+  if test $sixdeskplatform = "cpss"
+  then
+    . ./dot_task
+  elif test $sixdeskplatform = "boinc"
+  then
+    . ./dot_boinc
+  elif test $sixdeskplatform = "grid"
+  then
+    . ./dot_grid
+  fi
+done < $sixdeskjobs/missing_tasks
+myexit 0

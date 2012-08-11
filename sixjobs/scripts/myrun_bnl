@@ -1,0 +1,182 @@
+#!/bin/ksh
+#
+. ./dot_env
+if test "$BNL" = ""
+then
+  mymess 0 "Something up!! run_bnl expects BNL $BNL" to be set
+fi
+dir16=$sixtrack_input
+mymess 0 "Using sixtrack_input $dir16"
+if test ! -d "$dir16" 
+then
+  mymess 0 "The directory $dir16 does not exist!!!" 
+  myexit 1
+fi
+mylock $sixdeskstudy
+mkdir -p $sixdeskjobs_logs
+###mylock $sixdeskjobs_logs
+###mymess 0 "Using $sixdeskjobs_logs locked"
+#
+tree=$sixdesktrack
+#
+# work out platform dependent stuff...
+qpref="undef"
+if test "$OS" = "OSF1"
+then
+    qpref=""
+fi
+if test "$OS" = "Linux"
+then
+    qpref=""
+fi
+if test "$qpref" = "undef"
+then
+  mymess 0 "The OS $OS is not currently supported"
+  ###myunlock $sixdeskjobs_logs
+  myunlock $sixdeskstudy
+  myexit 3
+fi
+mymess 2 "Main loop (long) for Study $LHCDescrip, Seeds $bnlseeds to $bnlseede"
+bnlseed=$bnlseeds
+while test "$bnlseed" -le "$bnlseede"
+do
+  dir16=$sixtrack_input/$bnlseed
+  mymess 2 "Using sixtrack_input $dir16"
+  if test ! -d "$dir16" 
+  then
+    mymess 0 "The directory $dir16 does not exist!!!" 
+    ###myunlock $sixdeskjobs_logs
+    myunlock $sixdeskstudy
+    myexit 1
+  fi
+  if test ! -s "$dir16/fort.3.mother"
+  then
+    mymess 0 "There is NO fort.3.mother in $dir16"
+    ###myunlock $sixdeskjobs_logs
+    myunlock $sixdeskstudy
+    myexit 4
+  fi
+  cp $dir16/fort.3.mother $sixdeskjobs_logs
+  bnlsample=$bnlsamples
+  while test "$bnlsample" -le "$bnlsamplee "
+  do
+    bnlpair1=1
+    while test "$bnlpair1" -lt "$bnlpairs"
+    do
+      bnlpair2=`expr $bnlpair1 + $bnlperjob`
+      bnlpair2=`expr $bnlpair2 - 1`
+      bnlpair=$bnlpair1"_"$bnlpair2
+      bnlperjob2=`expr $bnlperjob \* 2`
+      bnlpair1=`expr $bnlpair1 + $bnlperjob`
+      Runnam=$LHCDesName"%"$bnlseed"%"$bnlsample"%"$bnlpair"%"$bnlturnse
+      Rundir=$LHCDesName/$bnlseed/$bnlsample/$bnlpair/$bnlturnse
+      mymess 1 "Runnam/Rundir $Runnam $Rundir"
+      mymess 1 "$LHCDesName $bnlseed $bnlsample $bnlpair $bnlturnse"
+      if test ! -d "$tree"/"$Rundir"
+      then
+        mymess 0 "$Rundir does NOT exist!!!"
+        mymess 0 "Have you run prepare_bnl for the seed(s), sample(s), etc???"
+        ###myunlock $sixdeskjobs_logs
+        myunlock $sixdeskstudy
+        myexit 5
+      fi
+      if test ! -s $tree"/"$Rundir"/"$sixdeskbnlin".gz"
+      then
+        mymess 0 "$Rundir/$sixdeskbnlin"".gz (beambeamdist.dat) does NOT exist!!!"
+        mymess 0 "Have you run prepare_bnl for the seed(s), sample(s), etc???"
+        ###myunlock $sixdeskjobs_logs
+        myunlock $sixdeskstudy
+        myexit 6
+      fi
+      #setup all the input files 
+      #($sixdeskbnlin aka beambeamdist.dat already set by prepare_bnl)
+      mymess 1 "fort.3 setup $Runnam"
+      sed -e 's/%napx%/'$bnlperjob'/g' \
+          -e 's/%bnlturns%/'$bnlturns'/g' \
+          -e 's/%bnlwrite%/'$bnlwrite'/g' \
+          -e 's/%writebinl/'$writebinl'/g' \
+          -e 's/%runnam%/'$Runnam'/g' \
+      $sixdeskjobs_logs/fort.3.mother > $sixdeskjobs_logs/fort.3
+      if [ -a "$dir16"/fort.2.gz ]
+      then
+        ln -sf "$dir16"/fort.2.gz  "$tree"/"$Rundir"/fort.2.gz
+      else
+        mymess 0 "No SIXTRACK geometry file (fort.2): Run stopped"
+        myunlock $sixdeskjobs_logs
+        myunlock $sixdeskstudy
+        myexit 7
+      fi
+      if [ -a $sixdeskjobs_logs/fort.3 ]
+      then
+        gzip -cfq  $sixdeskjobs_logs/fort.3 > "$tree"/"$Rundir"/fort.3.gz
+      else
+        mymess 0 "No SIXTRACK control file (fort.3): Run stopped"
+        myunlock $sixdeskjobs_logs
+        myunlock $sixdeskstudy
+        myexit 7
+      fi
+      if [ -a "$dir16"/fort.8.gz ]
+      then
+        ln -sf "$dir16"/fort.8.gz  "$tree"/"$Rundir"/fort.8.gz
+      else
+        mymess 0 "No SIXTRACK misalignment file (fort.8): dummy file created"
+        touch "$tree"/"$Rundir"/fort.8
+        gzip -fq "$tree"/"$Rundir"/fort.8
+      fi
+      if [ -a "$dir16"/fort.16.gz ]
+      then
+        ln -sf "$dir16"/fort.16.gz  "$tree"/"$Rundir"/fort.16.gz
+      else
+        mymess 0 "No SIXTRACK error file (fort.16): dummy file created"
+        touch "$tree"/"$Rundir"/fort.16
+        gzip -fq "$tree"/"$Rundir"/fort.16
+      fi
+      #start LSF job for long run
+      if test "$sixdeskplatform" = "lsf"
+      then
+        sed -e 's?SIXJOBNAME?'$Runnam'?g' \
+            -e 's?SIXJOBDIR?'$Rundir'?g' \
+            -e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
+            -e 's?SIXTRACKBNLEXE?'$SIXTRACKBNLEXE'?g' \
+            -e 's?SIXBNLIN?'$sixdeskbnlin'?g' \
+            -e 's?SIXCASTOR?'$sixdeskcastor'?g' \
+            -e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' "$sixdeskhome"/utilities/bnl.lsf > \
+                $sixdeskjobs_logs/"$Runnam".lsf
+        chmod 755 $sixdeskjobs_logs/"$Runnam".lsf
+        sixdeskRunnam="$Runnam"
+        sixdeskRundir="$Rundir"
+        . ./dot_bsub $Runnam $Rundir
+      elif test "$sixdeskplatform" = "cpss"
+      then
+        # The 3rd param 0 means only if not submitted already
+        sixdeskRunnam="$Runnam"
+        sixdeskRundir="$Rundir"
+        . ./dot_task
+      elif test "$sixdeskplatform" = "grid"
+      then
+        # Create $Runnam.grid in $sixdeskwork/$Runnam
+        mymess 0 "Running on GRID not yet implemented!!!"
+        myunlock $sixdeskjobs_logs
+        myunlock $sixdeskstudy
+        myexit 9
+      elif test "$sixdeskplatform" = "boinc"
+      then
+        # The 3rd param 0 means only if not submitted already
+        sixdeskRunnam="$Runnam"
+        sixdeskRundir="$Rundir"
+        . ./dot_boinc
+      else
+        # Should be impossible
+        mymess 0 "You have not selected a platform CPSS, LSF, BOINC or GRID!!!"
+        myunlock $sixdeskjobs_logs
+        myunlock $sixdeskstudy
+        myexit 10
+      fi
+    done
+    bnlsample=`expr $bnlsample + 1`
+  done
+  bnlseed=`expr $bnlseed + 1`
+done
+###myunlock $sixdeskjobs_logs
+myunlock $sixdeskstudy
+myexit 0

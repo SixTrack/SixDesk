@@ -1,0 +1,46 @@
+#!/bin/ksh
+#BSUB -J SIXJOBNAME   	# job name
+
+junktmp=SIXJUNKTMP
+export junktmp
+TRACKDIR=SIXTRACKDIR
+pwd		# where am I?
+rm -f $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_STARTED
+touch $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_COMPLETED
+# copy compressed fortran files from the designated"job"  directory to our work dir
+
+# pick up inputfiles
+cp $TRACKDIR/SIXJOBDIR/fort.*.gz .
+gunzip fort.*.gz
+
+#get  sixtrack image
+cp SIXTRACKDAEXE sixtrack
+
+./sixtrack > fort.6 
+
+if [ -s core ];then
+   cp core sixtrack $TRACKDIR/SIXJOBDIR
+   exit
+fi
+
+#copy dalie specific files
+
+cp $junktmp/dalie.data fort.2
+cp $junktmp/reson.data fort.3
+cp $junktmp/dalie.input .
+cp $junktmp/dalie .
+cp $junktmp/readda .
+
+./dalie < dalie.input > dalie.out
+./readda 
+mv fort.91 fort.18.4d
+rm -rf fort.92
+tar cvzf SIXJOBNAME"dalie".tgz fort.*
+mkdir -p $TRACKDIR/SIXJOBDIR/dalie
+cp SIXJOBNAME"dalie".tgz $TRACKDIR/SIXJOBDIR/dalie
+
+gzip fort.18 fort.25
+cp fort.18.gz fort.25.gz $TRACKDIR/SIXJOBDIR
+
+#
+rm -f $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_COMPLETED

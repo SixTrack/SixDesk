@@ -1,0 +1,5 @@
+#!/bin/sh
+#
+# Resume all my suspended jobs
+
+bresume 0

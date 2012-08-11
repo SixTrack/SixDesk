@@ -1,0 +1,31 @@
+C
+C INPUT FOR SUSSIX ---21/01/2005---
+C DETAILS ARE IN THE MAIN PROGRAM SUSSIX_V4.F
+C
+
+ISIX  = 1
+NTOT  = %nss
+IANA  = %IANA
+ICONV = 1
+TURNS = 1 %turnss
+NARM  = 100
+ISTUN = 1 0.02 0.02 0.02
+TUNES = %qx %qy .07
+NSUS  = 0
+IDAM  = %dimsus
+NTWIX = 1
+IR    = 0
+IMETH = 1
+NRC   = 2
+EPS   = .2000D-2
+NLINE = 1
+L,M,K = %LR %MR %KR
+IDAMX = %dimline
+NFIN  = 50
+ISME  = 0
+IUSME = 20
+INV   = 0
+IINV  = 25
+ICF   = 0
+IICF  = 35
+

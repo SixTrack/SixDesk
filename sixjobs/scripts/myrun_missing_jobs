@@ -1,0 +1,32 @@
+#!/bin/sh
+#
+. ./dot_env
+if test $sixdeskplatform != "lsf"
+then
+  mymess 0 "run_missing_jobs can be used only with LSF !!!"
+  myexit 0
+fi
+if test ! -s "$sixdeskjobs/missing_jobs"
+then
+  mymess 0 "The file $sixdeskjobs/missing_jobs is empty!!!"
+  myexit 0
+fi
+mylock $sixdeskstudy
+###mylock $sixdeskjobs_logs
+while read Runnam
+do
+  sixdeskRunnam=$Runnam
+  myrundir $sixdeskRunnam sixdeskRundir
+  mymktmp tmp
+  mylock $sixdeskjobs
+  sed -e '/^'$Runnam'$/d' $sixdeskjobs/incomplete_jobs > $tmp
+  mv $tmp $sixdeskjobs/incomplete_jobs
+  myunlock $sixdeskjobs
+  cp $sixdesktrack/$sixdeskRundir/$sixdeskRunnam.lsf $sixdeskjobs_logs
+  sixdeskforce=2
+  . ./dot_bsub
+done < $sixdeskjobs/missing_jobs
+rm -f $sixdeskjobs/missing_jobs
+###myunlock $sixdeskjobs_logs
+myunlock $sixdeskstudy
+myexit 0

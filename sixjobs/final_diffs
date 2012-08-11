@@ -1,0 +1,1426 @@
+
+=====================
+DAsurv.tex
+=====================
+
+=====================
+README
+=====================
+1,15d0
+< New Major Release 29th February matching SixDesk documentation 
+< and using study job_tracking with appropriate defaults.
+< 
+< Most/all commands now accept a study and optionally a
+< platform as parameters  to the command. This facilitates
+< running multiple studies in a workspace.
+< 
+< run_status still takes a long time for platform LSF but
+< the delays can be minimised but doing a run_status at regular
+< intervals.
+< 
+< Set up to use SIXTRACKEXE=SixTrack_4411
+< 
+< Added pilot versions of compare_DA and plot_DA.
+< Some minor new messages to log normal completion.
+25a11
+> Need to list all these MAJOR changes.
+34,35c20,21
+<  short run remains an issue ????
+<  (Remived bnl options which can be restored)
+---
+>  short run remains an issue
+>  (Added bnl options which can be removed)
+
+=====================
+acrontab.entry
+=====================
+
+=====================
+backup.txt
+=====================
+
+=====================
+backup_study
+=====================
+
+=====================
+backup_workspace
+=====================
+
+=====================
+batch_correct
+=====================
+
+=====================
+batch_incomplete
+=====================
+
+=====================
+batch_join10
+=====================
+
+=====================
+batch_missing
+=====================
+
+=====================
+batch_post
+=====================
+
+=====================
+batch_results
+=====================
+
+=====================
+batch_run
+=====================
+
+=====================
+batch_status
+=====================
+
+=====================
+bin (directory)
+=====================
+castorbackup
+=====================
+castorrecall
+=====================
+corr9394
+=====================
+correl
+=====================
+dalie4
+=====================
+dalie6
+=====================
+dynsumtunres
+=====================
+joinf10
+=====================
+read10
+=====================
+read10a
+=====================
+read10b
+=====================
+readda
+=====================
+readdp
+=====================
+readplot
+=====================
+readplotb
+=====================
+readweb
+=====================
+repair
+=====================
+resonance
+=====================
+sixcpin
+=====================
+sixcpout
+=====================
+sixdir
+=====================
+sixmkdir
+=====================
+sixrename
+=====================
+sixrm
+=====================
+sixtouch
+=====================
+structot
+=====================
+sumtunres
+=====================
+sussix
+=====================
+
+=====================
+bnl_arrays
+=====================
+
+=====================
+bnl_results
+=====================
+
+=====================
+bresume_all
+=====================
+
+=====================
+bstop_all
+=====================
+
+=====================
+check_all_locks
+=====================
+
+=====================
+check_amps10
+=====================
+
+=====================
+check_amps3
+=====================
+
+=====================
+check_envs
+=====================
+
+=====================
+check_incomplete
+=====================
+
+=====================
+check_jobs
+=====================
+
+=====================
+check_joined10
+=====================
+
+=====================
+check_lock
+=====================
+
+=====================
+check_locks
+=====================
+
+=====================
+check_mad6t
+=====================
+
+=====================
+check_really
+=====================
+
+=====================
+check_seds
+=====================
+
+=====================
+check_studies
+=====================
+
+=====================
+clone_w
+=====================
+
+=====================
+compare_DA
+=====================
+
+=====================
+compare_DAS
+=====================
+
+=====================
+compare_envs
+=====================
+
+=====================
+compare_myscripts
+=====================
+
+=====================
+compare_results
+=====================
+
+=====================
+compare_scripts
+=====================
+
+=====================
+compare_studies
+=====================
+
+=====================
+compare_workspaces
+=====================
+31a32
+>       echo "$fn"
+33c34
+<       if test $? -ne 0 -a "$fn" != "backup"
+---
+>       if test $? -ne 0
+35d35
+<         echo "$fn"
+
+=====================
+compare_workspaces_recursive
+=====================
+34c34
+<       if test $? -ne 0 -a "$fn" != "backup"
+---
+>       if test $? -ne 0
+43a44,48
+>     echo ""
+>     echo "====================="
+>     echo "$fnordir"
+>     echo "====================="
+> 
+45,46c50,51
+<     if test $? -ne 0
+<     then
+---
+>      if test $? -ne 0
+>      then
+
+=====================
+control_files (directory)
+=====================
+all_control
+=====================
+fort.3.mother1_col
+=====================
+fort.3.mother1_inj
+=====================
+fort.3.mother2_col
+=====================
+fort.3.mother2_col_b2
+=====================
+fort.3.mother2_inj
+=====================
+fort.3.mother2_inj.massimo
+=====================
+fort.3.mother2_inj.master
+=====================
+fort.3.mother2_inj.orig
+=====================
+fort.3.mother2_inj_b2
+=====================
+
+=====================
+correct_cases
+=====================
+
+=====================
+correct_template
+=====================
+
+=====================
+createDAsurv
+=====================
+
+=====================
+create_protection_group
+=====================
+
+=====================
+delete_all_error_results
+=====================
+
+=====================
+delete_cpss_tasks
+=====================
+
+=====================
+delete_errors
+=====================
+
+=====================
+delete_study
+=====================
+
+=====================
+docompare_DA
+=====================
+
+=====================
+docompare_results
+=====================
+
+=====================
+doplot_DA
+=====================
+
+=====================
+dorun_mad6t
+=====================
+
+=====================
+dot_boinc
+=====================
+
+=====================
+dot_bsub
+=====================
+118a119,120
+> # and now we DELETE any existing fort.10.gz if the platform is LSF
+> # and also remove it from completed cases if it is there.........
+126a129,149
+>   if test "$sixdeskplatform" = "LSF"
+>   then
+>     rm -f $sixdesktrack/$sixdeskRundir/fort.10.gz
+>     if test -s $sixdeskwork/completed_cases
+>     then
+> 
+> #MACRO mylock $sixdeskwork
+>       sixdesklockdir=$sixdeskwork
+>       sixdesklock
+> #MACRO mylock
+> 
+>       sed -e'/^'$Runnam'$/d' $sixdeskwork/completed_cases > $tmp
+>       cp $tmp $sixdeskwork/completed_cases
+> 
+> #MACRO myunlock $sixdeskwork
+>       sixdesklockdir=$sixdeskwork
+>       sixdeskunlock
+> #MACRO myunlock
+> 
+>     fi
+>   fi
+
+=====================
+dot_env
+=====================
+
+=====================
+dot_profile
+=====================
+2c2
+< # A set of subroutines for the SixDesk environment
+---
+> # A set of subroutines/Macros for the SixDesk environment
+
+=====================
+dot_task
+=====================
+
+=====================
+dot_taskgroup
+=====================
+
+=====================
+exec_env
+=====================
+
+=====================
+final_diffs
+=====================
+
+=====================
+get_all_betavalues
+=====================
+
+=====================
+get_wpro
+=====================
+
+=====================
+inc (directory)
+=====================
+S2_11.50.Ljs
+=====================
+S2_3.6.Ljs
+=====================
+S2_5.12.Ljs
+=====================
+S2_7.24.Ljs
+=====================
+S2_9.32.Ljs
+=====================
+accelerator_data
+=====================
+accelerator_data.mask
+=====================
+da2j.mask
+=====================
+da2j_4d.mask
+=====================
+da2j_6d.mask
+=====================
+dalie4.data.mask
+=====================
+dalie4.mask
+=====================
+dalie6.data
+=====================
+dalie6.mask
+=====================
+fort.3_post
+=====================
+fort.3_post.mask
+=====================
+j2c.mask
+=====================
+prepare_fort.3
+=====================
+replace.awk.mask
+=====================
+reson.data
+=====================
+reson4.data.mask
+=====================
+reson6.data.mask
+=====================
+sussix.inp.mask
+11c11
+< NARM  = 4
+---
+> NARM  = 100
+=====================
+
+=====================
+incomplete_template
+=====================
+
+=====================
+join10_template
+=====================
+
+=====================
+join_bnl
+=====================
+
+=====================
+mask (directory)
+=====================
+README
+=====================
+job_tracking.mask
+=====================
+jobref503_coll.mask
+=====================
+jobref503_inj.mask
+=====================
+jobref503_withbb_coll.mask
+=====================
+jobref503_withbb_inj.mask
+=====================
+jobrefslhc_coll.mask
+=====================
+jobrefslhc_inj.mask
+=====================
+jobrefslhc_withbb_coll.mask
+=====================
+jobrefslhc_withbb_inj.mask
+=====================
+
+=====================
+minav.awk
+=====================
+
+=====================
+missing_template
+=====================
+
+=====================
+mywhich
+=====================
+
+=====================
+plot (directory)
+=====================
+inc
+=====================
+
+=====================
+plot1.template
+=====================
+
+=====================
+plot2.template
+=====================
+
+=====================
+plot_DA
+=====================
+
+=====================
+post_template
+=====================
+
+=====================
+prepare_bnl
+=====================
+
+=====================
+print_env
+=====================
+
+=====================
+query_all
+=====================
+
+=====================
+recall_study
+=====================
+
+=====================
+rerun_all_cases
+=====================
+
+=====================
+results_template
+=====================
+
+=====================
+run_awk
+=====================
+
+=====================
+run_bnl
+=====================
+
+=====================
+run_incomplete_cases
+=====================
+
+=====================
+run_incomplete_tasks
+=====================
+
+=====================
+run_join10
+=====================
+
+=====================
+run_mad6t
+=====================
+2c2
+< # Just handles the -i parameter for running interactively
+---
+> # Now it just handles the -i parameter for running interactively
+6d5
+< # This assumes only one run_mad6t at a time. Should do better?
+
+=====================
+run_missing_jobs
+=====================
+
+=====================
+run_missing_tasks
+=====================
+
+=====================
+run_post
+=====================
+
+=====================
+run_query
+=====================
+
+=====================
+run_results
+=====================
+
+=====================
+run_six
+=====================
+891a892,898
+> 
+> #MACRO mymess 2 Trans $Runnam $Rundir, k=$k
+>           sixdeskmesslevel=2
+>           sixdeskmess="Trans $Runnam $Rundir, k=$k"
+>           sixdeskmess
+> #MACRO mymess
+> 
+894c901
+<             if [ -s "$tree"/"$Rundir"/fort.10.gz ] ;then
+---
+>             if [ -s "$tree"/"$Rundir"/fort.10.gz ] && [ $sixdeskforce -ne 2 ] ;then
+959a967,973
+> 
+> #MACRO mymess 2 Momen $Runnam $Rundir, k/0=$k
+>           sixdeskmesslevel=2
+>           sixdeskmess="Momen $Runnam $Rundir, k/0=$k"
+>           sixdeskmess
+> #MACRO mymess
+> 
+961,962c975,977
+<           if [ -d "$tree"/"$Rundir" ] && [ ! -s "$tree"/"$Rundir"/fort.10.gz ] ;then
+<             rm -rf "$tree"/"$Rundir"
+---
+>           if [ -d "$tree"/"$Rundir" ] ;then
+>             if [ ! -s "$tree"/"$Rundir"/fort.10.gz ] || [ $sixdeskforce -eq 2 ] ;then
+>               rm -rf "$tree"/"$Rundir"
+965,967c980,982
+<             sixdeskmesslevel=2
+<             sixdeskmess="$tree/$Rundir removed contained no or zerolength fort.10.gz"
+<             sixdeskmess
+---
+>               sixdeskmesslevel=2
+>               sixdeskmess="$tree/$Rundir removed contained no or zerolength fort.10.gz"
+>               sixdeskmess
+969a985
+>             fi
+
+=====================
+run_status
+=====================
+
+=====================
+run_template
+=====================
+
+=====================
+scripts (directory)
+=====================
+DAsurv.tex
+=====================
+README
+1,15d0
+< New Major Release 29th February matching SixDesk documentation 
+< and using study job_tracking with appropriate defaults.
+< 
+< Most/all commands now accept a study and optionally a
+< platform as parameters  to the command. This facilitates
+< running multiple studies in a workspace.
+< 
+< run_status still takes a long time for platform LSF but
+< the delays can be minimised but doing a run_status at regular
+< intervals.
+< 
+< Set up to use SIXTRACKEXE=SixTrack_4411
+< 
+< Added pilot versions of compare_DA and plot_DA.
+< Some minor new messages to log normal completion.
+25a11
+> Need to list all these MAJOR changes.
+34,35c20,21
+<  short run remains an issue ????
+<  (Remived bnl options which can be restored)
+---
+>  short run remains an issue
+>  (Added bnl options which can be removed)
+=====================
+acrontab.entry
+=====================
+allmyseds
+0a1,5
+> s/\(.*\)myglobal_lock/\
+> #MACRO mylobal_lock\
+> \1sixdeskglobal_lock\
+> #MACRO myglobal_lock\
+> /
+=====================
+allscripts
+=====================
+Skipping!
+=====================
+backup_study
+=====================
+backup_workspace
+=====================
+batch_join10
+=====================
+batch_post
+=====================
+batch_results
+=====================
+batch_run
+=====================
+bnl_arrays
+=====================
+bnl_results
+=====================
+bresume_all
+=====================
+bstop_all
+=====================
+check_all_locks
+=====================
+check_amps10
+=====================
+check_amps3
+=====================
+check_envs
+=====================
+check_incomplete
+=====================
+check_jobs
+=====================
+check_joined10
+=====================
+check_lock
+=====================
+check_locks
+=====================
+check_mad6t
+=====================
+check_really
+=====================
+check_seds
+=====================
+check_studies
+=====================
+clone_w
+=====================
+compare_DA
+=====================
+compare_DAS
+=====================
+compare_envs
+=====================
+compare_myscripts
+=====================
+compare_results
+=====================
+compare_scripts
+=====================
+compare_studies
+=====================
+compare_workspaces
+=====================
+compare_workspaces_recursive
+=====================
+correct_cases
+=====================
+createDAsurv
+=====================
+create_protection_group
+=====================
+delete_all_error_results
+=====================
+delete_cpss_tasks
+=====================
+delete_errors
+=====================
+delete_study
+=====================
+docompare_DA
+=====================
+docompare_results
+=====================
+domyseds
+4c4
+< # remove "x" executable from dot_* files
+---
+> # remove "x" excutable from dot_* files
+=====================
+doplot_DA
+=====================
+dorun_mad6t
+=====================
+dot_boinc
+=====================
+dot_bsub
+118a119,120
+> # and now we DELETE any existing fort.10.gz if the platform is LSF
+> # and also remove it from completed cases if it is there.........
+126a129,149
+>   if test "$sixdeskplatform" = "LSF"
+>   then
+>     rm -f $sixdesktrack/$sixdeskRundir/fort.10.gz
+>     if test -s $sixdeskwork/completed_cases
+>     then
+> 
+> #MACRO mylock $sixdeskwork
+>       sixdesklockdir=$sixdeskwork
+>       sixdesklock
+> #MACRO mylock
+> 
+>       sed -e'/^'$Runnam'$/d' $sixdeskwork/completed_cases > $tmp
+>       cp $tmp $sixdeskwork/completed_cases
+> 
+> #MACRO myunlock $sixdeskwork
+>       sixdesklockdir=$sixdeskwork
+>       sixdeskunlock
+> #MACRO myunlock
+> 
+>     fi
+>   fi
+=====================
+dot_env
+=====================
+dot_profile
+2c2
+< # A set of subroutines for the SixDesk environment
+---
+> # A set of subroutines/Macros for the SixDesk environment
+=====================
+dot_task
+=====================
+dot_taskgroup
+=====================
+exec_env
+=====================
+get_all_betavalues
+=====================
+get_wpro
+=====================
+getlocks
+=====================
+join10_template
+=====================
+join_bnl
+=====================
+minav.awk
+=====================
+mybackup_study
+=====================
+mybackup_workspace
+=====================
+mybnl_arrays
+=====================
+mybnl_results
+=====================
+mycheck_all_locks
+=====================
+mycheck_amps10
+=====================
+mycheck_amps3
+=====================
+mycheck_envs
+=====================
+mycheck_incomplete
+=====================
+mycheck_jobs
+=====================
+mycheck_joined10
+=====================
+mycheck_lock
+=====================
+mycheck_locks
+=====================
+mycheck_mad6t
+=====================
+mycheck_really
+=====================
+mycorrect_cases
+=====================
+mycorrect_cases.orig
+=====================
+mydelete_all_error_results
+=====================
+mydelete_cpss_tasks
+=====================
+mydelete_errors
+=====================
+mydelete_study
+=====================
+mydocompare_DA
+=====================
+mydocompare_results
+=====================
+mydoplot_DA
+=====================
+mydorun_mad6t
+=====================
+mydot_boinc
+=====================
+mydot_bsub
+61a62,63
+> # and now we DELETE any existing fort.10.gz if the platform is LSF
+> # and also remove it from completed cases if it is there.........
+62a65,75
+>   if test "$sixdeskplatform" = "LSF"
+>   then
+>     rm -f $sixdesktrack/$sixdeskRundir/fort.10.gz
+>     if test -s $sixdeskwork/completed_cases
+>     then
+>       mylock $sixdeskwork
+>       sed -e'/^'$Runnam'$/d' $sixdeskwork/completed_cases > $tmp
+>       cp $tmp $sixdeskwork/completed_cases
+>       myunlock $sixdeskwork
+>     fi
+>   fi
+=====================
+mydot_env
+=====================
+mydot_profile
+2c2
+< # A set of subroutines for the SixDesk environment
+---
+> # A set of subroutines/Macros for the SixDesk environment
+=====================
+mydot_task
+=====================
+mydot_taskgroup
+=====================
+myget_all_betavalues
+=====================
+myjoin_bnl
+=====================
+mymywhich
+=====================
+myplot_DA
+=====================
+myprepare_bnl
+=====================
+Skipping!
+=====================
+myrecall_study
+=====================
+myrecall_workspace
+=====================
+myrerun_all_cases
+=====================
+myrun_awk
+=====================
+myrun_bnl
+=====================
+myrun_incomplete_cases
+=====================
+myrun_incomplete_tasks
+=====================
+myrun_join10
+=====================
+myrun_missing_jobs
+=====================
+myrun_missing_tasks
+=====================
+myrun_post
+=====================
+myrun_query
+=====================
+myrun_results
+=====================
+myrun_six
+499a500
+>           mymess 2 "Trans $Runnam $Rundir, k=$k"
+502c503
+<             if [ -s "$tree"/"$Rundir"/fort.10.gz ] ;then
+---
+>             if [ -s "$tree"/"$Rundir"/fort.10.gz ] && [ $sixdeskforce -ne 2 ] ;then
+549a551
+>           mymess 2 "Momen $Runnam $Rundir, k/0=$k"
+551,553c553,557
+<           if [ -d "$tree"/"$Rundir" ] && [ ! -s "$tree"/"$Rundir"/fort.10.gz ] ;then
+<             rm -rf "$tree"/"$Rundir"
+<             mymess 2 "$tree/$Rundir removed contained no or zerolength fort.10.gz"
+---
+>           if [ -d "$tree"/"$Rundir" ] ;then
+>             if [ ! -s "$tree"/"$Rundir"/fort.10.gz ] || [ $sixdeskforce -eq 2 ] ;then
+>               rm -rf "$tree"/"$Rundir"
+>               mymess 2 "$tree/$Rundir removed contained no or zerolength fort.10.gz"
+>             fi
+=====================
+myrun_status
+=====================
+myrun_status.new
+=====================
+myrun_status.orig
+=====================
+myrun_status.vnewropy
+=====================
+myset_env
+=====================
+myunlock
+=====================
+myunlock_all
+=====================
+myupdate_incomplete
+=====================
+myupdate_sixjobs
+=====================
+mywhich
+=====================
+plot1.template
+=====================
+plot2.template
+=====================
+plot_DA
+=====================
+post_template
+=====================
+prepare_bnl
+=====================
+print_env
+=====================
+query_all
+=====================
+recall_study
+=====================
+recall_workspace
+=====================
+rerun_all_cases
+=====================
+results_template
+=====================
+run_awk
+=====================
+run_bnl
+=====================
+run_incomplete_cases
+=====================
+run_incomplete_tasks
+=====================
+run_join10
+=====================
+run_mad6t
+2c2
+< # Just handles the -i parameter for running interactively
+---
+> # Now it just handles the -i parameter for running interactively
+6d5
+< # This assumes only one run_mad6t at a time. Should do better?
+=====================
+run_missing_jobs
+=====================
+run_missing_tasks
+=====================
+run_post
+=====================
+run_query
+=====================
+run_results
+=====================
+run_six
+891a892,898
+> 
+> #MACRO mymess 2 Trans $Runnam $Rundir, k=$k
+>           sixdeskmesslevel=2
+>           sixdeskmess="Trans $Runnam $Rundir, k=$k"
+>           sixdeskmess
+> #MACRO mymess
+> 
+894c901
+<             if [ -s "$tree"/"$Rundir"/fort.10.gz ] ;then
+---
+>             if [ -s "$tree"/"$Rundir"/fort.10.gz ] && [ $sixdeskforce -ne 2 ] ;then
+959a967,973
+> 
+> #MACRO mymess 2 Momen $Runnam $Rundir, k/0=$k
+>           sixdeskmesslevel=2
+>           sixdeskmess="Momen $Runnam $Rundir, k/0=$k"
+>           sixdeskmess
+> #MACRO mymess
+> 
+961,962c975,977
+<           if [ -d "$tree"/"$Rundir" ] && [ ! -s "$tree"/"$Rundir"/fort.10.gz ] ;then
+<             rm -rf "$tree"/"$Rundir"
+---
+>           if [ -d "$tree"/"$Rundir" ] ;then
+>             if [ ! -s "$tree"/"$Rundir"/fort.10.gz ] || [ $sixdeskforce -eq 2 ] ;then
+>               rm -rf "$tree"/"$Rundir"
+965,967c980,982
+<             sixdeskmesslevel=2
+<             sixdeskmess="$tree/$Rundir removed contained no or zerolength fort.10.gz"
+<             sixdeskmess
+---
+>               sixdeskmesslevel=2
+>               sixdeskmess="$tree/$Rundir removed contained no or zerolength fort.10.gz"
+>               sixdeskmess
+969a985
+>             fi
+=====================
+run_status
+=====================
+run_template
+=====================
+sedbnl
+=====================
+sedboincnames
+=====================
+sedbunch_charge
+=====================
+sedchrom
+=====================
+sedcron
+=====================
+sedexes
+=====================
+Skipping!
+=====================
+sedpmass
+=====================
+sedtune
+=====================
+set_env
+=====================
+stable.awk
+=====================
+stable2.awk
+=====================
+status_all
+=====================
+sub_wpro
+=====================
+unlock
+=====================
+unlock_all
+=====================
+update_incomplete
+=====================
+update_scripts
+=====================
+update_sixjobs
+=====================
+
+=====================
+sedboincnames
+=====================
+
+=====================
+set_env
+=====================
+
+=====================
+sixdeskTaskIds (directory)
+=====================
+sixdeskTaskId
+1c1
+< 0
+---
+> 30311
+=====================
+
+=====================
+sixdeskenv
+=====================
+2,3c2
+< # February 29, 2012 using new defaults
+< # Tested with job_tracking collision beam 1
+---
+> # 10th August, 2010
+8,9c7,8
+< export pmass=938.272013
+< # or you can use the older value
+---
+> export pmass=938.271998
+> # or you can use the new more precise value
+11c10
+< # export pmass=938.271998
+---
+> export pmass=938.272013
+13a13,15
+> #export bunch_charge=1.1000e+11
+> #export bunch_charge=1.1000e+12
+> #export bunch_charge=1.7000e+11
+24c26
+< export workspace=w1
+---
+> export workspace=wbnlaug10
+26c28
+< # The directory for the workspace normally $HOME
+---
+> # The directory for the workspace (normally backed up) e.g. $HOME
+31c33
+< export scratchdir=/afs/cern.ch/user/$initial/$LOGNAME/scratch0
+---
+> export scratchdir=/afs/cern.ch/user/$initial/$LOGNAME/scratch1
+35,38c37
+< # but the default now includes the workspace name (track is added
+< # by sysenv to make $sixdesktrackdir and the LHCDescrip is added
+< # as necessary by run_six etc etc).
+< export trackdir=$scratchdir/$workspace
+---
+> export trackdir=$scratchdir/track/$workspace
+49,50c48
+< export sixdeskforce=0
+< 
+---
+> export sixdeskforce=2
+53a52,53
+> #export platform=BOINC
+> #export platform=CPSS
+72c72,74
+< export iendmad=60
+---
+> export istamad=3
+> export iendmad=10
+> export iendmad=3
+87c89
+< export beam=""
+---
+> export beam=
+120a123,124
+> # export e0=3500000.
+> # export gamma=3730.2
+177,179c181
+< export sussix=0
+< # Note if sussix = 1, short must be 1 (long/da 0)
+< # and kini = 1 FRS??????
+---
+> export sussix=1
+184c186
+< export short=0
+---
+> export short=1
+194c196,197
+<   # kini=0 is the momemtum detuning and then set to 1
+---
+>   # kini=0 is for the momentum detuning and then kini is set to 1
+>   # kini >= 1 for the amplitude detuning
+204c207
+< export long=1
+---
+> export long=0
+208,209c211,212
+<   export ns1l=18
+<   export ns2l=22
+---
+>   export ns1l=6
+>   export ns2l=16
+216,217c219,220
+<   export kendl=59
+<   export kmaxl=59
+---
+>   export kendl=19
+>   export kmaxl=19
+283a287,316
+> if test "$BNL" != ""
+> then
+> # We expect to find beambeamdist.dat, fort.2, fort.3.mother and fort.8 and fort.16
+> # in sixtrack_input and run_bnl will check this
+> #
+> # The "seed" 1000 for example as used by Yun Luo
+>   export bnlseeds=1000
+>   export bnlseede=1000
+> # First and Last sample number in beambeamdist.dat
+>   export bnlsamples=1
+>   export bnlsamplee=1
+> # Number of pairs descriped in a sample in beambeamdist.dat
+>   export bnlpairs=32
+> # Number of pairs for each job
+> # This used to generate bnlpair names like 1-2, 2-3, and so on....63,64
+>   export bnlperjob=2
+> # Now the turns, a bit tricky, since we use nwri for both deciding how often
+> # to checkpoint, and how often to write beambeam-output.dat!
+> # I am assuming we run 2 pairs per job and then the values below
+> # are reasonable
+>   export bnlturns=10000000
+>   export bnlturnse=e7
+>   export bnlwrite=100000
+> # for my testing I use
+>   export bnlturns=10000
+>   export bnlturnse=e4
+>   export bnlwrite=1000
+> # end BNL variables
+> fi
+> #
+
+=====================
+sixdeskenv.bnl
+=====================
+
+=====================
+stable.awk
+=====================
+
+=====================
+stable2.awk
+=====================
+
+=====================
+status_all
+=====================
+
+=====================
+status_template
+=====================
+
+=====================
+studies (directory)
+=====================
+
+=====================
+sub_wpro
+=====================
+
+=====================
+sysenv
+=====================
+2c2
+< # February 29 2012
+---
+> # 10th August, 2010
+7a8
+> # SIXTRACKEXE re-defined at the end.
+9,10c10
+< export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_pro
+< export SIXTRACKBNLEXE=$sixdeskpath/exes/SixTrack_bnl_pro
+---
+> # SIXTRACKBNLEXE re-defined at the end.
+12c12
+< export SIXTRACKDAEXE=$sixdeskpath/exes/SixTrack_crlibm_da_lf95v4200
+---
+> # SIXTRACKDAEXE re-defined at the end.
+16,17c16
+< # Doesn't seem to work!
+< #export MADX="madx_pro"
+---
+> export MADX="madx_pro"
+19,20c18
+< #export MADX="madx_dev"
+< # and the new default
+---
+> export MADX="madx_dev"
+21a20,23
+> # Previous production version using Version 3.04.53
+> #export MADX_PATH="/afs/cern.ch/group/si/slap/bin/old_madX_production"
+> # The following is a special version for backwards compatibility (Dobrin)
+> #export MADX_PATH="/afs/cern.ch/eng/sl/MAD-X/pro/bin/V2.13"
+25c27
+< # Turn ON/OFF CASTOR........... true or false 
+---
+> # Turn ON/OFF CASTOR........... true or false (CPSS only, will do for LSF also)
+57,58d58
+< export cronlogs=$scratchdir/cronlogs/$workspace
+< export cronlogdir=$cronlogs/$LHCDescrip
+60c60
+< export sixdesktrack=$trackdir/track
+---
+> export sixdesktrack=$trackdir
+70,71c70,71
+< # The SixTrack executable is now ????.
+< export sixdeskpts=boinc_users
+---
+> # The SixTrack executable is now 4.2.11 BNL 
+> export sixdeskpts=mcintosh:boinc
+75c75
+< # and use boinctest (for Igor and new BOINC release)
+---
+> #for Igor
+101d100
+< #sixdeskfpopse=`expr $sixdeskfpopse \* 3`
+107c106
+< export sixdeskexec="$sixdeskpath/exes/SixTrack_4411_crlibm_bnl_ifort_icpss.exe"
+---
+> # sixdeskexec re-defined at the end.
+148a148,157
+> # SIXTRACKEXE re-defined at the end.
+> # SIXTRACKBNLEXE re-defined at the end.
+> # SIXTRACKDAEXE re-defined at the end.
+> # sixdeskexec re-defined at the end.
+> export cronlogs=$scratchdir/cronlogs/$workspace
+> export cronlogdir=$cronlogs/$LHCDescrip
+> export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_pro
+> export SIXTRACKBNLEXE=$sixdeskpath/exes/SixTrack_bnl_pro
+> export SIXTRACKDAEXE=$sixdeskpath/exes/SixTrack_crlibm_da_lf95v4200
+> export sixdeskexec=$sixdeskpath/exes/SixTrack_crlibm_bnl_lf95v4211_cpss.exe
+
+=====================
+unlock
+=====================
+
+=====================
+unlock_all
+=====================
+
+=====================
+update_incomplete
+=====================
+
+=====================
+update_scripts
+=====================
+
+=====================
+update_sixjobs
+=====================
+
+=====================
+utilities (directory)
+=====================
+bnl.lsf
+=====================
+mad6t.lsf
+=====================
+mad6t1.lsf
+=====================
+sixda.lsf
+=====================
+sixmedium.lsf.mask
+17d16
+< rm $TRACKDIR/SIXJOBDIR/fort.*.gz 
+=====================
+sixtracking.lsf
+=====================

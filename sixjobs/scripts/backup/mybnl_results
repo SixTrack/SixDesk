@@ -1,0 +1,815 @@
+#!/bin/sh
+# Special run_results for BNL
+# See if we have any results and download them
+# uses a lock on the Study
+# A new subroutine to update mydatabase......
+update_cases()
+{
+  #We now make the new mycompleted_cases amd myincomplete_cases
+  # using the new completed_this_run file (or left over from a
+  # previous run_results which was killed for some reason).
+  touch $sixdeskwork/completed_this_run
+  mymktmp newccases $sixdeskwork
+  mymktmp newicases $sixdeskwork
+  cat $sixdeskwork/mycompleted_cases $sixdeskwork/completed_this_run > $newccases
+  sort --unique $newccases > $sixdeskwork/mycompleted_cases
+  rm $newccases
+  rm -f $sixdeskwork/sedscript
+  touch $sixdeskwork/sedscript
+  while read mycase
+  do
+  #make a sed script
+    echo '/^'$mycase'$/d' >> $sixdeskwork/sedscript
+  done < $sixdeskwork/completed_this_run
+  sed -f $sixdeskwork/sedscript $sixdeskwork/myincomplete_cases > $newicases
+  cp $newicases $sixdeskwork/myincomplete_cases
+  rm -f $newicases
+  rm -f $sixdeskwork/completed_this_run
+  # and make another report
+  mymess 2 "Due to an AFS/Linux bug we maintain another database"
+  mymess 2 "with the files myincomplete_cases and mycompleted_cases"
+  mymess 2 "to help find the problem"
+  icases=0
+  if test -s $sixdeskwork/myincomplete_cases
+  then
+    icases=`wc -l $sixdeskwork/myincomplete_cases`
+    icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+  fi
+  ccases=0
+  if test -s $sixdeskwork/mycompleted_cases
+  then
+    ccases=`wc -l $sixdeskwork/mycompleted_cases`
+    ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+  fi
+  mymess 1 "Before/after this download $cases mycases, $ccases complete ($icases incomplete)"
+}
+# If called with a Study ($1) and a Platform ($2)
+# we now use dot_env 
+. ./dot_env
+# and now we can define our arrays
+# Declare our new BNL arrays
+declare -a bfiles
+declare -a bforts
+bnlfiles="title.dat beambeam-output.dat beambeam-lostID.dat SixTwiss.dat checkdist.dat"
+bnlforts="fort.10 fort.52 fort.53 fort.51 fort.97"
+bfiles=($bnlfiles)
+bforts=($bnlforts)
+if test -s $sixdeskstudy/sixdesklock
+then
+  if test ! -w $sixdeskstudy/sixdesklock
+  then
+    echo "The Study $sixdeskstudy sixdesklock is ON; giving up!"
+    myexit 0
+  fi
+fi
+if test "$BNL" = ""  
+then
+  mymess 0 "The BNL flag must be set in sixdeskenv!"
+  myexit 1
+fi
+mylock $sixdeskstudy
+mymess 0 "Starting in Workspace $workspace, Study `basename $sixdeskstudy`, Platform $sixdeskplatform"
+mymess 0 "Using sixdesk.log in $sixdesklogdir"
+
+if test $sixdeskplatform = "lsf"
+then
+  echo "This command is not available for LSF jobs!!!"
+  myunlock $sixdeskstudy
+  myexit 0
+fi
+
+# Now update my database if a completed_this_run file exists froma previous run
+if test -s $sixdeskwork/completed_this_run
+then
+###  mylock $sixdeskwork
+  update_cases
+###  myunlock $sixdeskwork
+fi
+# Get the counts before we run for checking later
+mylock $sixdeskwork
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+###myunlock $sixdeskwork
+
+mymess 0 "Running on `hostname`"
+IDS=$sixdeskwork
+mkdir -p $sixdeskjobs
+mymktmp tmp $sixdeskjobs
+mymktmp sixdesktasklist $sixdeskjobs
+if test $sixdeskplatform = "cpss"
+then
+  if test ! -s $sixdeskstudy/TaskGroupId
+  then
+    rm $tmp
+    rm $sixdesktasklist
+    mymess 0 "No TaskGroup exists for CPSS."
+    myunlock $sixdeskstudy
+    myexit 0
+  fi
+  tgid=`cat $sixdeskstudy/TaskGroupId`
+  mytgid=`echo $tgid | sed -e 's/TaskGroupID: *//'`
+  mymess 2 "Checking TaskGroup $mytgid for $LHCDescrip"
+  perl $sixdeskpath/Bin/queryReadyResults.pl $mytgid > $tmp
+  stat=$?
+  if test $stat -ne 0
+  then
+    mymess 0 "Problem with query ReadyResults Status $stat `cat $tmp`"
+    rm $tmp
+    rm $sixdesktasklist
+    myunlock $sixdeskstudy
+    myexit 99
+  fi
+  # remove the \r's............
+  mymktmp sixdeskresults $sixdeskjobs
+  awk -f $sixdeskpath/scripts/remover $tmp > $sixdeskresults
+  rm $tmp
+  tot=`grep TotalTasks $sixdeskresults | sed -e 's/TotalTasks: *//'`
+  ready=`grep ResultsReady $sixdeskresults | sed -e 's/ResultsReady: *//'`
+  mymess 1 "Out of $tot Tasks $ready Results are available"
+  cat $sixdeskresults
+  tasks=`grep ReadyTasks $sixdeskresults | sed -e 's/ReadyTasks: *//'`
+  rm $sixdeskresults
+  mymktmp sixdesktasks $sixdeskjobs
+  echo "$tasks" > $sixdesktasks
+  awk -f $sixdeskpath/scripts/splitter $sixdesktasks > $sixdesktasklist
+  rm $sixdesktasks 
+elif test $sixdeskplatform = "boinc"
+then
+  sixdeskboinc=$sixdeskboincdir
+  export sixdeskboinc
+  if test ! -d $sixdeskboincdir
+  then
+    mkdir -p $sixdeskboincdir
+    # and here use AFS protection group stuff to fix access control list
+    fs setacl $sixdeskboincdir $LOGNAME rlidwka
+    fs setacl $sixdeskboincdir $sixdeskpts rl
+  fi
+  if test -s $sixdeskboincdir/owner
+  then
+    sixdeskowner=`cat $sixdeskboincdir/owner`
+    if test "$sixdeskowner" != "$LOGNAME"
+    then
+      mymess 0 "The workspace/LHCDescrip $sixdeskboincdirname are already in use by $sixdeskowner!!!"
+      rm -f $tmp
+      rm -f $sixdesktasklist
+      myunlock $sixdeskstudy
+      myexit 11
+    fi
+  else
+    echo "$LOGNAME" > $sixdeskboincdir/owner
+  fi
+  mkdir -p $sixdeskboinc/results
+  cd $sixdeskboinc/results
+  find . -name ${workspace}_${LHCDesName}__[0-9]\*__[0-9.]\*_[0-9.]\*__[0-9.]\*_[0-9.]\*__[0-9]__[0-9.]\*_1_sixvf_boinc[0-9]\* > $tmp 2> /dev/null
+  cd $sixdeskhome
+  mymktmp sixdeskresults $sixdeskjobs
+  sed -f sedboincnames $tmp > $sixdeskresults
+  rm $tmp
+  ready=`wc -l $sixdeskresults`
+  ready=`echo $ready | sed -e 's? *\([0-9]*\).*?\1?'`
+  mymess 1 "$ready Results are available"
+  cat $sixdeskresults
+  cut -d"%" -f6- $sixdeskresults > $tmp 
+  cut -d"_" -f4 $tmp > $sixdesktasklist
+  rm $tmp
+  rm $sixdeskresults
+elif test "$sixdeskplatform" = "grid"
+then
+  # Here will produce a sixdesktasklist for GRID
+  echo "GRID not yet implemented"
+  rm -f $tmp
+  rm -f $sixdesktasklist
+  myunlock $sixdeskstudy
+  myexit 89
+fi
+ok=0
+duplicated=0
+failed=0
+
+rm -f $sixdeskwork/completed_this_run
+
+touch $sixdesktasklist
+for ntaskid in `cat $sixdesktasklist`
+do
+  if test $sixdeskplatform = "cpss"
+  then
+    taskid=cpss$ntaskid
+  else
+    taskid=$ntaskid
+  fi
+  success="false"
+  ignore="true"
+  delete="false"
+  duplicate="false"
+  anerror="false"
+  unknown="false"
+  mymess 2 "Now treating TaskID $taskid"
+  Runnam=""
+  Rundir=""
+  where=""
+  taskids=""
+  entry=`grep " $taskid " $IDS/taskids`
+  if test "$entry" != ""
+  then
+    Runnam=`echo $entry | cut -d" " -f1`
+    if test $sixdeskplatform = "boinc"
+    then
+      aboincRunnam=`echo $Runnam | sed -e's/%/__/g'`
+      if test ! -f $sixdeskboincdir/results/$workspace"_"$aboincRunnam"_1_sixvf_"$taskid
+      then
+      # Hopefully because of duplicate TaskIds
+        mymess 0 "Looking for duplicates TaskId $taskid"
+        mymktmp boincdup $sixdeskjobs
+        grep " $taskid " $IDS/taskids > $boincdup
+        mytimes=`wc -l $boincdup`
+        mytimes=`echo "$mytimes" | sed -e 's? *\([0-9]*\).*?\1?'`
+        if test "$mytimes" -gt 1
+        then
+          mymess 0 "FOUND duplicate TaskId  $taskid Times $mytimes"
+          while read myline
+          do
+            aRunnam=`echo $myline | cut -d" " -f1`
+            aboincRunnam=`echo $aRunnam | sed -e's/%/__/g'`
+            if test -f $sixdeskboincdir/results/$workspace"_"$aboincRunnam"_1_sixvf_"$taskid
+            then
+              #found one, may be more!
+              mymess 0 "Found the duplicated entry $taskid $aRunnam"
+              entry=$myline
+              Runnam=`echo $entry | cut -d" " -f1` 
+              mymess 0 "Using $Runnam for $taskid"
+              break
+            fi
+          done < $boincdup
+          rm -f $boincdup
+        else
+          mymess 0 "A very serious problem in matching TaskID/Runnam!!!"
+          mymess 0 "Could not resolve TaskId $taskid"
+        fi
+      fi
+    fi
+    taskids=`echo $entry | cut -d" " -f2-`
+#   if test "$BNL" = ""
+#   then 
+      myrundir $Runnam Rundir
+#   else
+#      export Rundir=`echo $Runnam | sed -e's?%?\/?g'`
+#   fi
+    where=$sixdesktrack/$Rundir
+    mymess 1 "Task $taskid for job $Runnam found in $Rundir"
+  fi
+  if test "$Runnam" = ""
+  then 
+    mymess 0 "Task $taskid can NOT be found in $sixdeskwork/taskids !!! Deleting result from the server"
+    delete="true"
+    anerror="true"
+    unknown="true"
+  else
+    where=$sixdesktrack/$Rundir
+    if test ! -d "$where"
+    then
+      mymess 0 "Strange the directory $where for task $taskid does NOT exist!!! We shall ignore this result for the moment"
+      delete="true"
+      anerror="true"
+    else
+      #let us get the results downloaded
+      #sixres.tar.gz will be put here
+      cd $where
+      if test $sixdeskplatform = "cpss"
+      then
+        perl $sixdeskpath/Bin/downloadResult.pl $mytgid $ntaskid > down 2>&1
+        stat=$?
+      elif test $sixdeskplatform = "boinc"
+      then
+        found="false"
+        boincRunnam=`echo $Runnam | sed -e's/%/__/g'`
+        if test ! -f $sixdeskboincdir/results/$workspace"_"$boincRunnam"_1_sixvf_"$taskid
+        then
+          mymess 0 "CANNOT FIND the result file!!!"
+          anerror="true"
+        else
+          echo "Found in hierarchy $sixdeskboincdir"
+          found="true"
+        fi
+        if test "$found" = "true"
+        then
+          mkdir -p sixtrack
+          awk -f $sixdeskpath/scripts/remover $sixdeskboincdir/results/$workspace"_"$boincRunnam"_1_sixvf_"$taskid > sixtrack/fort.10
+#Eric BOINC marker
+          cd sixtrack
+          mymktmp tmp
+          egrep 'title     ' fort.10 > $tmp
+          sed -e's/title     //' $tmp > title.dat
+          egrep 'output    ' fort.10 > $tmp
+          sed -e's/output    //' $tmp > beambeam-output.dat
+          egrep 'lostID    ' fort.10 > $tmp
+          sed -e's/lostID    //' $tmp > beambeam-lostID.dat
+          egrep 'checkdist ' fort.10 > $tmp
+          sed -e's/checkdist //' $tmp > checkdist.dat
+          egrep 'SixTwiss  ' fort.10 > $tmp
+          sed -e's/SixTwiss  //' $tmp > SixTwiss.dat
+          rm $tmp
+          myRunnam=`echo $Runnam | cut -c1-50`
+          grep "$myRunnam" title.dat > headmess 2>&1
+          stat=$?
+          mymess 2 "`cat headmess`"
+          rm headmess
+          if test $stat -ne 0 
+          then
+            mymess 0 "Cannot find Runnam $Runnam in title.dat !!!; wrong results???"
+            delete="true"
+            ignore="true"
+            anerror="true"
+            mkdir -p ../problems
+            mv ../w$taskid.tar.gz ../problems
+          else
+            for i in 0 1 2 3 4
+            do
+              if test ! -f "${bfiles[$i]}"
+              then
+                mymess 0 "${bfiles[$i]} appears to be MISSING!!!"
+                anerror="true"
+                ignore="true"
+                delete="true"
+                mkdir -p ../problems
+                mv ../w$taskid.tar.gz ../problems
+              fi
+            done
+          fi
+          if test "$anerror" = "false"
+          then
+            # See if it is duplicated or not (ALL files exist)
+            # and is is it the same???
+            # So we just check for beambeam-output.dat.gz
+            if test -s ../beambeam-output.dat.gz
+            then
+            # we assume duplication
+            #for myfil in title beambeam-output checkdist beambeam-lostID
+            # and we ignore SixTwiss.dat
+              mymess 0 "Checking Duplicates $Runnam"
+              duplicate="true"
+              for i in  0 1 2 4
+              do
+                if test -s ../${bfiles[$i]}.gz
+                then
+                  gunzip -f ../${bfiles[$i]}.gz 
+                  diff -b ../${bfiles[$i]} ${bfiles[$i]} > /dev/null
+                  if test $? -ne 0
+                  then
+                    mymess 0 "BNL DIFF ${bfiles[$i]} $where!!!"
+                    anerror="true"
+                    ignore="true"
+                    delete="true"
+                    mkdir -p ../problems
+                    mv ../w$taskid.tar.gz ../problems
+                  fi 
+                  gzip -f ../${bfiles[$i]}
+                else
+                  duplicate="false"
+                  mymess 0 "${bfiles[$i]}.gz is NOT duplicated!"
+                fi
+              done  
+            else
+              mymess 0 "No duplication of beambeam-output.dat"
+            fi
+            if test "$duplicate" = "true"
+            then
+              mymess 0 "Seem to have duplicated result $Runnam" 
+            fi
+            if test "$duplicate" = "false"
+            then
+### Don't bother with SixTwiss.dat
+              for i in  0 1 2 4
+              do
+                mv ${bfiles[i]} ../${bfiles[i]}
+                gzip -f ../${bfiles[i]}
+              done
+              success="true"
+              delete="true"
+              rm -f ../w$taskid.tar.gz
+# and keep fort.10 for CASTOR (ther is NO fort.6 from BOINC)
+              gzip fort.10
+            fi
+          fi
+#Eric BOINC marker
+        fi
+      fi
+# CPSS handled here
+      if test $sixdeskplatform != "boinc"
+      then
+        if test $stat -ne 0 -o ! -s sixres.tar.gz
+        then
+          mymess 0 "Download of task $taskid FAILED!!! Status $stat Message `cat down` or empty tar file"
+          rm down
+          # probably a WEB service problem
+          # but delete it anyway (if possible)
+          delete="true"
+          anerror="true"
+          ignore="true"
+        else 
+          cat down
+          rm down
+          ls -l sixres.tar.gz
+          cp sixres.tar.gz w$taskid.tar.gz 
+          gunzip -f sixres.tar.gz > mess 2>&1
+          stat=$?
+          if test $stat -ne 0
+          then
+            mymess00 "`ls -l sixres.tar.gz`"
+            mymess 1 "gunzip failed!!! `cat mess`"
+            # now just delete it but log for future reference
+            delete="true"
+            anerror="true"
+            mkdir -p problems
+            mv w$taskid.tar.gz problems
+          else
+            rm mess
+            tar -xf sixres.tar > mess 2>&1
+            stat=$?
+            if test $stat -ne 0
+            then
+              mymess 0 "Untar of sixres.tar failed!!!"
+              mymess 0 "`ls -l sixres.tar`"
+              mymess 0 "`cat $where/mess`"
+              rm mess
+              # never seen this in practice, just delete it
+              delete="true"
+              anerror="true"
+              ignore="true"
+              mkdir -p problems
+              mv w$taskid.tar.gz problems
+            elif test ! -d sixtrack
+            then
+              mymess 0 "Sixtrack untar has not produced a sixtrack directory!!!"
+              mymess 0 "`ls -l sixres.tar`"
+              mymess 0 "`cat mess`" 
+              rm mess
+              # never seen this in practice, just delete it
+              delete="true"
+              anerror="true"
+              ignore="true"
+              mkdir -p problems
+              mv w$taskid.tar.gz problems
+            else
+              rm mess
+              rm sixres.tar
+              cd sixtrack
+              touch sixtrack.exe
+              rm -f sixtrack.exe
+              # Now remove any \r characters from Windows in ASCII text files
+              # bnlforts are explicitly defined here
+              for fileno in 4 6 9 10 12 14 15 17 18 19 \
+                           20 21 22 23 24 25 26 27 28 29 31 34 91 92 93 98 \
+                           51 52 53 97
+              do
+                myfil=fort.$fileno
+                if test -s $myfil
+                then
+                  file $myfil | egrep "CRLF" > /dev/null 2>&1
+                  if test $? -eq 0
+                  then
+                    awk -f $sixdeskpath/scripts/remover $myfil > $tmp
+                    mv $tmp $myfil
+                  fi
+                fi
+              done 
+              if test -f fort.93
+              then
+                echo "$Runnam $Rundir $taskid" >> $sixdesklogdir/restart.log
+                cat fort.93 >> $sixdesklogdir/restart.log
+              fi
+              myRunnam=`echo $Runnam | cut -c1-50`
+              head -20 fort.6 | grep "$myRunnam" > headmess 2>&1
+              stat=$?
+              mymess 1 "`cat headmess`"
+              rm headmess
+              if test $stat -ne 0 
+              then
+                mymess 0 "Cannot find Runnam $Runnam in fort.6 !!!; wrong results???"
+                delete="true"
+                ignore="true"
+                anerror="true"
+                mkdir -p ../problems
+                mv ../w$taskid.tar.gz ../problems
+              else
+                for i in 0 1 2 3 4
+                do
+                  if test ! -f "${bforts[$i]}"
+                  then
+                    mymess 0 "${bforts[$i]} appears to be MISSING!!!"
+                    anerror="true"
+                    ignore="true"
+                    delete="true"
+                    mkdir -p ../problems
+                    mv ../w$taskid.tar.gz ../problems
+                  fi
+                done
+              fi
+              if test "$anerror" = "false"
+              then
+                # See if it is duplicated or not
+                # and is is it the same???
+                # So we just check for beambeam-output.dat.gz
+                if test -s ../beambeam-output.dat.gz
+                then
+                # we have duplication
+                #for myfil in title beambeam-output checkdist beambeam-lostID
+                # and we ignore SixTwiss.dat
+                  mymess 0 "Checking Duplicates $Runnam"
+                  duplicate="true"
+                  for i in  0 1 2 4
+                  do
+                    if test -s ../${bfiles[$i]}.gz
+                    then
+                      gunzip -f ../${bfiles[$i]}.gz 
+                      diff -b ../${bfiles[$i]} ${bforts[$i]} > /dev/null
+                      if test $? -ne 0
+                      then
+                        mymess 0 "BNL DIFF ${bfiles[$i]} $where!!!"
+                        anerror="true"
+                        ignore="true"
+                        delete="true"
+                        duplicate="false"
+                        mkdir -p ../problems
+                        mv ../w$taskid.tar.gz ../problems
+                      fi 
+                      gzip -f ../${bfiles[$i]}
+                    else
+                      duplicate="false"
+                      mymess 0 "${bfiles[$i]}.gz is NOT duplicated!"
+                    fi
+                  done  
+                else
+                  mymess 0 "No duplication of beambeam-output.dat"
+                fi
+                if test "$duplicate" = "true"
+                then
+                  mymess 0 "Seem to have duplicated result $Runnam" 
+                fi
+                if test "$duplicate" = "false"
+                then
+# Don't bother with SixTwiss.dat
+                  for i in  0 1 2 4
+                  do
+                    cp ${bforts[i]} ../${bfiles[i]}
+                    gzip -f ../${bfiles[i]}
+                  done
+                fi
+                success="true"
+                delete="true"
+                rm -f ../w$taskid.tar.gz
+              fi
+              # End of it all (except copying to CASTOR)
+              # End of 1st time or not
+              cd $where
+              if test "$ignore" = "false"
+              then
+                #Now figure out the CASTOR name etc
+                if test "$sixdeskcastor" = "true"
+                then
+                  export RFIO_USE_CASTOR_V2="YES"
+                  export STAGE_HOST="castorpublic"
+                  export STAGE_SVCCLASS="default"
+                  CASTOR=/castor/cern.ch/nap/$LOGNAME/direct_track/$Rundir
+                  mymess 1 "CASTOR of $Runnam.tar to $CASTOR"
+                  nsrm -rf $CASTOR > /dev/null 2>&1
+                  nsmkdir -p $CASTOR
+                  cd sixtrack
+                  mymktmp tmp
+                  tar cvf ../$Runnam.tar *.gz > $tmp 2>&1
+                  stat=$?
+                  cd ..
+                  if test $stat -ne 0
+                  then
+                    mymess 0 "Tar $Runnam.tar $where/.*.gz failed!!!"
+                    mymess 0 "`cat $tmp`"
+                    rm $tmp
+                    anerror="true"
+                  else
+                    rm $tmp
+                    rfcp $Runnam.tar $CASTOR > $tmp 2>&1
+                    stat=$?
+                    rm $Runnam.tar
+                    if test $stat -ne 0
+                    then
+                      mymess 0 "Copy to CASTOR failed!!! rfcp $where/sixtrack/$Runnam.tar $CASTOR"
+                      mymess 0 "`cat $tmp`"
+                      rm $tmp
+                      anerror="true"
+                    else
+                      rm $tmp
+                      success="true"
+                      delete="true"
+                    fi
+                  fi                  
+                else
+                  # CASTOR is not available
+                  success="true"
+                  delete="true"
+                fi
+              fi
+              # end of various nasties with fort.10 fort.6 etc
+            fi
+            # end of untar problem or not
+          fi
+          # end of gunzip problem
+        fi
+        # end of download result
+      fi
+      # end of if NOT BOINC
+      touch $where/down
+      rm $where/down
+    fi
+    # end of checking where
+  fi
+  # end of found a taskid or not
+  cd $sixdeskhome
+  if test "$success" = "true"
+  then
+    mymess 0 "BNL download complete, updating completed jobs etc"
+###    mylock $sixdeskwork
+    mymktmp tmp
+# Now we make a file completed_this_run which we will
+# use to update a parallel mycompleted_cases and myincomplete_cases
+    echo "$Runnam" >> $sixdeskwork/completed_this_run
+    touch $sixdeskwork/DEBUG
+    sed -e'/^'$Runnam'$/d' $sixdeskwork/incomplete_cases > $tmp
+    cp $tmp $sixdeskwork/incomplete_cases
+    if test $? -ne 0
+    then
+      stat $sixdeskwork/incomplete_cases >> $sixdeskwork/DEBUG
+      stat $tmp >> $sixdeskwork/DEBUG
+      mymess 0 "AFS problem with incomplete_cases"
+      mymess 0 "`stat $sixdeskwork/incomplete_cases`"
+      mymess 0 "`stat $tmp`"
+      myexit 999
+    else
+      rm $tmp
+    fi
+    dicases=`wc -l $sixdeskwork/incomplete_cases`
+    dicases=`echo $dicases | sed -e 's? *\([0-9]*\).*?\1?'`
+    if test -s $sixdeskwork/completed_cases
+    then
+      sed -e'/^'$Runnam'$/d' $sixdeskwork/completed_cases > $tmp
+      cp $tmp $sixdeskwork/completed_cases
+      if test $? -ne 0
+      then
+        stat $sixdeskwork/completed_cases >> $sixdeskwork/DEBUG
+        stat $tmp >> $sixdeskwork/DEBUG
+        mymess 0 "AFS problem with completed_cases"
+        mymess 0 "`stat $sixdeskwork/completed_cases`"
+        mymess 0 "`stat $tmp`"
+        myexit 999
+      else
+        rm $tmp 
+      fi
+    fi
+    echo $Runnam >> $sixdeskwork/completed_cases
+    dccases=`wc -l $sixdeskwork/completed_cases`
+    dccases=`echo $dccases | sed -e 's? *\([0-9]*\).*?\1?'`
+    tot=`expr $dicases + $dccases`
+    allcases=`wc -l $sixdeskwork/taskids`
+    allcases=`echo $allcases | sed -e 's? *\([0-9]*\).*?\1?'`
+    if test "$tot" -ne "$allcases"
+    then
+      mymess 0 "DEBUGZ $tot NOT= $allcases !!!"
+      stat $sixdeskwork/completed_cases >> $sixdeskwork/DEBUG
+      stat $sixdeskwork/incomplete_cases >> $sixdeskwork/DEBUG
+      mymess 0 "`stat $sixdeskwork/completed_cases`"
+      mymess 0 "`stat $sixdeskwork/incomplete_cases`"
+      myexit 999
+    fi
+    #Eric here we should now delete other redundant tasks
+    #mess="Taskids were x$taskids""x"
+    #taskids=`echo "$taskids" | sed -e's? '$taskid' ? ?'`
+    #mess="Taskids now x$taskids""x"
+    #for l in $taskids
+    #do
+    #  echo "Here I will delete $l in $mytgid"
+    #done
+###    myunlock $sixdeskwork
+    mymess 2 "Removing JOB_NOT_YET_COMPLETED in $where"
+    rm -f $where/JOB_NOT_YET_COMPLETED
+#  Do NOT remove input files when using CPSS , BOINC or GRID???
+#  rm $where/fort.2.gz $where/fort.3.gz $where/fort.8.gz $where/fort.16.gz
+  fi
+  if test "$where" != ""
+  then
+    if test -d $where
+    then
+      if test -d $where/sixtrack
+      then
+        rm -r $where/sixtrack
+      fi
+      echo "Final state of $where"
+      ls -l $where
+    fi
+  fi
+  if test "$delete" = "true"
+  then
+    # success = true => delete = true
+    if test "$unknown" = "false"
+    then
+###      mylock $sixdeskjobs
+      touch $sixdeskjobs/incomplete_tasks
+      sed -e'/'$Runnam' '$taskid'/d' $sixdeskjobs/incomplete_tasks > $tmp
+      mv $tmp $sixdeskjobs/incomplete_tasks
+      touch $sixdeskjobs/completed_tasks
+      sed -e'/'$Runnam' '$taskid'/d' $sixdeskjobs/completed_tasks > $tmp
+      mv $tmp $sixdeskjobs/completed_tasks
+      echo "$Runnam" "$taskid" >> $sixdeskjobs/completed_tasks
+###      myunlock $sixdeskjobs
+    fi
+    if test $sixdeskplatform = "cpss"
+    then
+      mymess 2 "Deleting result $ntaskid from the server"
+      perl $sixdeskpath/Bin/confirmResultDownload.pl $ntaskid > $tmp 2>&1
+      stat=$?
+      if test $stat -ne 0
+      then
+        mymess 0 "confirmResultDownload failed!!! `cat $tmp`"
+      fi
+      rm $tmp
+    elif test $sixdeskplatform = "boinc"
+    then
+      mymess 2 "Deleting result $taskid"
+      if test "$Runnam" != ""
+      then
+        rm -f $sixdeskboincdir/results/${workspace}_${boincRunnam}_1_sixvf_$taskid
+      else
+        rm -f $sixdeskboincdir/results/${workspace}_*_1_sixvf_$taskid
+      fi
+    fi
+  fi
+  if test $success = "false"
+  then
+    if test "$anerror" = "true"
+    then
+      mymess 0 "Download FAILED for $taskid : $where  !!!"
+      failed=`expr $failed + 1`
+      touch $sixdesklogdir/sixdeskerror.log
+      grep "^$taskid " $sixdesklogdir/sixdeskerror.log > /dev/null 2>&1
+      if test $? -ne 0
+      then
+        echo "$taskid $Runnam $Rundir" >> $sixdesklogdir/sixdeskerror.log
+      fi
+    fi
+  fi
+  if test "$duplicate" = "true" 
+  then
+    duplicated=`expr $duplicated + 1`
+    mymess 2 "$taskid ignored (duplicate/redundant result)"
+  elif test "$success" = "true"
+  then
+    ok=`expr $ok + 1`
+    mymess 2 "$taskid downloaded successfully to $where"
+  fi
+done  
+# end of all tasks
+rm -f $sixdesktasklist
+mymess 0 "Before this download $cases cases, $ccases complete ($icases incomplete)"
+if test "$ready" -ne 0
+then
+  mymess 0 "Of $ready Ready results, $ok were downloaded successfully, $duplicated were deleted as duplicate/redundant, and $failed failed."
+else
+  mymess 0 "There were no results available"
+fi
+###myunlock $sixdeskstudy
+
+# Get the counts after the run for checking
+###mylock $sixdeskwork
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+mymess 0 "After  this download $cases cases, $ccases complete ($icases incomplete)"
+update_cases
+myunlock $sixdeskstudy
+myexit 0

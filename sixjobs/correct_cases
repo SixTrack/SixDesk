@@ -1,0 +1,171 @@
+#!/bin/sh
+# This scripts checks all cases using the work/taskid file
+# and correct the completed/incomplete_cases files.
+. ./dot_env
+# Now first report current situation
+
+#MACRO mymess 0 Correcting Study $LHCDescrip
+sixdeskmesslevel=0
+sixdeskmess="Correcting Study $LHCDescrip"
+sixdeskmess
+#MACRO mymess
+
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+
+#MACRO mylock $sixdeskwork
+###sixdesklockdir=$sixdeskwork
+###sixdesklock
+#MACRO mylock
+
+cases=0
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+
+#MACRO mymess 0 Before found $cases cases, $ccases complete ($icases incomplete)
+sixdeskmesslevel=0
+sixdeskmess="Before found $cases cases, $ccases complete ($icases incomplete)"
+sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymktmpdir tmp /tmp/$LOGNAME
+sixdesktmpdirname=tmp
+sixdesktmpdirarg=/tmp/$LOGNAME
+sixdeskmktmpdir
+tmp=$sixdesktmpdir
+#MACRO mymktmp
+
+cd $tmp
+touch incomplete_cases
+touch completed_cases
+touch $sixdeskwork/taskids
+cp $sixdeskwork/taskids .
+while read aline
+do
+  Runnam=`echo $aline | cut -d " " -f1`
+
+#MACRO myrundir $Runnam Rundir
+  runnamename=$Runnam
+  sixdeskrundir
+  Rundir=$rundirname
+#MACRO myrundir
+
+  where=$sixdesktrack/$Rundir
+  missing=0
+  echo "Processing $Runnam in $Rundir"
+  if test "$da" -ne 0
+  then
+    if test ! -s $where/fort.18.gz
+    then
+
+#MACRO mymess 0 $Runnam fort.18.gz is MISSING in $Rundir !!!
+      sixdeskmesslevel=0
+      sixdeskmess="$Runnam fort.18.gz is MISSING in $Rundir !!!"
+      sixdeskmess
+#MACRO mymess
+
+      missing="1"
+    fi
+  else
+   if test "$BNL" = ""
+    then
+      if test ! -s $where/fort.10.gz
+      then
+
+#MACRO mymess 0 $Runnam fort.10.gz is MISSING for $Runnam !!!
+        sixdeskmesslevel=0
+        sixdeskmess="$Runnam fort.10.gz is MISSING for $Runnam !!!"
+        sixdeskmess
+#MACRO mymess
+
+          missing="1"
+      fi
+    else
+      if test ! -s $where/beambeam-output.dat.gz
+      then
+
+#MACRO mymess 0 $Runnam beambeam-output.dat.gz is MISSING for $Runnam !!!
+        sixdeskmesslevel=0
+        sixdeskmess="$Runnam beambeam-output.dat.gz is MISSING for $Runnam !!!"
+        sixdeskmess
+#MACRO mymess
+
+        missing="1"
+      fi
+    fi
+  fi
+  if test "$missing" -eq 0
+  then
+    # Really complete
+    echo "$Runnam" >> completed_cases
+    rm -f $where/JOB_NOT_YET_STARTED
+    rm -f $where/JOB_NOT_YET_COMPLETED
+  else
+    # Incomplete
+    echo "$Runnam" >> incomplete_cases
+  fi
+done < taskids
+cp completed_cases $sixdeskwork/completed_cases
+cp incomplete_cases $sixdeskwork/incomplete_cases
+cp completed_cases $sixdeskwork/mycompleted_cases
+cp incomplete_cases $sixdeskwork/myincomplete_cases
+cd $sixdeskhome
+rm -r $tmp
+# and report status after correction
+cases=0
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+
+#MACRO mymess 0 After checking found $cases cases, $ccases complete ($icases incomplete)
+sixdeskmesslevel=0
+sixdeskmess="After checking found $cases cases, $ccases complete ($icases incomplete)"
+sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskwork
+###sixdesklockdir=$sixdeskwork
+###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+

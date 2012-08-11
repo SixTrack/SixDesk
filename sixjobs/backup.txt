@@ -1,0 +1,159 @@
+
+                 CASTOR backup/recall       Eric McIntosh 25th January, 2010
+
+ Backing up your scratch space (and SixDesk workspaces and studies).
+ =============================================================================
+
+ The scratch disks at CERN are not backed up (unlike your $HOME). I recommend
+that you periodically run a backup so that data can be recovered in case of a 
+scratch disk failure.
+
+ This can be done rather simply in a batch job. First I show an example of 
+backing up your scratch disks and then document the rather more sophisticated
+facilities available for SixDesk tracking studies and workspaces.
+
+NOTA BENE: all castor_backups save the logs in your ~/castor/logs. Although
+these are gzipped and might be useful if you forget the contents of a backup
+you may also just want to delete them to save space in your HOME directory.
+The contents of backups can be always be determined from the backups
+themselves. Note also that for all backups, links are NOT followed. Further
+a link to a non-existent file is NOT backed up.
+
+ 1. Backing up scratch disks
+ Everyone has a CASTOR account and a default $CASTOR_HOME directory
+/castor/cern.ch/user/$INITIAL/$LOGNAME. All the ns commands like
+nsls, nsrm, nsmkdir etc use this by default. In this example I am putting 
+all the backups in my CASTOR directory scratch_backups. 
+In the examples below "date" is of the form yyyy-mm-dd (and mydate is
+just -yyyy-mm-dd).
+The batch job script, which must have execute permission, is as follows:
+
+#!/bin/sh
+# Do a dated (by day) backup of all scratch disks to 
+#  $CASTOR_HOME/scratch_backups
+# and log the reports in ~/backup_scratch.reports
+#
+cd $HOME
+mydate="-`date -Idate`"
+echo "" >> backup_scratch.reports
+echo "Scratch backup reports$mydate" >> backup_scratch.reports
+echo "Scratch backup reports$mydate"
+echo "" >> backup_scratch.reports
+for i in `ls -d scratch*`
+do
+  echo "Backing up $i to scratch_backups/$i$mydate" >> backup_scratch.reports
+  echo "Backing up $i to scratch_backups/$i$mydate"
+  castor_backup $i scratch_backups/$i$mydate
+  nsls -l scratch_backups/$i$mydate >> backup_scratch.reports
+  nsls -l scratch_backups/$i$mydate
+done
+
+If the job runs to completion (as can be checked in the LSF STDOUT or the 
+backup_scratch_reports) a lost disk, scratch0 say, can be restored with a
+
+cd $HOME
+castor_recall scratch_backups/scratch0"mydate"/scratch0
+
+where "mydate" identifies the backup to be used. nsls scratch_backups will show
+all available backups. Clearly this can also be done in a batch job.
+To recall to a different place
+
+cd $HOME/scratch99
+castor_recall scratch_backups/scratch0"date"/scratch0 .
+
+ 2. Backing up SixDesk workspaces and directories.
+ The intended usage is that in order to free up disk space a study can be 
+backed up and then deleted. It may later be recalled to exactly the same
+workspace or to a new different workspace. The backup_workspace might be
+used to backup a complete set of studies. A study may be recalled from 
+either a workspace backup or a study backup.
+
+ Deleted studies are never backed up; a non-deleted study cannot be recalled
+to the same workspace. Deleting a study does NOT delete sixjobs and all
+sixdeskenv/sysenv files are kept in the studies directory. All DAres* files
+are also preserved.
+
+ All backup/recall commands should be issued from the sixjobs directory as usual
+except for recall_workspace where you must be in the workspace itself.
+
+ In these examples "date" is of the form ddmmyy.
+
+ So, normally, for example:
+
+  cd ~w1/sixjobs
+  set_env lhc1
+  backup_study
+  delete_study
+
+and subsequently
+
+  cd ~w1/sixjobs
+  set_env lhc1
+  recall_study w1%lhc1%"date"
+
+or
+
+  cd ~w1/sixjobs
+  set_env lhc1
+  recall_study w1%lhc1%"date" w99
+  
+In the latter case the sixdeskenv files are edited to reflect the new
+workspace (and the CPSS TaskGroupId is deleted). In all recalls an 
+existing sixjobs directory is never overwritten, but in all cases the 
+sixtrack_input, track, work, and plot data are recalled along with 
+logfiles if possible.
+
+ To recall several studies to a new workspace, the first recall will
+recall sixjobs as well as the data; afterwards, cd to the workspace
+to recall other studies.
+
+ As mentioned a study can be similarly recalled from a workspace backup by
+
+  set_env lhc1
+  recall_study w1%"date" to restore it to w1 
+or 
+  set_env lhc1
+  recall_study w1%"date" w99 to a new empty workspace.
+
+ Finally a complete workspace can be recalled to the same workspace or a
+different one.
+
+To backup a workspace
+
+  cd ~/w1/sixjobs 
+  backup_workspace
+
+and to recall
+
+  cd ~/w1
+  recall_workspace w1%"date"
+or 
+  cd ~/w99
+  cp SOMEWHERE/recall_workspace .
+  ./recall_workspace w1%"date"
+
+ All backups can be found in $CASTOR_HOME/workspace_backups with names like
+
+  w1%lhc1%"date"     for a study backup
+or
+  w1%"date"          for a workspace backup.
+
+nsls workspace_backups will list them all.
+
+ All backups are restartable as they may be lengthy. A file 
+backup_study.list or backup_workspace.list is used for restarting
+from the point of failure. Thus a backup must be completed before a new
+backup is started in the same workspace (or the file backup_study.list or
+backup_workspace.list must be deleted). The workspace is locked to ensure
+only one backup at a time and no switching of studies.
+
+ This may sound a bit complicated but the simple backup, delete, recall is
+easy to perform and the compications are necessary to avoid destroying
+data and to recover from system failures. Details of the CASTOR backups/
+recalls can be found in the castor_backup.log or castor_recall.log.
+
+ Please do not hesitate to contact me for help or advice.
+Hopefully I will soon have an xfig diagram of a workspace which will
+help everyone.
+
+    eric.mcintosh@cern.ch 70047

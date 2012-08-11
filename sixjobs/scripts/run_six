@@ -1,0 +1,1603 @@
+#!/bin/ksh
+#
+. ./dot_env
+dir16=$sixtrack_input
+
+#MACRO mymess 2 Using sixtrack_input $dir16
+sixdeskmesslevel=2
+sixdeskmess="Using sixtrack_input $dir16"
+sixdeskmess
+#MACRO mymess
+
+if test ! -d "$dir16" 
+then
+
+#MACRO mymess 1 The directory $dir16 does not exist!!!
+  sixdeskmesslevel=1
+  sixdeskmess="The directory $dir16 does not exist!!!"
+  sixdeskmess
+#MACRO mymess
+ 
+
+#MACRO myexit 1
+  sixdeskexitparam=1
+  sixdeskexit
+#MACRO myexit
+
+fi
+./check_mad6t
+if test $? -ne 0
+then
+
+#MACRO mymess 1 sixtrack_input appears incomplete!!!
+  sixdeskmesslevel=1
+  sixdeskmess="sixtrack_input appears incomplete!!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 2
+  sixdeskexitparam=2
+  sixdeskexit
+#MACRO myexit
+
+fi
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+mkdir -p $sixdeskjobs_logs
+
+#MACRO mylock $sixdeskjobs_logs
+###sixdesklockdir=$sixdeskjobs_logs
+###sixdesklock
+#MACRO mylock
+
+
+#MACRO mymess 2 Using $sixdeskjobs_logs
+sixdeskmesslevel=2
+sixdeskmess="Using $sixdeskjobs_logs"
+sixdeskmess
+#MACRO mymess
+
+#
+tree=$sixdesktrack
+if [ ! -d "$tree/$LHCDesHome" ] ;then
+  mkdir -p $tree/$LHCDesHome
+fi
+#
+if [ ! -s "$tree/$LHCDesHome/general_input" ];then
+  echo "$emit  $gamma" > $tree/$LHCDesHome/general_input
+fi
+factor=`gawk 'END{fac=sqrt('$emit'/'$gamma');print fac}' /dev/null`
+dimsus=`gawk 'END{dimsus='$dimen'/2;print dimsus}' /dev/null` 
+
+#MACRO mymess 0 factor $factor dimsus $dimsus
+sixdeskmesslevel=0
+sixdeskmess="factor $factor dimsus $dimsus"
+sixdeskmess
+#MACRO mymess
+
+square=0
+#
+Ampl=$ns1l"_"$ns2l
+#
+#da run parameters
+#
+if [ "$da" -eq 1 ];then
+  if [ "$short" -eq 1 -o "$long" -eq 1 ];then
+
+#MACRO mymess 0 A map run cannot been treated simultaneously with a short or long run
+    sixdeskmesslevel=0
+    sixdeskmess="A map run cannot been treated simultaneously with a short or long run"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 1
+    sixdeskexitparam=1
+    sixdeskexit
+#MACRO myexit
+
+  fi
+fi
+#
+# Amplitude range
+#
+if [ $short -eq 1 ]; then
+  Ampl=$ns1s"_"$ns2s
+fi
+if [ $long -eq 1 ] ;then
+  if [ -z "$Ampl" ] ;then
+
+#MACRO mymess 0 Define Ampl for longterm tracking ...
+    sixdeskmesslevel=0
+    sixdeskmess="Define Ampl for longterm tracking ..."
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskjobs_logs
+    ###sixdesklockdir=$sixdeskjobs_logs
+    ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+    sixdesklockdir=$sixdeskstudy
+    sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 2
+    sixdeskexitparam=2
+    sixdeskexit
+#MACRO myexit
+
+  fi
+fi
+if [ $da -eq 1 ] ;then
+  Ampl="0$dimda"
+fi
+#
+#da run postprocessing
+#
+if [ da -eq 1 ] ;then
+  if [ $dimda -eq 6 ] ;then
+    cp inc/dalie6.data $sixdeskjobs_logs/dalie.data
+    sed -e 's/%NO/'$NO1'/g' \
+        -e 's/%NV/'$NV'/g' inc/dalie6.mask > $sixdeskjobs_logs/dalie.input
+    cp $sixdeskhome/bin/dalie6 $sixdeskjobs_logs/dalie
+  else
+    sed -e 's/%NO/'$NO'/g' inc/dalie4.data.mask > $sixdeskjobs_logs/dalie.data
+    sed -e 's/%NO/'$NO1'/g' \
+        -e 's/%NV/'$NV'/g' inc/dalie4.mask > $sixdeskjobs_logs/dalie.input
+    cp $sixdeskhome/bin/dalie4 $sixdeskjobs_logs/dalie
+  fi
+  cp inc/reson.data $sixdeskjobs_logs
+  cp $sixdeskhome/bin/readda $sixdeskjobs_logs
+fi  
+#
+#end of input of paths and tracking variables
+#
+# work out platform dependent stuff...
+qpref="undef"
+if test "$OS" = "OSF1"
+then
+    qpref=""
+fi
+if test "$OS" = "Linux"
+then
+    qpref=""
+fi
+if test "$qpref" = "undef"
+then
+
+#MACRO mymess 0 The OS $OS is not currently supported
+  sixdeskmesslevel=0
+  sixdeskmess="The OS $OS is not currently supported"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskjobs_logs
+  ###sixdesklockdir=$sixdeskjobs_logs
+  ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+  sixdesklockdir=$sixdeskstudy
+  sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 3
+  sixdeskexitparam=3
+  sixdeskexit
+#MACRO myexit
+
+fi
+#
+#basic set up of fort.3
+#
+cp $dir16/fort.3.mad $dir16/fort.3.mother1 $dir16/fort.3.mother2 $sixdeskjobs_logs
+inc/prepare_fort.3 $sixdeskjobs_logs $dimen $chrom $dimda $reson $dpini $dpmax $tunex $tuney $e0 $chromx $chromy $tune $bunch_charge
+#
+#preparation
+#
+#speedy tune calculation (short)
+#
+if [ "$short" -eq 1 ] ;then
+  if [ "$sussix" -eq 1 ] ;then
+    IANA=1
+    LR=1
+    MR=0
+    KR=0
+    dimline=1
+    sed -e 's/%nss/'$nss'/g' \
+        -e 's/%IANA/'$IANA'/g' \
+        -e 's/%turnss/'$turnss'/g' \
+        -e 's/%dimsus/'$dimsus'/g' \
+        -e 's/%LR/'$LR'/g' \
+        -e 's/%MR/'$MR'/g' \
+        -e 's/%KR/'$KR'/g' \
+        -e 's/%dimline/'$dimline'/g' inc/sussix.inp.mask > \
+                $sixdeskjobs_logs/sussix.tmp.1
+    IANA=0
+    LR=0
+    MR=1
+    dimline=2
+    sed -e 's/%nss/'$nss'/g' \
+        -e 's/%IANA/'$IANA'/g' \
+        -e 's/%turnss/'$turnss'/g' \
+        -e 's/%dimsus/'$dimsus'/g' \
+        -e 's/%LR/'$LR'/g' \
+        -e 's/%MR/'$MR'/g' \
+        -e 's/%KR/'$KR'/g' \
+        -e 's/%dimline/'$dimline'/g' inc/sussix.inp.mask > \
+                $sixdeskjobs_logs/sussix.tmp.2
+    MR=0
+    KR=1
+    dimline=3
+    sed -e 's/%nss/'$nss'/g' \
+        -e 's/%IANA/'$IANA'/g' \
+        -e 's/%turnss/'$turnss'/g' \
+        -e 's/%dimsus/'$dimsus'/g' \
+        -e 's/%LR/'$LR'/g' \
+        -e 's/%MR/'$MR'/g' \
+        -e 's/%KR/'$KR'/g' \
+        -e 's/%dimline/'$dimline'/g' inc/sussix.inp.mask > \
+                $sixdeskjobs_logs/sussix.tmp.3
+    sed -e 's/%suss//g' \
+        -e 's?SIXTRACKEXE?'$SIXTRACKEXE'?g' \
+        -e 's?SIXDESKHOME?'$sixdeskhome'?g' \
+           "$sixdeskhome"/utilities/"${lsfjobtype}".lsf.mask > $sixdeskjobs_logs/"${lsfjobtype}".lsf
+    chmod 755 $sixdeskjobs_logs/"${lsfjobtype}".lsf
+  else
+    sed -e 's/%suss/'#'/g' \
+        -e 's?SIXTRACKEXE?'$SIXTRACKEXE'?g' \
+        -e 's?SIXDESKHOME?'$sixdeskhome'?g' \
+           "$sixdeskhome"/utilities/"${lsfjobtype}".lsf.mask > $sixdeskjobs_logs/"${lsfjobtype}".lsf
+    chmod 755 $sixdeskjobs_logs/"${lsfjobtype}".lsf 
+  fi
+  sed -e 's/%suss/'#'/g' \
+        -e 's?SIXTRACKEXE?'$SIXTRACKEXE'?g' \
+        -e 's?SIXDESKHOME?'$sixdeskhome'?g' \
+           "$sixdeskhome"/utilities/"${lsfjobtype}".lsf.mask > $sixdeskjobs_logs/"${lsfjobtype}"0.lsf
+  chmod 755 $sixdeskjobs_logs/"${lsfjobtype}"0.lsf
+fi
+#
+# main loop
+#
+if test $long -eq 1
+then
+
+#MACRO mymess 0 Main loop (long) for Study $LHCDescrip, Seeds $ista to $iend
+  sixdeskmesslevel=0
+  sixdeskmess="Main loop (long) for Study $LHCDescrip, Seeds $ista to $iend"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO mytunes
+  sixdesktunes
+#MACRO mytunes
+
+
+#MACRO mymess 0 Amplitudes $ns1l to $ns2l by $nsincl, Angles $kinil, $kendl, $kmaxl by $kstep
+  sixdeskmesslevel=0
+  sixdeskmess="Amplitudes $ns1l to $ns2l by $nsincl, Angles $kinil, $kendl, $kmaxl by $kstep"
+  sixdeskmess
+#MACRO mymess
+
+elif test $short -eq 1 -o $da -eq 1
+then
+
+#MACRO mymess 0 Main loop (short/da) for Study $LHCDescrip, Seeds $ista to $iend
+  sixdeskmesslevel=0
+  sixdeskmess="Main loop (short/da) for Study $LHCDescrip, Seeds $ista to $iend"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO mytunes
+  sixdesktunes
+#MACRO mytunes
+
+
+#MACRO mymess 0 Amplitudes $ns1s to $ns2s by $nss, Angles $kini, $kend, $kmax by $kstep
+  sixdeskmesslevel=0
+  sixdeskmess="Amplitudes $ns1s to $ns2s by $nss, Angles $kini, $kend, $kmax by $kstep"
+  sixdeskmess
+#MACRO mymess
+
+fi
+i=$ista
+while test "$i" -le "$iend" 
+do
+  # And now we have a new loop over the tunescans
+  itunexx=$itunex
+  ituneyy=$ituney
+  if test "$ideltax" -eq 0 -a "$ideltay" -eq 0
+  then
+    ideltax=1000000
+    ideltay=1000000
+  fi
+  while test "$itunexx" -le "$itunex1" -o "$ituneyy" -le "$ituney1"
+  do
+    tunexx=`echo "$itunexx" | cut -c1-2`"."`echo "$itunexx" | cut -c3-6`
+    tunexx=`echo "$tunexx" | sed -e's/0*$//'`
+    tunexx=`echo "$tunexx" | sed -e's/^0//'`
+    tuneyy=`echo "$ituneyy" | cut -c1-2`"."`echo "$ituneyy" | cut -c3-6`
+    tuneyy=`echo "$tuneyy" | sed -e's/0*$//'`
+    tuneyy=`echo "$tuneyy" | sed -e's/^0//'`
+    sixdesktunes=$tunexx"_"$tuneyy
+
+#MACRO mymess 0 Tunescan $sixdesktunes
+    sixdeskmesslevel=0
+    sixdeskmess="Tunescan $sixdesktunes"
+    sixdeskmess
+#MACRO mymess
+
+    # compute inttunexx and inttuneyy
+
+#MACRO myinttunes
+    sixdeskinttunes
+#MACRO myinttunes
+
+    #
+    if [ ! -d "$tree/$LHCDesHome/$i/simul/$sixdesktunes" ]; then  
+       mkdir -p $tree/$LHCDesHome/$i/simul/$sixdesktunes
+    fi  
+    # run sixtrack for one turn in order to get linear functions
+    # (and possibly two runs to determine the chromaticity)
+    # but NOT for DA runs
+    if test "$da" -eq "0"
+    then
+      if [ ! -s "$tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues" ]; then
+        if test "$chrom" -eq 0
+        then
+
+#MACRO mymess 0 Running two one turn jobs to compute chromaticity
+          sixdeskmesslevel=0
+          sixdeskmess="Running two one turn jobs to compute chromaticity"
+          sixdeskmess
+#MACRO mymess
+
+          sed -e 's/%turnss/'1'/g' \
+              -e 's/%nss/'1'/g' \
+              -e 's/%ax0s/'.1'/g' \
+              -e 's/%ax1s/'.1'/g' \
+              -e 's/%imc/'1'/g' \
+              -e 's/%iclo6/'2'/g' \
+              -e 's/%writebins/'1'/g' \
+              -e 's/%ratios/'1'/g' \
+              -e 's/%dp1/'.000'/g' \
+              -e 's/%dp2/'.000'/g' \
+              -e 's/%e0/'$e0'/g' \
+              -e 's/%Runnam/First Turn/g' \
+              -e 's/%idfor/0/g' \
+              -e 's/%ibtype/0/g' \
+              -e 's/%bunch_charge/'$bunch_charge'/g' \
+              -e 's/%ition/'0'/g' $dir16/fort.3.mother1 > $sixdeskjobs_logs/fort.3.t1 
+          sed -e 's/%turnss/'1'/g' \
+              -e 's/%nss/'1'/g' \
+              -e 's/%ax0s/'.1'/g' \
+              -e 's/%ax1s/'.1'/g' \
+              -e 's/%imc/'1'/g' \
+              -e 's/%iclo6/'2'/g' \
+              -e 's/%writebins/'1'/g' \
+              -e 's/%ratios/'1'/g' \
+              -e 's/%dp1/'$chrom_eps'/g' \
+              -e 's/%dp2/'$chrom_eps'/g' \
+              -e 's/%e0/'$e0'/g' \
+              -e 's/%Runnam/First Turn/g' \
+              -e 's/%idfor/0/g' \
+              -e 's/%ibtype/0/g' \
+              -e 's/%bunch_charge/'$bunch_charge'/g' \
+              -e 's/%ition/'0'/g' $dir16/fort.3.mother1 > $sixdeskjobs_logs/fort.3.t2
+# and now make one mother2 as .m2
+          CHROVAL='/'
+          if test "$tune" -eq 0
+          then
+            TUNEVAL='/'
+          else
+            TUNEVAL=''
+          fi
+          sed -e 's?%CHRO?'$CHROVAL'?g' \
+              -e 's?%TUNE?'$TUNEVAL'?g' \
+              -e 's/%POST/'POST'/g' \
+              -e 's/%POS1/''/g' \
+              -e 's/%ndafi/'1'/g' \
+              -e 's/%tunex/'$tunexx'/g' \
+              -e 's/%tuney/'$tuneyy'/g' \
+              -e 's/%chromx/'$chromx'/g' \
+              -e 's/%chromy/'$chromy'/g' \
+              -e 's/%inttunex/'$inttunexx'/g' \
+              -e 's/%inttuney/'$inttuneyy'/g' \
+              -e 's/%DIFF/\/DIFF/g' \
+              -e 's/%DIF1/\//g' $sixdeskjobs_logs/fort.3.mother2 > $sixdeskjobs_logs/fort.3.m2
+# and we make the two runs using .t1 and .t2 along with .m2
+          cat $sixdeskjobs_logs/fort.3.t1 $sixdeskjobs_logs/fort.3.mad $sixdeskjobs_logs/fort.3.m2 \
+               > $sixdeskjobs_logs/fort.3
+          gunzip -c $dir16/fort.16_$i.gz > $sixdeskjobs_logs/fort.16
+          gunzip -c $dir16/fort.2_$i.gz > $sixdeskjobs_logs/fort.2
+          if [ -a "$dir16"/fort.8_"$i".gz ] ;then
+            gunzip -c $dir16/fort.8_$i.gz > $sixdeskjobs_logs/fort.8
+          else
+            touch $sixdeskjobs_logs/fort.8
+          fi
+          cd $sixdeskjobs_logs
+          rm -f fort.10
+          $SIXTRACKEXE > first_oneturn
+          if test $? -ne 0 -o ! -s fort.10
+          then
+
+#MACRO mymess 0 The first turn Sixtrack for chromaticity FAILED!!!
+            sixdeskmesslevel=0
+            sixdeskmess="The first turn Sixtrack for chromaticity FAILED!!!"
+            sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 Look in $sixdeskjobs_logs to see SixTrack input and output.
+            sixdeskmesslevel=0
+            sixdeskmess="Look in $sixdeskjobs_logs to see SixTrack input and output."
+            sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 Check the file first_oneturn which contains the SixTrack fort.6 output.
+            sixdeskmesslevel=0
+            sixdeskmess="Check the file first_oneturn which contains the SixTrack fort.6 output."
+            sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskjobs_logs
+            ###sixdesklockdir=$sixdeskjobs_logs
+            ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+            sixdesklockdir=$sixdeskstudy
+            sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 77
+            sixdeskexitparam=77
+            sixdeskexit
+#MACRO myexit
+
+          fi
+          mv fort.10 fort.10_first_oneturn
+          cd $sixdeskhome
+# and now the second one turn
+
+#MACRO mymess 0 Running the second one turn job for chromaticity
+          sixdeskmesslevel=0
+          sixdeskmess="Running the second one turn job for chromaticity"
+          sixdeskmess
+#MACRO mymess
+
+          cat $sixdeskjobs_logs/fort.3.t2 $sixdeskjobs_logs/fort.3.mad $sixdeskjobs_logs/fort.3.m2 \
+              > $sixdeskjobs_logs/fort.3
+          cd $sixdeskjobs_logs
+          rm -f fort.10
+          $SIXTRACKEXE > second_oneturn
+          if test $? -ne 0 -o ! -s fort.10
+          then
+
+#MACRO mymess 0 The second turn Sixtrack for chromaticity FAILED!!!
+            sixdeskmesslevel=0
+            sixdeskmess="The second turn Sixtrack for chromaticity FAILED!!!"
+            sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 Look in $sixdeskjobs_logs to see SixTrack input and output.
+            sixdeskmesslevel=0
+            sixdeskmess="Look in $sixdeskjobs_logs to see SixTrack input and output."
+            sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 Check the file second_oneturn which contains the SixTrack fort.6 output.
+            sixdeskmesslevel=0
+            sixdeskmess="Check the file second_oneturn which contains the SixTrack fort.6 output."
+            sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskjobs_logs
+            ###sixdesklockdir=$sixdeskjobs_logs
+            ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+            sixdesklockdir=$sixdeskstudy
+            sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 78
+            sixdeskexitparam=78
+            sixdeskexit
+#MACRO myexit
+
+          fi
+          mv fort.10 fort.10_second_oneturn
+          cd $sixdeskhome
+# and now a bit of arithmetic
+
+#MACRO mytunes
+          echo "$chrom_eps" > $tree/$LHCDesHome/$i/simul/$sixdesktunes/sixdesktunes
+#MACRO mytunes
+
+
+#MACRO mytunes
+          gawk 'FNR==1{print $3, $4}' < $sixdeskjobs_logs/fort.10_first_oneturn >> $tree/$LHCDesHome/$i/simul/$sixdesktunes/sixdesktunes
+#MACRO mytunes
+
+
+#MACRO mytunes
+          gawk 'FNR==1{print $3, $4}' < $sixdeskjobs_logs/fort.10_second_oneturn >> $tree/$LHCDesHome/$i/simul/$sixdesktunes/sixdesktunes
+#MACRO mytunes
+
+
+#MACRO mytunes
+          mychrom=`gawk 'FNR==1{E=$1}FNR==2{A=$1;B=$2}FNR==3{C=$1;D=$2}END{print (C-A)/E,(D-B)/E}' < $tree/$LHCDesHome/$i/simul/$sixdesktunes/sixdesktunes
+#MACRO mytunes
+`
+          echo "$mychrom" > $tree/$LHCDesHome/$i/simul/$sixdesktunes/mychrom          
+
+#MACRO mymess 0 Chromaticity computed as $mychrom
+          sixdeskmesslevel=0
+          sixdeskmess="Chromaticity computed as $mychrom"
+          sixdeskmess
+#MACRO mymess
+
+        else
+
+#MACRO mymess 0 Using Chromaticity specified as $chromx $chromy
+          sixdeskmesslevel=0
+          sixdeskmess="Using Chromaticity specified as $chromx $chromy"
+          sixdeskmess
+#MACRO mymess
+
+        fi
+
+#MACRO mymess 0 Running `basename $SIXTRACKEXE` (one turn) to get beta values
+        sixdeskmesslevel=0
+        sixdeskmess="Running `basename $SIXTRACKEXE` (one turn) to get beta values"
+        sixdeskmess
+#MACRO mymess
+
+        sed -e 's/%turnss/'1'/g' \
+            -e 's/%nss/'1'/g' \
+            -e 's/%ax0s/'.1'/g' \
+            -e 's/%ax1s/'.1'/g' \
+            -e 's/%imc/'1'/g' \
+            -e 's/%iclo6/'2'/g' \
+            -e 's/%writebins/'1'/g' \
+            -e 's/%ratios/'1'/g' \
+            -e 's/%dp1/'.000'/g' \
+            -e 's/%dp2/'.000'/g' \
+            -e 's/%e0/'$e0'/g' \
+            -e 's/%Runnam/One Turn/g' \
+            -e 's/%idfor/0/g' \
+            -e 's/%ibtype/0/g' \
+            -e 's/%bunch_charge/'$bunch_charge'/g' \
+            -e 's/%ition/'1'/g' $dir16/fort.3.mother1 > $sixdeskjobs_logs/fort.3.m1
+        if test "$chrom" -eq 0
+        then
+          CHROVAL='/'
+        else
+          CHROVAL=''
+        fi
+        if test "$tune" -eq 0
+        then
+          TUNEVAL='/'
+        else
+          TUNEVAL=''
+        fi
+        sed -e 's?%CHRO?'$CHROVAL'?g' \
+            -e 's?%TUNE?'$TUNEVAL'?g' \
+            -e 's/%POST/'POST'/g' \
+            -e 's/%POS1/''/g' \
+            -e 's/%ndafi/'1'/g' \
+            -e 's/%tunex/'$tunexx'/g' \
+            -e 's/%tuney/'$tuneyy'/g' \
+            -e 's/%chromx/'$chromx'/g' \
+            -e 's/%chromy/'$chromy'/g' \
+            -e 's/%inttunex/'$inttunexx'/g' \
+            -e 's/%inttuney/'$inttuneyy'/g' \
+            -e 's/%DIFF/\/DIFF/g' \
+            -e 's/%DIF1/\//g' $sixdeskjobs_logs/fort.3.mother2 > $sixdeskjobs_logs/fort.3.m2
+        cat $sixdeskjobs_logs/fort.3.m1 $sixdeskjobs_logs/fort.3.mad $sixdeskjobs_logs/fort.3.m2 > \
+            $sixdeskjobs_logs/fort.3
+    
+        gunzip -c $dir16/fort.16_$i.gz > $sixdeskjobs_logs/fort.16
+    
+        gunzip -c $dir16/fort.2_$i.gz > $sixdeskjobs_logs/fort.2
+    
+        if [ -a "$dir16"/fort.8_"$i".gz ] ;then
+          gunzip -c $dir16/fort.8_$i.gz > $sixdeskjobs_logs/fort.8  
+        else
+          touch $sixdeskjobs_logs/fort.8          
+        fi
+        cd $sixdeskjobs_logs
+        # Fix for Dobrin's problem where previous betavalues were re-used
+        # because the one turn job failed but exited normally leaving
+        # the betavalues from a previous run (if any)
+        rm -f fort.10
+        $SIXTRACKEXE > lin
+        if test $? -ne 0 -o ! -s fort.10
+        then
+
+#MACRO mymess 0 The one turn Sixtrack for betavalues FAILED!!!
+          sixdeskmesslevel=0
+          sixdeskmess="The one turn Sixtrack for betavalues FAILED!!!"
+          sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 Look in $sixdeskjobs_logs to see SixTrack input and output.
+          sixdeskmesslevel=0
+          sixdeskmess="Look in $sixdeskjobs_logs to see SixTrack input and output."
+          sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 Check the file lin which contains the SixTrack fort.6 output.
+          sixdeskmesslevel=0
+          sixdeskmess="Check the file lin which contains the SixTrack fort.6 output."
+          sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskjobs_logs
+          ###sixdesklockdir=$sixdeskjobs_logs
+          ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+          sixdesklockdir=$sixdeskstudy
+          sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 99
+          sixdeskexitparam=99
+          sixdeskexit
+#MACRO myexit
+
+        fi
+        mv lin lin_old
+        cp fort.10 fort.10_old
+        cd $sixdeskhome
+        # Now uses the new closed orbit data as well
+        echo `gawk 'FNR==1{print $5, $48, $6, $49, $3, $4, $50, $51, $53, $54, $55, $56, $57, $58}' $sixdeskjobs_logs/fort.10` > $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues
+        # but if chrom=0 we need to update chromx, chromy
+        if test "$chrom" -eq 0
+        then
+          beta_x=`gawk '{print $1}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+          beta_x2=`gawk '{print $2}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+          beta_y=`gawk '{print $3}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+          beta_y2=`gawk '{print $4}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+          mychromx=`gawk '{print $1}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/mychrom`
+          mychromy=`gawk '{print $2}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/mychrom`
+          htune=`gawk '{print $5}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+          vtune=`gawk '{print $6}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+          closed_orbit=`gawk '{print $9" "$10" "$11" "$12" "$13" "$14}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+          echo "$beta_x $beta_x2 $beta_y $beta_y2 $htune $vtune $mychromx $mychromy $closed_orbit" \
+             > $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues
+
+#MACRO mymess 0 Final betavalues `cat $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+          sixdeskmesslevel=0
+          sixdeskmess="Final betavalues `cat $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`"
+          sixdeskmess
+#MACRO mymess
+
+        fi
+      fi
+      # Check betavalues
+      nobetas=`cat $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues | wc -w`
+      if test "$nobetas" -ne 14
+      then 
+
+#MACRO mymess 0 betavalues has only $nobetas words!!! Should be 14!
+        sixdeskmesslevel=0
+        sixdeskmess="betavalues has only $nobetas words!!! Should be 14!"
+        sixdeskmess
+#MACRO mymess
+
+        rm -f $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues
+
+#MACRO myunlock $sixdeskjobs_logs
+        ###sixdesklockdir=$sixdeskjobs_logs
+        ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+        sixdesklockdir=$sixdeskstudy
+        sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 98
+        sixdeskexitparam=98
+        sixdeskexit
+#MACRO myexit
+
+      fi
+      beta_x=`gawk '{print $1}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+      beta_x2=`gawk '{print $2}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+      beta_y=`gawk '{print $3}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+      beta_y2=`gawk '{print $4}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+      if test "$beta_x" = "" -o "$beta_y" = "" -o "$beta_x2" = "" -o "beta_y2" = ""
+      then
+        # clean up for a retry by removing old betavalues
+        rm -f $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues
+
+#MACRO mymess 0 One or more betavalues are NULL !!!
+        sixdeskmesslevel=0
+        sixdeskmess="One or more betavalues are NULL !!!"
+        sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 Look in $sixdeskjobs_logs to see SixTrack input and output.
+        sixdeskmesslevel=0
+        sixdeskmess="Look in $sixdeskjobs_logs to see SixTrack input and output."
+        sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 Check the file lin_old which contains the SixTrack fort.6 output.
+        sixdeskmesslevel=0
+        sixdeskmess="Check the file lin_old which contains the SixTrack fort.6 output."
+        sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskjobs_logs
+        ###sixdesklockdir=$sixdeskjobs_logs
+        ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+        sixdesklockdir=$sixdeskstudy
+        sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 98
+        sixdeskexitparam=98
+        sixdeskexit
+#MACRO myexit
+
+      fi
+
+#MACRO mymess 0  Finally all betavalues:
+      sixdeskmesslevel=0
+      sixdeskmess=" Finally all betavalues:"
+      sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 beta_x[2] $beta_x $beta_x2 beta_y[2] $beta_y $beta_y2
+      sixdeskmesslevel=0
+      sixdeskmess="beta_x[2] $beta_x $beta_x2 beta_y[2] $beta_y $beta_y2"
+      sixdeskmess
+#MACRO mymess
+
+      fhtune=`gawk '{print $5}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+      fvtune=`gawk '{print $6}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+      fchromx=`gawk '{print $7}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+      fchromy=`gawk '{print $8}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+      fclosed_orbit=`gawk '{print $9" "$10" "$11" "$12" "$13" "$14}' $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues`
+
+#MACRO mymess 0 Chromaticity: $fchromx $fchromy
+      sixdeskmesslevel=0
+      sixdeskmess="Chromaticity: $fchromx $fchromy"
+      sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 Tunes: $fhtune $fvtune
+      sixdeskmesslevel=0
+      sixdeskmess="Tunes: $fhtune $fvtune"
+      sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 Closed orbit: $fclosed_orbit
+      sixdeskmesslevel=0
+      sixdeskmess="Closed orbit: $fclosed_orbit"
+      sixdeskmess
+#MACRO mymess
+
+    fi
+    #
+    #Resonance Calculation only
+    N1=0
+    if [ "$N1" -gt 0 ] ; then
+      N2=9
+      Qx=63.28
+      Qy=59.31
+      nsr=10.
+      Ax=`gawk 'END{Ax='$nsr'*sqrt('$emit'/'$gamma'*'$beta_x');print Ax}' /dev/null`
+      Ay=`gawk 'END{Ay='$nsr'*sqrt('$emit'/'$gamma'*'$beta_y');print Ay}' /dev/null`
+      echo "$Qx $Qy $Ax $Ay $N1 $N2" > $sixdeskjobs_logs/resonance
+    fi
+    # 
+    #
+    #
+    # run short-term
+    #
+    if [ "$short" -eq 1 ] ;then
+      if [ "$sussix" -eq 1 ] ;then
+      # and now we get fractional tunes to plug in qx/qy
+        qx=`gawk 'END{qx='$fhtune'-int('$fhtune');print qx}' /dev/null`
+        qy=`gawk 'END{qy='$fvtune'-int('$fvtune');print qy}' /dev/null`
+
+#MACRO mymess 0 Sussix tunes set to $qx, $qy from $fhtune, $fvtune
+        sixdeskmesslevel=0
+        sixdeskmess="Sussix tunes set to $qx, $qy from $fhtune, $fvtune"
+        sixdeskmess
+#MACRO mymess
+
+        sed -e 's/%qx/'$qx'/g' \
+            -e 's/%qy/'$qy'/g' $sixdeskjobs_logs/sussix.tmp.1 \
+             > $sixdeskjobs_logs/sussix.inp.1
+    # and do the other 2
+        sed -e 's/%qx/'$qx'/g' \
+            -e 's/%qy/'$qy'/g' $sixdeskjobs_logs/sussix.tmp.2 \
+             > $sixdeskjobs_logs/sussix.inp.2
+        sed -e 's/%qx/'$qx'/g' \
+            -e 's/%qy/'$qy'/g' $sixdeskjobs_logs/sussix.tmp.3 \
+             > $sixdeskjobs_logs/sussix.inp.3
+      fi
+      k=$kini 
+      AngleStep=`gawk 'END{a=90/('$kmax'+1);print a}' /dev/null`
+      #
+      while [ "$k" -le "$kend" ] ;do
+        Angle=`gawk 'END{a='$AngleStep'*'$k';print a}' /dev/null`
+        kang=`gawk 'END{kang='$k'/('$kmax'+1);print kang}' /dev/null`
+        echo $k, $kini, $kmax, $kend, $Angle, $AngleStep
+        #
+        # set up fort.3 for short runs
+        # a.) k > 1
+        #
+        if [ "$k" -ge 1 ] ;then
+          ###Rundir=$LHCDesHome/$i/trans/$sixdesktunes/$Ampl/e$turnsse/$Angle
+          Runnam=$LHCDesName"%"${i}"%t%"$sixdesktunes"%"$Ampl"%"$turnsse"%"$Angle
+
+#MACRO myrundir $Runnam Rundir
+          runnamename=$Runnam
+          sixdeskrundir
+          Rundir=$rundirname
+#MACRO myrundir
+ 
+
+#MACRO mymess 1 Trans $Runnam $Rundir, k=$k
+          sixdeskmesslevel=1
+          sixdeskmess="Trans $Runnam $Rundir, k=$k"
+          sixdeskmess
+#MACRO mymess
+
+          #
+          if [ -d "$tree"/"$Rundir" ] ;then
+            if [ -s "$tree"/"$Rundir"/fort.10.gz ] && [ $sixdeskforce -ne 2 ] ;then
+              rm -f $tree/$LHCDesHome/$i/trans/$sixdesktunes/$Ampl/e$turnsse/.$k
+              ln -fs $tree/$Rundir $tree/$LHCDesHome/$i/trans/$sixdesktunes/$Ampl/e$turnsse/.$k
+
+#MACRO mymess 1 $tree/$Rundir relinked to $tree/$LHCDesHome/$i/trans/$sixdesktunes/$Ampl/e$turnsse/.$k
+              sixdeskmesslevel=1
+              sixdeskmess="$tree/$Rundir relinked to $tree/$LHCDesHome/$i/trans/$sixdesktunes/$Ampl/e$turnsse/.$k"
+              sixdeskmess
+#MACRO mymess
+
+            else
+              rm -rf "$tree"/"$Rundir"
+
+#MACRO mymess 1 $tree/$Rundir removed contained no or zerolength fort.10
+              sixdeskmesslevel=1
+              sixdeskmess="$tree/$Rundir removed contained no or zerolength fort.10"
+              sixdeskmess
+#MACRO mymess
+
+            fi
+          fi
+          #
+          if [ ! -d "$tree"/"$Rundir" ] ;then
+            echo "$Rundir $Runnam"
+            ratios=`gawk 'END{ratios=exp(2*log(sin(1.570796*'$kang')/cos(1.570796*'$kang')));\
+                   print ratios}' /dev/null`          
+            if [ "$square" -eq 0 ] ;then
+              ax0=`gawk 'END{ax0='$factor'*(sqrt('$beta_x')+sqrt('$beta_x2'*'$ratios'))*\
+                     cos(1.5707963268*'$kang');print ax0}' /dev/null`
+            else
+              if [ "$ratios" -le "$one" ] ;then
+                 ax0=`gawk 'END{ax0='$factor'*(sqrt('$beta_x')+sqrt('$beta_x2'*'$ratios'));\
+                     print ax0}' /dev/null`
+              else
+                ax0=`gawk 'END{ax0='$factor'*(sqrt('$beta_y2'/'$ratios')+sqrt('$beta_y'))*\
+                    cos(1.5707963268*'$kang')/sin(1.5707963268*'$kang');print ax0}' /dev/null`
+              fi
+            fi
+            ax0s=`gawk 'END{ax0s='$ax0'*'$ns1s';print ax0s}' /dev/null`
+            ax1s=`gawk 'END{ax1s='$ax0'*'$ns2s';print ax1s}' /dev/null`          
+            sed -e 's/%nss/'$nss'/g' \
+                -e 's/%turnss/'$turnss'/g' \
+                -e 's/%ax0s/'$ax0s'/g' \
+                -e 's/%ax1s/'$ax1s'/g' \
+                -e 's/%ratios/'$ratios'/g' \
+                -e 's/%tunex/'$tunexx'/g' \
+                -e 's/%tuney/'$tuneyy'/g' \
+                -e 's/%inttunex/'$inttunexx'/g' \
+                -e 's/%inttuney/'$inttuneyy'/g' \
+                -e 's/%Runnam/'$Runnam'/g' \
+                -e 's/%writebins/'$writebins'/g' $sixdeskjobs_logs/forts.3.mask > $sixdeskjobs_logs/fort.3
+          fi
+        #
+        # b.) k = 0
+        #
+        else
+          ###Rundir=$LHCDesHome/$i/momen/__/e0/$Angle
+          ###Runnam=$LHCDesName${i}m__0$Angle
+          Runnam=$LHCDesName"%"${i}"%m%"$sixdesktunes"%__%0%"$Angle
+
+#MACRO myrundir $Runnam Rundir
+          runnamename=$Runnam
+          sixdeskrundir
+          Rundir=$rundirname
+#MACRO myrundir
+ 
+
+#MACRO mymess 1 Momen $Runnam $Rundir, k/0=$k
+          sixdeskmesslevel=1
+          sixdeskmess="Momen $Runnam $Rundir, k/0=$k"
+          sixdeskmess
+#MACRO mymess
+
+          #
+          if [ -d "$tree"/"$Rundir" ] ;then
+            if [ ! -s "$tree"/"$Rundir"/fort.10.gz ] || [ $sixdeskforce -eq 2 ] ;then
+              rm -rf "$tree"/"$Rundir"
+
+#MACRO mymess 1 $tree/$Rundir removed contained no or zerolength fort.10.gz
+              sixdeskmesslevel=1
+              sixdeskmess="$tree/$Rundir removed contained no or zerolength fort.10.gz"
+              sixdeskmess
+#MACRO mymess
+
+            fi
+          fi
+          #
+          if [ ! -d "$tree"/"$Rundir" ] ;then
+            echo $Rundir $Runnam
+            sed -e 's/%Runnam/'$Runnam'/g' \
+                -e 's/%tunex/'$tunexx'/g' \
+                -e 's/%tuney/'$tuneyy'/g' \
+                -e 's/%inttunex/'$inttunexx'/g' \
+                -e 's/%inttuney/'$inttuneyy'/g' \
+            $sixdeskjobs_logs/fort0.3.mask > $sixdeskjobs_logs/fort.3
+          fi
+        fi
+        #
+        # final preparation of all SIXTRACK files (short), 
+        # creating run directory and cp all files to it
+        #
+        if [ ! -d "$tree"/"$Rundir" ] ;then
+          mkdir -p "$tree"/"$Rundir"
+          if [ "$k" -ge 1 ] ;then
+            rm -f $tree/$LHCDesHome/$i/trans/$sixdesktunes/$Ampl/e$turnsse/.$k
+            ln -fs $tree/$Rundir $tree/$LHCDesHome/$i/trans/$sixdesktunes/$Ampl/e$turnsse/.$k
+          else
+            rm -f $tree/$LHCDesHome/$i/momen/$sixdesktunes/__/e0/.$k
+            ln -fs $tree/$Rundir $tree/$LHCDesHome/$i/momen/$sixdesktunes/__/e0/.$k
+          fi
+
+          if [ -a "$dir16"/fort.2_"$i".gz ] ;then
+            ln -s "$dir16"/fort.2_"$i".gz  "$tree"/"$Rundir"/fort.2.gz
+#          cp "$dir16"/fort.2_"$i".gz  "$tree"/"$Rundir"/fort.2.gz
+          else
+
+#MACRO mymess 0 No SIXTRACK geometry file (fort.2): Run stopped
+            sixdeskmesslevel=0
+            sixdeskmess="No SIXTRACK geometry file (fort.2): Run stopped"
+            sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskjobs_logs
+            ###sixdesklockdir=$sixdeskjobs_logs
+            ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+            sixdesklockdir=$sixdeskstudy
+            sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 4
+            sixdeskexitparam=4
+            sixdeskexit
+#MACRO myexit
+
+          fi
+          if [ -a $sixdeskjobs_logs/fort.3 ] ;then
+            gzip -c  $sixdeskjobs_logs/fort.3 > "$tree"/"$Rundir"/fort.3.gz
+          else
+
+#MACRO mymess 0 No SIXTRACK control file (fort.3): Run stopped
+            sixdeskmesslevel=0
+            sixdeskmess="No SIXTRACK control file (fort.3): Run stopped"
+            sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskjobs_logs
+            ###sixdesklockdir=$sixdeskjobs_logs
+            ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+            sixdesklockdir=$sixdeskstudy
+            sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 5
+            sixdeskexitparam=5
+            sixdeskexit
+#MACRO myexit
+
+          fi
+          if [ -a "$dir16"/fort.8_"$i".gz ] ;then
+            ln -s "$dir16"/fort.8_"$i".gz  "$tree"/"$Rundir"/fort.8.gz
+#           cp "$dir16"/fort.8_"$i".gz  "$tree"/"$Rundir"/fort.8.gz
+          else
+
+#MACRO mymess 0 No SIXTRACK misalignment file (fort.8): dummy file created
+            sixdeskmesslevel=0
+            sixdeskmess="No SIXTRACK misalignment file (fort.8): dummy file created"
+            sixdeskmess
+#MACRO mymess
+
+            touch "$tree"/"$Rundir"/fort.8
+            gzip "$tree"/"$Rundir"/fort.8
+          fi
+          if [ -a "$dir16"/fort.16_"$i".gz ] ;then
+            ln -s "$dir16"/fort.16_"$i".gz  "$tree"/"$Rundir"/fort.16.gz
+#          cp "$dir16"/fort.16_"$i".gz  "$tree"/"$Rundir"/fort.16.gz
+          else
+
+#MACRO mymess 0 No SIXTRACK error file (fort.16): dummy file created
+            sixdeskmesslevel=0
+            sixdeskmess="No SIXTRACK error file (fort.16): dummy file created"
+            sixdeskmess
+#MACRO mymess
+
+            touch "$tree"/"$Rundir"/fort.16
+            gzip "$tree"/"$Rundir"/fort.16
+          fi
+          #
+          #start LSF job for short run
+          #
+          if [ k -eq 0 ] ;then
+            sed -e 's?SIXJOBNAME?'$Runnam'?g' \
+                -e 's?SIXJOBDIR?'$Rundir'?g' \
+                -e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
+                -e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' $sixdeskjobs_logs/"${lsfjobtype}"0.lsf > \
+                   $sixdeskjobs_logs/"$Runnam".lsf
+            chmod 755 $sixdeskjobs_logs/"$Runnam".lsf
+            sixdeskRunnam="$Runnam"
+            sixdeskRundir="$Rundir"
+            . ./dot_bsub $Runnam $Rundir
+          else
+            sed -e 's?SIXJOBNAME?'$Runnam'?g' \
+                -e 's?SIXJOBDIR?'$Rundir'?g' \
+                -e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
+                -e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' $sixdeskjobs_logs/"${lsfjobtype}".lsf > \
+                   $sixdeskjobs_logs/"$Runnam".lsf
+            chmod 755 $sixdeskjobs_logs/"$Runnam".lsf
+            sixdeskRunnam="$Runnam"
+            sixdeskRundir="$Rundir"
+            . ./dot_bsub $Runnam $Rundir
+          fi
+        fi
+        #
+        let k=k+$kstep
+      done
+    fi
+    #
+    #run for longterm
+    #
+    if [ "$long" -eq 1 ] ;then
+    # Now we have the new code to do integer arithmetic on amplitudes
+
+#MACRO myamps
+      sixdeskamps
+#MACRO myamps
+
+      while test "$ampstart" -lt "$ampfinish"
+      do
+        fampstart=`gawk 'END{fnn='$ampstart'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
+        fampstart=`echo $fampstart | sed -e's/0*$//'`
+        fampstart=`echo $fampstart | sed -e's/\.$//'`
+        ampend=`expr "$ampstart" + "$ampincl"`
+        fampend=`gawk 'END{fnn='$ampend'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
+        fampend=`echo $fampend | sed -e's/0*$//'`
+        fampend=`echo $fampend | sed -e's/\.$//'`
+        Ampl="$fampstart"_"$fampend" 
+
+#MACRO mymess 0 Loop over amplitudes: $Ampl $ns1l $ns2l $nsincl
+        sixdeskmesslevel=0
+        sixdeskmess="Loop over amplitudes: $Ampl $ns1l $ns2l $nsincl"
+        sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 $ampstart $ampfinish $ampincl $fampstart $fampend
+        sixdeskmesslevel=0
+        sixdeskmess="$ampstart $ampfinish $ampincl $fampstart $fampend"
+        sixdeskmess
+#MACRO mymess
+
+        k=$kinil
+        AngleStep=`gawk 'END{a=90/('$kmaxl'+1);print a}' /dev/null`
+        while test "$k" -le "$kendl"
+        do
+          Angle=`gawk 'END{a='$AngleStep'*'$k';print a}' /dev/null`
+          kang=`gawk 'END{kang='$k'/('$kmaxl'+1);print kang}' /dev/null`
+          echo $k, $kinil, $kmaxl, $kendl, $Angle, $AngleStep
+          ###Rundir=$LHCDesHome/$i/simul/$sixdesktunes/$Ampl/e$turnsle/$Angle
+          Runnam=$LHCDesName"%"${i}"%s%"$sixdesktunes"%"$Ampl"%"$turnsle"%"$Angle
+
+#MACRO myrundir $Runnam Rundir
+          runnamename=$Runnam
+          sixdeskrundir
+          Rundir=$rundirname
+#MACRO myrundir
+ 
+          #
+          if [ -d "$tree"/"$Rundir" ] ;then
+            if [ -s "$tree"/"$Rundir"/fort.10.gz ] ;then
+              rm -f $tree/$Rundir/../.$k
+              ln -fs $tree/$Rundir $tree/$Rundir/../.$k
+
+#MACRO mymess 1 $tree/$Rundir relinked to $tree/$Rundir/../.$k
+              sixdeskmesslevel=1
+              sixdeskmess="$tree/$Rundir relinked to $tree/$Rundir/../.$k"
+              sixdeskmess
+#MACRO mymess
+
+            else
+              rm -rf "$tree"/"$Rundir"
+
+#MACRO mymess 1 $tree/$Rundir removed contained no or zerolength fort.10.gz
+              sixdeskmesslevel=1
+              sixdeskmess="$tree/$Rundir removed contained no or zerolength fort.10.gz"
+              sixdeskmess
+#MACRO mymess
+
+            fi
+          fi
+          #
+          if [ ! -d "$tree"/"$Rundir" ] ;then
+            #
+            #set up of fort.2 for long run
+            #
+
+#MACRO mymess 1 fort.2 setup $Rundir $Runnam
+            sixdeskmesslevel=1
+            sixdeskmess="fort.2 setup $Rundir $Runnam"
+            sixdeskmess
+#MACRO mymess
+
+            #
+            ratiol=`gawk 'END{ratios=exp(2*log(sin(1.570796*'$kang')/cos(1.570796*'$kang')));\
+                   print ratios}' /dev/null`          
+            if [ "$square" -eq 0 ] ;then
+              ax0=`gawk 'END{ax0='$factor'*(sqrt('$beta_x')+sqrt('$beta_x2'*'$ratiol'))*\
+                     cos(1.5707963268*'$kang');print ax0}' /dev/null`
+            else
+              if [ "$ratiol" -le "$one" ] ;then
+               ax0=`gawk 'END{ax0='$factor'*(sqrt('$beta_x')+sqrt('$beta_x2'*'$ratiol'));\
+                   print ax0}' /dev/null`
+              else
+                ax0=`gawk 'END{ax0='$factor'*(sqrt('$beta_y2'/'$ratiol')+sqrt('$beta_y'))*\
+                     cos(1.5707963268*'$kang')/sin(1.5707963268*'$kang');print ax0}' /dev/null`
+              fi
+            fi
+            ax0l=`gawk 'END{ax0l='$ax0'*'$fampstart';print ax0l}' /dev/null`
+            ax1l=`gawk 'END{ax1l='$ax0'*'$fampend';print ax1l}' /dev/null`
+            #
+            sed -e 's/%ax0l/'$ax0l'/g' \
+                -e 's/%ax1l/'$ax1l'/g' \
+                -e 's/%turnsl/'$turnsl'/g' \
+                -e 's/%ratiol/'$ratiol'/g' \
+                -e 's/%writebinl/'$writebinl'/g' \
+                -e 's/%tunex/'$tunexx'/g' \
+                -e 's/%tuney/'$tuneyy'/g' \
+                -e 's/%inttunex/'$inttunexx'/g' \
+                -e 's/%inttuney/'$inttuneyy'/g' \
+                -e 's/%Runnam/'$Runnam'/g' \
+            $sixdeskjobs_logs/fortl.3.mask > $sixdeskjobs_logs/fort.3
+            #
+            # final preparation of all SIXTRACK files (long), creating run directory and 
+            # cp all files to it
+            #
+            mkdir -p "$tree"/"$Rundir"
+            rm -f $tree/$Rundir/../.$k
+            ln -fs $tree/$Rundir $tree/$Rundir/../.$k
+
+            if [ -a "$dir16"/fort.2_"$i".gz ] ;then
+              ln -s "$dir16"/fort.2_"$i".gz  "$tree"/"$Rundir"/fort.2.gz
+#           cp "$dir16"/fort.2_"$i".gz  "$tree"/"$Rundir"/fort.2.gz
+            else
+
+#MACRO mymess 0 No SIXTRACK geometry file (fort.2): Run stopped
+              sixdeskmesslevel=0
+              sixdeskmess="No SIXTRACK geometry file (fort.2): Run stopped"
+              sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskjobs_logs
+              ###sixdesklockdir=$sixdeskjobs_logs
+              ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+              sixdesklockdir=$sixdeskstudy
+              sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 6
+              sixdeskexitparam=6
+              sixdeskexit
+#MACRO myexit
+
+            fi
+            if [ -a $sixdeskjobs_logs/fort.3 ] ;then
+              gzip -c  $sixdeskjobs_logs/fort.3 > "$tree"/"$Rundir"/fort.3.gz
+            else
+
+#MACRO mymess 0 No SIXTRACK control file (fort.3): Run stopped
+              sixdeskmesslevel=0
+              sixdeskmess="No SIXTRACK control file (fort.3): Run stopped"
+              sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskjobs_logs
+              ###sixdesklockdir=$sixdeskjobs_logs
+              ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+              sixdesklockdir=$sixdeskstudy
+              sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 7
+              sixdeskexitparam=7
+              sixdeskexit
+#MACRO myexit
+
+            fi
+            if [ -a "$dir16"/fort.8_"$i".gz ] ;then
+              ln -s "$dir16"/fort.8_"$i".gz  "$tree"/"$Rundir"/fort.8.gz
+#           cp "$dir16"/fort.8_"$i".gz  "$tree"/"$Rundir"/fort.8.gz
+            else
+
+#MACRO mymess 0 No SIXTRACK misalignment file (fort.8): dummy file created
+              sixdeskmesslevel=0
+              sixdeskmess="No SIXTRACK misalignment file (fort.8): dummy file created"
+              sixdeskmess
+#MACRO mymess
+
+              touch "$tree"/"$Rundir"/fort.8
+              gzip "$tree"/"$Rundir"/fort.8
+            fi
+            if [ -a "$dir16"/fort.16_"$i".gz ] ;then
+              ln -s "$dir16"/fort.16_"$i".gz  "$tree"/"$Rundir"/fort.16.gz
+#           cp "$dir16"/fort.16_"$i".gz  "$tree"/"$Rundir"/fort.16.gz
+            else
+
+#MACRO mymess 0 No SIXTRACK error file (fort.16): dummy file created
+              sixdeskmesslevel=0
+              sixdeskmess="No SIXTRACK error file (fort.16): dummy file created"
+              sixdeskmess
+#MACRO mymess
+
+              touch "$tree"/"$Rundir"/fort.16
+              gzip "$tree"/"$Rundir"/fort.16
+            fi
+            #
+            if test "$sixdeskplatform" = "lsf"
+            then
+            #start LSF job for long run
+            #
+              sed -e 's?SIXJOBNAME?'$Runnam'?g' \
+                  -e 's?SIXJOBDIR?'$Rundir'?g' \
+                  -e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
+                  -e 's?SIXTRACKEXE?'$SIXTRACKEXE'?g' \
+                  -e 's?SIXCASTOR?'$sixdeskcastor'?g' \
+                  -e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' "$sixdeskhome"/utilities/"${lsfjobtype}".lsf > \
+                      $sixdeskjobs_logs/"$Runnam".lsf
+              chmod 755 $sixdeskjobs_logs/"$Runnam".lsf
+              sixdeskRunnam="$Runnam"
+              sixdeskRundir="$Rundir"
+              . ./dot_bsub $Runnam $Rundir
+            elif test "$sixdeskplatform" = "cpss"
+            then
+              # The 3rd param 0 means only if not submitted already
+              sixdeskRunnam="$Runnam"
+              sixdeskRundir="$Rundir"
+              . ./dot_task
+            elif test "$sixdeskplatform" = "grid"
+            then
+              # Create $Runnam.grid in $sixdeskwork/$Runnam
+
+#MACRO mymess 0 Running on GRID not yet implemented!!!
+              sixdeskmesslevel=0
+              sixdeskmess="Running on GRID not yet implemented!!!"
+              sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskjobs_logs
+              sixdesklockdir=$sixdeskjobs_logs
+              sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+              sixdesklockdir=$sixdeskstudy
+              sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 9
+              sixdeskexitparam=9
+              sixdeskexit
+#MACRO myexit
+
+            elif test "$sixdeskplatform" = "boinc"
+            then
+              # The 3rd param 0 means only if not submitted already
+              sixdeskRunnam="$Runnam"
+              sixdeskRundir="$Rundir"
+              . ./dot_boinc
+            else
+              # Should be impossible
+
+#MACRO mymess 0 You have not selected a platform CPSS, LSF, BOINC or GRID!!!
+              sixdeskmesslevel=0
+              sixdeskmess="You have not selected a platform CPSS, LSF, BOINC or GRID!!!"
+              sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskjobs_logs
+              ###sixdesklockdir=$sixdeskjobs_logs
+              ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+              sixdesklockdir=$sixdeskstudy
+              sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 10
+              sixdeskexitparam=10
+              sixdeskexit
+#MACRO myexit
+
+            fi
+          fi
+          # End of if NOT a Rundir already
+          k=`expr $k + $kstep`
+        done
+        # end of loop over angles
+        ampstart=`expr $ampstart + $ampincl`
+      done
+      # end of loop over amplitudes
+    fi
+    # end of long term
+    #
+    # Start DA run
+    #
+    if [ "$da" -eq 1 ] ;then
+      Angle=0
+      ###Rundir=$LHCDesHome/$i/damap/$Ampl/e0/$Angle
+      ###Runnam=$LHCDesName${i}d${Ampl}0$Angle
+      Runnam=$LHCDesName"%"${i}"%d%"$sixdesktunes"%"$Ampl"%0%"$Angle
+
+#MACRO myrundir $Runnam Rundir
+      runnamename=$Runnam
+      sixdeskrundir
+      Rundir=$rundirname
+#MACRO myrundir
+
+
+      #
+      if [ -d "$tree"/"$Rundir" ] && [ ! -s "$tree"/"$Rundir"/fort.10.gz ] ;then
+        rm -rf "$tree"/"$Rundir"
+        echo "$tree/$Rundir removed contained no or zerolength fort.10"
+      fi
+      #
+      if [ ! -d "$tree"/"$Rundir" ] ;then
+        sed -e 's/%NO/'$NO'/g' \
+            -e 's/%tunex/'$tunexx'/g' \
+            -e 's/%tuney/'$tuneyy'/g' \
+            -e 's/%inttunex/'$inttunexx'/g' \
+            -e 's/%inttuney/'$inttuneyy'/g' \
+            -e 's/%Runnam/'$Runnam'/g' \
+            -e 's/%NV/'$NV'/g' $sixdeskjobs_logs/fortda.3.mask > $sixdeskjobs_logs/fort.3
+        #
+        # final preparation of all SIXTRACK files (da), creating run directory and 
+        # cp all files to it
+        #
+        echo "$Rundir" "$Runnam"
+        Rundirda="$tree"/"$Rundir"
+        mkdir -p "$Rundirda"
+
+        if [ -a "$dir16"/fort.2_"$i".gz ] ;then
+          ln -s "$dir16"/fort.2_"$i".gz  "$Rundirda"/fort.2.gz
+  #        cp "$dir16"/fort.2_"$i".gz  "$Rundirda"/fort.2.gz
+        else
+
+#MACRO mymess 0 No SIXTRACK geometry file (fort.2): Run stopped
+          sixdeskmesslevel=0
+          sixdeskmess="No SIXTRACK geometry file (fort.2): Run stopped"
+          sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskjobs_logs
+          ###sixdesklockdir=$sixdeskjobs_logs
+          ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+          sixdesklockdir=$sixdeskstudy
+          sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 11
+          sixdeskexitparam=11
+          sixdeskexit
+#MACRO myexit
+
+        fi
+        if [ -a $sixdeskjobs_logs/fort.3 ] ;then
+          gzip -c  $sixdeskjobs_logs/fort.3 > "$Rundirda"/fort.3.gz
+        else
+
+#MACRO mymess 0 No SIXTRACK control file (fort.3): Run stopped
+          sixdeskmesslevel=0
+          sixdeskmess="No SIXTRACK control file (fort.3): Run stopped"
+          sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskjobs_logs
+          ###sixdesklockdir=$sixdeskjobs_logs
+          ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+          sixdesklockdir=$sixdeskstudy
+          sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 12
+          sixdeskexitparam=12
+          sixdeskexit
+#MACRO myexit
+
+        fi
+        if [ -a "$dir16"/fort.8_"$i".gz ] ;then
+         ln -s "$dir16"/fort.8_"$i".gz  "$Rundirda"/fort.8.gz
+  #       cp "$dir16"/fort.8_"$i".gz  "$Rundirda"/fort.8.gz
+        else
+
+#MACRO mymess 0 No SIXTRACK misalignment file (fort.8): dummy file created
+          sixdeskmesslevel=0
+          sixdeskmess="No SIXTRACK misalignment file (fort.8): dummy file created"
+          sixdeskmess
+#MACRO mymess
+
+          touch "$Rundirda"/fort.8
+          gzip "$Rundirda"/fort.8
+        fi
+        if [ -a "$dir16"/fort.16_"$i".gz ] ;then
+          ln -s "$dir16"/fort.16_"$i".gz  "$Rundirda"/fort.16.gz
+  #        cp "$dir16"/fort.16_"$i".gz  "$Rundirda"/fort.16.gz
+        else
+
+#MACRO mymess 0 No SIXTRACK error file (fort.16): dummy file created
+          sixdeskmesslevel=0
+          sixdeskmess="No SIXTRACK error file (fort.16): dummy file created"
+          sixdeskmess
+#MACRO mymess
+
+          touch "$Rundirda"/fort.16
+          gzip "$Rundirda"/fort.16
+        fi
+        #
+        #start LSF job for da run
+        #
+        sed -e 's?SIXJOBNAME?'"$Runnam"'?g' \
+            -e 's?SIXTRACKDAEXE?'$SIXTRACKDAEXE'?g' \
+            -e 's?SIXJOBDIR?'$Rundir'?g' \
+            -e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
+            -e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' "$sixdeskhome"/utilities/"${lsfjobtype}".lsf > \
+                $sixdeskjobs_logs/"$Runnam".lsf
+        chmod 755 $sixdeskjobs_logs/"$Runnam".lsf
+        sixdeskRunnam="$Runnam"
+        sixdeskRundir="$Rundir"
+        . ./dot_bsub $Runnam $Rundir
+      fi
+    fi
+    itunexx=`expr $itunexx + $ideltax`
+    ituneyy=`expr $ituneyy + $ideltay`
+  done
+  # end of loop over tunescans
+  let i=i+1
+done
+#
+# end main loop
+
+#MACRO myunlock $sixdeskjobs_logs
+###sixdesklockdir=$sixdeskjobs_logs
+###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO mymess 0 Completed normally
+sixdeskmesslevel=0
+sixdeskmess="Completed normally"
+sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

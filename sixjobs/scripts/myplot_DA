@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+. ./dot_env
+mytunes
+# loop over the tunescans
+itunexx=$itunex
+ituneyy=$ituney
+if test "$ideltax" -eq 0 -a "$ideltay" -eq 0
+then
+  ideltax=1000000
+  ideltay=1000000
+fi
+while test "$itunexx" -le "$itunex1" -o "$ituneyy" -le "$ituney1"
+do
+  tunexx=`echo "$itunexx" | cut -c1-2`"."`echo "$itunexx" | cut -c3-6`
+  tunexx=`echo "$tunexx" | sed -e's/0*$//'`
+  tunexx=`echo "$tunexx" | sed -e's/^0//'`
+  tuneyy=`echo "$ituneyy" | cut -c1-2`"."`echo "$ituneyy" | cut -c3-6`
+  tuneyy=`echo "$tuneyy" | sed -e's/0*$//'`
+  tuneyy=`echo "$tuneyy" | sed -e's/^0//'`
+  sixdesktunes=$tunexx"_"$tuneyy
+  echo "Tunes $sixdesktunes"
+# and now the plotting
+  myname="DAres.${LHCDescrip}.${sixdesktunes}.${turnse}"
+  echo "$myname"
+# and now loop over the angles
+  k=$kinil
+  while test "$k" -le "$kendl"
+  do
+    echo "Angle $k"
+    myfile=${myname}.$k
+    k=`expr $k + $kstep`
+  done
+  itunexx=`expr $itunexx + $ideltax`
+  ituneyy=`expr $ituneyy + $ideltay`
+done
+mymess 0 "plot_DA finished normally"

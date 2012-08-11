@@ -1,0 +1,36 @@
+#!/bin/sh
+if test -s backup_workspace.list
+then
+  # we assume we restarting or we are allowing editing
+  # of the list
+  if test -s backup_workspace.finished
+  then
+    # Keep one complete log for this backup
+    bname=`head -1 backup_workspace.finished`
+    touch $bname.log
+    touch backup_workspace.log
+    cat backup_workspace.log >> $bname.log
+    rm backup_workspace.log
+  fi
+  if test -s backup_workspace.started
+  then
+    rm backup_workspace.started
+  fi
+fi
+./scripts/backup_workspace 2>&1 | tee backup_workspace.log
+if test -s backup_workspace.started
+then
+  rm backup_workspace.started
+  exit
+fi
+# Are we really finished
+if test -s backup_workspace.completed 
+then
+  rm backup_workspace.completed
+  bname=`head -1 backup_workspace.finished`
+  touch $bname.log
+  cat backup_workspace.log >> $bname.log 
+  rm backup_workspace.log
+  rm backup_workspace.list
+  rm backup_workspace.finished
+fi

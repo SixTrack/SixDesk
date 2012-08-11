@@ -1,0 +1,273 @@
+Release 11th August first for SVN.
+
+Release 6th August, 2012. Changed log message levels and defaults.
+Simplified locks to lock study but lock plot for run_post as well.
+Added fort.15 to $Fileps as suggested by Massimo.
+
+New Major Release 29th February matching SixDesk documentation 
+and using study job_tracking with appropriate defaults.
+
+Most/all commands now accept a study and optionally a
+platform as parameters  to the command. This facilitates
+running multiple studies in a workspace.
+
+run_status still takes a long time for platform LSF but
+the delays can be minimised but doing a run_status at regular
+intervals.
+
+Set up to use SIXTRACKEXE=SixTrack_pro (currently 4437)
+Uses CASTOR_HOME and not nap.
+
+Fixed a bug in sysenv for the new pts group specification.
+Corrected messages in run_six when the one-turn jobs fail.
+Modified run_post to use a working directory and to
+NOT lock $sixdeskhome (the workspace).
+
+Added pilot versions of compare_DA and plot_DA.
+Some minor new messages to log normal completion.
+Some improvements, 7th November, 2011.
+Added batch_ join10|post|results|run
+and the associated _template files.
+Changed dot_boinc to use a per study sixdesktaskIds
+directory to avoid locking the sixdeskTaskId.
+
+New Major Release, 6th November, 2011.
+Also:
+ run_post and others: issue a message on completion
+ run_status: puts missing_jobs in $sixdeskjobs
+ run_results: issues only DIFF messages to sixdesklog when fort.10s are different
+ dot_boinc: creates the results sub-directory
+ dot_profile: issues sleep delay messages for locks
+ Improved? lock handling everywhere
+ Added bunch_charge
+ short run remains an issue ????
+ (Removed bnl options which can be restored)
+
+Release 6th May, 2010.
+Added new sixdeskenv variable bunch_charge for fort.3.mother1.
+Added the BEAM block to fort.3.mother1_inj.
+Added the correct tunes to the web.save file for run_post
+Also added all this to update[d]_scripts.
+and added the missing .save files as .mask:
+beamweb.mask detuning.mask detuningh.mask detuningv.mask
+tunedp.mask web.mask.
+Fixed updated_scripts to add myrun_results, mydot_boinc, mydot_task,
+(allmyseds and myrun_join10 seemed to be there already)
+and the missing run_post files.
+Fixed the "beam" control files as well.
+Updated all executables to V4.2.09 (BNL).
+Release 3rd March, 2010.
+Just modified myrun_results to delete the BOINC .dec.done and
+.zip in the boinc work directory (as left by Alex).
+Release 18th January, 2010.
+Added the new backup_study, backup_workspace,
+recall_study and recall_workspace procedures.
+Incorporates new SixTrack 4.2.06 for LSF and CPSS (NOT BOINC).
+This version saves the closed orbit in sumda(53:58) and is thus
+written out in fort.10.
+Fixed sixdeskenv to include the chrom options described in the previous release.
+Replaced the rfrm by nsrm -rf and the rfmkdir by nsmkdir.
+Added a summary plot of DA over all seeds to run_post when kvar is 1.
+Issue a warning when at least one seed is missing in plot_dyb summary.
+Only plots down to minimum of writebinl turns from turnsl[e].
+Corrected an error message in run_awk.
+Corrected dot_bsub to ALWAYS save the .lsf job in the tree
+and to ALWAYS delete the orginal.
+run_missing_jobs sets sixdeskforce=2.
+Made sixdeskerror.log and restart.log links to the same files
+in $sixdesklogdir in mydot_env. Changed dot_profile to use
+$sixdeskhome if $sixdesklogdir is undefined.
+Corrected correct_cases.
+Modified compare_workspaces to allow the username as a second parameter.
+Moved README to scripts and put the link in sixjobs.
+Several changes to correctly handle search for Runnam.
+The following scripts were modified.
+README (and was moved to the scripts directory).
+In scripts:
+allscripts check_sixdeskenv check_sysenv compare_workspaces exec_env
+mybackup_study mybackup_workspace mycheck_incomplete mycheck_jobs
+mycheck_locks mycheck_really mycompare_results mycorrect_cases
+mydelete_study mydot_bsub mydot_env mydot_profile mymywhich
+myrecall_study myrecall_workspace myrun_mad6t myrun_missing_jobs
+myrun_post myrun_query myrun_six myrun_status myset_env
+and finally plot/inc/plot_dyb and added plot/inc/minmax.awk
+
+Release 22nd September, 2009.
+Really tidied up (re-wrote) delete_study.
+Added the -f flag to the rfrm of the "new" CASTORDIR in sixtracking.lsf.
+Fixed sixtracking.lsf to copy only the four input files and to remove
+any existing fort.10.gz; also added some ls and a tail -100 fort.6.
+Added the extra chrom option for calculating it from two additional
+one-turn runs. (Has a bug in sixdeskenv missing new chrom defs!)
+Incorporates Frank's version 4.2.05 for LSF and CPSS (NOT BOINC).
+
+Release 31st July, 2009.
+Incorporates Frank's version 4.2.03 for LSF and CPSS (NOT BOINC).
+Release 24th June, 2009.
+Fixed the \n problem with ksh in run_post and plot/inc/plot_dyb
+Release 27th, May 2009
+Corrected chrom flag in sixdeskenv.
+Modified run_six to handle chrom flag in one turn case.
+Modified utilities/sixmedium.lsf.mask to properly handle sussix
+(was wrong path, and myrun_six now defines the correct path).
+Added another madX path to Version 3.04.53 and removed the -X flag.
+This is meant to point to the previous production version
+and should be updated when the default path is updated.
+Added new option for turning off tune (tune).
+Added new option for the mass of the proton (pmass).
+Cleaned up "beam" option to specify null|b1|B1 for beam1 or
+b2|B2 for beam2 with appropriate control_files; fixed a problem
+affecting runtype injection with the b2 option which was using
+a fixed "length" rather than the value returned from madX.
+This might have affected studies concerning SUBRESONANCE CALCULATION,
+RESONANCE COMPENSATION, SEARCH FOR THE BEST POSITIONS FOR 
+COMPENSATION-ELEMENTS.
+Fixed a bug in check_mad6t which was incorrectly concatenating
+the MCSSX, MCOSX, MCOX, MCSX and MCTX error files when the
+CORR_TEST option is selected.
+Improved mydot_bsub to specify that LSF output should be returned
+to the track hierarchy in Rundir; after submission moved the actual
+job to the Rundir as well. Improves scalability.
+Fixed the error message on job submission.
+Greatly improved run_awk to handle only the specified files (angles)
+and to clear the .plot file.
+Added a new check_locks command.
+Added a new compare_workspaces script.
+Updated the sixtrack_da executable.
+Fixed bug with chrom=0 in run_six one turn.
+
+Release 16th March, 2009.
+Added \* to find in run_status/run_results to help Tatiana
+with the "e" field which can now be any number of digits.
+(Not checked really for post-processing etc.)
+Tidied up the sixdesk.log links and directories.
+Modified test for current directory to be anything followed
+by $workspace/sixjobs. (Fixes annoying problem with a link.)
+Modified create_protection_group for two new users.
+Modified myrun_six to better handle errors in producing
+the betavalues. fort10 is saved as fort.10_old and any (wrong)
+betavalues file is also renamed to make sure we try again.
+
+Release 5th March, 2009.
+Got rid of some bin links to non-existent files.
+Got rid of local cronlogs sixdesklogs directories.
+Redefined logs to have workspace sub-directory.
+Modified delete_study for the new log directories.
+
+Release 13th February, 2009.
+Added new CASTOR V2 environment variables to myrun_results.
+Changed uploadWorkunit to submit only 2 copies of the work
+with a 3-day deadline (instead of 2 weeks).
+
+Release 28th August, 2008.
+Just changed sixdeskenv comment about sixdeskpairs
+to report that it may now be varied between 1 and 32
+
+Release 26th August, 2008.
+Fixed a problem with incomplete_cases in dot_bsub, dot_boinc and dot_task.
+Changed to use mychecktens to handle Version No in Word 52 fort.10.
+Free the locks correctly (rather than by default) in run_six.
+
+Release 15th August, 2008.
+(Finally?) Fixed problem with delete_study.
+Implemented sixdeskpairs by using it in inc/prepare_fort.3 to set %nss.
+Modified utilities/sixtracking.lsf and run_six to honour 
+the CASTOR flag for LSF jobs.
+Fixed run_status to update my[in]complete[d]_cases for LSF.
+
+Release 27th June, 2008.
+Thanks to Massimo I added the "beam" option to sixdeskenv
+and the two fort.3.mother2_col.B2  fort.3.mother2_inj.B2
+files to the control_files.
+
+Release 17th June, 2008.
+Updates mydot_bsub, task, boinc to update myincomplete_tasks.
+Removed a lot of useless DEBUG messages and added the
+"stat" command to try and find the AFS/Linux problem
+with run_results. It exits with 999 but should still be OK
+for production. 
+ 
+Release 9th June, 2008
+More debug code added. Look for DEBUGZ in the sixdesk.log.
+Maintain a parallel databse with mycompleted_cases and 
+myincomplete_cases in $sixdeskwork updated by subroutine update_cases.
+Now treats all CPSS download failures as errors.
+A new script correct_cases which regenerates the correct
+completed|incomplete_cases for the workspace by checking for fort.10.gz. 
+
+Release 2nd June, 2008
+Some debug code in myrun_results for finding AFS problem.
+Moved the tmp file in myupdate_incomplete
+
+Release 17th March, 2008
+Two new scripts delete_study and check_incomplete.
+New option run_mad6t -i to make the mad6t runs interactively
+when the batch queues are blocked.
+New mad6t option "beam" which is appended to the "runtype" for the 
+mother filenames.
+Easier to run multiple studies simultaneously in the same workspace.
+run_results (as called by get_wlhc) accepts STUDY and PLATFORM as options:
+e.g. run_results lhc boinc or run_results lhc cpss irrespective of current
+settings in sixdeskenv.
+dot_env initialises track to current study and logfiles are now in the
+cronlogs and sixdesklogs directories. 
+run_status reporting tidied up.
+Fixed nasty bug with duplicate BOINC TaskIds and improved run_results to handle them.
+  
+Release 11th July, 2006
+Fixes missing ./ for exec_end in [my]dot_env since lxplus
+now removes . from PATH
+Sets kvar to 0 with a comment
+
+Release 11th May, 2006
+Now added support for "short" and "DA" studies.
+Handle the BOINC directories ACL using the 
+AFS_GROUP feature. Cleaned up the "utilities".
+Corrected plot/inc/plot_dyb for these new studies.
+Removed all references to TARGETDIR in the batch jobs.
+Use a temporary SIXDA executable until we move to
+the next SixTrack version with newcrlibm etc.
+
+The scripts modified in sixjobs/scripts: README \
+mydot_bsub \ myrun_status \ mycheck_mad6t \
+myrun_six \ myrun_post \ myrun_mad6t \ exec_env \
+myrun_join10 \ mydot_env \ mydot_profile \
+and
+plot/inc/plot_dyb \ sixdeskenv \ sysenv. 
+
+Current executables in ~/sixdesk/slap/Bin are:
+For LSF, one turn, etc:
+-rwxr-xr-x    1 mcintosh c3        5276057 Mar 22  2005 SixTrack62v4004lsf
+For CPSS:
+-rwxr-xr-x    1 mcintosh c3        2526836 Mar 23  2005 SixTrack71v4004.exe
+For DA runs
+-rwxr-xr-x    1 mcintosh c3        4871142 Jan 27 12:09 SixTrack_da_frs
+For BOINC we use the compatible version 4004.
+
+(Still to add additional mad6t checks, tune overlaps,
+and a generic run_results workspace platform (parallel?)).
+
+Release 1st July, 2005
+Incorporates "BOINC" support using new names with "%" converted
+to "__" for Markku.
+Handle most errors automatically, but keep info in "problems".
+
+The scripts modified in sixjobs/scripts: README \
+mydot_bsub \ mydot_boinc \ myrun_status \ myrun_query \ mycheck_mad6t \
+myrun_six \ myrun_results \ myrun_post \ myrun_incomplete_cases \
+myrun_incomplete_tasks \ mydot_boinc
+
+
+The scripts modified in sixjobs AND scripts:
+sedboincnames \ dot_bsub \ dot_boinc \ run_status \
+run_query \ check_mad6t \ run_six \ run_results \ run_post \
+run_incomplete_cases \ run_incomplete_tasks \ dot_boinc
+
+
+First Release for Dobrin  24th May, 2005
+All the scripts are now stored in workspace/sixjobs/scripts.
+They are listed in the file "allscripts" which is used
+for maintenance and support. All changes should be made in 
+that directory. The script domyseds expands macros in the "my" source files using the
+"allmyseds" directives and copies all executables to sixjobs.
+A backup is made in the "backup" sub-directory.

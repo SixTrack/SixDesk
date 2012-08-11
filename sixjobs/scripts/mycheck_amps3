@@ -1,0 +1,37 @@
+#!/bin/sh
+. ./dot_env
+mydir=$PWD
+rm -f amps3
+while read task
+do
+  Runnam=`echo $task | cut -d " " -f1`
+  myrundir $Runnam Rundir
+  taskid=`echo $task | cut -d " " -f2`
+  where=$sixdesktrack/$Rundir
+  cd $where
+  cp fort.3.gz my3.gz
+  gunzip my3
+  found="false"
+  written="false"
+  while read aline
+  do
+    if test "$found" = "true"
+    then
+      amps=`echo "$aline" | cut -d" " -f4-5`
+      echo "$amps" $Rundir >> $mydir/amps3
+      written="true"
+    else
+      echo "$aline" | grep "TRACKING PARAM" > /dev/null
+      if test $? -eq 0
+      then
+        found="true"
+      fi
+    fi
+    if test "$written" = "true"
+    then
+      break
+    fi
+  done < my3
+  rm my3
+  cd $mydir 
+done < work/taskids

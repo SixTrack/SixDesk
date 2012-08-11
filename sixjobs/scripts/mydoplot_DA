@@ -1,0 +1,116 @@
+#!/bin/sh
+# and get the environment of the current study
+. ./dot_env
+# We have been called with no arguments so we use current study etc
+# but we read the parameters w2 and s2, logname2, and name1 name2
+args=`cat plot_DA_args`
+rm plot_DA_args
+w2=`echo "$args" | cut -d" " -f1`
+ws2=`dirname $w2`
+ws2=`basename $ws2`
+s2=`echo "$args" | cut -d" " -f2`
+w1=$sixdeskhome
+ws1=`dirname $w1`
+ws1=`basename $ws1`
+s1=$LHCDescrip
+l1=$LOGNAME
+l2=`echo "$args" | cut -d" " -f3`
+name1=`echo "$args" | cut -d" " -f4`
+name2=`echo "$args" | cut -d" " -f5`
+mynames="${name1}-${name2}"
+mymess 0 "Plotting    $name1 $l1 $s1 in $w1"
+mymess 0 "compared to $name2 $l2 $s2 in $w2"
+mytunes
+itunexx=$itunex
+ituneyy=$ituney
+if test "$ideltax" -eq 0 -a "$ideltay" -eq 0
+then
+  ideltax=1000000
+  ideltay=1000000
+fi
+while test "$itunexx" -le "$itunex1" -a "$ituneyy" -le "$ituney1"
+do
+  tunexx=`echo "$itunexx" | cut -c1-2`"."`echo "$itunexx" | cut -c3-6`
+  tunexx=`echo "$tunexx" | sed -e's/0*$//'`
+  tunexx=`echo "$tunexx" | sed -e's/^0//'`
+  tuneyy=`echo "$ituneyy" | cut -c1-2`"."`echo "$ituneyy" | cut -c3-6`
+  tuneyy=`echo "$tuneyy" | sed -e's/0*$//'`
+  tuneyy=`echo "$tuneyy" | sed -e's/^0//'`
+  sixdesktunes=$tunexx"_"$tuneyy
+  echo ""
+  mymess 0 "Processing tunes $sixdesktunes"
+  myname="DAres.${l1}.${ws1}.${s1}.${sixdesktunes}.${turnse}_${l2}.${ws2}.${s2}"
+  j=$kinil
+  mymess 0 "Processing angles $kinil to $kendl by $kstep"
+# kendl=$kinil
+  while test "$j" -le "$kendl"
+  do 
+# each .stable file has seed no, amp1, amp2, diff, relative_diff
+    mymess 0 "Plotting ${myname}.${j}.stable"
+    maxDA=10
+    maxDA=20
+    myend=`expr $iend + 1`
+    sed -e's/%myname%/'$myname'/g' \
+        -e's/%name1%/'$name1'/g' \
+        -e's/%name2%/'$name2'/g' \
+        -e's/%maxDA%/'$maxDA'/g' \
+        -e's/%j%/'$j'/g' \
+        -e's/%myend%/'$myend'/g' \
+        -e's?%mynames%?'$mynames'?g' \
+         plot1.template > plot1.plot
+    gnuplot < plot1.plot
+    rm plot1.plot
+    rm ${myname}.${j}.stable
+    rm ${mynames}.${j}.stable
+    mv ${myname}.${j}.eps ${mynames}.${j}.eps
+    epstopdf ${mynames}.${j}.eps
+    rm ${mynames}.${j}.eps
+    ((j=j+$kstep))
+  done
+# and now plot the myname.sum file
+# seed no, av1-min1, av1, max1-av1, av2-min2, av2, max2-av2
+  mybegin=`expr $kinil - 1`
+  myend=`expr $kendl + 1`
+  sed -e's/%myname%/'$myname'/g' \
+      -e's/%name1%/'$name1'/g' \
+      -e's/%name2%/'$name2'/g' \
+      -e's/%maxDA%/'$maxDA'/g' \
+      -e's/%mybegin%/'$mybegin'/g' \
+      -e's/%myend%/'$myend'/g' \
+      -e's?%mynames%?'$mynames'?g' \
+       plot2.template > plot2.plot
+  gnuplot < plot2.plot
+  rm plot2.plot
+# rm ${myname}.sum
+  mv ${myname}.${myend}.eps ${mynames}.${myend}.eps
+  epstopdf ${mynames}.${myend}.eps 
+  rm ${mynames}.${myend}.eps
+# and try a quick fix for when kinil is NOT 1
+  if test "$kinil" -ne 1
+  then
+    k=1
+    j=$kinil
+    while test "$j" -le "$myend"
+    do
+      ln -sf ${mynames}.${j}.pdf jktemp.${k}.pdf   
+        ((j=j+$kstep))
+        ((k=k+$kstep))
+    done
+    createDAsurv jktemp
+#   rm jktemp.*
+  else
+    createDAsurv $mynames
+  fi
+  mv DAsurv.pdf ${mynames}.pdf
+
+  j=$kinil
+  while test "$j" -le "$kendl"
+  do
+    rm ${mynames}.${j}.pdf
+    ((j=j+$kstep))
+  done
+
+  itunexx=`expr $itunexx + $ideltax`
+  ituneyy=`expr $ituneyy + $ideltay`
+done
+myexit 0

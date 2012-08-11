@@ -1,0 +1,63 @@
+#!/bin/sh
+#
+# This script will (re-)submit a case if its status is incomplete 
+. ./dot_env
+if test $sixdeskplatform = "lsf"
+then
+  echo "This command is NOT available for LSF"
+  myexit 98
+fi
+mylock $sixdeskstudy
+mkdir -p $sixdeskjobs
+mymktmp copy $sixdeskjobs
+cp $sixdeskwork/incomplete_cases $copy
+while read line
+do
+  sixdeskRunnam=`echo $line | cut -d" " -f1`
+  entry=`grep "$sixdeskRunnam " $sixdeskwork/taskids`
+  if test "$entry" = ""
+  then
+    mymess 0 "Something badly wrong!!! We cannot find $sixdeskRunnam in $sixdeskwork/taskids"
+    myunlock $sixdeskstudy
+    myexit 1
+  fi
+  myrundir $sixdeskRunnam sixdeskRundir
+  where=$sixdesktrack/$sixdeskRundir
+  taskids=`echo $entry | cut -d" " -f2-`
+  if test ! -d "$where"
+  then
+    mymess 0 "The directory $sixdeskRundir for job $sixdeskRunnam does NOT exist!!!"
+    myunlock $sixdeskstudy
+    myexit 2
+  fi
+  if test ! -s "$where/fort.10.gz" -o $sixdeskforce -ge 2
+  then
+    mymess 1 "Job incomplete $taskids for $sixdeskRunnam"
+    if test $sixdeskforce -eq 0
+    then
+      export sixdeskforce=1 
+    fi
+    if test "$sixdeskplatform" = "cpss"
+    then
+      . ./dot_task
+      stat=$?
+    elif test "$sixdeskplatform" = "boinc"
+    then
+      . ./dot_boinc
+      stat=$?
+    elif test "$sixdeskplatform" = "grid"
+    then
+      . ./dot_grid
+      stat=$?
+    fi
+    if test $stat -ne 0
+    then
+      mymess 0 "dot_task/dot_boinc/dot_grid failed!!!"
+      myexit 99
+    fi
+  fi
+done < $copy
+rm $copy
+myunlock $sixdeskstudy
+mymess 0 "Completed normally"
+myexit 0

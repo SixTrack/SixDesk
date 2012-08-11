@@ -1,0 +1,30 @@
+%LieOrd %Nvar
+%DimPhase
+%Ndelta
+11
+13
+80 %Njolts
+29
+70
+1
+1 3
+0
+0
+
+#
+# Controls for 'Cremona'
+#
+# LieOrder  Nvars
+# DimPhaseSpace
+# NdPt
+# TmapFile
+# COdataFile (in 6-D)
+# LjFile  Njolts
+# JmapFile
+# CheckFile
+# UseNF?
+# OscPlanesList (= {1 3})
+# ComputeGramEVs?
+# SaveJoltVcts?
+#
+

@@ -1,0 +1,8 @@
+#!/bin/sh
+for i in sixdeskenv sysenv
+do
+  echo "======================="
+  echo "$i"
+  echo "======================="
+  diff ~/wjulypro/sixjobs/$i ../$i
+done

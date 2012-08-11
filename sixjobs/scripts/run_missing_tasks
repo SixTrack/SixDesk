@@ -1,0 +1,47 @@
+#!/bin/sh
+#
+. ./dot_env
+if test $sixdeskplatform = "lsf"
+then
+
+#MACRO mymess 0 run_missing_tasks can NOT be used with LSF !!!
+  sixdeskmesslevel=0
+  sixdeskmess="run_missing_tasks can NOT be used with LSF !!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 0
+  sixdeskexitparam=0
+  sixdeskexit
+#MACRO myexit
+
+fi
+while read line
+do
+  sixdeskRunnam=`echo $line | cut -d" " -f1`
+
+#MACRO myrundir $sixdeskRunnam sixdeskRundir
+  runnamename=$sixdeskRunnam
+  sixdeskrundir
+  sixdeskRundir=$rundirname
+#MACRO myrundir
+
+  sixdeskforce=2
+  if test $sixdeskplatform = "cpss"
+  then
+    . ./dot_task
+  elif test $sixdeskplatform = "boinc"
+  then
+    . ./dot_boinc
+  elif test $sixdeskplatform = "grid"
+  then
+    . ./dot_grid
+  fi
+done < $sixdeskjobs/missing_tasks
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

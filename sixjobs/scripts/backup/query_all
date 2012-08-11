@@ -1,0 +1,10 @@
+#!/bin/sh
+# Just do a run_status for all studies
+for mystudy in `ls studies`
+do
+  if test -d studies/"$mystudy"
+  then
+    echo ""
+    run_query "$mystudy"
+  fi
+done

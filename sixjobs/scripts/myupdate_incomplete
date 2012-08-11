@@ -1,0 +1,80 @@
+#!/bin/sh
+#
+# Update incomplete_cases, in case of overlap or manual intervention
+#
+. ./dot_env
+if test -s $sixdeskstudy/sixdesklock
+then
+  if test ! -w $sixdeskstudy/sixdesklock
+  then
+    mymess 0 "The $sixdeskstudy sixdesklock is ON; giving up!"
+    myexit 0
+  fi
+fi
+mylock $sixdeskstudy
+###mylock $sixdeskwork
+cases=0
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+mymess 0 "Found $cases cases, $ccases complete ($icases incomplete)"
+mymktmp tmp $sixdeskwork
+mymktmp copy $sixdeskwork
+cp $sixdeskwork/incomplete_cases $copy
+while read Runnam
+do
+  myrundir $Runnam Rundir
+  where=$sixdesktrack/$Rundir
+  if test -s $where/fort.10.gz
+  then
+    mymess 0 "$Runnam in $sixdesktrack/$Rundir is complete"
+    sed -e'/^'$Runnam'$/d' $sixdeskwork/incomplete_cases > $tmp
+    mv $tmp $sixdeskwork/incomplete_cases
+    if test -s $sixdeskwork/completed_cases
+    then
+      sed -e'/^'$Runnam'$/d' $sixdeskwork/completed_cases > $tmp
+      mv $tmp $sixdeskwork/completed_cases
+    fi
+    echo $Runnam >> $sixdeskwork/completed_cases
+    mymess 0 "$Runnam added to completed_cases"
+    rm -f $where/JOB_NOT_YET_COMPLETED
+  fi
+done < $copy
+rm -f $copy
+rm -f $tmp
+cases=0
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+mymess 0 "Now   $cases cases, $ccases complete ($icases incomplete)"
+###myunlock $sixdeskwork
+myunlock $sixdeskstudy
+myexit 0

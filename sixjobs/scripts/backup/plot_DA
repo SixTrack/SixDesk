@@ -1,0 +1,26 @@
+#!/bin/sh
+# Plots the results of compare_DA 
+# Expects a LOGNAME, workspace and study
+# Uses the DAres for the current study and the one specified.
+# Calls doplot_DA to do it.
+if test $# -lt 3 
+then
+  echo "You must specify a LOGNAME, Workspace and LHCDescrip for comparison"
+  echo "(and optionally two names)"
+  exit 2
+fi
+lognam=$1
+initial=`echo $lognam | cut -c 1`
+wspace=$2
+s2=$3
+w2="/afs/cern.ch/user/$initial/$lognam/$wspace/sixjobs"
+if test $# -eq 5
+then
+  name1=$4
+  name2=$5
+else
+  name1=a
+  name2=b
+fi
+echo "$w2 $s2 $lognam $name1 $name2" > plot_DA_args
+./doplot_DA

@@ -1,0 +1,250 @@
+#!/bin/sh
+# Used by dot_env and set_env with the study locked
+diff --brief $sixdeskstudy/sixdeskenv sixdeskenv > /dev/null
+stat1=$?
+diff --brief $sixdeskstudy/sysenv sysenv > /dev/null
+stat2=$?
+stat=`expr $stat1 + $stat2`
+if test "$stat" -ne 0
+then
+
+#MACRO mymktmp newenv 
+  sixdesktmpname=newenv
+  sixdesktmpdirarg=
+  sixdeskmktmp
+  newenv=$sixdesktmp
+#MACRO mymktmp
+
+  ./exec_env ./sixdeskenv ./sysenv > $newenv
+
+#MACRO mymktmp oldenv 
+  sixdesktmpname=oldenv
+  sixdesktmpdirarg=
+  sixdeskmktmp
+  oldenv=$sixdesktmp
+#MACRO mymktmp
+
+  ./exec_env $sixdeskstudy/sixdeskenv $sixdeskstudy/sysenv > $oldenv
+
+#MACRO mymess 0 Environment changed for $LHCDescrip
+  sixdeskmesslevel=0
+  sixdeskmess="Environment changed for $LHCDescrip"
+  sixdeskmess
+#MACRO mymess
+
+  # and report changes
+
+#MACRO mymktmp diffs 
+  sixdesktmpname=diffs
+  sixdesktmpdirarg=
+  sixdeskmktmp
+  diffs=$sixdesktmp
+#MACRO mymktmp
+
+  diff --side-by-side $oldenv $newenv > $diffs
+
+#MACRO mymktmp summary 
+  sixdesktmpname=summary
+  sixdesktmpdirarg=
+  sixdeskmktmp
+  summary=$sixdesktmp
+#MACRO mymktmp
+
+  egrep ">|<|\|" "$diffs" > $summary
+  rm $oldenv $newenv $diffs
+  while read aline
+  do
+    shortline=`echo $aline | sed -e's/  */ /'`
+
+#MACRO mymess 0 $shortline
+    sixdeskmesslevel=0
+    sixdeskmess="$shortline"
+    sixdeskmess
+#MACRO mymess
+
+  done < $summary
+  rm $summary
+fi
+# and a few basic checks (can always add more later)
+if test "$runtype" != "inj" -a "$runtype" != "col"
+then
+
+#MACRO mymess 0 dot_env: runtype must be 'inj' or 'col' !!!
+  sixdeskmesslevel=0
+  sixdeskmess="dot_env: runtype must be 'inj' or 'col' !!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock studies
+  sixdesklockdir=studies
+  sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 10
+  sixdeskexitparam=10
+  sixdeskexit
+#MACRO myexit
+
+fi
+if test "$da" = ""
+then
+  da=0
+fi
+mytype=`expr $short + $long + $da`
+if test "$mytype" -ne 1
+then
+
+#MACRO mymess 0 dot_env: Must choose one, and only one, of short/long/da in sixdeskenv
+  sixdeskmesslevel=0
+  sixdeskmess="dot_env: Must choose one, and only one, of short/long/da in sixdeskenv"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock studies
+  sixdesklockdir=studies
+  sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 11
+  sixdeskexitparam=11
+  sixdeskexit
+#MACRO myexit
+
+fi
+if test "$sussix" -eq 1
+then
+  if test "$short" -eq 0
+  then
+
+#MACRO mymess 0 The sixdeskenv flag short must be set to 1 for a sussix run!!!
+    sixdeskmesslevel=0
+    sixdeskmess="The sixdeskenv flag short must be set to 1 for a sussix run!!!"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 13
+    sixdeskexitparam=13
+    sixdeskexit
+#MACRO myexit
+
+  fi
+fi
+if test "$short" -eq 1 -a "$sixdeskplatform" != "lsf"
+then
+
+#MACRO mymess 0 Short runs must be made using the platform LSF!!!
+  sixdeskmesslevel=0
+  sixdeskmess="Short runs must be made using the platform LSF!!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock studies
+  sixdesklockdir=studies
+  sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 12
+  sixdeskexitparam=12
+  sixdeskexit
+#MACRO myexit
+
+fi
+if test "$BIGNBLZ" != ""
+then
+  if test "$sixdeskplatform" != "lsf"
+  then
+
+#MACRO mymess 0 BIGNBLZ runs must be made using the platform LSF!!!
+   sixdeskmesslevel=0
+   sixdeskmess="BIGNBLZ runs must be made using the platform LSF!!!"
+   sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock studies
+   sixdesklockdir=studies
+   sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 14
+   sixdeskexitparam=14
+   sixdeskexit
+#MACRO myexit
+
+  fi
+fi
+cworkspace=`basename $sixdeskwhere`
+if test "$workspace" != "$cworkspace"
+then
+
+#MACRO mymess 0 Workspace mismatch $workspace/$cworkspace
+  sixdeskmesslevel=0
+  sixdeskmess="Workspace mismatch $workspace/$cworkspace"
+  sixdeskmess
+#MACRO mymess
+ 
+
+#MACRO myunlock studies
+  sixdesklockdir=studies
+  sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 6
+  sixdeskexitparam=6
+  sixdeskexit
+#MACRO myexit
+
+fi
+if test ! -d "$trackdir"
+then
+
+#MACRO mymess 0 The tracking directory $trackdir does NOT exist!!!
+  sixdeskmesslevel=0
+  sixdeskmess="The tracking directory $trackdir does NOT exist!!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock studies
+  sixdesklockdir=studies
+  sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 7
+  sixdeskexitparam=7
+  sixdeskexit
+#MACRO myexit
+
+fi
+if test ! -d "$scratchdir"
+then
+
+#MACRO mymess 0 The scratch directory $scratchdir does NOT exist!!!
+  sixdeskmesslevel=0
+  sixdeskmess="The scratch directory $scratchdir does NOT exist!!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock studies
+  sixdesklockdir=studies
+  sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 8
+  sixdeskexitparam=8
+  sixdeskexit
+#MACRO myexit
+
+fi

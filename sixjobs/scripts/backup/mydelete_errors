@@ -1,0 +1,130 @@
+#!/bin/sh
+#
+# Delete all the fort.10s etc for the failing cases
+#
+. ./dot_env
+mylock $sixdeskstudy
+###mylock $sixdeskwork
+cases=0
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+mymess 0 "Found $cases cases, $ccases complete ($icases incomplete)"
+mymktmp tmp $sixdeskwork
+mymktmpdir junk $sixdeskwork
+while read Runnam
+do
+  myrundir $Runnam Rundir
+  where=$sixdesktrack/$Rundir
+  if test -s $where/fort.10.gz
+  then
+    echo ""
+    echo ""
+    echo ""
+    echo "$Runnam in $sixdesktrack/$Rundir is complete"
+    if test -s $where/mess
+    then 
+      echo ""
+      echo "PROBABLY OK"
+      cat $where/mess
+      ls -l $where
+    else
+      echo ""
+      echo "Could be a REAL ERROR!!!"
+      ls -l $where
+      cd $junk      
+      rm -rf *
+      cp $where/fort.10.gz fort.20.gz
+      gunzip fort.20.gz
+      ls -l $where/fort.10.wcpss* > /dev/null 2>&1
+      if test $? -eq 0
+      then
+        cp $where/fort.10.wcpss* fort.21
+      else
+        ls -l $where/problems/problem* > /dev/null 2>&1
+        if test $? -eq 0
+        then
+          cp $where/problems/problem* fort.21 
+        else
+          ls -l $where/problems/wcpss*.tar* > /dev/null 2>&1
+          if test $? -eq 0
+          then
+            echo "Probably a dud tar file from CPSS..."
+            file $where/problems/wcpss*.tar* | grep gzip > /dev/null 
+            if test $? -eq 0
+            then 
+              cp $where/problems/wcpss*.tar* mytar.gz
+              gunzip mytar.gz
+            else
+              cp $where/problems/wcpss*.tar* mytar
+            fi
+            tar -xvf mytar
+            cp sixtrack/fort.10 fort.21
+            echo "Probably a dud tar file from CPSS..."
+            ls -l sixtrack
+          else
+            echo "COULD NOT FIND the other fort.10!!!"
+          fi
+        fi
+      fi
+      if test -s fort.21
+      then
+        $sixdeskpath/scripts/checktens
+      else
+        echo "Second fort.10 is empty!!"
+      fi
+      cd $sixdeskhome 
+      rm $where/fort.10.gz
+      sed -e'/^'$Runnam'$/d' $sixdeskwork/completed_cases > $tmp
+      mv $tmp $sixdeskwork/completed_cases
+      touch $sixdeskwork/incomplete_cases 
+      sed -e'/^'$Runnam'$/d' $sixdeskwork/incomplete_cases > $tmp
+      mv $tmp $sixdeskwork/incomplete_cases
+      echo $Runnam >> $sixdeskwork/incomplete_cases
+      mymess 0 "$Runnam added to incomplete_cases"
+      touch $where/JOB_NOT_YET_COMPLETED
+    fi
+  else
+      echo ""
+      echo "FUNNY NO fort.10.gz!!!"
+      ls -l $where
+  fi
+done < problem.names
+rm -f $tmp
+rm -rf $junk
+cases=0
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+mymess 0 "Now   $cases cases, $ccases complete ($icases incomplete)"
+###myunlock $sixdeskwork
+myunlock $sixdeskstudy
+myexit 0

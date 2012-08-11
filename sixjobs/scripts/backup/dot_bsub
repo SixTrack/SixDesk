@@ -1,0 +1,284 @@
+#!/bin/sh
+# The little script to do a bsub and the job management
+# using the $1 sixdeskRunnam and the $2 directory sixdeskRundir
+# $3 sixdeskforce=0 mean submit only if not submitted already
+# $3 sixdeskforce=1 means (re-)submit if no fort.10.z exists
+# $3 sixdeskforce=2,3 means (re-)submit anyway ( run_six handles this)
+# The sixdeskRundir is relative to $sixdesktrack
+# It then creates or updates the taskids file to include the new taskid
+# It adds a new job to the incomplete_jobs file
+# In this case the taskid is the string lsf"LSF Job Sequence Number"
+if test "$sixdeskplatform" != "lsf"
+then
+
+#MACRO mymess 0 You can only bsub if platform=LSF
+  sixdeskmesslevel=0
+  sixdeskmess="You can only bsub if platform=LSF"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 20
+  sixdeskexitparam=20
+  sixdeskexit
+#MACRO myexit
+
+fi
+
+#MACRO mymess 2 sixdeskRunnam $sixdeskRunnam sixdeskRundir $sixdeskRundir sideskwork $sixdeskwork
+sixdeskmesslevel=2
+sixdeskmess="sixdeskRunnam $sixdeskRunnam sixdeskRundir $sixdeskRundir sideskwork $sixdeskwork"
+sixdeskmess
+#MACRO mymess
+
+if test ! -d $sixdesktrack/$sixdeskRundir
+then
+
+#MACRO mymess 0 $sixdesktrack/$sixdeskRundir is NOT a directory!!!
+  sixdeskmesslevel=0
+  sixdeskmess="$sixdesktrack/$sixdeskRundir is NOT a directory!!!"
+  sixdeskmess
+#MACRO mymess
+ 
+
+#MACRO myexit 5
+  sixdeskexitparam=5
+  sixdeskexit
+#MACRO myexit
+
+fi
+# and now put the job in the tree in ALL cases
+mv $sixdeskjobs_logs/"$Runnam".lsf $sixdesktrack/$sixdeskRundir
+sixdeskrunit="true"
+if test -s $sixdesktrack/$sixdeskRundir/fort.10.gz -a $sixdeskforce -lt 2
+then
+
+#MACRO mymess 1 Job $sixdeskRunnam already completed; we will NOT re-submit
+  sixdeskmesslevel=1
+  sixdeskmess="Job $sixdeskRunnam already completed; we will NOT re-submit"
+  sixdeskmess
+#MACRO mymess
+
+  sixdeskrunit="false"
+else
+  if test "$sixdeskforce" -eq 0
+  then
+    if test -s $sixdeskwork/taskids
+    then
+      grep "$sixdeskRunnam " $sixdeskwork/taskids > /dev/null 2>&1
+      sixdeskstat=$?
+      if test $sixdeskstat -eq 0
+      then
+
+#MACRO mymess 1 Job $sixdeskRunnam already submitted; skipping it
+        sixdeskmesslevel=1
+        sixdeskmess="Job $sixdeskRunnam already submitted; skipping it"
+        sixdeskmess
+#MACRO mymess
+
+        sixdeskrunit="false"
+      fi 
+    fi
+  fi
+fi
+if test $sixdeskrunit = "true"
+then
+  sixdeskexists=0
+  for sixdeski in 2 3 8 16
+  do
+    if test ! -f $sixdesktrack/$sixdeskRundir/fort.$sixdeski.gz
+    then
+
+#MACRO mymess 0 File $sixdesktrack/$sixdeskRundir/fort.$sixdeski.gz does NOT exist!!!
+      sixdeskmesslevel=0
+      sixdeskmess="File $sixdesktrack/$sixdeskRundir/fort.$sixdeski.gz does NOT exist!!!"
+      sixdeskmess
+#MACRO mymess
+
+    else
+      sixdeskexists=`expr $sixdeskexists + 1`
+    fi
+  done
+  if test "$sixdeskexists" -ne 4
+  then
+    sixdeskexists=`expr 4 - $sixdeskexists`
+
+#MACRO mymess 0 There are $sixdeskexists input files missing!!! in $sixdesktrack/$sixdeskRundir
+    sixdeskmesslevel=0
+    sixdeskmess="There are $sixdeskexists input files missing!!! in $sixdesktrack/$sixdeskRundir"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 6
+    sixdeskexitparam=6
+    sixdeskexit
+#MACRO myexit
+
+  fi
+# and now we DELETE any existing fort.10.gz if the platform is LSF
+# and also remove it from completed cases if it is there.........
+
+#MACRO mymktmp tmp 
+  sixdesktmpname=tmp
+  sixdesktmpdirarg=
+  sixdeskmktmp
+  tmp=$sixdesktmp
+#MACRO mymktmp
+
+  if test "$sixdeskplatform" = "LSF"
+  then
+    rm -f $sixdesktrack/$sixdeskRundir/fort.10.gz
+
+#MACRO mylock $sixdeskwork
+    ###sixdesklockdir=$sixdeskwork
+    ###sixdesklock
+#MACRO mylock
+
+    if test -s $sixdeskwork/completed_cases
+    then
+
+#MACRO mylock $sixdeskwork
+      ###sixdesklockdir=$sixdeskwork
+      ###sixdesklock
+#MACRO mylock
+
+      sed -e'/^'$Runnam'$/d' $sixdeskwork/completed_cases > $tmp
+      cp $tmp $sixdeskwork/completed_cases
+    fi
+    if test -s $sixdeskwork/mycompleted_cases
+    then
+      sed -e'/^'$Runnam'$/d' $sixdeskwork/mycompleted_cases > $tmp
+      cp $tmp $sixdeskwork/mycompleted_cases
+    fi
+
+#MACRO myunlock $sixdeskwork
+    ###sixdesklockdir=$sixdeskwork
+    ###sixdeskunlock
+#MACRO myunlock
+
+  fi
+  bsub -q ${qpref}${lsfq} $sixdeskM -o $sixdesktrack/$sixdeskRundir/"$Runnam".log < $sixdesktrack/$sixdeskRundir/"$Runnam".lsf > $tmp 2>&1
+  sixdeskstat=$?
+  cat $tmp
+  if test "$sixdeskstat" -eq 0
+  then
+    sixdesktaskno=`tail -1 $tmp | sed -e's/Job <\([0-9]*\)> is submitted to queue.*/\1/'`
+    if test "$sixdesktaskno" = ""
+    then
+
+#MACRO mymess 0 bsub did NOT return a taskno !!!
+      sixdeskmesslevel=0
+      sixdeskmess="bsub did NOT return a taskno !!!"
+      sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 `cat $tmp`
+      sixdeskmesslevel=0
+      sixdeskmess="`cat $tmp`"
+      sixdeskmess
+#MACRO mymess
+
+      rm $tmp
+
+#MACRO myexit 21
+      sixdeskexitparam=21
+      sixdeskexit
+#MACRO myexit
+
+    fi
+    sixdesktaskid=lsf$sixdesktaskno
+    touch $sixdesktrack/$sixdeskRundir/JOB_NOT_YET_STARTED
+    rm -f $tmp
+  else
+    rm -f $sixdesktrack/$sixdeskRundir/JOB_NOT_YET_STARTED 
+
+#MACRO mymess 0 bsub of $sixdesktrack/$sixdeskRundir/${Runnam}.lsf to Queue ${qpref}${longlsfq} failed !!!
+    sixdeskmesslevel=0
+    sixdeskmess="bsub of $sixdesktrack/$sixdeskRundir/${Runnam}.lsf to Queue ${qpref}${longlsfq} failed !!!"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 `cat $tmp`
+    sixdeskmesslevel=0
+    sixdeskmess="`cat $tmp`"
+    sixdeskmess
+#MACRO mymess
+
+    rm $tmp
+
+#MACRO myexit 10
+    sixdeskexitparam=10
+    sixdeskexit
+#MACRO myexit
+
+  fi
+
+#MACRO mylock $sixdeskwork
+  ###sixdesklockdir=$sixdeskwork
+  ###sixdesklock
+#MACRO mylock
+
+  sixdeskoldtaskid=""
+  if test -s $sixdeskwork/taskids
+  then
+    grep "$sixdeskRunnam " $sixdeskwork/taskids
+    sixdeskstat=$?
+    if test $sixdeskstat -eq 0
+    then
+      line=`grep "$sixdeskRunnam " $sixdeskwork/taskids`
+      sixdeskoldtaskid=`echo $line | cut -d " " -f2-`
+      sixdesktaskids=$sixdeskoldtaskid" "$sixdesktaskid" "
+      sed -e'/'$sixdeskRunnam' /d' $sixdeskwork/taskids > $tmp
+      mv $tmp $sixdeskwork/taskids
+    fi
+  fi
+  if test "$sixdeskoldtaskid" = ""
+  then
+    sixdesktaskids=$sixdesktaskid" "
+  fi
+  rm -f $tmp
+  echo "$sixdeskRunnam" "$sixdesktaskids" >> $sixdeskwork/taskids
+  if test "$sixdeskoldtaskid" != ""
+  then
+
+#MACRO mymess 1 Job $sixdeskRunnam re-submitted with taskid $sixdesktaskid; other jobs $sixdeskoldtaskid
+    sixdeskmesslevel=1
+    sixdeskmess="Job $sixdeskRunnam re-submitted with taskid $sixdesktaskid; other jobs $sixdeskoldtaskid"
+    sixdeskmess
+#MACRO mymess
+
+  else
+    echo $sixdeskRunnam >> $sixdeskwork/incomplete_cases
+    echo $sixdeskRunnam >> $sixdeskwork/myincomplete_cases
+
+#MACRO mymess 1 Job $sixdeskRunnam submitted with LSF JobId/taskid $sixdesktaskid
+    sixdeskmesslevel=1
+    sixdeskmess="Job $sixdeskRunnam submitted with LSF JobId/taskid $sixdesktaskid"
+    sixdeskmess
+#MACRO mymess
+
+  fi
+
+#MACRO myunlock $sixdeskwork
+  ###sixdesklockdir=$sixdeskwork
+  ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO mylock $sixdeskjobs
+  ###sixdesklockdir=$sixdeskjobs
+  ###sixdesklock
+#MACRO mylock
+
+  echo "$sixdeskRunnam" "$sixdesktaskid" >> $sixdeskjobs/jobs
+  echo "$sixdeskRunnam" "$sixdesktaskid" >> $sixdeskjobs/incomplete_jobs
+
+#MACRO myunlock $sixdeskjobs
+  ###sixdesklockdir=$sixdeskjobs
+  ###sixdeskunlock
+#MACRO myunlock
+
+fi

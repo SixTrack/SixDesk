@@ -1,0 +1,68 @@
+s/\(.*\)myglobal_lock/\
+#MACRO mylobal_lock\
+\1sixdeskglobal_lock\
+#MACRO myglobal_lock\
+/
+s/\(.*\)mymess  *\([0-9]*\)  *"\([^"]*\)"/\
+#MACRO mymess \2 \3\
+\1sixdeskmesslevel=\2\
+\1sixdeskmess="\3"\
+\1sixdeskmess\
+#MACRO mymess\
+/
+s/\(.*\)myexit  *\([0-9]*\)/\
+#MACRO myexit \2\
+\1sixdeskexitparam=\2\
+\1sixdeskexit\
+#MACRO myexit\
+/
+s/\(.*\)mylock *\(.*\)*/\
+#MACRO mylock \2\
+\1sixdesklockdir=\2\
+\1sixdesklock\
+#MACRO mylock\
+/
+s/\(.*\)myunlock *\(.*\)*/\
+#MACRO myunlock \2\
+\1sixdesklockdir=\2\
+\1sixdeskunlock\
+#MACRO myunlock\
+/
+s/\(.*\)mymktmp  *\([^ ]*\) *\([^ ]*\)/\
+#MACRO mymktmp \2 \3\
+\1sixdesktmpname=\2\
+\1sixdesktmpdirarg=\3\
+\1sixdeskmktmp\
+\1\2=$sixdesktmp\
+#MACRO mymktmp\
+/
+s/\(.*\)mymktmpdir  *\([^ ]*\) *\([^ ]*\)/\
+#MACRO mymktmpdir \2 \3\
+\1sixdesktmpdirname=\2\
+\1sixdesktmpdirarg=\3\
+\1sixdeskmktmpdir\
+\1\2=$sixdesktmpdir\
+#MACRO mymktmp\
+/
+s/\(.*\)myamps/\
+#MACRO myamps\
+\1sixdeskamps\
+#MACRO myamps\
+/
+s/\(.*\)mytunes/\
+#MACRO mytunes\
+\1sixdesktunes\
+#MACRO mytunes\
+/
+s/\(.*\)myinttunes/\
+#MACRO myinttunes\
+\1sixdeskinttunes\
+#MACRO myinttunes\
+/
+s/\(.*\)myrundir  *\([^ ]*\) *\([^ ]*\)/\
+#MACRO myrundir \2 \3\
+\1runnamename=\2\
+\1sixdeskrundir\
+\1\3=$rundirname\
+#MACRO myrundir\
+/

@@ -1,0 +1,4 @@
+#!/bin/sh
+#
+cd ~/%WS%/sixjobs
+run_post %STUDY% %PLATFORM%

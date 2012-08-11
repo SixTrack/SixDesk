@@ -1,0 +1,87 @@
+#!/bin/sh
+# Used by dot_env and set_env with the study locked
+diff --brief $sixdeskstudy/sixdeskenv sixdeskenv > /dev/null
+stat1=$?
+diff --brief $sixdeskstudy/sysenv sysenv > /dev/null
+stat2=$?
+stat=`expr $stat1 + $stat2`
+if test "$stat" -ne 0
+then
+  mymktmp newenv
+  ./exec_env ./sixdeskenv ./sysenv > $newenv
+  mymktmp oldenv 
+  ./exec_env $sixdeskstudy/sixdeskenv $sixdeskstudy/sysenv > $oldenv
+  mymess 0 "Environment changed for $LHCDescrip"
+  # and report changes
+  mymktmp diffs
+  diff --side-by-side $oldenv $newenv > $diffs
+  mymktmp summary
+  egrep ">|<|\|" "$diffs" > $summary
+  rm $oldenv $newenv $diffs
+  while read aline
+  do
+    shortline=`echo $aline | sed -e's/  */ /'`
+    mymess 0 "$shortline"
+  done < $summary
+  rm $summary
+fi
+# and a few basic checks (can always add more later)
+if test "$runtype" != "inj" -a "$runtype" != "col"
+then
+  mymess 0  "dot_env: runtype must be 'inj' or 'col' !!!"
+  myunlock studies
+  myexit 10
+fi
+if test "$da" = ""
+then
+  da=0
+fi
+mytype=`expr $short + $long + $da`
+if test "$mytype" -ne 1
+then
+  mymess 0 "dot_env: Must choose one, and only one, of short/long/da in sixdeskenv"
+  myunlock studies
+  myexit 11
+fi
+if test "$sussix" -eq 1
+then
+  if test "$short" -eq 0
+  then
+    mymess 0 "The sixdeskenv flag short must be set to 1 for a sussix run!!!"
+    myexit 13
+  fi
+fi
+if test "$short" -eq 1 -a "$sixdeskplatform" != "lsf"
+then
+  mymess 0 "Short runs must be made using the platform LSF!!!"
+  myunlock studies
+  myexit 12
+fi
+if test "$BIGNBLZ" != ""
+then
+  if test "$sixdeskplatform" != "lsf"
+  then
+   mymess 0 "BIGNBLZ runs must be made using the platform LSF!!!"
+   myunlock studies
+   myexit 14
+  fi
+fi
+cworkspace=`basename $sixdeskwhere`
+if test "$workspace" != "$cworkspace"
+then
+  mymess 0 "Workspace mismatch $workspace/$cworkspace" 
+  myunlock studies
+  myexit 6
+fi
+if test ! -d "$trackdir"
+then
+  mymess 0 "The tracking directory $trackdir does NOT exist!!!"
+  myunlock studies
+  myexit 7
+fi
+if test ! -d "$scratchdir"
+then
+  mymess 0 "The scratch directory $scratchdir does NOT exist!!!"
+  myunlock studies
+  myexit 8
+fi

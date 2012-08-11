@@ -1,0 +1,48 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{ifthen}
+\setlength{\oddsidemargin}{-15mm}
+\setlength{\evensidemargin}{-15mm}
+\setlength{\textwidth}{166mm}
+\setlength{\marginparwidth}{0mm}
+\setlength{\topmargin}{-20mm}
+\setlength{\textheight}{240mm}
+\batchmode
+\pagestyle{empty}
+%
+\newcommand{\forloop}[5][1]%
+{%
+ \setcounter{#2}{#3}%
+ \ifthenelse{#4}%
+ {%
+  #5%
+  \addtocounter{#2}{#1}%
+  \forloop[#1]{#2}{\value{#2}}{#4}{#5}%
+ }%
+  % Else
+  {%
+  }%
+}% 
+\begin{document}
+\newcounter{pagenumber}
+\newcounter{figurenumber}
+\addtocounter{figurenumber}{1}
+\forloop{pagenumber}{0}{\value{pagenumber}<10}
+{
+  \newcounter{linenumber}
+  \begin{figure}[htb]
+  \begin{center}
+  \begin{tabular}{cc}
+  \forloop{linenumber}{0}{\value{linenumber}<3}
+  {
+    \IfFileExists{\filename.\arabic{figurenumber}.pdf}{\includegraphics[type=pdf,ext=.pdf,read=.pdf,angle=-90,width=0.55\linewidth,clip=]{\filename.\arabic{figurenumber}}}{} \addtocounter{figurenumber}{1} &
+    \IfFileExists{\filename.\arabic{figurenumber}.pdf}{\includegraphics[type=pdf,ext=.pdf,read=.pdf,angle=-90,width=0.55\linewidth,clip=]{\filename.\arabic{figurenumber}}}{} \addtocounter{figurenumber}{1} \\
+  }
+  \end{tabular}
+  \end{center}
+  \end{figure}
+
+  \clearpage
+}
+\end{document}
+%

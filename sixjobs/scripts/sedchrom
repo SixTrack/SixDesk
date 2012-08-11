@@ -1,0 +1,6 @@
+1a\
+#\
+# *** NOTA BENE ***\
+# chrom_eps added\
+export chrom_eps=0.0000001\
+#

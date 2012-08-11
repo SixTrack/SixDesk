@@ -1,0 +1,85 @@
+#!/bin/sh
+# Checks all locks in workspace
+mychecklocksub()
+{
+# echo "Using lockfile $locks" 
+  if test -d "$locks"
+  then
+    if test -f "$locks"/sixdesklock
+    then
+      if test ! -w "$locks"/sixdesklock
+      then
+        echo "The directory "$locks" is locked by the script"
+        echo " `cat "$locks"/sixdesklock`"
+       fi
+    fi
+  fi
+}
+# First test in case the studies directory is locked!
+# Making sure we are in sixjobs.
+export sixdeskroot=`basename $PWD`
+if test "$sixdeskroot" != "sixjobs"
+then
+  echo "This script must be run in the directory sixjobs!!!"
+  exit 1
+fi
+if test -d "studies"
+then
+  if test -f studies/sixdesklock
+  then
+    if test ! -w studies/sixdesklock
+    then
+      echo "The directory studies is locked by the script"
+      echo " `cat studies/sixdesklock`"
+      echo "We cannot continue checking until it is unlocked!!!"
+      exit 3
+    fi
+  fi
+else
+  echo "The directory studies does not exist!!!"
+  exit 2
+fi
+. ./dot_env
+# first check sixjobs workspace plot sixdeskTaskIds (coomon to all studies)
+echo "Checking sixjobs workspace plot sixdeskTaskIds"
+for locks in . .. ./plot sixdeskTaskIds
+do
+  mychecklocksub
+done
+# Now check all studies
+mymktmp tmp /tmp
+mymktmp tmp2 /tmp
+echo "check_all_locks using $tmp $tmp2"
+ls -tr studies > $tmp
+while read myitem
+do
+  if test -d studies/"$myitem"
+  then
+    echo "$myitem" >> $tmp2
+  fi
+done < $tmp
+rm $tmp
+while read mystudy
+do
+  echo "Checking Study $mystudy"
+  locks=studies/$mystudy
+  mychecklocksub
+  locks=$sixdesk_input/../$mystudy
+  mychecklocksub
+  locks=$sixdesktrack/../$mystudy
+  mychecklocksub
+  locks=$sixdeskwork/../$mystudy
+  mychecklocksub
+  for myplat in boinc cpss lsf
+  do
+    for dir in ${myplat}jobs
+    do
+      locks=$sixdeskwork/../$mystudy/$dir
+      mychecklocksub
+      locks=$sixdeskwork/../$mystudy/$dir/jobs_logs
+      mychecklocksub
+    done
+  done
+done < $tmp2
+rm $tmp2
+myexit 0

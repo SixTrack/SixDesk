@@ -1,0 +1,17 @@
+%LieOrd %Nvar
+%DimPhase %Ndelta
+29
+39
+80 %Njolts
+%Cavity
+
+#
+# Controls for 'Jolt2RKick'
+#
+# LieOrder  Nvars
+# DimPhaseSpace  NdPt
+# JmapFile  (input)
+# RKmapFile (output)
+# LjFile  Njolts
+# UseCavity?
+#

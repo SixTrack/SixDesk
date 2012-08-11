@@ -1,0 +1,36 @@
+#!/bin/sh
+# Take a workspace and clone it
+#
+set -x
+fromuser=kaltchev
+initial=`echo $fromuser | cut -c 1`
+fromhome=/afs/cern.ch/user/$initial/$fromuser
+touser=kaltchev
+initial=`echo $touser | cut -c 1`
+tohome=/afs/cern.ch/user/$initial/$touser
+todir=nap
+fromw=wpro
+tow=wcpss6
+for from in lhcdummy
+do
+  to=v6s4hvnom
+  cd $tohome
+  mkdir -p $todir/$tow
+  ln -sf $todir/$tow $tow 
+  for i in sixjobs
+  do
+    cd $tohome
+    mkdir -p $tow/$i 
+    cd $fromhome/$fromw/$i
+    find . -print | cpio -pumvd $tohome/$tow/$i
+  done
+  cd $tohome/$tow/sixjobs
+  sed -e's/'$fromw'/'$tow'/' $fromhome/$fromw/sixjobs/sub_$fromw > sub_$tow
+  sed -e's/'$fromw'/'$tow'/' $fromhome/$fromw/sixjobs/get_$fromw > get_$tow
+  chmod 755 sub_$tow get_$tow
+  sed  -e's/workspace='$fromw'/workspace='$tow'/' \
+       -e's/LHCDescrip=.*/LHCDescrip='$to'/' \
+       sixdeskenv > tmp$$
+  mv tmp$$ sixdeskenv
+  chmod 755 sixdeskenv
+done

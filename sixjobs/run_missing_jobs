@@ -1,0 +1,102 @@
+#!/bin/sh
+#
+. ./dot_env
+if test $sixdeskplatform != "lsf"
+then
+
+#MACRO mymess 0 run_missing_jobs can be used only with LSF !!!
+  sixdeskmesslevel=0
+  sixdeskmess="run_missing_jobs can be used only with LSF !!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 0
+  sixdeskexitparam=0
+  sixdeskexit
+#MACRO myexit
+
+fi
+if test ! -s "$sixdeskjobs/missing_jobs"
+then
+
+#MACRO mymess 0 The file $sixdeskjobs/missing_jobs is empty!!!
+  sixdeskmesslevel=0
+  sixdeskmess="The file $sixdeskjobs/missing_jobs is empty!!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 0
+  sixdeskexitparam=0
+  sixdeskexit
+#MACRO myexit
+
+fi
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+
+#MACRO mylock $sixdeskjobs_logs
+###sixdesklockdir=$sixdeskjobs_logs
+###sixdesklock
+#MACRO mylock
+
+while read Runnam
+do
+  sixdeskRunnam=$Runnam
+
+#MACRO myrundir $sixdeskRunnam sixdeskRundir
+  runnamename=$sixdeskRunnam
+  sixdeskrundir
+  sixdeskRundir=$rundirname
+#MACRO myrundir
+
+
+#MACRO mymktmp tmp 
+  sixdesktmpname=tmp
+  sixdesktmpdirarg=
+  sixdeskmktmp
+  tmp=$sixdesktmp
+#MACRO mymktmp
+
+
+#MACRO mylock $sixdeskjobs
+  sixdesklockdir=$sixdeskjobs
+  sixdesklock
+#MACRO mylock
+
+  sed -e '/^'$Runnam'$/d' $sixdeskjobs/incomplete_jobs > $tmp
+  mv $tmp $sixdeskjobs/incomplete_jobs
+
+#MACRO myunlock $sixdeskjobs
+  sixdesklockdir=$sixdeskjobs
+  sixdeskunlock
+#MACRO myunlock
+
+  cp $sixdesktrack/$sixdeskRundir/$sixdeskRunnam.lsf $sixdeskjobs_logs
+  sixdeskforce=2
+  . ./dot_bsub
+done < $sixdeskjobs/missing_jobs
+rm -f $sixdeskjobs/missing_jobs
+
+#MACRO myunlock $sixdeskjobs_logs
+###sixdesklockdir=$sixdeskjobs_logs
+###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

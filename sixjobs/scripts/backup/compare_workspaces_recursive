@@ -1,0 +1,55 @@
+#!/bin/sh
+#
+# Should be in run in the directory sixjobs
+# Requires name of new workspace as $1
+# Optional LOGNAME as $2
+#
+if test $# -eq 0
+then
+  echo "Please specify name of new workspace for comparison"
+  exit 1
+fi
+new=$1
+if test $# -eq 2
+then
+  uname=$2
+else
+  uname=$LOGNAME
+fi
+initial=`echo $uname | cut -c 1`
+mybdir=/afs/cern.ch/user/$initial/$uname
+for fnordir in `ls`
+do
+  if test -d $fnordir
+  then
+    echo ""
+    echo "====================="
+    echo "$fnordir (directory)"
+    echo "====================="
+    cd $fnordir
+    for fn in `ls`
+    do
+      echo "$fn"
+      echo "$fn" | grep log > /dev/null
+      if test $? -ne 0
+      then
+        diff -r --report $fn $mybdir/$new/sixjobs/$fnordir/$fn
+      else
+        echo "Skipping!"
+      fi
+      echo "====================="
+    done
+    cd ..
+  else
+    echo ""
+    echo "====================="
+    echo "$fnordir"
+    echo "====================="
+
+    echo "$fnordir" | grep log > /dev/null
+     if test $? -ne 0
+     then
+      diff -r --report $fnordir $mybdir/$new/sixjobs/$fnordir
+    fi
+  fi
+done

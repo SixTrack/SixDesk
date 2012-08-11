@@ -1,0 +1,215 @@
+#!/bin/sh
+# Does a backup to CASTOR of the current workspace and all studies in it.
+# Must be run in the directory sixjobs, but actually runs in ...
+# The script can be restarted at any time and will continue.
+# The workspace and .. are locked to ensure only one 
+# backup/recall at a time. 
+# NO parameters are allowed (we can use dot_env then)
+#
+# Get the environment and utilities
+castorb() 
+{
+  mymess 0 "Backing up $cin to $cout"
+  echo echo "YES" | castor_backup -n $cin $cout >> castor_backup.log 2>&1
+  if test $? -ne 0
+  then
+    mymess 0 "castor_backup failed!! See castor_backup.log."
+    myexit 99
+  fi
+}
+if test $? -ne 0
+then
+  echo "No parameters allowed!!!"
+  exit 1
+fi
+if test "$CASTOR_HOME" = ""
+then
+  echo "The variable CASTOR_HOME is undefined!!!" 
+  echo "Do you have a CASTOR account?" 
+  exit 2
+fi
+cname=$CASTOR_HOME/workspace_backups
+# Lock the workspace (only one backup at a time)
+# and get the environment for the current study
+. ./dot_env
+mylock ..
+mylock
+# Now we worry about the mymess log messages
+# These are written to ./sixdesk.log i.e. sixjobs/..
+# We replace sixdesklogdir by "."
+# The backup of each study will also use this
+cd ..
+sixdesklogdir="."
+touch sixdesk.log
+touch castor_backup.log
+if test ! -s backup_workspace.list
+then
+  # we assume a new backup
+  # We have workspace sixdeskstudy available
+  myd=`date +%d%m%y`
+  myt=`date +%T`
+  bname=${workspace}%${myd}
+  mymess 0 "Starting backup of Workspace: $bname at $myt"
+  mymktmp tmp
+  mymktmp tmp2
+  rm -f $tmp $tmp2
+  echo "$bname" > backup_workspace.finished
+  echo "sixjobs" > $tmp2
+  # and list only directories (not e.g. sixdesklock!)
+  ls -tr sixjobs/studies > $tmp
+  while read myitem
+  do
+    if test -d sixjobs/studies/"$myitem"
+    then
+      echo "$myitem" >> $tmp2
+    fi
+  done < $tmp
+  rm $tmp
+  # and a final move (done this way in case we are interrupted CTRLC)
+  mv $tmp2 backup_workspace.list
+  mymess 0 "All of sixjobs and the following studies will be backed up"
+  myss=""
+  while read mystudy
+  do
+    myss="$myss $mystudy"
+  done < backup_workspace.list
+  mymess 0 "$myss"
+  # and remove any old castor_backup.log
+  rm -f castor_backup.log
+else
+  # We are restarting a backup
+  if test ! -s backup_workspace.finished
+  then
+    mymess 0 "Strange: we have a backup_workspace.list but NO backup_workspace.finished!!!"
+    myunlock sixjobs
+    myunlock
+    myexit 3
+  fi
+  bname=`head -1 backup_workspace.finished`
+  mymess 0 "Restarting backup of $workspace to $bname at `date +%d%m%y`/`date +%T`"
+fi
+# First do all of sixjobs (remembering links are not followed)
+# This will also cover logs from old versions where they are not links.
+# Afterwards, for each study, we do logs, sixtrack_input, track and work.
+while read nextb
+do
+  grep '^'$nextb'$' backup_workspace.finished > /dev/null
+  if test $? -eq 0
+  then
+    mymess 0 "Skipping backup of $nextb as it is already completed"
+  else
+  # we have not finished this case so [re-]start it 
+  # First do all of sixjobs (remembering links are not followed)
+  # This will also cover logs from old versions where they are not links.
+  # Afterwards, for each study, we do logs, sixtrack_input, track, and work.
+  # However plot ssume plot is backed up with sixjobs.
+    if test "$nextb" = "sixjobs"
+    then
+      mymess 0 "Backing up sixjobs for `basename $sixdeskstudy` at `date +%d%m%y`/`date +%T`"
+      cin="sixjobs"
+      cout=$cname/$bname
+      castorb
+    else
+      if test -e studies/$nextb/deleted
+      then
+        mymess 0 "Skipping DELETED study $nextb"
+      else
+        # Make sure we have a study, not a file like sixdesklock!
+        if test -d sixjobs/studies/$nextb
+        then
+          # Now switch to this study
+          # but first NULLIFY the key variables
+          mymess 0 "Switching to study $nextb"
+          export cronlogdir=""
+          export sixdesktrack=""
+          export sixtrack_input=""
+          export sixdeskwork=""
+          if test ! -e sixjobs/studies/$nextb/sixdeskenv -o ! -e sixjobs/studies/$nextb/sysenv
+          then
+            mymess 0 "The sixdeskenv/sysenv files for $nextb are missing!!!"
+            myunlock sixjobs
+            myunlock
+            myexit 4
+          fi
+          . sixjobs/studies/$nextb/sixdeskenv 
+          . sixjobs/studies/$nextb/sysenv 
+          mysixdesklogdir=$sixdesklogdir
+          export sixdesklogdir="."
+          if test "$LHCDescrip" != "$nextb"
+          then
+            mymess 0 "Study mismatch: skipping $nextb/ because LHCDescrip is /$LHCDescrip/!!!"  
+          else 
+            mymess 0 "Locking study $nextb"
+            mylock sixjobs/studies/$nextb
+            # even though it may be null.
+            # If mysixdesklogdir is defined we will back up the "old" sixdesk.log
+            mymess 0 "Backing up $nextb at `date +%d%m%y`/`date +%T`"
+            # First we do the logs if sixdesklogdir is defined
+            # otherwise they were backed up with sixjobs
+            if test "$mysixdesklogdir" != "" -a -d "$mysixdesklogdir"
+            then
+              touch $mysixdesklogdir/sixdesk.log
+              touch $mysixdesklogdir/sixdeskerror.log
+              touch $mysixdesklogdir/restart.log
+              mymess 0 "Backing up logs"
+              cin=$mysixdesklogdir
+              cout=$cname/$bname/logs
+              castorb
+            else
+              mymess 0 "Skipping logs"
+            fi
+            if test "$cronlogdir" != "" -a -d "$cronlogdir"
+            then
+              mymess 0 "Backing up cronlogs"
+              touch $cronlogdir/cron_results.log               
+              cin=$cronlogdir
+              cout=$cname/$bname/cronlogs
+              castorb
+            else
+              mymess 0 "Skipping cronlogs"
+            fi
+            # Now we do the various links for each study
+            if test -d "$sixdesktrack/$LHCDescrip"
+            then
+              mymess 0 "Backing up track"
+              cin=$sixdesktrack/$LHCDescrip
+              cout=$cname/$bname/track
+              castorb
+            else
+              mymess 0 "Skipping track $sixdesktrack"
+            fi
+            if test -d "$sixtrack_input"
+            then
+              mymess 0 "backing up sixtrack_input"
+              cin=$sixtrack_input
+              cout=$cname/$bname/sixtrack_input
+              castorb
+            else
+              mymess 0 "Skipping sixtrack_input $sixdesk_input"
+            fi
+            if test -d "$sixdeskwork"
+            then
+              mymess 0 "Backing up work"
+              cin=$sixdeskwork
+              cout=$cname/$bname/work
+              castorb 
+            else
+              mymess 0 "Skipping work $sixdeskwork"
+            fi
+            # finished and unlock the study
+            myunlock sixjobs/studies/$nextb
+          fi
+        fi
+      fi
+      mymess 0 "$nextb finished `date +%d%m%y` `date +%T`"
+    fi
+    echo "$nextb" >> backup_workspace.finished
+  fi
+done < backup_workspace.list 
+rm -f castor_backup.log
+rm backup_workspace.finished
+rm backup_workspace.list
+mymess 0 "Backup of $workspace to $bname finished"
+myunlock sixjobs
+myunlock
+myexit 0

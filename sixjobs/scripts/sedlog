@@ -1,0 +1,8 @@
+1a\
+#\
+# *** NOTA BENE ***\
+# sixdesklogdir appended\
+#
+$a\
+export sixdesklogdir=$sixdeskhome/sixdesklogs/$LHCDescrip
+

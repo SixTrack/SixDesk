@@ -1,0 +1,29 @@
+#!/bin/sh
+. ./dot_env
+mydir=$PWD
+rm -f amps10
+while read task
+do
+  Runnam=`echo $task | cut -d " " -f1`
+
+#MACRO myrundir $Runnam Rundir
+  runnamename=$Runnam
+  sixdeskrundir
+  Rundir=$rundirname
+#MACRO myrundir
+
+  taskid=`echo $task | cut -d " " -f2`
+  where=$sixdesktrack/$Rundir
+  cd $where
+  cp fort.10.gz my10.gz
+  gunzip my10
+  rm -f amps10
+  echo "$Rundir" >> $mydir/amps10
+  while read aline
+  do
+    amps=`echo "$aline" | cut -d" " -f7-8,26-27`
+    echo "$amps" >> $mydir/amps10
+  done < my10
+  rm my10
+  cd $mydir 
+done < work/taskids

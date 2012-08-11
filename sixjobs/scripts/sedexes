@@ -1,0 +1,22 @@
+1a\
+#\
+# *** NOTA BENE ***\
+# LSF/CPSS executables commented and appended\
+# as Version 4.2.11 (not BOINC)
+1,$s/^ *export *SIXTRACKEXE=.*/# SIXTRACKEXE re-defined at the end./ 
+1,$s/^ *export *SIXTRACKBNLEXE=.*/# SIXTRACKBNLEXE re-defined at the end./ 
+1,$s/^ *export *SIXTRACKDAEXE=.*/# SIXTRACKDAEXE re-defined at the end./ 
+1,$s/^ *export *sixdeskexec=.*/# sixdeskexec re-defined at the end./ 
+1,$s/^ *export *MADX_PATH=.*/# MADX_PATH re-defined at the end./
+1,$s/^ *export *MADX=.*/# MADX re-defined at the end./
+$a\
+export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_4308_crlibm_bnl_ifort_O2\
+export SIXTRACKBNLEXE=$sixdeskpath/exes/SixTrack_4308_crlibm_bnl_ifort_O2\
+export SIXTRACKDAEXE=$sixdeskpath/exes/SixTrack_crlibm_da_lf95v4200\
+export sixdeskexec=$sixdeskpath/exes/SixTrack_crlibm_bnl_lf95v4211_cpss.exe\
+export MADX_PATH="/afs/cern.ch/group/si/slap/bin"\
+export MADX="madx"\
+# and the MUST use for Massimo\
+#export MADX="madx_dev"\
+# and for Riccardo\
+#export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_crlibm_lf95v4211_bignblz

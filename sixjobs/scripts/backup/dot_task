@@ -1,0 +1,366 @@
+#!/bin/sh
+#
+# This script will submit a task 
+# using the $1 sixdeskRunnam and the $2 directory sixdeskRundir
+# $3=0 mean submit only if not submitted already
+# $3=1 means (re-)submit anyway
+# $3=2 means (re-)submit anyway even if fort.10.gz exists
+# The sixdeskRundir is relative to $sixdesktrack
+# It then creates or updates the taskids file to include the new taskid
+# It adds a new job to the incomplete_jobs file
+# The variables sixdeskRunam sixdeskRundir and sixdeskforce must
+# be set before calling by . ./dot_task
+# priority could be set to "high" or "Low"
+sixdeskPriority="Normal"
+# sixdeskOsMin="5.0", sixdeskOsMax="9.9" and sixdeskCpuSpeedMin ="100" MHz are inherited from sixdeskenv
+# July 19th, 2004 added sixdeskcr and sixdeskclientv
+# August 19th, 2004 added sixdeskout (fort.6 or STDOUT for sixtrackcr)
+if test "$sixdeskcr" = ""
+then
+  sixdeskcr=0
+fi
+sixdeskout="fort.6"
+if test "$sixdeskcr" -ne "0"
+then
+  sixdeskout="STDOUT" 
+fi  
+if test "$sixdeskclientv" = ""
+then
+  sixdeskclientv=1.0
+fi
+if test "$sixdeskOsMin" = ""
+then
+  sixdeskOsMin=5.0
+fi
+if test "$sixdeskOsMax" = ""
+then
+  sixdeskOsMax=9.9
+fi
+if test "$sixdeskCpuSpeedMin" = ""
+then
+  sixdeskCpuSpeedMin=100
+fi
+SIXDESKWHERE=$sixdesktrack/$sixdeskRundir
+
+#MACRO mymess 1 sixdeskRunnam $sixdeskRunnam SIXDESKWHERE $SIXDESKWHERE sixdeskwork FORCE $sixdeskforce $sixdeskwork
+sixdeskmesslevel=1
+sixdeskmess="sixdeskRunnam $sixdeskRunnam SIXDESKWHERE $SIXDESKWHERE sixdeskwork FORCE $sixdeskforce $sixdeskwork"
+sixdeskmess
+#MACRO mymess
+
+if test ! -s "$sixdeskstudy/TaskGroupId"
+then
+  . ./dot_taskgroup
+fi
+if test ! -s "$sixdeskstudy/TaskGroupId"
+then
+
+#MACRO mymess 0 The file $sixdeskstudy/TaskGroupId is missing!!
+  sixdeskmesslevel=0
+  sixdeskmess="The file $sixdeskstudy/TaskGroupId is missing!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 4
+  sixdeskexitparam=4
+  sixdeskexit
+#MACRO myexit
+
+fi
+sixdeskTaskGroupId=`sed -e's/TaskGroupID: *//' $sixdeskstudy/TaskGroupId`
+if test ! -s "$sixdeskstudy/ProgramId"
+then
+
+#MACRO mymess 0 The file $sixdeskstudy/ProgramId is missing!!
+  sixdeskmesslevel=0
+  sixdeskmess="The file $sixdeskstudy/ProgramId is missing!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 4
+  sixdeskexitparam=4
+  sixdeskexit
+#MACRO myexit
+
+fi
+sixdeskProgramId=`sed -e's/ProgramId: *//' $sixdeskstudy/ProgramId`
+
+#MACRO mymess 0 Using TaskGroup $sixdeskTaskGroupId and ProgramId $sixdeskProgramId
+sixdeskmesslevel=0
+sixdeskmess="Using TaskGroup $sixdeskTaskGroupId and ProgramId $sixdeskProgramId"
+sixdeskmess
+#MACRO mymess
+
+if test ! -d $SIXDESKWHERE
+then
+
+#MACRO mymess 0 $SIXDESKWHERE is NOT a directory!!!
+  sixdeskmesslevel=0
+  sixdeskmess="$SIXDESKWHERE is NOT a directory!!!"
+  sixdeskmess
+#MACRO mymess
+ 
+
+#MACRO myexit 5
+  sixdeskexitparam=5
+  sixdeskexit
+#MACRO myexit
+
+fi
+sixdeskrunit="true"
+if test -s $SIXDESKWHERE/fort.10.gz -a "$sixdeskforce" -lt 2
+then
+
+#MACRO mymess 1 Task $sixdeskRunnam already completed; we will NOT re-submit
+  sixdeskmesslevel=1
+  sixdeskmess="Task $sixdeskRunnam already completed; we will NOT re-submit"
+  sixdeskmess
+#MACRO mymess
+
+  sixdeskrunit="false"
+else
+  if test "$sixdeskforce" -eq 0
+  then
+
+#MACRO mylock $sixdeskwork
+    ###sixdesklockdir=$sixdeskwork
+    ###sixdesklock
+#MACRO mylock
+
+    if test -s $sixdeskwork/taskids
+    then
+      grep "$sixdeskRunnam " $sixdeskwork/taskids > /dev/null 2>&1
+      sixdeskstat=$?
+      if test $sixdeskstat -eq 0
+      then
+        line=`grep "$sixdeskRunnam " $sixdeskwork/taskids`
+        sixdeskoldtaskid=`echo $line | cut -d " " -f2-`
+        if test "$sixdeskoldtaskid" != ""
+        then
+
+#MACRO mymess 1 Task $sixdeskRunnam already submitted taskid(s) $sixdeskoldtaskid; skipping it
+          sixdeskmesslevel=1
+          sixdeskmess="Task $sixdeskRunnam already submitted taskid(s) $sixdeskoldtaskid; skipping it"
+          sixdeskmess
+#MACRO mymess
+
+          sixdeskrunit="false"
+          # and make sure we have a JOB_NOT_YET_COMPLETED
+          ###touch $SIXDESKWHERE/JOB_NOT_YET_COMPLETED
+        fi
+      fi 
+    fi
+
+#MACRO myunlock $sixdeskwork
+    ###sixdesklockdir=$sixdeskwork
+    ###sixdeskunlock
+#MACRO myunlock
+
+  fi
+fi
+if test $sixdeskrunit = "true"
+then
+
+#MACRO mymktmp tmp 
+  sixdesktmpname=tmp
+  sixdesktmpdirarg=
+  sixdeskmktmp
+  tmp=$sixdesktmp
+#MACRO mymktmp
+
+  mkdir -p $sixdeskjobs_logs/run
+  # We are going to (re-)submit it
+  sixdeskexists=0
+  for sixdeski in 2 3 8 16
+  do
+    if test ! -f $SIXDESKWHERE/fort.$sixdeski.gz
+    then
+
+#MACRO mymess 0 File $SIXDESKWHERE/fort.$sixdeski.gz does NOT exist!!!
+      sixdeskmesslevel=0
+      sixdeskmess="File $SIXDESKWHERE/fort.$sixdeski.gz does NOT exist!!!"
+      sixdeskmess
+#MACRO mymess
+
+    else
+      sixdeskexists=`expr $sixdeskexists + 1`
+    fi
+  done
+  if test "$sixdeskexists" -ne 4
+  then
+    sixdeskexists=`expr 4 - $sixdeskexists`
+
+#MACRO mymess 0 There are $sixdeskexists input files missing!!! in $SIXDESKWHERE
+    sixdeskmesslevel=0
+    sixdeskmess="There are $sixdeskexists input files missing!!! in $SIXDESKWHERE"
+    sixdeskmess
+#MACRO mymess
+
+    rm -f $tmp
+
+#MACRO myexit 6
+    sixdeskexitparam=6
+    sixdeskexit
+#MACRO myexit
+
+  fi
+  # Make sure we are clean (in case of a run_six or system crash)
+  rm -f $sixdeskjobs_logs/run/fort.*
+  for sixdeski in 2 3 8 16
+  do
+    cp $SIXDESKWHERE/fort.$sixdeski.gz $sixdeskjobs_logs/run
+    gunzip -f $sixdeskjobs_logs/run/fort.$sixdeski.gz
+  done
+  sixdeskTaskName=$sixdeskRunnam
+  sixdeskfileDir=$sixdeskjobs_logs/run
+  gotit=""
+  mytries=0
+  while test "$gotit" != "OK" -a $mytries -ne 11
+  do
+    mytries=`expr $mytries + 1`
+    echo "Perl uploadTask" "$sixdeskTaskName" "$sixdeskTaskGroupId" "$sixdeskProgramId" "$sixdeskfileDir" "$sixdeskPriority" "$sixdeskOsMin" "$sixdeskOsMax" "$sixdeskCpuSpeedMin" "$sixdeskcr" "$sixdeskclientv" "$sixdeskout"
+    perl $sixdeskpath/Bin/uploadTask.pl "$sixdeskTaskName" "$sixdeskTaskGroupId" "$sixdeskProgramId" "$sixdeskfileDir" "$sixdeskPriority" "$sixdeskOsMin" "$sixdeskOsMax" "$sixdeskCpuSpeedMin" "$sixdeskcr" "$sixdeskclientv" "$sixdeskout" > $tmp 2>&1
+    sixdeskstat=$?
+    if test $sixdeskstat -ne 0
+    then
+
+#MACRO mymess 0 UploadTask failed with Status $sixdeskstat !!! `cat $tmp`
+      sixdeskmesslevel=0
+      sixdeskmess="UploadTask failed with Status $sixdeskstat !!! `cat $tmp`"
+      sixdeskmess
+#MACRO mymess
+
+    else
+      grep error $tmp > /dev/null 2>&1
+      sixdeskstat=$?
+      if test $sixdeskstat -eq 0
+      then
+        sixdeskmess=" UploadTask failed!!! `cat $tmp`"
+      else
+        grep "TaskId:" $tmp > /dev/null 2>&1
+        sixdeskstat=$?
+        if test $sixdeskstat -ne 0
+        then
+          cat $tmp
+
+#MACRO mymess 0 UploadTask problem, no TaskId was found!!! `cat $tmp`
+          sixdeskmesslevel=0
+          sixdeskmess="UploadTask problem, no TaskId was found!!! `cat $tmp`"
+          sixdeskmess
+#MACRO mymess
+
+        else
+          sixdesktaskid=`sed -e's/TaskId: *//' $tmp` 
+          sixdesktaskid=`echo $sixdesktaskid | sed -e's/[^0-9]//g'`
+          if test "$sixdesktaskid" = ""
+          then
+
+#MACRO mymess 0 UploadTask problem, a NULL TaskId was found!!! `cat $tmp`
+            sixdeskmesslevel=0
+            sixdeskmess="UploadTask problem, a NULL TaskId was found!!! `cat $tmp`"
+            sixdeskmess
+#MACRO mymess
+
+          else
+            gotit="OK"
+            sixdesktaskid=cpss$sixdesktaskid
+          fi
+        fi   
+      fi
+    fi
+  done 
+  rm $sixdeskjobs_logs/run/fort.2 $sixdeskjobs_logs/run/fort.3 $sixdeskjobs_logs/run/fort.8 $sixdeskjobs_logs/run/fort.16
+  if test "$gotit" != "OK"
+  then
+
+#MACRO mymess 0 FAILED to submit task 10 times!!
+    sixdeskmesslevel=0
+    sixdeskmess="FAILED to submit task 10 times!!"
+    sixdeskmess
+#MACRO mymess
+
+    rm -f $tmp
+
+#MACRO myexit 10
+    sixdeskexitparam=10
+    sixdeskexit
+#MACRO myexit
+
+  fi
+
+#MACRO mylock $sixdeskwork
+  ###sixdesklockdir=$sixdeskwork
+  ###sixdesklock
+#MACRO mylock
+
+  sixdeskoldtaskid=""
+  if test -s $sixdeskwork/taskids
+  then
+    grep "$sixdeskRunnam " $sixdeskwork/taskids
+    sixdeskstat=$?
+    if test $sixdeskstat -eq 0
+    then
+      line=`grep "$sixdeskRunnam " $sixdeskwork/taskids`
+      sixdeskoldtaskid=`echo $line | cut -d " " -f2-`
+    fi
+  fi
+  if test "$sixdeskoldtaskid" = ""
+  then
+    sixdesktaskids=$sixdesktaskid" "
+  else
+    sixdesktaskids=$sixdeskoldtaskid" "$sixdesktaskid" "
+  fi
+  if test ! -s $SIXDESKWHERE/fort.10.gz
+  then
+    touch $SIXDESKWHERE/JOB_NOT_YET_COMPLETED
+  fi
+  if test -s $sixdeskwork/taskids
+  then
+    sed -e'/'$sixdeskRunnam' /d' $sixdeskwork/taskids > $tmp
+    mv $tmp $sixdeskwork/taskids
+  fi
+  echo "$sixdeskRunnam" "$sixdesktaskids" >> $sixdeskwork/taskids
+  if test "$sixdeskoldtaskid" != ""
+  then
+
+#MACRO mymess 1 Task $sixdeskRunnam re-submitted with TaskId $sixdesktaskid; other tasks $sixdeskoldtaskid
+    sixdeskmesslevel=1
+    sixdeskmess="Task $sixdeskRunnam re-submitted with TaskId $sixdesktaskid; other tasks $sixdeskoldtaskid"
+    sixdeskmess
+#MACRO mymess
+
+  else
+    echo $sixdeskRunnam >> $sixdeskwork/incomplete_cases
+    echo $sixdeskRunnam >> $sixdeskwork/myincomplete_cases
+
+#MACRO mymess 1 Task $sixdeskRunnam submitted with TaskId $sixdesktaskid
+    sixdeskmesslevel=1
+    sixdeskmess="Task $sixdeskRunnam submitted with TaskId $sixdesktaskid"
+    sixdeskmess
+#MACRO mymess
+
+  fi
+
+#MACRO myunlock $sixdeskwork
+  ###sixdesklockdir=$sixdeskwork
+  ###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO mylock $sixdeskjobs 
+  ###sixdesklockdir=$sixdeskjobs 
+  ###sixdesklock
+#MACRO mylock
+
+  echo "$sixdeskRunnam" "$sixdesktaskid" >> $sixdeskjobs/tasks
+  echo "$sixdeskRunnam" "$sixdesktaskid" >> $sixdeskjobs/incomplete_tasks
+
+#MACRO myunlock $sixdeskjobs 
+  ###sixdesklockdir=$sixdeskjobs 
+  ###sixdeskunlock
+#MACRO myunlock
+
+  rm -f $tmp
+fi

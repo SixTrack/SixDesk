@@ -1,0 +1,67 @@
+#!/bin/sh
+#
+# Delete all cpss tasks in error.tasks (by TaskId)
+#
+. ./dot_env
+if test $sixdeskplatform != "cpss"
+then
+  echo "This command is available for CPSS only!"
+
+#MACRO myexit 1
+  sixdeskexitparam=1
+  sixdeskexit
+#MACRO myexit
+
+fi
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+tgid=`cat $sixdeskstudy/TaskGroupId`
+mytgid=`echo $tgid | sed -e 's/TaskGroupID: *//'`
+
+#MACRO mymktmp tmp $sixdeskjobs
+sixdesktmpname=tmp
+sixdesktmpdirarg=$sixdeskjobs
+sixdeskmktmp
+tmp=$sixdesktmp
+#MACRO mymktmp
+
+while read line
+do
+  ntaskid=`echo $line | sed -e's/cpss//'`
+
+#MACRO mymess 2 Deleting task $ntaskid in $mytgid from the server
+  sixdeskmesslevel=2
+  sixdeskmess="Deleting task $ntaskid in $mytgid from the server"
+  sixdeskmess
+#MACRO mymess
+
+  perl $sixdeskpath/Bin/deleteTask.pl $ntaskid $mytgid > $tmp 2>&1
+  stat=$? 
+  if test $stat -ne 0
+  then
+
+#MACRO mymess 0 deleteTask failed!!! `cat $tmp`
+    sixdeskmesslevel=0
+    sixdeskmess="deleteTask failed!!! `cat $tmp`"
+    sixdeskmess
+#MACRO mymess
+
+  fi
+  rm $tmp
+done < error.tasks
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

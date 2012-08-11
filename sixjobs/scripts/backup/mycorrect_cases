@@ -1,0 +1,102 @@
+#!/bin/sh
+# This scripts checks all cases using the work/taskid file
+# and correct the completed/incomplete_cases files.
+. ./dot_env
+# Now first report current situation
+mymess 0 "Correcting Study $LHCDescrip"
+mylock $sixdeskstudy
+###mylock $sixdeskwork
+cases=0
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+mymess 0 "Before found $cases cases, $ccases complete ($icases incomplete)"
+mymktmpdir tmp /tmp/$LOGNAME
+cd $tmp
+touch incomplete_cases
+touch completed_cases
+touch $sixdeskwork/taskids
+cp $sixdeskwork/taskids .
+while read aline
+do
+  Runnam=`echo $aline | cut -d " " -f1`
+  myrundir $Runnam Rundir
+  where=$sixdesktrack/$Rundir
+  missing=0
+  echo "Processing $Runnam in $Rundir"
+  if test "$da" -ne 0
+  then
+    if test ! -s $where/fort.18.gz
+    then
+      mymess 0 "$Runnam fort.18.gz is MISSING in $Rundir !!!"
+      missing="1"
+    fi
+  else
+   if test "$BNL" = ""
+    then
+      if test ! -s $where/fort.10.gz
+      then
+        mymess 0 "$Runnam fort.10.gz is MISSING for $Runnam !!!"
+          missing="1"
+      fi
+    else
+      if test ! -s $where/beambeam-output.dat.gz
+      then
+        mymess 0 "$Runnam beambeam-output.dat.gz is MISSING for $Runnam !!!"
+        missing="1"
+      fi
+    fi
+  fi
+  if test "$missing" -eq 0
+  then
+    # Really complete
+    echo "$Runnam" >> completed_cases
+    rm -f $where/JOB_NOT_YET_STARTED
+    rm -f $where/JOB_NOT_YET_COMPLETED
+  else
+    # Incomplete
+    echo "$Runnam" >> incomplete_cases
+  fi
+done < taskids
+cp completed_cases $sixdeskwork/completed_cases
+cp incomplete_cases $sixdeskwork/incomplete_cases
+cp completed_cases $sixdeskwork/mycompleted_cases
+cp incomplete_cases $sixdeskwork/myincomplete_cases
+cd $sixdeskhome
+rm -r $tmp
+# and report status after correction
+cases=0
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+mymess 0 "After checking found $cases cases, $ccases complete ($icases incomplete)"
+###myunlock $sixdeskwork
+myunlock $sixdeskstudy

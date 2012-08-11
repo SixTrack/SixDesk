@@ -1,0 +1,115 @@
+#!/bin/sh
+#
+# This script will re-submit tasks
+# It uses the taskids file to get relevant info
+# Runnam Rundir (relative to $sixdeskdata)
+. ./dot_env
+if test $sixdeskplatform = "lsf"
+then
+  echo "This command is NOT available for LSF"
+
+#MACRO myexit 98
+  sixdeskexitparam=98
+  sixdeskexit
+#MACRO myexit
+
+fi
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+
+#MACRO mymktmp mytaskids 
+sixdesktmpname=mytaskids
+sixdesktmpdirarg=
+sixdeskmktmp
+mytaskids=$sixdesktmp
+#MACRO mymktmp
+
+
+#MACRO mylock $sixdeskwork
+###sixdesklockdir=$sixdeskwork
+###sixdesklock
+#MACRO mylock
+
+cp $sixdeskwork/taskids $mytaskids 
+
+#MACRO myunlock $sixdeskwork
+###sixdesklockdir=$sixdeskwork
+###sixdeskunlock
+#MACRO myunlock
+
+while read line
+do
+  sixdeskRunnam=`echo $line | cut -d" " -f1`
+
+#MACRO myrundir $sixdeskRunnam sixdeskRundir
+  runnamename=$sixdeskRunnam
+  sixdeskrundir
+  sixdeskRundir=$rundirname
+#MACRO myrundir
+
+  where=$sixdesktrack/$sixdeskRundir
+  taskids=`echo $entry | cut -d" " -f2-`
+  if test ! -d "$where"
+  then
+
+#MACRO mymess 0 The directory $sixdeskRundir for job $sixdeskRunnam does NOT exist!!!
+    sixdeskmesslevel=0
+    sixdeskmess="The directory $sixdeskRundir for job $sixdeskRunnam does NOT exist!!!"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 2
+    sixdeskexitparam=2
+    sixdeskexit
+#MACRO myexit
+
+  fi
+  export sixdeskforce=2 
+  if test "$sixdeskplatform" = "cpss"
+  then
+    . ./dot_task
+    stat=$?
+  elif test "$sixdeskplatform" = "boinc"
+  then
+    . ./dot_boinc
+    stat=$?
+  elif test "$sixdeskplatform" = "grid"
+  then
+    . ./dot_grid
+    stat=$?
+  fi
+  if test $stat -ne 0
+  then
+
+#MACRO mymess 0 dot_task/dot_boinc/dot_grid failed!!!
+    sixdeskmesslevel=0
+    sixdeskmess="dot_task/dot_boinc/dot_grid failed!!!"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 99
+    sixdeskexitparam=99
+    sixdeskexit
+#MACRO myexit
+
+  fi
+done < $mytaskids
+rm $mytaskids
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

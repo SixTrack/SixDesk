@@ -1,0 +1,218 @@
+#!/bin/ksh
+#***************************************************************************
+#
+# Process final SixTrack output fort.10
+#
+#***************************************************************************
+#
+. ./dot_env
+#
+# and ONLY one at a time just now
+# uses plot and local files
+# Is rather slow with iplot and kvar=1 (can look at this later)
+# Locks plot so only one at a tome in the workspace
+# Locks study (as does join10)
+mylock $sixdeskhome/plot
+mylock $sixdeskstudy
+end=""
+#
+# iplot and kvar are inherited from sixdeskenv
+#
+# Amplitude range for plotting
+#
+myamps
+fns1l=`gawk 'END{fnn='$ampstart'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
+fns1l=`echo $fns1l | sed -e's/0*$//'`
+fns1l=`echo $fns1l | sed -e's/\.$//'`
+fns2l=`gawk 'END{fnn='$ampfinish'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
+fns2l=`echo $fns2l | sed -e's/0*$//'`
+fns2l=`echo $fns2l | sed -e's/\.$//'`
+a0=$fns1l
+a1=$fns2l
+#
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# End of Input
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#
+cremona=0
+myTaylorOrder=4
+blah=
+if [ $short -eq 1 ] ;then
+  if [ $cremona -eq 1 ] ;then
+    mode=cremona$myTaylorOrder
+  else
+    mode=trans
+  fi
+  mo=t
+  kini=1
+  jtest=0
+  Ampl="$ns1s"_"$ns2s"
+fi
+if [ $long -eq 1 ] ;then
+  if [ $cremona -eq 1 ] ;then
+    mode=cremona$myTaylorOrder
+    mo=c
+  else
+    mode=simul
+    mo=s
+  fi
+  Ampl=$fns1l"-"$fns2l
+  if [ -z "$Ampl" ] ;then
+    mymess 0 "Define Ampl for longterm postprocessing ...!!!"
+    myunlock $sixdeskstudy
+    myunlock $sixdeskhome/plot
+    myexit 1
+  fi
+  kini=$kinil
+  kend=$kendl
+  jtest=1
+fi
+if [ -s "$sixdesktrack/$LHCDesHome/general_input" ];then
+  elhc=`awk '{print $1}' $sixdesktrack/$LHCDesHome/general_input`
+  einj=`awk '{print $2}' $sixdesktrack/$LHCDesHome/general_input`
+elif [ -s "general_input" ];then
+  elhc=`awk '{print $1}' general_input`
+  einj=`awk '{print $2}' general_input`
+else
+  mymess 0 "No general_input file: Run stopped!!!"
+  myunlock $sixdeskstudy
+  myunlock $sixdeskhome/plot
+  myexit 2
+fi
+#
+sed -e 's/%a0/'$a0'/g' \
+    -e 's/%a1/'$a1'/g' plot/inc/distance.mask  > plot/inc/distance.save
+sed -e 's/%a0/'$a0'/g' \
+    -e 's/%a1/'$a1'/g' plot/inc/maxslope.mask  > plot/inc/maxslope.save 
+sed -e 's/%a0/'$a0'/g' \
+    -e 's/%a1/'$a1'/g' plot/inc/survival.mask  > plot/inc/survival.save
+sed -e 's/%a0/'$a0'/g' \
+    -e 's/%a1/'$a1'/g' plot/inc/smear.mask     > plot/inc/smear.save
+sed -e 's/%a0/'$a0'/g' \
+    -e 's/%a1/'$a1'/g' plot/inc/averem.mask    > plot/inc/averem.save
+sed -e 's/%a0/'$a0'/g' \
+    -e 's/%a1/'$a1'/g' plot/inc/kvar.mask      > plot/inc/kvar.save
+#
+echo "$a0 $a0" > plot/linear
+echo "$a1 $a1" >> plot/linear
+cat plot/inc/test1 > plot/test.tex
+if [ "$short" -eq 1 ] 
+then cat plot/inc/test2 >> plot/test.tex 
+fi
+if [ "$long" -eq 1 ] 
+then cat plot/inc/test3 >> plot/test.tex 
+fi
+#
+if [ "$kvar" -eq 1 ] 
+then cat plot/inc/test4 >> plot/test.tex 
+fi
+cat plot/inc/test5 >> plot/test.tex 
+# and also get the "missing" .save from .mask
+cp plot/inc/beamweb.mask plot/inc/beamweb.save
+cp plot/inc/detuning.mask plot/inc/detuning.save
+cp plot/inc/detuningh.mask plot/inc/detuningh.save
+cp plot/inc/detuningv.mask plot/inc/detuningv.save
+cp plot/inc/tunedp.mask plot/inc/tunedp.save
+# and fix the tunes for Frank!
+xrangelo=`gawk 'END{xrangelo='$tunex'-.02;print xrangelo}' /dev/null`
+xrangehi=`gawk 'END{xrangehi='$tunex1'+.02;print xrangehi}' /dev/null`
+yrangelo=`gawk 'END{yrangelo='$tuney'-.02;print yrangelo}' /dev/null`
+yrangehi=`gawk 'END{yrangehi='$tuney1'+.02;print yrangehi}' /dev/null`
+#
+sed -e 's/%xrangelo/'$xrangelo'/g' \
+    -e 's/%xrangehi/'$xrangehi'/g' \
+    -e 's/%yrangelo/'$yrangelo'/g' \
+    -e 's/%yrangehi/'$yrangehi'/g' \
+plot/inc/web.mask > plot/inc/web.save
+# and hit the loop
+mytunes
+rm -f fort.17
+rm -f fort.31
+itunexx=$itunex
+ituneyy=$ituney
+if test "$ideltax" -eq 0 -a "$ideltay" -eq 0
+then
+  ideltax=1000000
+  ideltay=1000000
+fi
+while test "$itunexx" -le "$itunex1" -a "$ituneyy" -le "$ituney1"
+do
+   tunexx=`echo "$itunexx" | cut -c1-2`"."`echo "$itunexx" | cut -c3-6`
+   tunexx=`echo "$tunexx" | sed -e's/0*$//'`
+   tunexx=`echo "$tunexx" | sed -e's/^0//'`
+   tuneyy=`echo "$ituneyy" | cut -c1-2`"."`echo "$ituneyy" | cut -c3-6`
+   tuneyy=`echo "$tuneyy" | sed -e's/0*$//'`
+   tuneyy=`echo "$tuneyy" | sed -e's/^0//'`
+   export sixdesktunes=$tunexx"_"$tuneyy
+   echo "Processing tunes $sixdesktunes"
+   j=$kini
+   while [ $j -le $kend ] ;do
+     if [ jtest -eq 1 ] ;then
+       end=.$j
+     else
+       end=.$kini
+     fi
+     if [ "$cremona" -eq 1 ]
+       then rm -f DAres.${LHCDesName}c.${sixdesktunes}.${myTaylorOrder}$blah.$j
+       else rm -f DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j
+     fi
+     i=$ista
+     while [ $i -le $iend ] ;do
+       mymess 0 "Qx $tunexx Qy $tuneyy angle $j seed $i" 
+       dir=$LHCDesHome/$i/$mode/$sixdesktunes/$Ampl/e$turnse/$end
+       Runnam=$LHCDesName${i}$mo$sixdesktunes$Ampl$turnse$end
+       dir1=$sixdesktrack/$dir
+       file=$dir1/fort.10.gz
+       if [ ! -s $file ] ;then
+         mymess 0 "File: " $file " does not exist, case skipped"
+         echo "No_fort10" >> DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j
+       else
+         echo "file: " $dir " okay, analysis started"
+         if [ -s "$file" -a "$long" -eq 1 ] ;then
+           gzip -cd $file > fort.10
+           echo "$elhc $einj backslashn $Runnam" | sed -e's/backslashn/\n/' | $sixdeskhome/bin/read10b
+           echo "$dir" >> fort.31
+           cat fort.30 >> fort.31
+           if [ "$cremona" -eq 1 ] ;then
+             cat fort.17 >> DAres.${LHCDesName}c.${sixdesktunes}.${myTaylorOrder}$blah.$j
+           else 
+             cat fort.17 >> DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j
+           fi
+           plot/inc/plot_dyb $file $dir1 $iplot $short $long $kvar $sixdesktrack/$LHCDesHome
+           if [ "$iplot" -gt 0 ] ;then
+             cp fort.30 $sixdeskhome/plot/$dir
+             gzip -f $sixdeskhome/plot/$dir/fort.30
+             cp $file $sixdeskhome/plot/$dir
+           fi
+         else
+           plot/inc/plot_dyb $file $dir1 $iplot $short $long $kvar $sixdesktrack/$LHCDesHome
+         fi
+       fi
+       ((i=i+1))
+     done
+     ((j=j+$kstep))
+  done
+  itunexx=`expr $itunexx + $ideltax`
+  ituneyy=`expr $ituneyy + $ideltay`
+done
+# Remove all the .save (they are re-generated on every call)
+# What about these fort.*??? e.g. fort.17 for Riccardo?
+# rm -f fort.10 fort.17 fort.30 fort.31
+rm -f plot/test.tex
+rm -f plot/inc/distance.save
+rm -f plot/inc/maxslope.save
+rm -f plot/inc/survival.save
+rm -f plot/inc/smear.save
+rm -f plot/inc/averem.save
+rm -f plot/inc/kvar.save
+rm -f plot/inc/beamweb.save
+rm -f plot/inc/detuning.save
+rm -f plot/inc/detuningh.save
+rm -f plot/inc/detuningv.save
+rm -f plot/inc/tunedp.save
+rm -f plot/inc/web.save
+rm -f plot/linear
+mymess 0 "Completed normally"
+myunlock $sixdeskstudy
+myunlock $sixdeskhome/plot
+myexit 0

@@ -1,0 +1,45 @@
+#!/bin/sh
+. ./dot_env
+mylock $sixdeskstudy
+mymess 0 "Study $LHCDescrip"
+mytunes
+itunexx=$itunex
+ituneyy=$ituney
+if test "$ideltax" -eq 0 -a "$ideltay" -eq 0
+then
+  ideltax=1000000
+  ideltay=1000000
+fi
+while test "$itunexx" -le "$itunex1" -a "$ituneyy" -le "$ituney1"
+do
+  tunexx=`echo "$itunexx" | cut -c1-2`"."`echo "$itunexx" | cut -c3-6`
+  tunexx=`echo "$tunexx" | sed -e's/0*$//'`
+  tunexx=`echo "$tunexx" | sed -e's/^0//'`
+  tuneyy=`echo "$ituneyy" | cut -c1-2`"."`echo "$ituneyy" | cut -c3-6`
+  tuneyy=`echo "$tuneyy" | sed -e's/0*$//'`
+  tuneyy=`echo "$tuneyy" | sed -e's/^0//'`
+  sixdesktunes=$tunexx"_"$tuneyy
+  echo ""
+  echo ""
+  echo ""
+  mymess 0 "Processing tunes $sixdesktunes"
+  rm -f DAres.${LHCDesName}.${sixdesktunes}.${turnse}.plot
+  touch DAres.${LHCDesName}.${sixdesktunes}.${turnse}.plot
+  j=$kinil
+  mymess 0 "Processing angles $kinil to $kendl by $kstep"
+  while test "$j" -le "$kendl"
+  do 
+    mymess 0 "DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
+    if test -s "DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
+    then
+      awk -f minav.awk "DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
+    else
+      mymess 0 "Skipping Angle $j; DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j missing or empty"
+    fi
+    ((j=j+$kstep))
+  done
+  itunexx=`expr $itunexx + $ideltax`
+  ituneyy=`expr $ituneyy + $ideltay`
+done
+myunlock $sixdeskstudy
+myexit 0

@@ -1,0 +1,304 @@
+#!/bin/ksh
+#***************************************************************************
+#
+# Merge over amplitudes SixTrack output file fort.10 for seeds and angles
+#
+#***************************************************************************
+#
+. ./dot_env
+# Order of number of turns
+# imported from sixdeskenv
+# Merge Range (amplitudes shown below)
+#
+# Amplitudes in [sigma]
+# are stored in e[1], e[2], .....
+# we just re-use the code from run_six to guarantee same names
+# and it now sets fampstart as well, sam code now added to run_post
+#Now we first check if "short" .eq. 1
+if test "$short" -eq 1
+then
+
+#MACRO mymess 0 Exiting as no join10 is necessary for short runs
+  sixdeskmesslevel=0
+  sixdeskmess="Exiting as no join10 is necessary for short runs"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 0
+  sixdeskexitparam=0
+  sixdeskexit
+#MACRO myexit
+
+fi
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+
+#MACRO myamps
+sixdeskamps
+#MACRO myamps
+
+jsta=1
+jend=0
+fampstart=`gawk 'END{fnn='$ampstart'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
+fampstart=`echo $fampstart | sed -e's/0*$//'`
+fampstart=`echo $fampstart | sed -e's/\.$//'`
+e[$jsta]="$fampstart"
+ampend=$ampstart
+while [ "$ampend" -lt "$ampfinish" ]
+do
+  ampend=`expr "$ampend" + "$ampincl"`
+  fampend=`gawk 'END{fnn='$ampend'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
+  fampend=`echo $fampend | sed -e's/0*$//'`
+  fampend=`echo $fampend | sed -e's/\.$//'`
+  jend=`expr $jend + 1`
+  e[$jend+1]=$fampend
+done
+myAmpl="$fampstart"_"$fampend"
+echo "ns1l ns2l nsincl ampstart ampfinish ampincl fampstart fampend myAmpl"
+echo "$ns1l $ns2l $nsincl $ampstart $ampfinish $ampincl $fampstart $fampend $myAmpl"
+echo "$jsta $jend"
+
+#MACRO mytunes
+sixdesktunes
+#MACRO mytunes
+
+#
+# Actually the name of the Study
+dirs=$LHCDescrip
+tree[0]=$sixdesktrack
+tree[1]=$sixdesktrack
+#
+mode=simul
+#
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# End of Input
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#
+# Result directory
+Ampl=${e[jsta]}-${e[jend+1]}
+#
+AngleStep=`awk 'END{a=90/('$kmaxl'+1);print a}' /dev/null`
+#
+turnmin=$turnse
+turnmax=$turnsemax
+#
+# AND now we make and go to a UNIQUE directory to allow parallelism!!!
+# i.e. unique to workspace and study and the study is locked
+
+#MACRO mymktmpdir tmp $sixdesktrack/$LHCDescrip
+sixdesktmpdirname=tmp
+sixdesktmpdirarg=$sixdesktrack/$LHCDescrip
+sixdeskmktmpdir
+tmp=$sixdesktmpdir
+#MACRO mymktmp
+
+cd $tmp
+
+#MACRO mymess 0 Running in $tmp
+sixdeskmesslevel=0
+sixdeskmess="Running in $tmp"
+sixdeskmess
+#MACRO mymess
+
+let i=ista
+while [ i -le iend ] ;do
+  echo "Processing Seed $i"
+  itunexx=$itunex
+  ituneyy=$ituney
+  if test "$ideltax" -eq 0 -a "$ideltay" -eq 0
+  then
+    ideltax=1000000
+    ideltay=1000000
+  fi
+  while test "$itunexx" -le "$itunex1" -a "$ituneyy" -le "$ituney1"
+  do
+    tunexx=`echo "$itunexx" | cut -c1-2`"."`echo "$itunexx" | cut -c3-6`
+    tunexx=`echo "$tunexx" | sed -e's/0*$//'`
+    tunexx=`echo "$tunexx" | sed -e's/^0//'`
+    tuneyy=`echo "$ituneyy" | cut -c1-2`"."`echo "$ituneyy" | cut -c3-6`
+    tuneyy=`echo "$tuneyy" | sed -e's/0*$//'`
+    tuneyy=`echo "$tuneyy" | sed -e's/^0//'`
+    sixdesktunes=$tunexx"_"$tuneyy
+    echo "Processing tunes $sixdesktunes"
+  #
+    ls -ld ${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl > /dev/null 2>&1
+    if test $? -eq 0
+    then
+
+#MACRO mymess 0 Removing existing joined results Seed $i
+      sixdeskmesslevel=0
+      sixdeskmess="Removing existing joined results Seed $i"
+      sixdeskmess
+#MACRO mymess
+
+      ls -ld ${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl
+      rm -r ${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl
+    fi
+    let k=$kinil
+    while [ $k -le $kendl ] ;do
+      Angle=`awk 'END{a='$AngleStep'*'$k';print a}' /dev/null`
+      let jst=jsta
+      let te=turnse
+      while [ te -le turnsemax ] ;do
+        #  
+        let j=jst
+        dir0=${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl/e$te/$Angle
+        dir1=${tree[1]}/$dirs/$i/$mode/$sixdesktunes/${e[j]}_${e[j+1]}/e$te/$Angle
+        #
+        file[0]="$dir0"/fort.10
+        file[j]="$dir1"/fort.10.gz
+        echo ${file[j]}
+        #
+        if [ -s "${file[j]}" ] ;then
+          gzip -cdf ${file[j]} > fort.11
+          ((j=j+1))
+          while [ j -le jend ] ;do
+            dir1=${tree[1]}/$dirs/$i/$mode/$sixdesktunes/${e[j]}_${e[j+1]}/e$te/$Angle
+            file[j]="$dir1"/fort.10.gz
+            if [ -s "${file[j]}" -a -s fort.11 ] ;then
+              echo ${file[j]}
+              cp fort.11 fort.22
+              gzip -cdf ${file[j]} > fort.23
+              $sixdeskhome/bin/joinf10
+            else
+
+#MACRO mymess 0 File not found:  ${file[j]} !!!
+              sixdeskmesslevel=0
+              sixdeskmess="File not found:  ${file[j]} !!!"
+              sixdeskmess
+#MACRO mymess
+
+            fi
+            ((j=j+1))
+          done
+          #
+          if [ -s fort.11 ] ;then
+            echo ${file[0]}".gz"
+            if [ ! -d "$dir0" ] ;then
+              mkdir -p "$dir0" 
+            fi
+            mv fort.11 ${file[0]}
+            gzip -f ${file[0]}
+            #
+            rm -f ${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl/e$te/.$k
+            ln -fs ${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl/e$te/$Angle ${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl/e$te/.$k
+            #
+          fi
+          ((te=te+1))
+        else
+
+#MACRO mymess 0 File not found Seed $i ${file[j]} !!!
+          sixdeskmesslevel=0
+          sixdeskmess="File not found Seed $i ${file[j]} !!!"
+          sixdeskmess
+#MACRO mymess
+
+          if [ jst -lt jend ] ;then
+            ((jst=jst+1))
+          else
+            ((te=te+1))
+          fi
+        fi
+      done
+      #
+      # Loop over turn numbers
+      #
+      if [ turnmin -lt turnmax ] ;then
+        dira=${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl/e${turnse}-$turnsemax
+        if [ ! -d "$dira" ] ;then
+          mkdir -p "$dira"
+        fi
+        #
+        te=$turnmin
+        #
+        dir0=${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl/e${turnmin}-$turnmax/$Angle
+        dir1=${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl/e$te/$Angle
+        #
+        file[0]=$dir0/fort.10
+        file[te]=$dir1/fort.10.gz
+        echo ${file[te]}
+        #
+        if [ -s "${file[te]}" ] ;then
+          gzip -cdf ${file[te]} > fort.11
+          ((te=te+1))
+          #
+          while [ te -le turnmax ] ;do
+            dir1=${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl/e$te/$Angle
+            file[te]=$dir1/fort.10.gz
+            #
+            if [ -s "${file[te]}" -a -s fort.11 ] ;then
+              echo ${file[te]}
+              cp fort.11 fort.22
+              gzip -cdf ${file[te]} > fort.23
+              $sixdeskhome/bin/joinf10
+            else
+
+#MACRO mymess 0 Seed $i File not found: ${file[te]} !!!
+              sixdeskmesslevel=0
+              sixdeskmess="Seed $i File not found: ${file[te]} !!!"
+              sixdeskmess
+#MACRO mymess
+
+            fi
+            ((te=te+1))
+          done
+          #
+          if [ -s fort.11 ] ;then
+            if [ ! -d "$dir0" ] ;then
+              mkdir -p "$dir0"
+            fi
+            mv fort.11 ${file[0]}
+            gzip -f ${file[0]}
+            echo ${file[0]}".gz"
+            #
+            rm -f ${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl/e${turnmin}-$turnmax/.$k
+            ln -fs $dir0 ${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl/e${turnmin}-$turnmax/.$k
+            # collect everything with respect to e$turnse-$turnsemax
+            rm -f $dira/.$k
+            ln -fs $dir0 $dira/.$k
+          fi
+          #
+        else
+
+#MACRO mymess 0 Seed $i File not found: ${file[te]} !!!
+          sixdeskmesslevel=0
+          sixdeskmess="Seed $i File not found: ${file[te]} !!!"
+          sixdeskmess
+#MACRO mymess
+
+        fi
+      fi
+      #       
+      ((k=k+$kstep))
+    done
+    itunexx=`expr $itunexx + $ideltax`
+    ituneyy=`expr $ituneyy + $ideltay`
+  done
+  ((i=i+1))
+done
+cd $sixdeskhome
+rm -r $tmp
+
+#MACRO mymess 0 Completed normally
+sixdeskmesslevel=0
+sixdeskmess="Completed normally"
+sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

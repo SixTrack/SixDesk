@@ -1,0 +1,117 @@
+#!/bin/ksh
+#
+# " run_mad6t "
+#
+# Paths and tracking variables
+. ./dot_env
+# Now check for an interactive request -i
+inter="false"
+if test $# -ne 0
+then
+  if test $1 = "-i"
+  then
+    inter="true"
+  else
+    mymess 2 "run_mad6t unrecognised command line option"
+    mymess 2 "run_mad6t accepts only -i for interactive MADX runs"
+    myexit 5
+  fi
+fi
+if test "$inter" = "true"
+then
+  mymess 0 "Starting interactive MADX runs" 
+fi
+mymess 0 "Using madx -X Version in $MADX_PATH"
+mymess 0 "Study $LHCDescrip Runtype $runtype Seeds $istamad to $iendmad"
+if test ! -s $sixdeskhome/mask/$LHCDescrip.mask
+then
+  mymess 1 "run_mad6t requires a $LHCDescrip.mask file in sixjobs/mask !!! "
+  myexit 3 
+fi
+if test ! -d "$sixtrack_input"
+then
+  mymess 2 "The $sixtrack_input directory does not exist!!!"
+  myexit 3
+fi
+# Check for another or incomplete mad6t
+if test -f $sixtrack_input/sixdesklock
+then
+  if test ! -w $sixtrack_input/sixdesklock
+  then
+    mymess 0 "There appears to be another incomplete mad6t run"
+    mymess 0 "Please wait or do an 'unlock sixtrack_input'"
+    myexit 4
+  fi
+fi
+mylock $sixtrack_input
+mymess 4 "$sixtrack_input is locked"
+# Make sure we set the new (optional) value for the proton mass
+# and get temporary copies of the fort.3.mother1/2.
+if test "$beam" = "" -o "$beam" = "b1" -o "$beam" = "B1"
+then
+  appendbeam=''
+elif test "$beam" = "b2" -o "$beam" = "B2"
+then
+  appendbeam='_b2'
+else
+  mymess 1 "Unrecognised beam option $beam : must be null, b1, B1, b2 or B2!!!"
+  myunlock $sixtrack_input
+  myexit 6
+fi
+sed -e 's?%pmass?'$pmass'?g' \
+    $sixdeskhome/control_files/fort.3.mother1_${runtype} > $sixtrack_input/fort.3.mother1.tmp
+cp $sixdeskhome/control_files/fort.3.mother2_${runtype}${appendbeam} $sixtrack_input/fort.3.mother2.tmp
+# Clear the flag for check_mad6t
+rm -f "$sixtrack_input/CORR_TEST"
+mymktmpdir mad $sixtrack_input
+junktmp=$sixdesktmpdir
+export junktmp
+mymess 2 "Using junktmp: $junktmp"
+cd $junktmp
+mad6tjob=$sixdeskhome/utilities/mad6t1.lsf
+filejob=$LHCDescrip
+cp $sixdeskhome/mask/$filejob.mask .
+# Loop over seeds
+i=$istamad
+while [ $i -le $iendmad ]
+do
+  # and remove any existing results for this seed
+  echo " Case : " $i
+  for f in 2 8 16 34
+  do
+    rm -rf $sixtrack_input/fort.$f"_"$i.gz
+  done
+  sed -e 's?%SEEDSYS?'$i'?g' \
+      -e 's?%SEEDRAN?'$i'?g' $filejob.mask > $filejob."$i"
+
+  sed -e 's?%SIXJUNKTMP?'$junktmp'?g' \
+      -e 's?%SIXI?'$i'?g' \
+      -e 's?%SIXFILEJOB?'$filejob'?g' \
+      -e 's?%CORR_TEST?'$CORR_TEST'?g' \
+      -e 's?%FORT_34?'$fort_34'?g' \
+      -e 's?%MADX_PATH?'$MADX_PATH'?g' \
+      -e 's?%SIXTRACK_INPUT?'$sixtrack_input'?g' $mad6tjob > mad6t_"$i".lsf
+  sleep 2
+  chmod 755 mad6t_"$i".lsf
+  if test "$inter" = "false"
+  then
+    bsub -q $madlsfq -o $junktmp/"$LHCDescrip""_mad6t_$i".log -J ${workspace}_${LHCDescrip}_mad6t_$i mad6t_"$i".lsf
+  else
+    echo "In $PWD"
+    mymktmpdir batch
+    cd $sixdesktmpdir
+    echo "Now in temporary $sixdesktmpdir"
+    ../mad6t_"$i".lsf | tee $junktmp/"$LHCDescrip""_mad6t_$i".log 2>&1
+    cd ..
+    echo "Removing temporary directory"
+    rm -rf $sixdesktmpdir
+    echo "Back in $PWD" 
+  fi
+  mad6tjob=$sixdeskhome/utilities/mad6t.lsf
+  ((i=i+1))
+done
+# End loop over seeds
+cd $sixdeskhome
+# Keep the lock on until a successful check_mad6t clears it
+SIXDESKLOCKED=""
+myexit 0

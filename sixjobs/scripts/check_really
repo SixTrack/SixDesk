@@ -1,0 +1,107 @@
+#!/bin/sh
+. ./dot_env
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+
+#MACRO mylock $sixdeskwork
+###sixdesklockdir=$sixdeskwork
+###sixdesklock
+#MACRO mylock
+
+while read task
+do
+  problem=""
+  Runnam=`echo $task | cut -d " " -f1`
+
+#MACRO myrundir $Runnam Rundir
+  runnamename=$Runnam
+  sixdeskrundir
+  Rundir=$rundirname
+#MACRO myrundir
+
+  taskid=`echo $task | cut -d " " -f2`
+  grep '^'$Runnam'$' $sixdeskwork/completed_cases > /dev/null
+  if test $? -eq 0
+  then
+    grep '^'$Runnam'$' $sixdeskwork/incomplete_cases > /dev/null
+    if test $? -eq 0
+    then
+      if test "$problem" = ""
+      then
+        problem="yes"
+        echo " "
+        echo " Problem with $Runnam $Rundir $taskid"
+        echo " "
+      fi
+      echo "$Runnam $Rundir $taskid in BOTH"
+    fi
+  fi
+  if test -s "$sixdesktrack/$Rundir/fort.10.gz"
+  then
+    grep '^'$Runnam'$' $sixdeskwork/completed_cases > /dev/null
+    if test $? -ne 0
+    then
+      if test "$problem" = ""
+      then
+        problem="yes"
+        echo " "
+        echo " Problem with $Runnam $Rundir $taskid"
+        echo " "
+      fi
+      echo "$Runnam $Rundir $taskid is COMPLETE but NOT in completed_cases"
+    fi
+    grep '^'$Runnam'$' $sixdeskwork/incomplete_cases > /dev/null
+    if test $? -eq 0
+    then
+      if test "$problem" = ""
+      then
+        problem="yes"
+        echo " "
+        echo " Problem with $Runnam $Rundir $taskid"
+        echo " "
+      fi
+      echo "$Runnam $Rundir $taskid completed but IS IN incomplete_cases"
+    fi
+  else
+    grep '^'$Runnam'$' $sixdeskwork/completed_cases > /dev/null
+    if test $? -eq 0
+    then
+      if test "$problem" = ""
+      then
+        problem="yes"
+        echo " "
+        echo " Problem with $Runnam $Rundir $taskid"
+        echo " "
+      fi
+      echo "$Runnam $Rundir $taskid is INCOMPLETE but in completed_cases"
+    fi
+    grep '^'$Runnam'$' $sixdeskwork/incomplete_cases > /dev/null
+    if test $? -ne 0
+    then
+      if test "$problem" = ""
+      then
+        problem="yes"
+        echo " "
+        echo " Problem with $Runnam $Rundir $taskid"
+        echo " "
+      fi
+      echo "$Runnam $Rundir $taskid IS incomplete but NOT in incomplete_cases"
+    fi
+  fi  
+done < work/taskids
+
+#MACRO myunlock $sixdeskwork
+###sixdesklockdir=$sixdeskwork
+###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+

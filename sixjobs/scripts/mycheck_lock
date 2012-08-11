@@ -1,0 +1,23 @@
+#!/bin/sh
+#
+. ./dot_env
+if test $# -eq 0
+then
+  sixdesklockdir="."
+else
+  sixdesklockdir=$1
+fi
+mymess 0 "check_lock: Checking lockdir $sixdesklockdir"
+if test ! -d $sixdesklockdir
+then
+  mymess 0 "check_lock: The lock directory $sixdesklockdir does not exist!!!"
+  myexit 1
+fi
+if test ! -f $sixdesklockdir/sixdesklock
+then
+  mymess 0 "check_lock: The lockfile $sixdesklockdir/sixdesklock does not exist!!!"
+  myexit 2
+fi
+ls -l $sixdesklockdir/sixdesklock
+cat $sixdesklockdir/sixdesklock
+myexit 0

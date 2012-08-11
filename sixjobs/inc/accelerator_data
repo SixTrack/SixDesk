@@ -1,0 +1,22 @@
+# accelerator data file
+#
+# Circumference  := machine circumference /m
+# HarmonicNumber := harmonic number (f_rf/f_rev)
+# CavityVoltage  := RF-cavity voltage /MV
+# InitialEnergy  := initial beam energy /MeV
+#
+#
+# LHC parameters
+#
+
+	Circumference
+ 26.658864e3
+
+	HarmonicNumber
+ 35640
+
+	CavityVoltage
+ 8
+
+	InitialEnergy
+ 450000

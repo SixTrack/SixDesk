@@ -1,0 +1,14 @@
+#!/bin/sh
+for i in `ls my*`
+do
+  echo ""
+  echo "======================"
+  echo "$i"
+  echo "======================"
+  grep lock $i
+done
+  echo ""
+  echo "======================"
+  echo "all"
+  echo "======================"
+  grep lock [c-z]* 

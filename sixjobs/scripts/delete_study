@@ -1,0 +1,369 @@
+#!/bin/sh
+# This script deletes all or part of a study.
+# It never deletes the CPSS TaskGroup info, nor the BOINC TaskID.
+# The sixdeskenv/sysenv files saved in the studies sub-directory
+# are not deleted. The study is flagged as deleted if everything
+# is deleted.
+#
+# It first asks if everything should be deleted (with the above
+# exceptions) which is useful when trying to get started amd you
+# want to get rid of false starts or when you are competely finished
+# with a study.
+# If everything is deleted a deleted flag is set in the studies directory.
+# The backup_workspace study NEVER backs up a deleted study.
+# If not everything is to be deleted it asks about logs (could be useful to save space)
+# and then the database (work), sixtrack_input, sixtrack input files,
+# LSF jobs/logs and the sixtrack results and he plotting if any. 
+sixdeskroot=`basename $PWD`
+if test "$sixdeskroot" != "sixjobs"
+then
+  echo "The script delete_study must be run in the directory sixjobs!!!"
+  exit 1
+fi
+if test ! -s dot_env
+then
+  echo "The script dot_env is missing!!!"
+  exit 2 
+fi
+. ./dot_env
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+deleteall="n"
+logs="n"
+database="n"
+sixtrack_in="n"
+sixin="n"
+jobslogs="n"
+track10="n"
+plotfiles="n"
+mystudy=`basename $sixdeskstudy`
+echo "  "
+echo " Do you want to go ahead and delete $mystudy??"
+echo " yes, YES, y, Y, will ALWAYS be interpreted as YES"
+echo " Anything else including CR/LF as NO."
+read mytest
+if test "$mytest" != "y" -a "$mytest" != "Y" -a "$mytest" != "YES" -a "$mytest" != "yes"
+then
+
+#MACRO myunlock $sixdeskstudy
+  sixdesklockdir=$sixdeskstudy
+  sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 0
+  sixdeskexitparam=0
+  sixdeskexit
+#MACRO myexit
+ 
+fi
+# First ask if everything is to be deleted.
+echo "  "
+echo "Do you want to remove everything?"
+read mytest
+if test "$mytest" = "y" -o "$mytest" = "Y" -o "$mytest" = "YES" -o "$mytest" = "yes"
+then
+  deleteall="y"
+  logs="y"
+  database="y"
+  jobslogs="y"
+  sixtrack_in="y"
+  sixin="y"
+  track10="y"
+  plotfiles="y"
+else
+  echo "Do you want to delete the sixdesk[error], restart and cron logfiles?"
+  read mytest
+  if test "$mytest" = "y" -o "$mytest" = "Y" -o "$mytest" = "YES" -o "$mytest" = "yes"
+  then
+    logs="y"
+  fi
+  echo "Do you want to delete the database (the work directory and contents)?"
+  read mytest
+  if test "$mytest" = "y" -o "$mytest" = "Y" -o "$mytest" = "YES" -o "$mytest" = "yes"
+  then
+    database="y"
+  fi
+  echo "Do you want to delete the LSF jobs/logs saved in the track directory?"
+  read mytest
+  if test "$mytest" = "y" -o "$mytest" = "Y" -o "$mytest" = "YES" -o "$mytest" = "yes"
+  then
+    jobslogs="y"
+  fi
+  echo "Do you want to remove the sixtrack_input mask files etc"
+  echo "(generated my mad6t) and the associated jobs and logs as can be found"
+  echo "in $sixtrack_input?"
+  read mytest
+  if test "$mytest" = "y" -o "$mytest" = "Y" -o "$mytest" = "YES" -o "$mytest" = "yes"
+  then
+    sixtrack_in="y"  
+  fi
+  echo ""
+  echo "Do you want to remove all the SixTrack input files (fort.[2|3|8|16].gz)"
+  read mytest
+  if test "$mytest" = "y" -o "$mytest" = "Y" -o "$mytest" = "YES" -o "$mytest" = "yes"
+  then
+    sixin="y"
+  fi
+# and plotting
+  if test -d "plot/$LHCDescrip"
+  then
+    echo "Do you want to delete the plot files in plot/$LHCDescrip?"
+    read mytest
+    if test "$mytest" = "y" -o "$mytest" = "Y" -o "$mytest" = "YES" -o "$mytest" = "yes"
+    then
+      plotfiles="y"
+    fi
+  else
+    plotfiles="y"
+  fi
+# and finally the fort.10.gz
+  echo ""
+  echo "Do you want to remove all the SixTrack results(fort.10.gz)"
+  echo "in $sixdesktrack/$LHCDescrip   ???"
+  echo "They may be in CASTOR, you may have post-processed them,"
+  echo "but you may really want to keep them!"
+  read mytest
+  if test "$mytest" = "y" -o "$mytest" = "Y" -o "$mytest" = "YES" -o "$mytest" = "yes"
+  then
+    track10="y"
+  fi
+fi
+echo " "
+echo "We are now about to delete the requested items."
+echo " "
+if test "$sixtrack_in" = "y"
+then
+  echo "SIXTRACK INPUT: $sixtrack_input/*"
+fi
+if test "$sixin" = "y" -a "$track10" = "y" -a "$jobslogs" = "y"
+then
+  echo "TRACK: $sixdesktrack/$LHCDescrip/*"
+  echo "i.e. all of the track directory including possible files from other workspaces"
+  echo "and the jobs/logs, fort.2|3|8|16, betavalues, general_input and all the fort.10s."
+else
+  if test "$sixin" = "y"
+  then
+    echo "TRACK INPUT: $sixdesktrack/$LHCDescrip/..../fort.[2|3|8|16].gz"
+  fi
+  if test "$jobslogs" = "y"
+  then
+    echo "TRACK LSF jobs and logs: $sixdesktrack/$LHCDescrip/..../.lsf and .log"
+  fi
+  if test "$track10" = "y"
+  then
+    echo "TRACK RESULTS: $sixdesktrack/$LHCDescrip/..../fort.10.gz"
+  fi
+fi
+if test "$database" = "y"
+then
+  echo "SIXTRACK WORK: $sixdeskwork/*"
+fi
+if test "$plotfiles" = "y" -a -d "plot/$LHCDescrip"
+then
+  echo "PLOTFILES: plot/$LHCDescrip/*"
+fi
+if test "$logs" = "y"
+then
+  echo "The logfiles"
+  if test ! -h sixdesk.log
+  then
+    for mylogname in sixdesk sixeskerror restart cron_results
+    do
+      if test -e $mylogname.log
+      then
+        ls -l $mylogname.log
+      fi
+    done
+  else
+    for mylogname in sixdesk sixeskerror restart 
+    do
+      if test -e $sixdesklogdir/$mylogname.log
+      then
+        ls -l $sixdesklogdir/$mylogname.log
+      fi
+    done
+    if test -e $cronlogdir/cron_results.log
+    then
+      ls -l $cronlogdir/cron_results.log
+    fi
+  fi
+fi
+
+echo " "
+echo "Are you really sure this is OK???"
+read mytest
+if test "$mytest" != "y" -a "$mytest" != "Y" -a "$mytest" != "YES" -a "$mytest" != "yes"
+then
+
+#MACRO myunlock $sixdeskstudy
+  sixdesklockdir=$sixdeskstudy
+  sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO mymess 0 Exit with nothing deleted
+  sixdeskmesslevel=0
+  sixdeskmess="Exit with nothing deleted"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 0
+  sixdeskexitparam=0
+  sixdeskexit
+#MACRO myexit
+
+fi
+
+echo "We are now deleting the requested items, which may take some time!"
+echo "You can just leave the script to do the work"
+echo "but don't forget to delete any acrontab entry for this study!"
+echo " "
+
+if test $logs = "y" -a $database = "y" -a $sixtrack_in = "y" -a $sixin = "y" -a $jobslogs = "y" -a $track10 = "y" -a $plotfiles = "y"
+then
+  deleteall="y"
+fi
+
+if test "$sixtrack_in" = "y"
+then
+
+#MACRO mymess 0 Deleting $sixtrack_input/*
+  sixdeskmesslevel=0
+  sixdeskmess="Deleting $sixtrack_input/*"
+  sixdeskmess
+#MACRO mymess
+
+  echo rm -rf "$sixtrack_input"/*
+  rm -rf "$sixtrack_input"/*
+# including the directory and the link
+fi
+
+if test "$sixin" = "y" -a "$track10" = "y" -a "$jobslogs" = "y"
+then
+
+#MACRO mymess 0 Deleting $sixdesktrack/$LHCDescrip/*
+  sixdeskmesslevel=0
+  sixdeskmess="Deleting $sixdesktrack/$LHCDescrip/*"
+  sixdeskmess
+#MACRO mymess
+
+  echo rm -rf $sixdesktrack/$LHCDescrip/*
+  rm -rf $sixdesktrack/$LHCDescrip/*
+elif test "$sixin" = "y"
+then
+
+#MACRO mymess 0 Deleting the tracking input fort.2|3|8|16.gz
+  sixdeskmesslevel=0
+  sixdeskmess="Deleting the tracking input fort.2|3|8|16.gz"
+  sixdeskmess
+#MACRO mymess
+
+  echo find $sixdesktrack/$LHCDescrip -name fort.2.gz -exec rm {} \;
+  find $sixdesktrack/$LHCDescrip -name fort.2.gz -exec rm {} \;
+  echo find $sixdesktrack/$LHCDescrip -name fort.3.gz -exec rm {} \;
+  find $sixdesktrack/$LHCDescrip -name fort.3.gz -exec rm {} \;
+  echo find $sixdesktrack/$LHCDescrip -name fort.8.gz -exec rm {} \;
+  find $sixdesktrack/$LHCDescrip -name fort.8.gz -exec rm {} \;
+  echo find $sixdesktrack/$LHCDescrip -name fort.16.gz -exec rm {} \;
+  find $sixdesktrack/$LHCDescrip -name fort.16.gz -exec rm {} \;
+elif test "$jobslogs" = "y"
+then
+
+#MACRO mymess 0 Deleting the LSF Jobs and logs
+  sixdeskmesslevel=0
+  sixdeskmess="Deleting the LSF Jobs and logs"
+  sixdeskmess
+#MACRO mymess
+
+  echo find $sixdesktrack/$LHCDescrip -name \*.lsf -exec rm {} \;
+  find $sixdesktrack/$LHCDescrip -name \*.lsf -exec rm {} \;
+  echo find $sixdesktrack/$LHCDescrip -name \*.log -exec rm {} \;
+  find $sixdesktrack/$LHCDescrip -name \*.log -exec rm {} \;
+elif test "$track10" = "y"
+then
+
+#MACRO mymess 0 Deleting all fort.10.gz in $sixdesktrack/$LHCDescrip
+  sixdeskmesslevel=0
+  sixdeskmess="Deleting all fort.10.gz in $sixdesktrack/$LHCDescrip"
+  sixdeskmess
+#MACRO mymess
+
+  echo find $sixdesktrack/$LHCDescrip -name fort.10.gz -exec rm {} \;
+  find $sixdesktrack/$LHCDescrip -name fort.10.gz -exec rm {} \;
+fi
+if test "$plotfiles" = "y"
+then
+
+#MACRO mymess 0 Removing all plotting in plot/$LHCDescrip/*
+  sixdeskmesslevel=0
+  sixdeskmess="Removing all plotting in plot/$LHCDescrip/*"
+  sixdeskmess
+#MACRO mymess
+
+  echo rm -rf plot/$LHCDescrip/*
+  rm -rf plot/$LHCDescrip/*
+fi
+           
+# removing all database entries and the other leftovers in $sixdeskwork"
+if test "$database" = "y"
+then
+
+#MACRO mymess 0 Removing all database entries and leftovers in $sixdeskwork/*
+  sixdeskmesslevel=0
+  sixdeskmess="Removing all database entries and leftovers in $sixdeskwork/*"
+  sixdeskmess
+#MACRO mymess
+
+  echo rm -rf $sixdeskwork/*
+  rm -rf $sixdeskwork/*
+fi
+
+# removing logfiles and links
+if test "$logs" = "y"
+then
+# the last! message
+
+#MACRO mymess 0 Deleting the logfiles
+  sixdeskmesslevel=0
+  sixdeskmess="Deleting the logfiles"
+  sixdeskmess
+#MACRO mymess
+
+  if test -h sixdesk.log
+  then
+    for mylogname in sixdesk sixdeskerror restart
+    do
+      echo rm -f $sixdesklogdir/$mylogname.log
+      rm -f  $sixdesklogdir/$mylogname.log
+    done
+    echo rm -f $cronlogdir/cron_results.log
+    rm -f $cronlogdir/cron_results.log
+  fi   
+  echo rm -f sixdesk.log sixeskerror.log restart.log cron_results.log
+  rm -f sixdesk.log sixdeskerror.log restart.log cron_results.log
+fi
+# and finally mark study as deleted if "all" is true
+if test "$deleteall" = "y"
+then
+  # First remove the directories themselves
+  echo "Deleting the directories before marking as deleted."
+  echo rm -rf  $sixtrack_input $sixdesktrack/$LHCDescrip $sixdeskwork plot/$LHCDescrip
+  rm -rf  $sixtrack_input $sixdesktrack/$LHCDescrip $sixdeskwork plot/$LHCDescrip
+  # and the links
+  echo rm -f sixtrack_input track work
+  rm -f sixtrack_input track work
+  echo "Deleted" > $sixdeskstudy/deleted
+  echo "Study marked as deleted."
+fi
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+

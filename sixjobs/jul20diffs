@@ -1,0 +1,76 @@
+=====================
+mydot_profile
+=====================
+103a104
+>     mymess 0 "Lock $sixdesklockdir unlocked"
+192c193
+<         mymess 1 "Sleeping $delay seconds"
+---
+>         mymess 2 "Sleeping $delay seconds"
+193a195,196
+>       else
+>         mymess 0 "Lock $sixdesklockdir locked"
+=====================
+=====================
+myrun_results
+=====================
+758c758
+<       myunlock $sixdeskstudy
+---
+>       ###myunlock $sixdeskstudy
+=====================
+=====================
+myrun_status
+=====================
+246c246
+<     mymess 1 "For $tot Tasks in CPSS, $ready Results are available"
+---
+>     mymess 0 "For $tot Tasks in CPSS, $ready Results are available"
+275c275,278
+<         cat $tmp 
+---
+>         if test "$sixdesklevel" -ne 0
+>         then
+>           cat $tmp 
+>         fi
+278c281
+<       mymess 1 "For BOINC $ready Results are available"
+---
+>       mymess 0 "For BOINC $ready Results are available"
+=====================
+mydot_env
+=====================
+mydot_profile
+103a104
+>     mymess 0 "Lock $sixdesklockdir unlocked"
+192c193
+<         mymess 1 "Sleeping $delay seconds"
+---
+>         mymess 2 "Sleeping $delay seconds"
+193a195,196
+>       else
+>         mymess 0 "Lock $sixdesklockdir locked"
+=====================
+myrun_results
+758c758
+<       myunlock $sixdeskstudy
+---
+>       ###myunlock $sixdeskstudy
+=====================
+myrun_status
+246c246
+<     mymess 1 "For $tot Tasks in CPSS, $ready Results are available"
+---
+>     mymess 0 "For $tot Tasks in CPSS, $ready Results are available"
+275c275,278
+<         cat $tmp 
+---
+>         if test "$sixdesklevel" -ne 0
+>         then
+>           cat $tmp 
+>         fi
+278c281
+<       mymess 1 "For BOINC $ready Results are available"
+---
+>       mymess 0 "For BOINC $ready Results are available"
+=====================

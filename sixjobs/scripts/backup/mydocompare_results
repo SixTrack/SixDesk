@@ -1,0 +1,91 @@
+#!/bin/sh
+#
+# Actually compare_results for current LHCDescrip 
+# but with $# = 0 for dot_env
+#
+. ./dot_env
+args=`cat compare_results_args`
+arg1=`echo "$args" | cut -d" " -f1`
+arg2=`echo "$args" | cut -d" " -f2`
+ready=`wc -l $sixdeskwork/completed_cases`
+ready=`echo $ready | sed -e 's? *\([0-9]*\).*?\1?'`
+echo "$ready Results are available"
+ok=0
+bad=0
+unav=0
+header=0
+mymktmpdir tmp /tmp/$LOGNAME
+rm -rf result_differences
+for Runnam in `cat $sixdeskwork/completed_cases`
+do
+  if test -s $sixdeskwork/taskids
+  then
+    entry=`grep '^'$Runnam' ' $sixdeskwork/taskids`
+  fi
+  if test "$entry" != ""
+  then
+    taskids=`echo $entry | cut -d" " -f2-`
+    myrundir $Runnam Rundir
+    echo "For $Runnam in $Rundir found Tasks $taskids"
+  else
+    echo "$Runnam can NOT be found in $sixdeskwork/taskids !!!"
+    myexit 99 
+  fi  
+  myrundir $Runnam Rundir
+  where=$sixdesktrack/$Rundir
+  if test ! -d "$where"
+  then
+    echo "Strange the directory $where for task $taskid does NOT exist!!! We shall ignore this result for the moment"
+  else
+    cp $where/fort.10.gz $tmp/here.gz
+    massdir=`echo $Rundir | sed -e's?'$LHCDescrip'?'$arg2'?'`  
+    massnam=`echo $Runnam | sed -e's?'$LHCDescrip'?'$arg2'?'`  
+    if test -s $arg1/sixjobs/track/../$massdir/fort.10.gz
+    then
+      if test "$header" -eq 0
+      then
+        echo "===========================================================" >> result_differences
+        echo "Comparing $LHCDescrip to $arg2" >> result_differences
+        echo "===========================================================" >> result_differences
+        header=1
+        echo "==========================================================="
+        echo "Comparing $LHCDescrip to $arg2"
+        echo "==========================================================="
+      fi
+      echo "For $massnam in $massdir found fort.10.gz"
+      cp $arg1/sixjobs/track/../$massdir/fort.10.gz $tmp/there.gz
+      gunzip $tmp/*.gz 
+      diff $tmp/here $tmp/there > /dev/null
+      echo "  "
+      echo "For $Runnam in $Rundir found Tasks $taskids" >> result_differences
+      echo "For $massnam in $massdir found fort.10.gz" >> result_differences
+      cd $tmp
+      ln -sf here fort.20
+      ln -sf there fort.21
+      $sixdeskpath/scripts/mychecktens > tens
+      rm fort.20 fort.21
+      cd $sixdeskhome
+      grep 'DIFF' $tmp/tens > /dev/null 2>&1
+      if test $? -eq 0
+      then  
+        bad=`expr $bad + 1`
+        echo "FORT.10 files are different!!! $Runnam $Rundir"
+        echo "FORT.10 files are different!!!  $Runnam $Rundir" >> result_differences
+        cat result_differences $tmp/tens > $tmp/tempdiffs
+        mv $tmp/tempdiffs result_differences
+      else
+        ok=`expr $ok + 1`
+      fi
+    else
+      unav=`expr $unav + 1`
+      echo "$massnam in $massdir is not available yet!"
+    fi
+    rm -r $tmp/*
+  fi
+  # end of checking where
+done  
+# end of all tasks
+rm -r $tmp
+echo "Of $ready Completed Jobs, $ok were compared successfully, $bad were different, $unav results unavailable"
+echo "Of $ready Completed Jobs, $ok were compared successfully, $bad were different, $unav results unavailable" >> result_differences
+myexit 0

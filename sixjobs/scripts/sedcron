@@ -1,0 +1,8 @@
+1a\
+#\
+# *** NOTA BENE ***\
+# cronlog definitions appended\
+#
+$a\
+export cronlogs=$scratchdir/cronlogs/$workspace\
+export cronlogdir=$cronlogs/$LHCDescrip

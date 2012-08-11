@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+. ./dot_env
+declare -a bfiles
+declare -a bforts
+#bnlfiles="title.dat beambeam-output.dat beambeam-lostID.dat SixTwiss.dat checkdist.dat"
+#bnlforts="fort.10 fort.52 fort.53 fort.51 fort.97"
+. ./dot_env
+bfiles=($bnlfiles)
+bforts=($bnlforts)
+
+for i in 0 1 2 3 4
+do
+  echo "File: ${bfiles[$i]} Fort: ${bforts[$i]}"
+done

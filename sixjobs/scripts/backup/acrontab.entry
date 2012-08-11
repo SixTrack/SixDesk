@@ -1,0 +1,25 @@
+ 20th February, 2008.
+
+ The acrontab entry for get_results should be of the form:
+
+20 * * * * lxplus.cern.ch /afs/cern.ch/user/I/LOGNAME/WORKSPACE/sixjobs/get_WORKSPACE STUDY PLATFORM >> /afs/cern.ch/user/I/LOGNAME/WORKSPACE/sixjobs/cronlogs/STUDY/cron_results.log 2>&1
+
+This will run once an hour at 20 minutes past (see man acrontab for more info).
+
+
+The get_WORKSPACE script is:
+
+     #!/bin/csh
+     #
+     if ($#argv != 2) then
+       echo "You must specify a Study and a Platform"
+       exit 1
+     endif
+     cd ~/WORKSPACE/sixjobs
+     run_results $1 $2
+
+An example is here as get_wpro:
+
+20 * * * * lxplus.cern.ch /afs/cern.ch/user/m/mcintosh/wpro/sixjobs/get_wpro lhc boinc >> /afs/cern.ch/user/m/mcintosh/wpro/sixjobs/cronlogs/lhc/cron_results.log 2>&1
+
+This will get results from boinc for the study lhc in the workspace wpro.

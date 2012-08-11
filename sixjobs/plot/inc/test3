@@ -1,0 +1,14 @@
+\begin{figure}[H]\vspace{-4cm}
+\begin{tabular}{|c|} \hline 
+\includegraphics*[width=16cm,height=8cm]{distance.eps} \\ 
+\includegraphics*[width=16cm,height=8cm]{maxslope.eps} \\ 
+\includegraphics*[width=16cm,height=8cm]{survival.eps} \\ \hline
+\end{tabular}
+\end{figure}
+
+\begin{figure}[H]
+\begin{tabular}{|c|} \hline 
+\mbox{\includegraphics*[width=16cm,height=11cm]{smear.eps}} \\ 
+\mbox{\includegraphics*[width=16cm,height=11cm]{averem.eps}} \\ \hline
+\end{tabular}
+\end{figure}

@@ -1,0 +1,144 @@
+#!/bin/sh
+# Special because we may have a parameter
+# but we now insist it must be the THIRD.
+# run_query / run_query STUDY / run_query STUDY PLATFORM /
+# run_query STUDY PLATFORM RUNNAM
+# No locks are held (except by dot_env itself).
+. ./dot_env
+cases=0
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+
+#MACRO mymess 0 Found $cases cases, $ccases complete ($icases incomplete)
+sixdeskmesslevel=0
+sixdeskmess="Found $cases cases, $ccases complete ($icases incomplete)"
+sixdeskmess
+#MACRO mymess
+
+if test $# -lt 3
+then
+  for myplatform in lsf boinc cpss grid
+  do
+    myname=tasks
+    if test "$myplatform" = "lsf"
+    then
+      myname=jobs
+    fi
+    sixdeskjobs=$sixdeskwork/$myplatform"jobs"
+    if test -s "$sixdeskjobs/$myname"
+    then
+      lsfjobs=`wc -l "$sixdeskjobs/$myname"`
+      lsfjobs=`echo "$lsfjobs" | sed -e 's? *\([0-9]*\).*?\1?'`
+      ijobs=0
+      if test -s $sixdeskjobs/incomplete_$myname
+      then
+        ijobs=`wc -l $sixdeskjobs/incomplete_$myname`
+        ijobs=`echo "$ijobs" | sed -e 's? *\([0-9]*\).*?\1?'`
+      fi
+      cjobs=0
+      if test -s $sixdeskjobs/completed_$myname
+      then
+        cjobs=`wc -l $sixdeskjobs/completed_$myname`
+        cjobs=`echo "$cjobs" | sed -e 's? *\([0-9]*\).*?\1?'`
+      fi
+      mjobs=0
+      if test -s $sixdeskjobs/missing_$myname
+      then
+        mjobs=`wc -l $sixdeskjobs/missing_$myname`
+        mjobs=`echo "$mjobs" | sed -e 's? *\([0-9]*\).*?\1?'`
+      fi
+
+#MACRO mymess 0 For $myplatform found $lsfjobs $myname, $ijobs incomplete, $cjobs completed, $mjobs missing
+      sixdeskmesslevel=0
+      sixdeskmess="For $myplatform found $lsfjobs $myname, $ijobs incomplete, $cjobs completed, $mjobs missing"
+      sixdeskmess
+#MACRO mymess
+
+    fi
+  done
+else
+  # we should have a Runnam
+  Runnam=$3
+  taskid=""
+  found=""
+  found=`grep '^'$Runnam' ' $sixdeskwork/taskids`
+  if test "$found" != ""
+  then
+    taskids=`echo "$found" | cut -d" " -f2-`
+    Runnam=`echo $found | cut -d" " -f1`
+
+#MACRO myrundir $Runnam Rundir
+    runnamename=$Runnam
+    sixdeskrundir
+    Rundir=$rundirname
+#MACRO myrundir
+
+
+#MACRO mymess 0 Case $Runnam with $taskids found in $Rundir
+    sixdeskmesslevel=0
+    sixdeskmess="Case $Runnam with $taskids found in $Rundir"
+    sixdeskmess
+#MACRO mymess
+
+    where=$sixdesktrack/$Rundir
+    if test ! -d "$where"
+    then
+
+#MACRO mymess 0 Strange the directory $where for job $taskid does NOT exist!!! We shall ignore this for the moment
+      sixdeskmesslevel=0
+      sixdeskmess="Strange the directory $where for job $taskid does NOT exist!!! We shall ignore this for the moment"
+      sixdeskmess
+#MACRO mymess
+
+    else
+      if test -s "$where/fort.10.gz"
+      then
+
+#MACRO mymess 0 Case complete $Runnam with taskids $taskids
+        sixdeskmesslevel=0
+        sixdeskmess="Case complete $Runnam with taskids $taskids"
+        sixdeskmess
+#MACRO mymess
+
+      else
+
+#MACRO mymess 0 Case incomplete $Runnam with taskids $taskids
+        sixdeskmesslevel=0
+        sixdeskmess="Case incomplete $Runnam with taskids $taskids"
+        sixdeskmess
+#MACRO mymess
+
+      fi
+    fi
+  else
+
+#MACRO mymess 0 Could not find Runnam $3
+     sixdeskmesslevel=0
+     sixdeskmess="Could not find Runnam $3"
+     sixdeskmess
+#MACRO mymess
+
+  fi
+fi
+rm -f $tmp
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

@@ -1,0 +1,28 @@
+#!/bin/sh
+#
+# Delete all cpss tasks in error.tasks (by TaskId)
+#
+. ./dot_env
+if test $sixdeskplatform != "cpss"
+then
+  echo "This command is available for CPSS only!"
+  myexit 1
+fi
+mylock $sixdeskstudy
+tgid=`cat $sixdeskstudy/TaskGroupId`
+mytgid=`echo $tgid | sed -e 's/TaskGroupID: *//'`
+mymktmp tmp $sixdeskjobs
+while read line
+do
+  ntaskid=`echo $line | sed -e's/cpss//'`
+  mymess 2 "Deleting task $ntaskid in $mytgid from the server"
+  perl $sixdeskpath/Bin/deleteTask.pl $ntaskid $mytgid > $tmp 2>&1
+  stat=$? 
+  if test $stat -ne 0
+  then
+    mymess 0 "deleteTask failed!!! `cat $tmp`"
+  fi
+  rm $tmp
+done < error.tasks
+myunlock $sixdeskstudy
+myexit 0

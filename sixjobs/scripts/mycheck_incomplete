@@ -1,0 +1,42 @@
+#!/bin/sh
+#
+# check that cases are really completed....
+. ./dot_env
+mymess 0 "Checking Study $LHCDescrip"
+cases=0
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $cases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+cases=`expr $ccases + $icases`
+mymess 0 "Found $cases cases, $ccases complete ($icases incomplete)"
+while read line
+do
+  Runnam=`echo $line | cut -d" " -f1`
+  taskid=`echo $line | cut -d" " -f2`
+  myrundir $Runnam Rundir
+  where=$sixdesktrack/$Rundir
+  if test -s $where/fort.10.gz
+  then
+    echo "=========================="
+    echo "$Runnam fort.10.gz is COMPLETE for $Runnam !!!"
+    grep "$Runnam" sixdesk.log
+    echo ""
+    grep "$Runnam" cron_results.log
+    echo "=========================="
+  fi
+done < $sixdeskwork/incomplete_cases
+myexit 0

@@ -1,0 +1,605 @@
+#!/bin/sh
+# A set of Subroutines called by Macros for the SixDesk environment
+sixdeskmess()
+{
+  if test "$sixdeskmesslevel" -le "$sixdesklevel"
+  then
+    sixdeskday="`date +%a`"
+    sixdeskdate="`date +%d/%m/%y`"
+    sixdesktime="`date +%T`"
+    sixdeskname="`basename $0`                "
+    sixdeskname=`echo $sixdeskname | cut -b 1-15`
+    if test "$sixdeskecho" != "" -o "$sixdeskmesslevel" -eq 0
+    then
+      echo "$sixdeskday $sixdeskdate $sixdesktime ""$sixdeskname"" $sixdeskmess" 
+    fi
+    if test "$sixdesklogdir" != ""
+    then
+      echo "$sixdeskday $sixdeskdate $sixdesktime ""$sixdeskname"" $sixdeskmess" >> "$sixdesklogdir"/sixdesk.log
+    else
+      echo "$sixdeskday $sixdeskdate $sixdesktime ""$sixdeskname"" $sixdeskmess" >> ./sixdesk.log
+    fi
+  fi
+}
+sixdeskmktmp()
+{
+# Assumes that the directory (if specified) exists
+  if test "$sixdesktmpdirarg" = ""
+  then
+    sixdesktmpdirarg="$PWD"
+  else
+    sixdeskfirst=`echo $sixdesktmpdirarg | cut -c1`
+    if test "$sixdeskfirst" != "/"
+    then
+      sixdesktmpdirarg=$PWD/$sixdesktmpdirarg
+    fi
+  fi
+  sixdesktmp=`mktemp -q $sixdesktmpdirarg/$sixdesktmpname.$sixdeskname.$sixdeskhostname.XXXXXX`
+  chmod 644 $sixdesktmp
+  if test $? -ne 0
+  then
+
+#MACRO mymess 0 sixdeskmktmp mktemp failed to produce a temporary file!!!
+    sixdeskmesslevel=0
+    sixdeskmess="sixdeskmktmp mktemp failed to produce a temporary file!!!"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 99
+    sixdeskexitparam=99
+    sixdeskexit
+#MACRO myexit
+
+  fi
+  chmod 644 $sixdesktmp
+}
+sixdeskmktmpdir()
+{
+# Now does a mkdir -p in case the specified directory does not exist
+# e.g. /tmp/mcintosh
+  if test "$sixdesktmpdirarg" = ""
+  then
+    sixdesktmpdirarg="$PWD"
+  else
+    sixdeskfirst=`echo $sixdesktmpdirarg | cut -c1`
+    if test "$sixdeskfirst" != "/"
+    then
+      sixdesktmpdirarg=$PWD/$sixdesktmpdirarg
+    fi
+    mkdir -p $sixdesktmpdirarg
+    if test $? -ne 0
+    then
+
+#MACRO mymess 0 sixdeskmktmpdir: mkdir failed to make $sixdesktmpdirarg!!!
+      sixdeskmesslevel=0
+      sixdeskmess="sixdeskmktmpdir: mkdir failed to make $sixdesktmpdirarg!!!"
+      sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 99
+      sixdeskexitparam=99
+      sixdeskexit
+#MACRO myexit
+
+    fi
+  fi
+  sixdesktmpdir=`mktemp -q -d $sixdesktmpdirarg/$sixdesktmpdirname.$sixdeskname.$sixdeskhostname.XXXXXX`
+  if test $? -ne 0
+  then
+
+#MACRO mymess 0 sixdeskmktmpdir: mktemp failed to produce a temporary directory!!!
+    sixdeskmesslevel=0
+    sixdeskmess="sixdeskmktmpdir: mktemp failed to produce a temporary directory!!!"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 99
+    sixdeskexitparam=99
+    sixdeskexit
+#MACRO myexit
+
+  fi
+  chmod 755 $sixdesktmpdir
+}
+sixdeskexit()
+{
+  if test "$SIXDESKLOCKED" != ""
+  then
+
+#MACRO mymess 0 sixdeskexit: Freeing lock(s) $SIXDESKLOCKED!!!
+    sixdeskmesslevel=0
+    sixdeskmess="sixdeskexit: Freeing lock(s) $SIXDESKLOCKED!!!"
+    sixdeskmess
+#MACRO mymess
+
+    while test "$SIXDESKLOCKED" != ""
+    do
+      sixdesklockeddir=`echo "$SIXDESKLOCKED" | cut -d " " -f1`
+
+#MACRO myunlock $sixdesklockeddir
+      sixdesklockdir=$sixdesklockeddir
+      sixdeskunlock
+#MACRO myunlock
+
+    done
+  fi
+  exit "$sixdeskexitparam"
+}
+sixdeskunlock()
+{
+  if test "$sixdesklockdir" = ""
+  then
+    sixdesklockdir="$PWD"
+  else
+    sixdeskfirst=`echo $sixdesklockdir | cut -c1`
+    if test "$sixdeskfirst" != "/"
+    then
+      sixdesklockdir=$PWD/$sixdesklockdir
+    fi
+  fi
+  if test -f "$sixdesklockdir/sixdesklock"
+  then
+
+#MACRO mymess 2 Freeing lock $sixdesklockdir
+    sixdeskmesslevel=2
+    sixdeskmess="Freeing lock $sixdesklockdir"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 2 held by      `cat $sixdesklockdir/sixdesklock`)
+    sixdeskmesslevel=2
+    sixdeskmess="held by      `cat $sixdesklockdir/sixdesklock`)"
+    sixdeskmess
+#MACRO mymess
+
+    chmod 644 $sixdesklockdir/sixdesklock
+
+#MACRO mymess 0 Lock $sixdesklockdir unlocked
+    sixdeskmesslevel=0
+    sixdeskmess="Lock $sixdesklockdir unlocked"
+    sixdeskmess
+#MACRO mymess
+
+    SIXDESKLOCKED=`echo "$SIXDESKLOCKED" | sed -e's?'"$sixdesklockdir "'??'`
+  else
+
+#MACRO mymess 0 sixdeskunlock: The lock $sixdesklockdir does NOT exist!!!
+    sixdeskmesslevel=0
+    sixdeskmess="sixdeskunlock: The lock $sixdesklockdir does NOT exist!!!"
+    sixdeskmess
+#MACRO mymess
+
+  fi
+}
+sixdesklock()
+{
+  if test "$sixdesklockdir" = ""
+  then
+    sixdesklockdir="$PWD"
+  else
+    sixdeskfirst=`echo $sixdesklockdir | cut -c1`
+    if test "$sixdeskfirst" != "/"
+    then
+      sixdesklockdir=$PWD/"$sixdesklockdir"
+    fi
+  fi
+  if test ! -d "$sixdesklockdir"
+  then
+
+#MACRO mymess 0 sixdesklock: The requested lock directory $sixdesklockdir does not exist!!!
+    sixdeskmesslevel=0
+    sixdeskmess="sixdesklock: The requested lock directory $sixdesklockdir does not exist!!!"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 99
+    sixdeskexitparam=99
+    sixdeskexit
+#MACRO myexit
+
+  fi
+  lockstat=0
+  if test "$SIXDESKLOCKED" != ""
+  then
+    echo "$SIXDESKLOCKED" | grep "$sixdesklockdir " > /dev/null 2>&1
+    if test $? -eq 0
+    then
+
+#MACRO mymess 0 sixdesklock: The lock $sixdesklockdir is already locked!!!
+      sixdeskmesslevel=0
+      sixdeskmess="sixdesklock: The lock $sixdesklockdir is already locked!!!"
+      sixdeskmess
+#MACRO mymess
+
+      lockstat=1
+    fi
+  fi
+  if test "$lockstat" -eq 0
+  then
+
+#MACRO mymess 2 sixdesklock: Obtaining lock $sixdesklockdir
+    sixdeskmesslevel=2
+    sixdeskmess="sixdesklock: Obtaining lock $sixdesklockdir"
+    sixdeskmess
+#MACRO mymess
+
+    sixdeskgotit="false"
+    sixdeskwait="false"
+    lessmess=0
+    while test "$sixdeskgotit" = "false"
+    do
+      if test ! -s $sixdesklockdir/sixdesklock
+      then
+        touch $sixdesklockdir/sixdesklock
+        chmod 644 $sixdesklockdir/sixdesklock
+      fi
+      if test -w $sixdesklockdir/sixdesklock
+      then
+        sixdeskkey="$0 on `hostname` at `date` by proc $$"
+        echo "$sixdeskkey" > $sixdesklockdir/sixdesklock
+        if test $? -eq 0
+        then
+          sixdeskval=`cat $sixdesklockdir/sixdesklock`
+          if test "$sixdeskval" = "$sixdeskkey"
+          then
+            chmod 444 $sixdesklockdir/sixdesklock
+            sixdeskval=`cat $sixdesklockdir/sixdesklock`
+            if test "$sixdeskval" = "$sixdeskkey"
+            then
+              sixdeskgotit="true"
+              export SIXDESKLOCKED="$SIXDESKLOCKED""$sixdesklockdir "
+            else
+              chmod 644 $sixdesklockdir/sixdesklock
+            fi
+          fi
+        fi
+      fi
+      if test "$sixdeskgotit" = "false"
+      then
+        if test "$lessmess" -eq 0
+        then
+
+#MACRO mymess 1 The directory $sixdesklockdir is currently locked by
+          sixdeskmesslevel=1
+          sixdeskmess="The directory $sixdesklockdir is currently locked by"
+          sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 1 script `cat $sixdesklockdir/sixdesklock`
+          sixdeskmesslevel=1
+          sixdeskmess="script `cat $sixdesklockdir/sixdesklock`"
+          sixdeskmess
+#MACRO mymess
+
+        fi
+        if test "$sixdeskwait" = "false"
+        then
+          if test "$lessmess" -eq 0
+          then
+            sixdeskwait="true"  
+
+#MACRO mymess 1 This script $0 will just wait for it to become free.
+            sixdeskmesslevel=1
+            sixdeskmess="This script $0 will just wait for it to become free."
+            sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 1 If this situation continues for ever then it may be false.
+            sixdeskmesslevel=1
+            sixdeskmess="If this situation continues for ever then it may be false."
+            sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 1 You may have CTRL_C/killed a script and left the lock locked.
+            sixdeskmesslevel=1
+            sixdeskmess="You may have CTRL_C/killed a script and left the lock locked."
+            sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 1 Some other error like a missing file may also cause a script to die
+            sixdeskmesslevel=1
+            sixdeskmess="Some other error like a missing file may also cause a script to die"
+            sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 1 To reset the lock just issue an unlock $sixdesklockdir command
+            sixdeskmesslevel=1
+            sixdeskmess="To reset the lock just issue an unlock $sixdesklockdir command"
+            sixdeskmess
+#MACRO mymess
+
+            lessmess=1
+          fi
+        fi
+        delay=`date +%S`
+        delay=`expr $delay + 5`
+
+#MACRO mymess 2 Sleeping $delay seconds
+        sixdeskmesslevel=2
+        sixdeskmess="Sleeping $delay seconds"
+        sixdeskmess
+#MACRO mymess
+
+        sleep $delay
+      else
+
+#MACRO mymess 0 Lock $sixdesklockdir locked
+        sixdeskmesslevel=0
+        sixdeskmess="Lock $sixdesklockdir locked"
+        sixdeskmess
+#MACRO mymess
+
+      fi
+    done
+  fi
+}
+sixdesktunes()
+{
+  # Takes tunex, tuney, tunex1, tuney1, deltax, deltay
+  # and produces
+  # itunex, ituney, itunex1, ituney1, ideltax, ideltay
+  if test "$tunex1" = "" -a "$tuney1" = ""
+  then
+    tunex1=$tunex
+    tuney1=$tuney
+    deltax=0.0
+    deltay=0.0
+  elif test "$tunex1" = ""
+  then
+    tunex1=$tunex
+    deltax=0.0
+  elif test "$tuney1" = ""
+  then
+    tuney1=$tuney
+    deltay=0.0
+  fi
+  # Now we have the new code to do integer arithmetic on the tunescans
+  itunexi=`echo "$tunex" | cut -d"." -f1`
+  itunexi=$itunexi"0000"
+  itunexi=`echo $itunexi | cut -c1-2`
+  itunexf=`echo "$tunex" | cut -d"." -f2`
+  itunexf=$itunexf"0000"
+  itunexf=`echo $itunexf | cut -c1-4`
+  itunex=$itunexi$itunexf
+
+  ituneyi=`echo "$tuney" | cut -d"." -f1`
+  ituneyi=$ituneyi"0000"
+  ituneyi=`echo $ituneyi | cut -c1-2`
+  ituneyf=`echo "$tuney" | cut -d"." -f2`
+  ituneyf=$ituneyf"0000"
+  ituneyf=`echo $ituneyf | cut -c1-4`
+  ituney=$ituneyi$ituneyf
+
+  itunex1i=`echo "$tunex1" | cut -d"." -f1`
+  itunex1i=$itunex1i"0000"
+  itunex1i=`echo $itunex1i | cut -c1-2`
+  itunex1f=`echo "$tunex1" | cut -d"." -f2`
+  itunex1f=$itunex1f"0000"
+  itunex1f=`echo $itunex1f | cut -c1-4`
+  itunex1=$itunex1i$itunex1f
+
+  ituney1i=`echo "$tuney1" | cut -d"." -f1`
+  ituney1i=$ituney1i"0000"
+  ituney1i=`echo $ituney1i | cut -c1-2`
+  ituney1f=`echo "$tuney1" | cut -d"." -f2`
+  ituney1f=$ituney1f"0000"
+  ituney1f=`echo $ituney1f | cut -c1-4`
+  ituney1=$ituney1i$ituney1f
+
+  ideltaxi=`echo "$deltax" | cut -d"." -f1`
+  ideltaxi=$ideltaxi"0000"
+  ideltaxi=`echo $ideltaxi | cut -c1-2`
+  ideltaxf=`echo "$deltax" | cut -d"." -f2`
+  ideltaxf=$ideltaxf"0000"
+  ideltaxf=`echo $ideltaxf | cut -c1-4`
+  ideltax=$ideltaxi$ideltaxf
+
+  ideltayi=`echo "$deltay" | cut -d"." -f1`
+  ideltayi=$ideltayi"0000"
+  ideltayi=`echo $ideltayi | cut -c1-2`
+  ideltayf=`echo "$deltay" | cut -d"." -f2`
+  ideltayf=$ideltayf"0000"
+  ideltayf=`echo $ideltayf | cut -c1-4`
+  ideltay=$ideltayi$ideltayf
+
+  if test "$itunex1" -lt "$itunex"
+  then
+
+#MACRO mymess 0 sixdesktunes: tunex1 $tunex1 .lt. tunex $tunex!!!
+    sixdeskmesslevel=0
+    sixdeskmess="sixdesktunes: tunex1 $tunex1 .lt. tunex $tunex!!!"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 12
+    sixdeskexitparam=12
+    sixdeskexit
+#MACRO myexit
+
+  elif test "$itunex1" -ne "$itunex" -a "$ideltax" -eq 0
+  then
+
+#MACRO mymess 0 sixdesktunes: deltax .eq. 0 !!!
+    sixdeskmesslevel=0
+    sixdeskmess="sixdesktunes: deltax .eq. 0 !!!"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 12
+    sixdeskexitparam=12
+    sixdeskexit
+#MACRO myexit
+
+  fi
+  if test "$ituney1" -lt "$ituney"
+  then
+
+#MACRO mymess 0 sixdesktunes: tuney1 $tuney1 .lt. tuney $tuney!!!
+    sixdeskmesslevel=0
+    sixdeskmess="sixdesktunes: tuney1 $tuney1 .lt. tuney $tuney!!!"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 12
+    sixdeskexitparam=12
+    sixdeskexit
+#MACRO myexit
+
+  elif test "$ituney1" -ne "$ituney" -a "$ideltay" -eq 0
+  then
+
+#MACRO mymess 0 sixdesktunes: deltay .eq. 0 !!!
+    sixdeskmesslevel=0
+    sixdeskmess="sixdesktunes: deltay .eq. 0 !!!"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 12
+    sixdeskexitparam=12
+    sixdeskexit
+#MACRO myexit
+
+  fi
+
+  # Finally get rid of any trailing zeros or one of two leading zeros
+  tunex=`echo "$itunex" | cut -c1-2`"."`echo "$itunex" | cut -c3-6`
+  tunex=`echo "$tunex" | sed -e's?0*$??'`
+  tunex=`echo "$tunex" | sed -e's?^0??'`
+  tuney=`echo "$ituney" | cut -c1-2`"."`echo "$ituney" | cut -c3-6`
+  tuney=`echo "$tuney" | sed -e's?0*$??'`
+  tuney=`echo "$tuney" | sed -e's?^0??'`
+  tunex1=`echo "$itunex1" | cut -c1-2`"."`echo "$itunex1" | cut -c3-6`
+  tunex1=`echo "$tunex1" | sed -e's?0*$??'`
+  tunex1=`echo "$tunex1" | sed -e's?^0??'`
+  tuney1=`echo "$ituney1" | cut -c1-2`"."`echo "$ituney1" | cut -c3-6`
+  tuney1=`echo "$tuney1" | sed -e's?0*$??'`
+  tuney1=`echo "$tuney1" | sed -e's?^0??'`
+  # and report
+  if test "$ideltax" -eq  0 -a "$ideltay" -eq 0
+  then
+
+#MACRO mymess 0 sixdesktunes: Tune ${tunex}_${tuney}
+    sixdeskmesslevel=0
+    sixdeskmess="sixdesktunes: Tune ${tunex}_${tuney}"
+    sixdeskmess
+#MACRO mymess
+
+  else
+
+#MACRO mymess 0 sixdesktunes: Tunescan (${tunex},${tuney}) to (${tunex1},${tuney1}) by (${deltax}, ${deltay})
+    sixdeskmesslevel=0
+    sixdeskmess="sixdesktunes: Tunescan (${tunex},${tuney}) to (${tunex1},${tuney1}) by (${deltax}, ${deltay})"
+    sixdeskmess
+#MACRO mymess
+
+  fi
+}
+sixdeskinttunes()
+{
+  tmp=`echo $tunexx | sed -e's? ??g'`
+  first=`echo $tunexx | cut -c1`
+  if test "$first" = "."
+  then
+    inttunexx=0.
+  else
+    inttunexx=`echo $tmp | sed -e's?\([0-9][0-9]*\.\).*?\1?'`
+  fi
+  tmp=`echo $tuneyy | sed -e's/ //g'`
+  first=`echo $tuneyy | cut -c1`
+  if test "$first" = "."
+  then
+    inttuneyy=0.
+  else
+    inttuneyy=`echo $tmp | sed -e's?\([0-9][0-9]*\.\).*?\1?'`
+  fi
+}
+sixdeskamps()
+{
+  # Generate the integer amplitude equivalents, and update fampstart
+  # ns1l
+  junk=`echo $ns1l | grep '\.'`
+  if test $? -ne 0
+  then
+    ampstart=$ns1l"000"
+  else
+    ins1l=`echo "$ns1l" | cut -d"." -f1`
+    fns1l=`echo "$ns1l" | cut -d"." -f2`
+    ins1l=$ins1l"000"
+    fns1l=`echo $fns1l"000" | cut -c1-3`
+    ampstart=`expr $ins1l + $fns1l`
+  fi
+  # ns2l
+  junk=`echo $ns2l | grep '\.'`
+  if test $? -ne 0
+  then
+    ampfinish=$ns2l"000"
+  else
+    ins2l=`echo "$ns2l" | cut -d"." -f1`
+    fns2l=`echo "$ns2l" | cut -d"." -f2`
+    ins2l=$ins2l"000"
+    fns2l=`echo $fns2l"000" | cut -c1-3`
+    ampfinish=`expr $ins2l + $fns2l`
+  fi
+  # nsincl
+  junk=`echo $nsincl | grep '\.'`
+  if test $? -ne 0
+  then
+    ampincl=$nsincl"000"
+  else
+    insincl=`echo "$nsincl" | cut -d"." -f1`
+    fnsincl=`echo "$nsincl" | cut -d"." -f2`
+    insincl=$insincl"000"
+    fnsincl=`echo $fnsincl"000" | cut -c1-3`
+    ampincl=`expr $insincl + $fnsincl`
+  fi
+  if test $ampstart -ge 99999 -o $ampfinish -ge 99999 -o $ampincl -ge 99999
+  then
+
+#MACRO mymess 0 sixdeskamps: Problem with amplitude definitions, $ns1l, $ns2l, $nsincl
+    sixdeskmesslevel=0
+    sixdeskmess="sixdeskamps: Problem with amplitude definitions, $ns1l, $ns2l, $nsincl"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 13
+    sixdeskexitparam=13
+    sixdeskexit
+#MACRO myexit
+
+  fi
+
+#MACRO mymess 0 sixdeskamps: Amps $ampstart to $ampfinish by $ampincl
+  sixdeskmesslevel=0
+  sixdeskmess="sixdeskamps: Amps $ampstart to $ampfinish by $ampincl"
+  sixdeskmess
+#MACRO mymess
+
+}
+sixdeskrundir()
+{
+  if test "$BNL" = ""
+  then
+    rundirname=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/e\6/?'`
+    rundirname=`echo $rundirname | sed -e's?/s/?/simul/?'`
+    rundirname=`echo $rundirname | sed -e's?/t/?/trans/?'`
+    rundirname=`echo $rundirname | sed -e's?/m/?/momen/?'`
+    rundirname=`echo $rundirname | sed -e's?/d/?/da/?'`
+  else
+    rundirname=`echo $runnamename | sed -e's?%?\/?g'`
+  fi
+}

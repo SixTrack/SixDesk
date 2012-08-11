@@ -1,0 +1,66 @@
+#!/bin/ksh
+#
+# This script should be run after (all) results are available.
+# It looks for all the beambeam-output.dat files (and beambeam-lostID.dat)
+# and sums up the variables in the correct under to provide a repeatable
+# result. The summation is done in fortran, with the lf95 compiler, using
+# the same compile options as SixTrack itself.
+. ./dot_env
+if test "$BNL" = ""
+then
+  mymess 0 "Something up!! join_bnl expects BNL $BNL" to be set
+  myexit 1
+fi
+#
+if test "$bnlsamplee" -lt "$bnlsamples"
+then
+  mymess 0 "A negative number of samples requested!!!"
+  mymess 0 "Please check bnlsamples/bnlsamplee $bnlsamples/$bnlsamplee"
+  myexit 2
+fi
+tree=$sixdesktrack
+if [ ! -d "$tree/$LHCDesHome" ] ;then
+  mymess 0 "The directory $tree/$LHCDesHome does NOT exist!"
+  myexit 4
+fi
+mylock $sixdeskstudy
+# main loop try and join up all pairs (if necessary)
+mymess 1 "Main loop for Study $LHCDescrip, Seeds $bnlseeds to $bnlseede"
+mymess 1 "and Samples $bnlsamples to $bnlsamplee"
+bnlseed=$bnlseeds
+if test ! -d $sixtrack_input/$bnlseed
+then
+  mymess 0 "The directory $sixtrack_input/$bnlseed does NOT exist!!!"
+  myunlock $sixdeskstudy
+  myexit 5
+fi
+
+  bnlsample=$bnlsamples
+  bnlpair1=1
+  i=0
+
+    bnlpair2=`expr $bnlpair1 + $bnlperjob`
+    bnlpair2=`expr $bnlpair2 - 1`
+    bnlpair=$bnlpair1"_"$bnlpair2
+    bnlperjob2=`expr $bnlperjob \* 2`
+    if test "$i" -eq 0
+    then
+      Runnam=$LHCDesName"%"$bnlseed"%"$bnlsample"%"$bnlpair"%"$bnlturnse
+      Rundir=$LHCDesName/$bnlseed/$bnlsample/$bnlpair/$bnlturnse
+    fi
+    i=`expr $i + 1`
+    if test "$i" -eq "$bnlperjob2"
+    then
+      i=0
+      bnlpair1=`expr $bnlpair1 + $bnlperjob`
+    fi
+    if test "$bnlpair1" -gt "$bnlpairs"
+    then
+      bnlpair1=1
+      bnlsample=`expr $bnlsample + 1`
+    fi
+
+  bnlseed=`expr $bnlseed + 1`
+
+myunlock $sixdeskstudy
+myexit 0

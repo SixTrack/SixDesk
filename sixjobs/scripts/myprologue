@@ -1,0 +1,67 @@
+#
+# If called with a Study ($1) and a Platform ($2)
+# we do NOT use dot_env but just execute
+# the specified study sixdeskenv and sysenv directly.
+# We then apply the specified Study and Platform
+export sixdeskhostname=`hostname`
+export sixdeskname=`basename $0`
+sixdeskroot=`basename $PWD`
+sixdeskwhere=`dirname $PWD`
+if test "$sixdeskroot" != "sixjobs"
+then
+  echo "run_results: The script must be run in the directory sixjobs!!!"
+  exit 1
+fi
+if test $# -ne 0
+then
+  # we have at least a study
+  if test $# -ne 2
+  then
+    echo "run_results requires a Study AND a Platform!!!"
+    exit 2
+  fi
+  localstudy=$1
+  localplatform=$2
+  if test ! -d studies/"$localstudy"
+  then
+    echo "The specified Study $localstudy does NOT exist in $PWD/studies!!!"
+    exit 2
+  fi
+  if test ! -s dot_profile
+  then
+    echo "run_results: The script dot_profile is missing!!!"
+    exit 2
+  fi
+  . ./dot_profile
+  . ./studies/$localstudy/sixdeskenv
+  . ./studies/$localstudy/sysenv
+  # Now we must set up $sixdeskplatform, $sixdeskjobs, 
+  # but NOT sixdesklogdir ????
+  # anything else????
+  # sixdeskhome is OK
+  if test `basename "$sixdeskstudy"` != "$localstudy"
+  then
+    echo "There seems to be a STUDY mis-match $sixdeskstudy $localstudy"
+    exit 2
+  fi
+  export sixdeskplatform=`echo "$localplatform" | tr '[A-Z]' '[a-z]'`
+  export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
+else
+  # No parameters so just use the old method
+  . ./dot_env
+fi
+
+if test -s $sixdeskstudy/sixdesklock
+then
+  if test ! -w $sixdeskstudy/sixdesklock
+  then
+    echo "The Study $sixdeskstudy sixdesklock is ON; giving up!"
+    myexit 0
+  fi
+fi
+if test "$BNL" != ""
+then
+  mymess 0 "You should use bnl_results to get results for this study!!!"
+  myexit 1
+fi
+mylock $sixdeskstudy

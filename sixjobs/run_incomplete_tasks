@@ -1,0 +1,149 @@
+#!/bin/sh
+#
+# This script will (re-)submit a task if its status is incomplete 
+. ./dot_env
+if test $sixdeskplatform = "lsf"
+then
+  echo "This command is NOT available for LSF"
+
+#MACRO myexit 98
+  sixdeskexitparam=98
+  sixdeskexit
+#MACRO myexit
+
+fi
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+
+#MACRO mymktmp copy $sixdeskjobs
+sixdesktmpname=copy
+sixdesktmpdirarg=$sixdeskjobs
+sixdeskmktmp
+copy=$sixdesktmp
+#MACRO mymktmp
+
+cp $sixdeskjobs/incomplete_tasks $copy
+while read line
+do
+  sixdeskRunnam=`echo $line | cut -d" " -f1`
+  entry=`grep "$sixdeskRunnam " $sixdeskwork/taskids`
+  if test "$entry" = ""
+  then
+
+#MACRO mymess 0 Something badly wrong!!! We cannot find $sixdeskRunnam in $sixdeskwork/taskids
+    sixdeskmesslevel=0
+    sixdeskmess="Something badly wrong!!! We cannot find $sixdeskRunnam in $sixdeskwork/taskids"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskstudy
+    sixdesklockdir=$sixdeskstudy
+    sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 1
+    sixdeskexitparam=1
+    sixdeskexit
+#MACRO myexit
+
+  fi
+
+#MACRO myrundir $sixdeskRunnam sixdeskRundir
+  runnamename=$sixdeskRunnam
+  sixdeskrundir
+  sixdeskRundir=$rundirname
+#MACRO myrundir
+
+  where=$sixdesktrack/$sixdeskRundir
+  taskids=`echo $entry | cut -d" " -f2-`
+  if test ! -d "$where"
+  then
+
+#MACRO mymess 0 The directory $sixdeskRundir for job $sixdeskRunnam does NOT exist!!!
+    sixdeskmesslevel=0
+    sixdeskmess="The directory $sixdeskRundir for job $sixdeskRunnam does NOT exist!!!"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskstudy
+    sixdesklockdir=$sixdeskstudy
+    sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 2
+    sixdeskexitparam=2
+    sixdeskexit
+#MACRO myexit
+
+  fi
+  if test ! -s "$where/fort.10.gz" -o $sixdeskforce -ge 2
+  then
+
+#MACRO mymess 1 Job incomplete $taskids for $sixdeskRunnam
+    sixdeskmesslevel=1
+    sixdeskmess="Job incomplete $taskids for $sixdeskRunnam"
+    sixdeskmess
+#MACRO mymess
+
+    if test $sixdeskforce -eq 0
+    then
+      export sixdeskforce=1 
+    fi
+    if test "$sixdeskplatform" = "cpss"
+    then
+      . ./dot_task
+      stat=$?
+    elif test "$sixdeskplatform" = "boinc"
+    then
+      . ./dot_boinc
+      stat=$?
+    elif test "$sixdeskplatform" = "grid"
+    then
+      . ./dot_grid
+      stat=$?
+    fi
+    if test $stat -ne 0
+    then
+
+#MACRO mymess 0 dot_task/dot_boinc/dot_grid failed!!!
+      sixdeskmesslevel=0
+      sixdeskmess="dot_task/dot_boinc/dot_grid failed!!!"
+      sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskstudy
+      sixdesklockdir=$sixdeskstudy
+      sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 99
+      sixdeskexitparam=99
+      sixdeskexit
+#MACRO myexit
+
+    fi
+  fi
+done < $copy
+rm $copy
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

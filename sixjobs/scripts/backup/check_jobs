@@ -1,0 +1,77 @@
+#!/bin/sh
+#
+# check that cases are really completed....
+. ./dot_env
+
+#MACRO mymess 0 Checking Study $LHCDescrip
+sixdeskmesslevel=0
+sixdeskmess="Checking Study $LHCDescrip"
+sixdeskmess
+#MACRO mymess
+
+cases=0
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $cases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+cases=`expr $ccases + $icases`
+
+#MACRO mymess 0 Found $cases cases, $ccases complete ($icases incomplete)
+sixdeskmesslevel=0
+sixdeskmess="Found $cases cases, $ccases complete ($icases incomplete)"
+sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymktmp tmp $sixdeskwork
+sixdesktmpname=tmp
+sixdesktmpdirarg=$sixdeskwork
+sixdeskmktmp
+tmp=$sixdesktmp
+#MACRO mymktmp
+
+while read line
+do
+  Runnam=`echo $line | cut -d" " -f1`
+  taskid=`echo $line | cut -d" " -f2`
+
+#MACRO myrundir $Runnam Rundir
+  runnamename=$Runnam
+  sixdeskrundir
+  Rundir=$rundirname
+#MACRO myrundir
+
+  where=$sixdesktrack/$Rundir
+  if test ! -s $where/fort.10.gz
+  then
+    echo "$Runnam fort.10.gz is MISSING for $Runnam !!!"
+    touch $sixdeskwork/missing_cases
+    grep '^'$Runnam'$' $sixdeskwork/missing_cases > /dev/null 2>&1
+    if test $? -ne 0
+    then
+      echo "$Runnam" >> $sixdeskwork/missing_cases
+    fi
+  else
+    sed -e '/^'$Runnam'$/d' $sixdeskwork/incomplete_cases > $tmp
+    mv $tmp $sixdeskwork/incomplete_cases
+  fi
+done < $sixdeskwork/completed_cases
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

@@ -1,0 +1,37 @@
+1a\
+#\
+# BNL options appended
+$a\
+# BNL variables for bnlelens\
+# Later I could separate out elens and bnl dependencies in sixtrack.s\
+# as we may wish to run LHC elens studies\
+export BNL=""\
+if test "$BNL" != ""\
+then\
+# We expect to find beambeamdist.dat, fort.2, fort.3.mother and fort.8 and fort.16\
+# in sixtrack_input and run_bnl will check this\
+#\
+# The "seed" 1000 for example as used by Yun Luo\
+  export bnlseeds=1000\
+  export bnlseede=1000\
+# First and Last sample number in beambeamdist.dat\
+  export bnlsamples=1\
+  export bnlsamplee=1\
+# Number of pairs descriped in a sample in beambeamdist.dat\
+  export bnlpairs=32\
+# Number of pairs for each job\
+# This used to generate bnlpair names like 1-2, 2-3, and so on....63,64\
+  export bnlperjob=2\
+# Now the turns, a bit tricky, since we use nwri for both deciding how often\
+# to checkpoint, and how often to write beambeam-output.dat!\
+# I am assuming we run 2 pairs per job and then the values below\
+# are reasonable\
+  export bnlturns=10000000\
+  export bnlturnse=e7\
+  export bnlwrite=100000\
+# for my testing I use\
+  export bnlturns=10000\
+  export bnlturnse=e4\
+  export bnlwrite=1000\
+# end BNL variables\
+fi

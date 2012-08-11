@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# Compare results for current LHCDescrip
+#
+if test $# != 3 
+then
+  echo "You must specify a LOGNAME, Workspace and LHCDescrip for comparison"
+  exit 2
+fi
+lognam=$1
+initial=`echo $lognam | cut -c 1`
+argw=$2
+arg2=$3
+arg1="/afs/cern.ch/user/$initial/$lognam/$argw"
+echo "$arg1 $arg2" > compare_results_args
+./docompare_results
+exit 0

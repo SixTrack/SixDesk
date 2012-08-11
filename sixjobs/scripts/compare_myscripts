@@ -1,0 +1,11 @@
+#!/bin/sh
+for i in `ls my*`
+do
+  echo "======================="
+  echo "$i"
+  echo "======================="
+  diff $i ~/wbnlaug10/sixjobs/scripts/$i
+#  diff ~/w10mar09pro/sixjobs/scripts/$i $i
+#  diff $i ~/wbnlpro/sixjobs/scripts/$i
+#  diff ~tpieloni/w1/sixjobs/scripts/$i $i
+done

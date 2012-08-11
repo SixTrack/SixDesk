@@ -1,0 +1,15 @@
+\begin{figure}[H]
+\begin{tabular}{|c|} \hline 
+\mbox{\includegraphics*[width=12cm,height=6.5cm]{tunedp.eps}} \\ 
+\mbox{\includegraphics*[width=12cm,height=6.5cm]{detuningh.eps}} \\  
+\mbox{\includegraphics*[width=12cm,height=6.5cm]{detuningv.eps}} \\ \hline  
+\end{tabular}
+\end{figure}
+% 
+\newpage
+\begin{figure}[H] \hfill
+\begin{tabular}{|c|} \hline 
+\mbox{\includegraphics*[width=15.59cm,height=15cm]{web.eps}} \\ \hline
+\end{tabular}
+\end{figure}
+%

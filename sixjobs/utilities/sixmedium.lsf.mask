@@ -1,0 +1,70 @@
+#!/bin/ksh
+#BSUB -J SIXJOBNAME   	# job name
+
+junktmp=SIXJUNKTMP
+export junktmp
+TRACKDIR=SIXTRACKDIR
+export TRACKDIR
+BINPATH=SIXDESKHOME/bin
+export BINPATH
+pwd		# where am I?
+touch $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_STARTED
+rm    $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_STARTED
+touch $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_COMPLETED
+# copy compressed fortran files from the designated"job"  directory to our work dir
+# pick up inputfiles
+cp $TRACKDIR/SIXJOBDIR/fort.*.gz .
+gunzip fort.*.gz
+%susscp $junktmp/sussix.inp.1 .
+%susscp $junktmp/sussix.inp.2 .
+%susscp $junktmp/sussix.inp.3 .
+#get  sixtrack image
+%susscp $BINPATH/sussix .
+%susscp $BINPATH/repair .
+cp SIXTRACKEXE sixtrack
+ls -al 
+./sixtrack > fort.6 
+%sussrm -rf fort.93 fort.94 fort.95 
+%sussmv sussix.inp.1 sussix.inp
+%suss./sussix
+%sussif [ -s reson51 ] ;then
+%suss  mv reson51 fort.93  
+%susselse
+%suss  touch fort.93
+%sussfi
+%sussmv sussix.inp.2 sussix.inp
+%suss./sussix
+%sussif [ -s reson51 ] ;then
+%suss  mv reson51 fort.94  
+%susselse
+%suss  touch fort.94
+%sussfi
+%sussmv sussix.inp.3 sussix.inp
+%suss./sussix
+%sussif [ -s reson51 ] ;then
+%suss  mv reson51 fort.95  
+%susselse
+%suss  touch fort.95
+%sussfi
+%sussrm -rf sussix*
+%suss./repair
+%sussif [ -s fort.11 ] ;then
+%suss  mv fort.11 fort.10
+%sussfi
+%sussrm -rf fort.93
+%sussrm -rf fort.94
+%sussrm -rf fort.95
+if [ ! -s fort.10 ];then
+  rm -f fort.10
+fi
+gzip fort.*
+if [ -s core ];then
+   cp core sixtrack $TRACKDIR/SIXJOBDIR
+   exit
+fi
+
+cp fort.10.gz $TRACKDIR/SIXJOBDIR/
+
+#
+rm -f $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_COMPLETED
+

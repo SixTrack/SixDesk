@@ -1,0 +1,94 @@
+#!/bin/sh
+. ./dot_env
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+
+#MACRO mymess 0 Study $LHCDescrip
+sixdeskmesslevel=0
+sixdeskmess="Study $LHCDescrip"
+sixdeskmess
+#MACRO mymess
+
+
+#MACRO mytunes
+sixdesktunes
+#MACRO mytunes
+
+itunexx=$itunex
+ituneyy=$ituney
+if test "$ideltax" -eq 0 -a "$ideltay" -eq 0
+then
+  ideltax=1000000
+  ideltay=1000000
+fi
+while test "$itunexx" -le "$itunex1" -a "$ituneyy" -le "$ituney1"
+do
+  tunexx=`echo "$itunexx" | cut -c1-2`"."`echo "$itunexx" | cut -c3-6`
+  tunexx=`echo "$tunexx" | sed -e's/0*$//'`
+  tunexx=`echo "$tunexx" | sed -e's/^0//'`
+  tuneyy=`echo "$ituneyy" | cut -c1-2`"."`echo "$ituneyy" | cut -c3-6`
+  tuneyy=`echo "$tuneyy" | sed -e's/0*$//'`
+  tuneyy=`echo "$tuneyy" | sed -e's/^0//'`
+  sixdesktunes=$tunexx"_"$tuneyy
+  echo ""
+  echo ""
+  echo ""
+
+#MACRO mymess 0 Processing tunes $sixdesktunes
+  sixdeskmesslevel=0
+  sixdeskmess="Processing tunes $sixdesktunes"
+  sixdeskmess
+#MACRO mymess
+
+  rm -f DAres.${LHCDesName}.${sixdesktunes}.${turnse}.plot
+  touch DAres.${LHCDesName}.${sixdesktunes}.${turnse}.plot
+  j=$kinil
+
+#MACRO mymess 0 Processing angles $kinil to $kendl by $kstep
+  sixdeskmesslevel=0
+  sixdeskmess="Processing angles $kinil to $kendl by $kstep"
+  sixdeskmess
+#MACRO mymess
+
+  while test "$j" -le "$kendl"
+  do 
+
+#MACRO mymess 0 DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j
+    sixdeskmesslevel=0
+    sixdeskmess="DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
+    sixdeskmess
+#MACRO mymess
+
+    if test -s "DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
+    then
+      awk -f minav.awk "DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
+    else
+
+#MACRO mymess 0 Skipping Angle $j; DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j missing or empty
+      sixdeskmesslevel=0
+      sixdeskmess="Skipping Angle $j; DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j missing or empty"
+      sixdeskmess
+#MACRO mymess
+
+    fi
+    ((j=j+$kstep))
+  done
+  itunexx=`expr $itunexx + $ideltax`
+  ituneyy=`expr $ituneyy + $ideltay`
+done
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

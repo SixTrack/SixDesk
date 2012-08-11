@@ -1,0 +1,49 @@
+#!/bin/sh
+#
+# Delete all failed Results in sixdeskerror.log (by TaskId)
+#
+. ./dot_env
+mylock $sixdeskstudy
+if test $sixdeskplatform = "lsf"
+then
+  echo "This command is not available for LSF!"
+  myexit 1
+fi
+if test $sixdeskplatform = "cpss"
+then
+  tgid=`cat $sixdeskjobs/TaskGroupId`
+  mytgid=`echo $tgid | sed -e 's/TaskGroupID: *//'`
+fi
+while read line
+do
+  taskid=`echo $line | cut -d" " -f1`
+  Runnam=`echo $line | cut -d" " -f2`
+  myrundir $Runnam Rundir
+  echo "$taskid $Runnam $Rundir"
+  mymess 2 "Deleting the result for task $taskid from the server"
+  if test $sixdeskplatform = "cpss"
+  then
+    ntaskid=`echo $taskid | sed -e's/cpss//'`
+    mymktmp tmp
+    perl $sixdeskpath/Bin/confirmResultDownload.pl $ntaskid > $tmp 2>&1
+    stat=$?
+    if test $stat -ne 0
+    then
+      mymess 1 "confirmResultDownload failed!!! `cat $tmp`"
+    fi
+    rm $tmp
+    mymess="Deleting task $taskid in $mytgid from the server"
+    perl $sixdeskpath/Bin/deleteTask.pl $ntaskid $mytgid > $tmp 2>&1
+    stat=$? 
+    if test $stat -ne 0
+    then
+      mymess="deleteTask failed!!! `cat $tmp`"
+    fi
+    rm $tmp
+  elif test $sixdeskplatform = "boinc"
+  then
+    rm $sixdeskboincdir/results/$Runnam"_1_sixvf_"$taskid  
+  fi
+done < sixdeskerror.log
+myunlock $sixdeskstudy
+myexit 0
