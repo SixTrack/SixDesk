@@ -1,3 +1,8 @@
+Release 20th August.
+Changed . dot_profile . ./dot_profile in myunlock, mydot_env,
+myset_env for users who do not have a . in their path.
+Thanks Javier.
+
 Release 11th August first for SVN.
 
 Release 6th August, 2012. Changed log message levels and defaults.
