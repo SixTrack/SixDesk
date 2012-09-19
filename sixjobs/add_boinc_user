@@ -1,0 +1,29 @@
+#!/bin/sh
+# Add a registered user to the AFS pts protection group.
+# The parameter sixdeskpts is defined is sysenv
+# export sixdeskpts=boinc:users
+# The group boinc:users is owned by boinc_admins
+# with mcintosh, pete, nils, boincadm, boinc, giovanno
+# being allowed to modify it.
+if test $# -ne 1
+then
+  echo "You must specify the login ID of the user to be added!!!"
+  exit 1
+fi
+newuser=$1
+for myname in $newuser
+do
+# We have to check the name as phonebook returns 0 status even
+# if the user is not found
+ username=`phonebook --terse login --login $myname`
+ if test "$username" != "${myname};"
+ then
+   echo "User $myname does NOT appear in the phonebook!"
+   exit 2
+ else
+  echo "Adding $myname to boinc:users"
+  pts adduser -group boinc:users -user $myname 
+ fi
+done
+# and verify
+pts membership -name boinc:users

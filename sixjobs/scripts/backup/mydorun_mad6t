@@ -74,7 +74,8 @@ do
   do
     rm -rf $sixtrack_input/fort.$f"_"$i.gz
   done
-  sed -e 's?%SEEDSYS?'$i'?g' \
+  sed -e 's?%NPART?'$bunch_charge'?g' \
+      -e 's?%SEEDSYS?'$i'?g' \
       -e 's?%SEEDRAN?'$i'?g' $filejob.mask > $filejob."$i"
 
   sed -e 's?%SIXJUNKTMP%?'$junktmp'?g' \

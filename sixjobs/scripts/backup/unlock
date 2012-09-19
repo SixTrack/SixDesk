@@ -19,7 +19,7 @@ then
   echo "dot_profile is missing!!!"
   exit 1
 fi
-. dot_profile
+. ./dot_profile
 if test $# -ne 0
 then 
   sixdesklockdir=$1

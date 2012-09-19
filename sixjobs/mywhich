@@ -37,12 +37,14 @@ then
   echo "bnlfilenames=$bnlfilenames"
   echo "bnlfortnames=$bnlfortnames"
 else
+  echo "STUDY is $LHCDescrip, WQRKSPACE is $workspace"
   echo "=============="
   echo "= sixdeskenv ="
   echo "=============="
   echo "istamad=$istamad"
   echo "iendmad=$iendmad"
   echo "runtype=$runtype"
+  echo "ibtype=$ibtype"
   echo "sixdeskpairs=$sixdeskpairs"
   echo "ista=$ista"
   echo "iend=$iend"
@@ -57,6 +59,8 @@ else
   echo "kinil=$kinil"
   echo "kendl=$kendl"
   echo "kmaxl=$kmaxl"
+  echo "iplot=$iplot"
+  echo "kvar=$kvar"
 fi
 echo "=========="
 echo "= sysenv ="

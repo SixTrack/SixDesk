@@ -43,8 +43,8 @@ if (NRJ<4999.9999)
 !Inj. optics in thin lens for IR1&5 (11 m in IR1/5)
 call,file="db5/V6.5.thin.inj.str";
 qx0 = 64.28;   qy0 = 59.31;  qprime = 2.0;
-Beam,particle=proton,sequence=lhcb1,energy=450.0,NPART=1.15E11,sige=4.5e-4;
-Beam,particle=proton,sequence=lhcb2,energy=450.0,bv = -1,NPART=1.15E11,sige=4.5e-4;
+Beam,particle=proton,sequence=lhcb1,energy=450.0,NPART=%NPART,sige=4.5e-4;
+Beam,particle=proton,sequence=lhcb2,energy=450.0,bv = -1,NPART=%NPART,sige=4.5e-4;
 };
 
 if (NRJ>5000.0000)
@@ -52,8 +52,8 @@ if (NRJ>5000.0000)
 !Coll. optics in thin lens for IR1&5 (55 cm in IR1/5)
 call,file="db5/V6.5.thin.coll.str";
 qx0 = 64.31;   qy0 = 59.32;  qprime = 2.0;
-Beam,particle=proton,sequence=lhcb1,energy=7000.0,NPART=1.15E11,sige=1.1e-4;
-Beam,particle=proton,sequence=lhcb2,energy=7000.0,bv = -1,NPART=1.15E11,sige=1.1e-4;         !<<<<
+Beam,particle=proton,sequence=lhcb1,energy=7000.0,NPART=%NPART,sige=1.1e-4;
+Beam,particle=proton,sequence=lhcb2,energy=7000.0,bv = -1,NPART=%NPART,sige=1.1e-4;         !<<<<
 };
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++;

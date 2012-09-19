@@ -1,3 +1,13 @@
+Release 19th September.
+Added the replacement of %NPART to mydorun_mad6t.
+Changed all the mask/*.mask files to replace the NPART value
+by the placekeeper %NPART. 
+Changed mydocompare_results to use verify10.
+Updated verify10 to also compare Word 59, Total Particle Turns.
+Added a couple more variables to mymywhich.
+Deleted create+protection_group and added add_boinc_user.
+Updated allscripts to add mydocompare_results and add_boinc_user.
+
 Release 20th August.
 Changed . dot_profile . ./dot_profile in myunlock, mydot_env,
 myset_env for users who do not have a . in their path.

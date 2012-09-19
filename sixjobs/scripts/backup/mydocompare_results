@@ -62,7 +62,7 @@ do
       cd $tmp
       ln -sf here fort.20
       ln -sf there fort.21
-      $sixdeskpath/scripts/mychecktens > tens
+      $sixdeskpath/scripts/verify10 > tens
       rm fort.20 fort.21
       cd $sixdeskhome
       grep 'DIFF' $tmp/tens > /dev/null 2>&1

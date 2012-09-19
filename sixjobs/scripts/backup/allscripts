@@ -19,6 +19,7 @@ mydelete_cpss_tasks
 mydelete_errors
 mydelete_study
 mydocompare_DA
+mydocompare_results
 mydoplot_DA
 mydorun_mad6t
 mydot_boinc
@@ -56,6 +57,7 @@ createDAsurv
 DAsurv.tex
 
 acrontab.entry
+add_boinc_user
 bresume_all
 bstop_all
 check_seds
@@ -69,7 +71,6 @@ compare_results
 compare_scripts
 compare_studies
 compare_workspaces
-create_protection_group
 exec_env
 get_wpro
 minav.awk

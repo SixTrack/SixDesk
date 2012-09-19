@@ -67,9 +67,9 @@ if (NRJ<4999.9999)
 { 
 qx0 = 63.28;   qy0 = 60.31;  qprime = 2.0;
 Beam,particle=proton,sequence=lhcb1,energy=NRJ,sigt=0.130,bv= 1,
-                     NPART=1.15E11,sige=4.5e-4,ex=epsx,ey=epsy;
+                     NPART=%NPART,sige=4.5e-4,ex=epsx,ey=epsy;
 Beam,particle=proton,sequence=lhcb2,energy=NRJ,sigt=0.130,bv=-1,
-                     NPART=1.15E11,sige=4.5e-4,ex=epsx,ey=epsy;
+                     NPART=%NPART,sige=4.5e-4,ex=epsx,ey=epsy;
 };
 
 if (NRJ>5000.0000)
@@ -80,9 +80,9 @@ qx0 = 63.31;   qy0 = 60.32;  qprime = 2.0;
 ON_BETABEAT:=1;  ! Correction of the momentum beta-beat by SF & SD families
 ON_QPP     :=0;  ! Correction of residual Q'' by MO's
 Beam,particle=proton,sequence=lhcb1,energy=NRJ,sigt=0.075,bv= 1,
-                     NPART=1.15E11,sige=1.1e-4,ex=epsx,ey=epsy;
+                     NPART=%NPART,sige=1.1e-4,ex=epsx,ey=epsy;
 Beam,particle=proton,sequence=lhcb2,energy=NRJ,sigt=0.075,bv=-1,
-                     NPART=1.15E11,sige=1.1e-4,ex=epsx,ey=epsy;     
+                     NPART=%NPART,sige=1.1e-4,ex=epsx,ey=epsy;     
 };
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++;
