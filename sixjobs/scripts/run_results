@@ -849,9 +849,9 @@ do
 #MACRO mymess
 
 
-#MACRO mymess 0 $word59 Totalturns $word60 seconds
+#MACRO mymess 0 CPU $word60 seconds
               sixdeskmesslevel=0
-              sixdeskmess="$word59 Totalturns $word60 seconds"
+              sixdeskmess="CPU $word60 seconds"
               sixdeskmess
 #MACRO mymess
 

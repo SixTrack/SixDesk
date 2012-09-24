@@ -1,3 +1,7 @@
+Release 24th September.
+run_results reports CPU time only
+as Total Turns are no longer available.
+
 Release 19th September.
 Added the replacement of %NPART to mydorun_mad6t.
 Changed all the mask/*.mask files to replace the NPART value

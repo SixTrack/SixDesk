@@ -425,7 +425,7 @@ do
               mymess 0 "Maxturn $word1 Lost $word2 Qx/Qy $word3 $word4"
               mymess 0 " 1st Ampx/y $word7 $word8 2nd $word26 $word27"
               mymess 0 "DP $word9 Findist $word10 Maxslope $word11 Turns $word22 $word23"
-              mymess 0 "$word59 Totalturns $word60 seconds"
+              mymess 0 "CPU $word60 seconds"
               gzip -f fort.10
               ignore="false"
               success="true"
