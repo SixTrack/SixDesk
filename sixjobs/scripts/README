@@ -1,8 +1,11 @@
-Release 24th September.
+Release ???
+Added iplot and kvar to mywhich.
+
+Release 24th September, 2012.
 run_results reports CPU time only
 as Total Turns are no longer available.
 
-Release 19th September.
+Release 19th September, 2012.
 Added the replacement of %NPART to mydorun_mad6t.
 Changed all the mask/*.mask files to replace the NPART value
 by the placekeeper %NPART. 
@@ -12,7 +15,7 @@ Added a couple more variables to mymywhich.
 Deleted create+protection_group and added add_boinc_user.
 Updated allscripts to add mydocompare_results and add_boinc_user.
 
-Release 20th August.
+Release 20th August, 2012.
 Changed . dot_profile . ./dot_profile in myunlock, mydot_env,
 myset_env for users who do not have a . in their path.
 Thanks Javier.

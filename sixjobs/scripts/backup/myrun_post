@@ -10,7 +10,7 @@
 # and ONLY one at a time just now
 # uses plot and local files
 # Is rather slow with iplot and kvar=1 (can look at this later)
-# Locks plot so only one at a tome in the workspace
+# Locks plot so only one at a time in the workspace
 # Locks study (as does join10)
 mylock $sixdeskhome/plot
 mylock $sixdeskstudy
