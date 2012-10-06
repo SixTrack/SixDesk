@@ -30,7 +30,7 @@
 
 \end{titlepage}
 %
-Version 10 20th August, 2012.
+Version 24 6th October, 2012.
 
 \section{Objectives}
 %
@@ -45,22 +45,29 @@ The specification of tune scans, fractional amplitude ranges and steps, and vari
 other physics options were also added to the {\tt run\_six} script/command.
 All SixDesk scripts report activity to the {\tt sixdesk.log} file
 and exit with an error code if an unrecoverable error is detected.
-The messages are optionally sent to {\tt STDOUT}, your screen in an interactive
+The messages are optionally sent to {\tt STDOUT}, your screen, in an interactive
 session.
 %
 \section{Getting Started}
+First note that in order to use BOINC you must not only have a CERN account
+but must also be registered in the
+AFS protection group boinc:users. This is done with the script
+{\tt add\_boinc\_user} but only E. McIntosh, M. Giovannozzi and
+IT BOINC administrators are authorised to do so.
+
 All the user modifiable parameters have been collected 
 into the two scripts {\tt sixdeskenv, sysenv} obviating the need to look through all
 scripts and make matching changes, simplifying the usage of the scripts,
 and limiting the risk of error.
 
 It is assumed that there is a large amount (at least 1GB) of disk space
-available on AFS to be used as a workspace which we shall call
-{\tt w1} for illustration. The {\tt w1} directory is normally a link in \$HOME
-to a directory with the same name on an AFS scratch disk (scratch0, scratch1, etc).
-Note that by default access to all files will be limited; it is useful
-to do a {\tt fs setacl w1 system:anyuser rl} so that everything in the workspace can
-be read by support.
+available to be used as a workspace which we shall call
+{\tt w1} for illustration. The {\tt w1} directory must be a link in \$HOME
+to a directory with the same name, usually on an scratch disk 
+(AFS scratch0, scratch1, etc or in a /scratch directory).
+Note that by default access to all AFS files will be limited; it is useful
+to do a {\tt fs setacl w1 system:anyuser rl} so that everything in an
+AFS workspace can be read by support.
 
 A workspace is created by e.g. 
 \begin{verbatim}
@@ -79,25 +86,36 @@ or
 \begin{verbatim}
  cd w1
  gtar xvzf /afs/cern.ch/user/f/frs/public_html/\
-SixTrack_run_environment/SixDesk_run_environment.20August2012.tgz
+SixTrack_run_environment/SixDesk_run_environment.pro.tgz
 \end{verbatim}
 where the first method will get the latest SVN committed version
-and the second tar file will be updated (and the name changed)
-in parallel with the SVN commits. 
+and the second method uses a link to a tar file which will be updated 
+in parallel with the SVN commits.  
 
 This will create a directory subtree starting with
-the directory {\tt sixjobs}. All the scripts are stored here
+the directory {\tt sixjobs}. An overview of this directory is
+shown in Appendix \ref{sec:commands}. 
+The latest source and postscript of this document can be found 
+in the directory {\tt sixjobs/doc}.
+All the scripts are stored in {\tt sixjobs} itself
 and the user should always do a
 {\tt cd w1/sixjobs} before executing any commands. It may be
-necessary to prefix any typed commands with a {\tt ./} if the
-shell PATH does not include the current directory {\tt .}. 
+necessary to prefix any typed commands with a {\tt ./} if your 
+shell PATH does not include the current directory {\tt "."}. 
 (The source version of each script can be found
 in {\tt sixjobs/scripts} as will be discussed later.)
 
 \section{Setting up a Study}
+\label{sec:study}
+At this point it is important to check that the LOCALE environment variable
+LANG has the value C. If not, {\tt setenv LOCALE "C"} in the {\tt csh}.
+It has been noted that the {\tt awk} program gives errors if this is not the
+case. (This is normally set, but it it is not the default on some laptops
+and on MacOS.)
 To facilitate the description of the various procedures we use this workspace
 {\tt w1} and a study {\tt job\_tracking} as an illustration using the mask
-file {\tt job\_tracking.mask} included in the release. Note that the name of the
+file {\tt job\_tracking.mask} included in the release in the {\tt sixjobs/mask}
+directory. Note that the name of the
 study is contained in the variable {\tt LHCDescrip} i.e. if we have a study
 called {\tt lhc\_nob1} then we must define it 
 with {\tt export LHCDescrip=lhc\_nob1}. It should also be noted that amplitudes
@@ -112,18 +130,19 @@ conditions in the {\tt sixdeskenv, sysenv} files.
 The first step is to edit the {\tt sixdeskenv} script and, if necessary, 
 the {\tt sysenv} script.
 
-NOTA BENE:It is strongly recommended to issue
+NOTA BENE:It is essential to issue
 a {\tt set\_env} command after any modification to these files so that 
 they are saved in the {\tt studies/study} directory as described later.
-Note also, that as shown for the variable {\tt LHCDescrip}, all values must be exported.
+Note also, that as shown below all values must be exported.
 
 \begin{description}
 \item [export LHCDescrip=job\_tracking] the name of the study and of the mask file
-\item [basedir=/afs/cern.ch/user/\$initial/\$LOGNAME]
-\item [scratchdir=/afs/cern.ch/user/\$initial/\$LOGNAME/scratch0]
-\item [trackdir=\$scratchdir/\$workspace]
-\item [sixtrack\_input=\$scratchdir/sixtrack\_input/\$workspace/\$LHCDescrip]
- but may also be changed to use an existing set of {\tt sixtrack\_input} files.
+\item [export basedir=/afs/cern.ch/user/\$initial/\$LOGNAME]
+\item [export scratchdir=/afs/cern.ch/user/\$initial/\$LOGNAME/scratch0]
+\item [export trackdir=\$scratchdir/\$workspace]
+(can be re-defined to use an area shared between studies or workspaces).
+\item [export sixtrack\_input=\$scratchdir/sixtrack\_input/\$workspace/\$LHCDescrip]
+(can be changed to point to, and use, an existing set of {\tt sixtrack\_input} files).
 \end{description}
 The above defaults, apart from the name of the study,
 are usually satisfactory but, once chosen,
@@ -138,22 +157,21 @@ will create the full directory structure of the environment.
 As already mentioned this command should also be used to save
 modified versions of the {\tt sixdeskenv, sysenv} files before doing
 anything else. The command also reports and logs changes. 
-(Remember to do a {\tt set\_env} as mentioned earlier after
-any modification of these two files.)
 
 While it is recommended to run one study per workspace, most users have
 multiple studies in the workspace. The command {\tt ls studies} can be used
 to list them and {\tt set\_env "name of the study"} to switch between studies.
 This switch copies the {\tt sixdeskenv, sysenv} files from the
-{\tt studies} directory to {\tt sixdekhome} i.e. the current {\tt sixjobs} directory. 
+{\tt studies} directory to {\tt sixdeskhome} i.e. the current {\tt sixjobs} directory. 
 
 An important new feature is that it is possible to execute many commands
 on a specific study without switching. This facilitates running multiple
 studies in the same workspace and using commands in batch jobs.  
-Thus, instead of switching, a command can be suffixed with an optional
-"study" and/or "platform". Examples are shown later.
+Thus, instead of switching, a command can be suffixed with a
+"study" and optionally a "platform". Examples are shown later.
 This option is NOT available for the backup or recall, study or workspace, 
-commands described in section \ref{sec:backup}.
+commands described in section \ref{sec:backup}where a {\tt set\_env "study"}
+must first be performed.
 
 The {\tt print\_env} command reports the complete environment to the screen;
 the command {\tt mywhich} reports a few important values.
@@ -183,8 +201,10 @@ for each seed in the range {\tt istamad} to {\tt iendmad} as defined in
 {\tt sixdeskenv}. In addition it will
 hold one {\tt mad.dorun\_mad6t*} directory for each {\tt run\_mad6t} command,
 with one mad6t LSF job {\tt mad6t\_"seedno".lsf}, one input file {\tt "study"."seedno"}, 
-one LSF job log {\tt "study"\_mad6t\_"seedno".log} and one mad6t output file 
-{\tt "study".out."seedno"} for each seed.
+one LSF job log 
+{\tt "study"\_mad6t\_"seedno".log} 
+and one mad6t output file 
+{\tt "study".out."seedno"} for each seed. 
 
 The {\tt studies} directory will hold one directory for each study, in turn
 containing the {\tt sixdeskenv, sysenv} files for that study.
@@ -203,6 +223,7 @@ and results as follows:
 \item [Level 7] input(links), fort.2,3,8,16.gz and the result fort.10.gz 
 as well as the LSF jobs and logs
 \end{description}
+A partial view of the {\tt track} tree is shown in Appendix \ref{sec:plot}.
 A typical lowest level structure (after the study has been completed),
 for workspace w1, study job\_tracking, long run (simul), seed 1,
 tunes 64.28\_59.31, amplitude range 10\_12, $10^5$ turns, phase space angle 1.5, is:
@@ -229,11 +250,12 @@ and the directory where the input and output files are stored. The general form 
 the name of a case in a {\tt long} run is 
 \begin{verbatim}
 study%seed%s%tune_range%amplitude_range%turns_exponent%angle
-\end{verbatim}.
+\end{verbatim}
 In the workspace this case would be found in the directory
 \begin{verbatim}
-track/'seed'/simul/'tune_range'/'amplitude_range'/e'turns_exponent'/'angle'
-\end{verbatim}.
+track/'seed'/simul/'tune_range'/'amplitude_range'/  \
+e'turns_exponent'/'angle'
+\end{verbatim}
 To give a specific example, a case named
 \begin{verbatim}
 job_tracking%1%s%62.31_60.32%10_12%5%18
@@ -262,18 +284,23 @@ command reports on the status of the study as described in section \ref{sec:stat
 
 There are also the other directories:
 \begin{description}
-\item [bin] containing links to various utility programs used by {\tt run\_join10}
-and {\tt run\_post}
+\item [bin] containing links to various utility programs used by {\tt run\_six}
+({\tt dalie4 dalie6 readda}), {\tt run\_join10} ({\tt joinf10})
+and {\tt run\_post} ({\tt read10b})
 \item [control\_files] the SixTrack mother files for the collision/injection/beam 2
 cases which are used to generate the SixTrack input files
+\item [doc] The Latex source and Postscript of this document
 \item [inc] other mask files and the prepare\_fort.3 script
 \item [mask] the LHC description mask files for madX 
-\item [plot] the plotting mask files and any plots produced by the post processing
-\item [sixdeskTaskIds] the study TaskIds for BOINC 
+\item [plot] the plotting mask files and scripts in the sub-directory {\tt plot/inc}.
+The sub-directory {\tt plot/"study"} will contain a hierarchy matching the {\tt track}
+hierarchy, but with the {\tt angle} directory replaced by a hidden directory {\tt .angle}  
+containing some or all of the files {\tt averem.eps.gz distance.eps.gz fort.10.gz 
+fort.15.gz fort.30.gz maxslope.eps.gz smear.eps.gz survival.eps.gz test.ps.gz}.
+\item [sixdeskTaskIds] the study TaskIds for BOINC
 \item [scripts] the source and copies of the commands
 \item [utilities] the various LSF job masks for {\tt run\_mad6t} and {\tt run\_six}  
 \end{description}
-(Here we will add a picture of the hierarchy and perhaps a screen shot.)
 \section{Running mad6t to produce the basic SixTrack input files}
 \label{sec:mad_6t}
 NOTA BENE: It is essential to have a \$LHCDescrip.mask file
@@ -309,6 +336,10 @@ automatically by a proper seed number by {\tt run\_mad6t} based on the
 current seed number based on the {\tt istamad and iendmad} variables
 defined in {\tt sixdeskenv}. 
 
+In addition, in order to use the correct bunch size, the place keeper 
+{\tt \%NPART} is replaced by the value specified for the {\tt bunch\_charge}
+ variable also in {\tt sixdeskenv}.
+
 Please note that the MAD-X {\tt sixtrack} command takes its
 information from the last {\tt Twiss, save} commmand. It is a
 sensible precaution to put these commands consecutively in the MAD
@@ -324,16 +355,18 @@ At this point it is also necessary to specify in {\tt sixdeskenv}
 \item [runtype=] inj or coll for injection/collision for an LHC lattice.
 For more information on how to define runtypes
 for either the LHC or other machines please see section \ref{sec:otherlattices}.
-\item [beam=] null or b1 or B1 for Beam1, b2 or B2 for Beam2
+\item [beam=] null or b1 or B1 for Beam1, b2 or B2 for Beam2.
 \item [CORR\_TEST=]0 or 1 if check\_mad6t is to copy the corrector strengths
-for each seed into one file in sixtrack\_input
+for each seed into one file in sixtrack\_input.
 \item [fort\_34=] If null the fort.34 files will not be copied 
-to the sixtrack\_inputdir. These files define the multipole strengths for the
+to the {\tt sixtrack\_input} directory. These files define the multipole strengths for the
 linear lattice when doing Second Order Detuning and Distortion (SODD)
  analysis in expert mode.
-\item [istamad=1] first seed for madX
+\item [istamad=1] first seed for madX.
 \item [iendmad=] normally 60 (maximum 64) but it is recommended to use 
-iendmad=1 until the results of the {\tt run\_mad6t} are considered satisfactory
+iendmad=1 until the results of the {\tt run\_mad6t} are considered satisfactory.
+The seeds are used to generate variations of the basic LHC machine with different
+randomly generated magnet errors.
 \item[madclass=] 8nm for 8 normalised CPU minutes, or 1nh for 1 normalised hour
 for the {\tt run\_mad6t} LSF jobs where 8nm is often enough but 1nh may be
 necessary.
@@ -384,7 +417,7 @@ It is recommended to use LSF batch for short runs and for exploratory studies,
 or when the binary files are required for detailed examination.
 BOINC is recommended for production runs and for large studies of more than 
 a few thousand jobs. Note that BOINC does not produce the fort.20 graphics nor
-return any binary files. Only the fort.10 resultt file is returned which is
+return any binary files. Only the {\tt fort.10.gz}  result file is returned which is
 enough for the subsequent post-processing. 
 In addition note that the platforms LSF and BOINC should
 not both be used in a single study; rather, once the preliminary investigations
@@ -452,7 +485,7 @@ runs (and possibly {\tt sussix}).
 \item Differential Algebra (DA) run ---
   If high order Taylor maps are needed this is the mode to use
   (activate with {\tt da=1}). This mode is mostly for expert use. 
-  Please ask the author (FS) how to make best use of it.
+  The {\tt SixTrack} author F. Schmidt should be consulted on how to make best use of it.
   In this case {\tt run\_six} calls the porgrams readda, dalie4 and dalie6
   in the directory {\tt bin}.  
 \end{enumerate}
@@ -516,7 +549,8 @@ range of seeds, but must clearly be a subset of the {run\_mad6t} values.
 \item [nsincl] 2 $\sigma$ is standard. A smaller step, of 0.5 say, 
 can give better results.
 \item [turnsl]
-  For the long term tracking we usually track for 100,000 turns or more.
+  For the long term tracking we usually track for 100,000 turns or for
+one miliion.
 \item [turnsle]
   This variable should be set to the number of zeros of `turnsl',
   i.e. `5' in our example. 
@@ -531,7 +565,8 @@ can give better results.
   `turnsl=100000' the variable should be set to at least `writebinl=100'.
   When running on BOINC, rather than LSF, the binary files are not returned
   but SixTrack is checkpointed every {\tt writebinl} turns. 
-  It is recommended to set {\tt writebinl} to 10000 for BOINC runs.
+  It is recommended to set {\tt writebinl} to 10000 for BOINC runs 
+of 100,000 turns or more.
 \item[kinil \& kendl]
   Initial and end angle in phase space. As in the `short run' mode
   the variation from `kinil' to `kendl' is done in steps defined by
@@ -562,7 +597,7 @@ should be set to {\tt 2nd} or to {\tt 1nw} if performing more than $10^5$ turns.
 \item[ibtype=0] or 1 to use the Erskine/McIntosh optimised error function
 of a complex number
 \item[idfor=1] the closed orbit is added, if set to 0 the initial co-ordinates are unchanged
-\item[sixdeskpairs=30] Normal value for 60 particles 
+\item[sixdeskpairs=30] Normal value for 60 particles, naximum of 32. 
 \end{description}
 
 Then we have, depending on the {\tt runtyp}:
@@ -601,7 +636,8 @@ and in particular a tunescan can be performed where
 the tunes will be computed on a straight line from
 (tunex,tuney) with gradient deltay/deltax up to and including (tunex1,tuney1).
 The tunes must be 10 .le. tune .lt. 100 in format dd.dd[d][d].
-The folowing example specifies the tunes (64.28,59.31) with no scan. 
+The folowing example specifies the tunes (64.28,59.31) with no scan
+(because {\tt tunex = tunex1, tuney = tuney1}. 
 \begin{verbatim}
 if test $runtype = "inj"
 then
@@ -614,7 +650,6 @@ then
 \item[tunex1=64.28] End value
 \item[tuney1=59.31] End value
 \end{description}
-Similarly for collision we have:
 \begin{verbatim}
 elif test $runtype = "col"
 then
@@ -627,9 +662,11 @@ then
 \item[tunex1=64.31]
 \item[tuney1=59.32]
 \end{description}
-
+\begin{verbatim}
+fi
+\end{verbatim}
 The total number of jobs/cases can be computed as the product of the number of
-seeds, the number of tune values, the number of amplitude intervals 
+seeds, the number of tune pairs, the number of amplitude intervals 
 and the number of angles.
 The total number of cases and progress is reported in the work directory and
 can be examined with the {\tt run\_query} or {\tt run\_status} commands. 
@@ -650,10 +687,14 @@ either because of a system crash, batch daemon not responding, jobs lost, or som
 The script {\tt run\_six} can be rerun as often as necessary, but by default will not re-submit
 jobs. The {\tt run\_six} can either be submitted as a batch job and/or with a different seed range
 ({\tt ista, iend}). 
-However, the {\tt run\_six} script now maintains a copy of each LSF job in {\tt \$sixdeskwork/jobs}
-directory and a file {\tt \$sixdeskwork/JobIds} containing one line for each case. Each line
-contains the JobName, the directory for the input files, and the fort.10.gz output, and the
-associated LSF job\_ID(s). If {\tt run\_six} is called more than once, it ignores cases
+The {\tt run\_six} script also keeps a copy of each LSF job in the {\tt track}
+hierarchy along with the data files or links 
+{\tt fort.2.gz fort.3.gz fort.8.gz fort.16.gz}. 
+It also updates the {\tt taskids file in the}{\tt sixjobs/work} directory.
+The {\tt taskids} file contains one line for each case. Each line
+contains the JobName (which can be mapped to the case directory) and the
+associated LSF job\_ID(s) or BOINC ID(s). 
+If {\tt run\_six} is called more than once, it ignores cases
 where a non-zero fort.10.gz exists, but otherwise deletes the tracking input files and 
 re-generates them. Even simpler recovery is available with the 
 {\tt run\_missing\_jobs} command.
@@ -671,7 +712,7 @@ command will re--submit jobs for those cases where no results are available.
 \label{sec:status}
 The script {\tt run\_status} looks into the database {\tt work} directory and updates and summarises
 the status of the study. The {\tt run\_query} command gives a quick look without
-any updating. It first counts the number of cases in {\tt \$sixdeskwork/JobIds}.
+any updating. It first counts the number of cases in {\tt work/taskids}.
 It reports the number of LSF batch jobs generated, possibly
 more than one per case, and does an LSF {\tt bjobs} to report on job status.
 Finally it performs a rather time-consuming search to find the number of unfinished cases.
@@ -683,12 +724,13 @@ be initiated. While the {\tt run\_status} command may take some time, many minut
 a recent study with 43,100 jobs over 800 jobs failed. One {\tt run\_missing\_jobs}
 command re-submitted them automatically to successfully complete the tracking.  
 As an alternative, the {\tt run\_six} command can be re-issued and will not re-submit
-jobs if {\tt sixdeskforce = 0}, will not re-submit jobs which have been completed successfully
-if {\tt sixdeskforce = 1} AND a fort.10.gz result file has been created.
+jobs if {\tt sixdeskforce = 0}. It will not re-submit jobs which have been completed successfully
+if {\tt sixdeskforce = 1} AND a {\tt fort.10.gz} result file has been created.
 
 There are also cases of database corruption. These are cleaned up, after all running LSF jobs
 have terminated, by the {\tt correct\_cases} command. Overall the environment has
-been proven to be rather robust and almost all errors can be recovered.
+been proven to be rather robust and almost all errors can be recovered
+as long as there is a valid {\tt work/taskids} file.
 
 \section{The fort.10 File}
 \label{sec:fort10}
@@ -828,7 +870,7 @@ There is one (very long) line per particle.
   \hline \stepcounter{dst}
   53 -- 58 &  Closed Orbit\\
   \hline
-  59 & Total turns all particles\\
+  59 & The number of the Random Set\\
   \hline
   60 & Tracking CPU time in seconds\\
   \hline
@@ -844,7 +886,7 @@ By default the scripts automatically tar all output
 files and store them directly to CASTOR.
 In order to view these files they have to be copied from CASTOR using
 the standard CASTOR tools like {\tt rfcp}, {\tt rfrm} and 
-{\tt nsls, nsrm, nsmkdir} etc. The option {\tt --help} is availble
+{\tt nsls, nsrm, nsmkdir} etc. The option {\tt --help} is available
 for each of these commands.
 
 Although the full description of all output files is beyond the scope
@@ -852,7 +894,9 @@ of this note; an ascii file worth
 looking at is the {\tt fort.6.gz} which gives an explicit description of
 all operations and possible failures of the SixTrack run as seen by
 the program. Also one finds the tracking data in the
-binary files {\tt fort.90.gz} down to {\tt fort.61.gz}, which may be useful for further
+binary files {\tt fort.90.gz fort.89.gz etc} down to {\tt fort.59.gz}
+in the cases of 64 particles/32 pairs, 
+which may be useful for further
 analysis. These and other files are all described in the
 SixTrack manual \cite{SixTrack}. Note that these files are not available
 from BOINC runs which are for full scale production; LSF should be used
@@ -885,10 +929,13 @@ If {\tt iplot=1} a plot is produced for each seed and the results
 can be found in the {\tt plot} directory. Note that setting 
 {\tt iplot} to 1 will produce a
 possibly huge amount of data, even if it is compressed with gzip.
-The variable {\tt kvar} should be set to 1 to obtain the DA
-as a function of angles for a {\tt long} study,
+The variable {\tt kvar} should be set to 1 (the default) to 
+obtain the DA as a function of angles for a {\tt long} study,
 and the DA over ALL seeds and angles is plotted for each angle
-even if {\tt iplot=0}.
+even if {\tt iplot=0}. Note that this is an extremely time consuming
+procedure. (For special post-processing of the 
+{\tt fort.10.gz} files the set of {\tt fort.15} files are
+produced and saved when {\tt iplot = 1})
 
 The following variables are used, almost certainly with the same values
 as used by {\tt run\_six} and {\tt run\_join10}:
@@ -950,17 +997,20 @@ is set automatically using {\tt ns1s/ns2s} or {\tt ns1l/ns2l}.
   swamping the printer. The graphics are stored as files
   like {\tt test.ps.gz} in the directory  
   {\tt sixjobs/plot/"study"} with the same tree structure as the
-  {\tt track} tree.
+  {\tt track} tree but with a hidden {\tt .angle} directory.
 \end{description}
 
-The result files from {\tt run\_post} in long mode are called DAres*,
-one per angle, and are stored in the {\tt sixjobs} directory itself.
+The DA* result files, one per angle, from {\tt run\_post} in long mode
+are called {\tt DAres."Study"."Tunes."Turns exponent"."Angle"},
+and are stored in the {\tt sixjobs} directory itself.
 The contents and format are defined in the next section \ref{sec:DAres}
-Here it should be noted that setting {\tt kvar=1}
+It should be noted again that setting {\tt kvar=1}
 causes {\tt run\_post} to take a long time, even a very long time of
 many hours, for a large number of angles. If both {\tt iplot} and
-{\tt kvar} are set to 0 the DAres* files are produced anyway
-and can be processed with {\tt run\_awk} or your own procedures.
+{\tt kvar} are set to 0 the {\tt DAres.Study.Tunes.Turns exponent.Angle}
+files are produced anyway and can be processed with {\tt run\_awk} 
+or your own procedures. A partial view of the {\tt sixjobs/plot} 
+directory is shown in Appendix C.
 
 \section{The DAres files}
 \label{sec:DAres}
@@ -979,8 +1029,8 @@ These files contain the following columns:
 \end{itemize}
 
 
-{\tt run\_awk} uses the DAres..... files from run\_post, reports to the screen,
-and produces a simple plot file named DAres.........plot.
+{\tt run\_awk} uses the DAres* files from {\tt run\_post}, reports to the screen,
+and produces a simple plot file named DAres*.plot.
 
 \section{Running studies in batch and/or parallel}
 In summary a study can be run in the following steps:
@@ -989,13 +1039,14 @@ In summary a study can be run in the following steps:
 {\tt mask} file in the {\tt mask} directory do a {\tt run\_mad6t}.
 Repeat as often as necessary until {\tt check\_mad6t} is successful
 and the {\tt mad6t} output has been verified.
-\item For a large study use {\tt run\_six} in a batch job by:
+\item For a large study use {\tt run\_six} in a batch job by
+for example:
 \begin{verbatim}
   bsub -q1nd 'cd w1/sixjobs;run_six job_tracking LSF' 
 \end{verbatim}
 to submit all cases of the study {\tt job\_tracking} in workspace {\tt w1} using LSF.
 The progress of the command can be monitored by
-e.g. {\tt tail -f sixdesk.log} or {\tt bpeek "LSFJobID"}. 
+{\tt tail -f sixdesk.log} or {\tt bpeek "LSFJobID"}. 
 \item Use {\tt run\_status} or {\tt run\_status job\_tracking}, as frequently 
 as convenient until all cases are complete or all batch jobs have terminated.
 The command {\tt correct\_cases} can be used if the database appears to be
@@ -1014,31 +1065,32 @@ It is necessary to use locks in order to
 avoid conflicting modifications to a file. A directory is locked if
 it contains a file sixdesklock in read only mode (444).
 If a script fails or dies for some reason or a batch job
-is killed , this lock file may be left behind. The script
+is killed this lock file may be left behind. The script
 {\tt check\_locks} reports lock status for the current study;
 {\tt check\_all\_locks} for the workspace. If the study itself is
 locked, it will be reported first as such a lock inhibits further
 checking. 
 {\tt unlock "directory"} frees the lock. The {\tt unlock\_all} 
-unlocks all locks but is deprecated. If in doubt about a lock, 
+unlocks all locks, but is deprecated when there is more than
+one active study in the workspace. If in doubt about a lock, 
 and the information shown by the check commands, simply do a 
 {\tt check\_lock "directory"} or {\tt cat sixdesklock} and
 {\tt ls -l sixdesklock} in the 
 relevant directory, to see which script, process and machine are 
 holding the lock and since when. The general philosophy is to lock
 the study so that only one operation at a time is permitted. Most
-command wait for the study to be unlcoked but the {\tt run\_results}
+command wait for the study to be unlocked but the {\tt run\_results}
 command for BOINC just exits on the grounds that it will be run periodically,
 nornally as an {\tt acrontab} entry.
  
 \section{BOINC}
 The sixdesk environment was designed to make it as transparent as possible
-to use LSF (or the now obsolete in house CPSS Windows desktop system) and later the 
+to use LSF or the 
 Berkeley Open Infrastructure for Network Computing BOINC \cite{Boinc}.
-This has made over 100,000 PCs available for tracking studies.
+which has made over 100,000 PCs available for tracking studies.
 There is one additional step required, namely {\tt run\_results}, to
 retrieve result files from the BOINC Web server 
-and move the fort.10.gz to the appropriate directory.
+and move the {\tt fort.10.gz} to the appropriate directory.
 Only this file is returned, no {\tt fort.6} or binary
 or graphics files and nothing is written to CASTOR.
 To use BOINC the {\tt sixdeskenv} file is modified to
@@ -1074,108 +1126,125 @@ All modifications should be made to the scripts in the directory
 "my" should be modified when it exists rather than the derived script
 e.g. modify {\tt myrun\_six} and NOT {run\_six}. The script {\tt domyseds},
 which operates on all the files/scripts in the file {\tt allscripts},
-should then be executed to expand macros in scripts named "my...." to
-produce the actual command scripts, and tocopy  all the commands
+should then be executed to expand macros in scripts named "my*" to
+produce the actual command scripts, and to copy  all the commands
 to {\tt ../sixjobs}.
 
 Here is a more or less alphabetic list of the "my" scripts:
-\begin{verbatim}
-[my]backup_study
-[my]backup_workspace
-[my]check_all_locks
-[my]check_lock
-[my]check_locks
-[my]check_mad6t
-[my]correct_cases
-[my]delete_study
-[my]dorun_mad6t called by run_mad6t
-[my]get_all_betavalues
-[my]mywhich
-[my]recall_study
-[my]recall_workspace
-[my]rerun_all_cases
-[my]run_awk
-[my]run_incomplete_cases
-[my]run_incomplete_tasks
-[my]run_join10
-[my]run_missing_jobs
-[my]run_post
-[my]run_query
-[my]run_results
-[my]run_six
-[my]run_status
-[my]set_env
-[my]unlock
-[my]unlock_all
-\end{verbatim}
+\begin{itemize}
+\item mybackup\_study to CASTOR
+\item mybackup\_workspace to CASTOR
+\item mycheck\_all\_locks Tries to check for any locks in the workspace
+\item mycheck\_lock Checks a specified directory or {\tt sixjobs}
+\item mycheck\_locks Tries to check for any locks in the current study
+\item mycheck\_mad6t Does minimal checks on the {\tt sixtrack\_input}
+\item mycorrect\_cases Re-generates {completed\_cases} and {\tt incomplete\_cases}
+using the {\tt taskids} file and checking for the presence of {\tt fort.10.gz}
+\item mydelete\_study deletes all or parts of a study based on replies
+to prompts
+\item mydorun\_mad6t called by run\_mad6t
+\item myget\_all\_betavalues Writes all betavalues to STDOUT
+\item mymywhich Writes some important variables to STDOUT
+\item myrecall\_study from CASTOR
+\item myrecall\_workspace from CASTOR
+\item myrerun\_all\_cases (Used to rerun\_all cases on BOINC)
+\item myrun\_awk Processes all the DAres* files and writes a summary to STDOUT
+\item myrun\_incomplete\_cases Re-submits incomplete cases to BOINC
+\item myrun\_incomplete\_tasks (Rarely used)
+\item myrun\_join10 Joins all {\tt fort.10.gz} files in preparation for {\tt run\_post}
+\item myrun\_missing\_jobs Re-submits any LSF jobs which have failed (after {\tt run\_status}
+\item myrun\_post Does the post-processing to produce graphics and the DAres* files
+\item myrun\_query A quick and brief status report
+\item myrun\_results Retrieves BOINC results
+\item myrun\_six Submits all LSF jobs or BOINC Work Units (after {run\_mad6t}
+\item myrun\_status Reports status and updates the database for the platform LSF
+\item myset\_env Used to save the environment after changes to {\tt sixdeskenv sysenv}, 
+ito create a study, or to switch studies
+\item myunlock Unlocks the specified directory or {\tt sixjobs}
+\item myunlock\_all An unlock of all locks of the current study and any other
+workspace locks not specific to a study {\tt sixjobs}, {\tt plot} and {\tt sixdeskTaskIds}
+\end{itemize}
 and here is a list of some other useful scripts/commands without macros. 
-\begin{verbatim}
-bresume_all
-bstop_all
-exec_env
-get_wpro
-minav.awk called by run_awk
-print_env
-query_all
-sub_wpro
-\end{verbatim}
+\begin{itemize}
+\item bresume\_all Resume all suspended batch jobs
+\item bstop\_all Stop all batch jobs
+\item get\_wpro A sample script for using from acron to get results
+\item minav.awk The awk script used by run\_awk
+\item print\_env Writes the {\tt sixdeskenv sysenv} variables and values to STDOUT
+\item query\_all Does a {\tt run\_status} for each study in a workspace
+\item sub\_wpro A sample script for doing a {\tt run\_six} in batch LSF
+\end{itemize}
 \section{The Subroutines}
 These subroutines are all defined in the file mydot\_profile
 and may therefore use macros themselves. A {\tt . ./dot\_profile}
 statement is issued when starting a script in order to make
-them available. (Parameters need to be documented.)
+them available.
 They are called by the corresponding "my" macros as shown.
-\begin{verbatim}
-sixdeskmess() mymess
-sixdeskmktmp() mymktmp
-sixdeskmktmpdir() mymktmpdir
-sixdeskexit() myexit
-sixdeskunlock() myunlock
-sixdesklock() mylock
-sixdesktunes() mytunes
-sixdeskinttunes() myinttunes
-sixdeskamps() myamps
-sixdeskrundir() myrundir
-\end{verbatim}
+\begin{itemize}
+\item sixdeskmess() mymess {\tt messagelevel} {\tt text}
+where the messagelevel is an integer 0, 1 or 2 and the text is 
+a doublequoted string. It uses the {\tt sixdeskenv} parameters 
+{\tt sixdeskecho} and {\tt sixdesklevel}. 
+If {\tt sixdesklevel} =  0 then only basic and error messages are logged.
+If {\tt sixdesklevel} = 1 then additional information is logged and if
+{\tt sixdesklevel} = 2 then further debug ifnormation is also logged.
+If {\tt sixdeskecho}  = "" only minimum information is echoed to STDOUT
+and otherwise all messages are also echoed.
+\item sixdeskmktmp() mymktmp {\tt name (dir)} makes a uniquely named temporary file in the 
+specified directory {\tt dir} or in {\tt .} and returns the full pathname in {\tt \$name} 
+\item sixdeskmktmpdir() mymktmpdir {\tt name (dir)} makes a uniquely named temporary directory
+in the specified directory {\tt dir} or in {\tt .} and returns the full pathname in {\tt \$name}
+\item sixdeskexit() myexit {\tt integer} exits with the code {\tt integer} freeing any locks
+\item sixdeskunlock() myunlock {\tt (dir)} unlocks the specified directory or {\tt .}
+\item sixdesklock() mylock {\tt (dir)} Locks the specified directory {\tt (dir)} or {\tt .}
+\item sixdesktunes() mytunes Converts the tunes and deltas specified in {\tt sixdeskenv}
+to integers and logs the values in {\tt sixdesk.log} 
+\item sixdeskinttunes() myinttunes Uses the integer tunes to produce values to replace 
+placeholders in fort.3
+\item sixdeskamps() myamps Generates the equivalent integer values for amplitudes
+\item sixdeskrundir() myrundir {\tt name1 name2} Converts the specified run {\tt name1}
+to the equivalent unique directory name which is returned in {\tt \$name2} 
+\end{itemize}
 The scripts:
-\begin{verbatim}
-[my]dot_boinc
-[my]dot_bsub
-\end{verbatim}
+\begin{itemize}
+\item [my]dot\_boinc
+\item [my]dot\_bsub
+\end{itemize}
 are effectively subroutines used by run\_six. 
 The scripts 
-\begin{verbatim}
-[my]dot_env
-[my]dot_profile
-\end{verbatim} are called by almost everyone to establish the environment
+\begin{itemize}
+\item [my]dot\_env
+\item [my]dot\_profile
+\end{itemize} 
+are called by almost every other script to establish the environment
 and make the subroutines available.
 
 \section{Backing up the workspace}
 \label{sec:backup}
- The scratch disks at CERN are not backed up (unlike your \$HOME) for the time being.
+The AFS scratch disks at CERN are not (yet) backed up.
 It is recommended that you periodically run a backup so that data can be recovered 
-in case of a scratch disk failure. It is also recommended to a
-{\tt backup\_study [job\_tracking]} when a study {\tt job\_tracking} is complete. The study may then
-be deleted safely.
+easily in case of a scratch disk failure. It is also recommended to a
+{\tt backup\_study [job\_tracking]} when a study {\tt job\_tracking} is complete.
+The study may then be deleted safely.
 
  These backups can be done rather simply in a batch job. First is shown an example of 
 backing up your scratch disks and then the rather more sophisticated
 facilities available for SixDesk tracking studies and workspaces.
 
-NOTA BENE: all castor\_backups save the logs in your ~/castor/logs. Although
+NOTA BENE: all {\tt castor\_backups} save the logs in your {\tt ~/castor/logs}. Although
 these are gzipped and might be useful if you forget the contents of a backup
 you may also just want to delete them to save space in your HOME directory.
 The contents of backups can be always be determined from the backups
 themselves. Note also that for all backups, links are NOT followed. Further
 a link to a non-existent file is NOT backed up.
 
- 1. Backing up scratch disks
- Everyone has a CASTOR account and a default \$CASTOR\_HOME directory
-/castor/cern.ch/user/\$INITIAL/\$LOGNAME. All the ns commands like
-nsls, nsrm, nsmkdir etc use this by default. In this example
-all the backups are in the CASTOR directory scratch\_backups. 
-In the examples below "date" is of the form yyyy-mm-dd (and mydate is
-just -yyyy-mm-dd).
+ \subsection{Backing up scratch disks}
+ Everyone has a CASTOR account and a default {\tt \$CASTOR\_HOME} directory
+{\tt /castor/cern.ch/user/\$INITIAL/\$LOGNAME}. All the {\tt ns} commands like
+{\tt nsls, nsrm, nsmkdir} etc use this by default. In this example
+all the backups are in the CASTOR directory {\tt scratch\_backups}. 
+In the examples below {\tt date} is of the form {\tt yyyy-mm-dd} 
+(and {\tt mydate} is just {\tt -yyyy-mm-dd}).
 The batch job script, which must have execute permission, is as follows:
 \begin{verbatim}
 #!/bin/sh
@@ -1191,7 +1260,8 @@ echo "Scratch backup reports$mydate"
 echo "" >> backup_scratch.reports
 for i in `ls -d scratch*`
 do
-  echo "Backing up $i to scratch_backups/$i$mydate" >> backup_scratch.reports
+  echo "Backing up $i to scratch_backups/$i$mydate" \
+       >> backup_scratch.reports
   echo "Backing up $i to scratch_backups/$i$mydate"
   castor_backup $i scratch_backups/$i$mydate
   nsls -l scratch_backups/$i$mydate >> backup_scratch.reports
@@ -1201,56 +1271,52 @@ done
 
 If the job runs to completion (as can be checked in the LSF STDOUT or the 
 backup\_scratch\_reports) a lost disk, scratch0 say, can be restored with a
-
 \begin{verbatim}
 cd $HOME
 castor_recall scratch_backups/scratch0"mydate"/scratch0
 \end{verbatim}
-
-where "mydate" identifies the backup to be used. nsls scratch\_backups will show
+where "mydate" identifies the backup to be used. {\tt nsls scratch\_backups} will show
 all available backups. Clearly this can also be done in a batch job.
 To recall to a different place
-
 \begin{verbatim}
 cd $HOME/scratch99
 castor_recall scratch_backups/scratch0"date"/scratch0 .
 \end{verbatim}
+will recall all the files to the directory {\tt scratch99}.
 
- 2. Backing up SixDesk workspaces and directories.
+\subsection{Backing up SixDesk workspaces and directories}
  The intended usage is that in order to free up disk space a study can be 
 backed up and then deleted. It may later be recalled to exactly the same
-workspace or to a new different workspace. The backup\_workspace might be
+workspace or to a new different workspace. The {\tt backup\_workspace}
+command might be
 used to backup a complete set of studies. A study may be recalled from 
 either a workspace backup or a study backup.
 
  Deleted studies are never backed up; a non-deleted study cannot be recalled
-to the same workspace. Deleting a study does NOT delete sixjobs and all
-sixdeskenv/sysenv files are kept in the studies directory. All DAres* files
+to the same workspace unless it has first been deleted. 
+Deleting a study does NOT delete the {\tt sixjobs}
+directory and all
+{\tt sixdeskenv} and {\tt sysenv} files are kept in the studies directory. All DAres* files
 are also preserved.
 
- All backup/recall commands should be issued from the sixjobs directory as usual
-except for recall\_workspace where you must be in the workspace itself.
+ All backup/recall commands should be issued from the {\tt sixjobs} directory as usual
+except for {\tt recall\_workspace} which should be one level above e.g. {\tt w1}.
 
  In these examples "date" is of the form ddmmyy.
  So, normally, for example:
-
 \begin{verbatim}
   cd ~w1/sixjobs
   set_env job_tracking
   backup_study
   delete_study
 \end{verbatim}
-
 and subsequently
-
 \begin{verbatim}
   cd ~w1/sixjobs
   set_env job_tracking
   recall_study w1%job_tracking%"date"
 \end{verbatim}
-
-or
-
+or to recall to a new different workspace
 \begin{verbatim}
   cd ~w1/sixjobs
   set_env job_tracking
@@ -1258,17 +1324,14 @@ or
 \end{verbatim}
   
 In the latter case the sixdeskenv files are edited to reflect the new
-workspace. In all recalls an 
+workspace. In all recalls, an 
 existing sixjobs directory is never overwritten, but in all cases the 
 sixtrack\_input, track, work, and plot data are recalled along with 
 logfiles if possible.
-
  To recall several studies to a new workspace, the first recall will
-recall sixjobs as well as the data; afterwards, cd to the workspace
+recall sixjobs as well as the data; afterwards, {\tt cd} to the workspace
 to recall other studies.
-
  As mentioned a study can be similarly recalled from a workspace backup by
-
 \begin{verbatim}
   set_env job_tracking
   recall_study w1%"date" to restore it to w1 
@@ -1278,22 +1341,20 @@ or
   set_env job_tracking
   recall_study w1%"date" w99 to a new empty workspace.
 \end{verbatim}
-
  Finally a complete workspace can be recalled to the same workspace or a
 different one.
-
 To backup a workspace
 \begin{verbatim} 
   cd ~/w1/sixjobs 
   backup_workspace
 \end{verbatim}
-
 and to recall
 \begin{verbatim}
   cd ~/w1
   recall_workspace w1%"date"
 \end{verbatim}
-or 
+or, since a new different workspace is empty, we must first
+get a copy of the {\tt recall\_workspace} script  
 \begin{verbatim}
   cd ~/w99
   cp SOMEWHERE/recall_workspace .
@@ -1301,27 +1362,24 @@ or
 \end{verbatim}
 
  All backups can be found in \$CASTOR\_HOME/workspace\_backups with names like
-
-  w1\%job\_tracking\%"date"     for a study backup
- 
+{\tt w1\%job\_tracking\%"date"} for a study backup
 or
-
-  w1\%"date"          for a workspace backup.
-
-nsls workspace\_backups will list them all.
+{\tt w1\%"date"} for a workspace backup.
+The command {\tt nsls workspace\_backups} will list all available backups.
 
  All backups are automatically restartable from checkpoints as they may take
 some time and are subject to the usual system failures. A file 
-backup\_study.list or backup\_workspace.list is used for restarting
+{\tt backup\_study.list} or {\tt backup\_workspace.list} is used for restarting
 from the point of failure. Thus a backup must be completed before a new
-backup is started in the same workspace (or the file backup\_study.list or
-backup\_workspace.list must be deleted). The workspace is locked to ensure
+backup is started in the same workspace (or the {\tt file backup\_study.list} or
+{\tt backup\_workspace.list} must be deleted). The workspace is locked to ensure
 only one backup at a time and no switching of studies.
 
  These procedures may seem complicated but the simple backup, delete, recall
 are easy to perform and the complications are necessary to avoid destroying
 data and to recover from system failures. Details of the CASTOR backups/
-recalls can be found in the castor\_backup.log or castor\_recall.log.
+recalls can be found in the {\tt castor\_backup.log} or {castor\_recall.log}
+in the {\tt sixjobs} directory.
 
 \section{Other lattices}
 \label{sec:otherlattices}
@@ -1332,17 +1390,172 @@ Other changes are described in the main part of this
 note, including aesthetic name changes. Also required are definitions
 of the {\tt runtype} (see section \ref{sec:mad_6t}). This variable
 and the variable {\tt beam} specify which of the {\tt fort.3.mother1} and {\tt fort.3.mother2}
-from the directory
-\begin{verbatim}
- sixjobs/control_files
-\end{verbatim}
+files from the directory {\tt sixjobs/control\_files}
 to use. The value of the {\tt runtype and beam} variables simply specify the suffix
 of the files to be used from this directory. For how these files are
 constructed the user is refered to the SixTrack manual \cite{SixTrack}.
 \section{Acknowledgements}
-Thanks to R. Demaria, M. Giovannozzi and T. ~Risselada
+Thanks to F. Schmidt for the original scripts and many helpful discussions
+and much advice; to R. Demaria, M. Giovannozzi and T. ~Risselada
 for acting as guinea pigs and for many helpful suggestions.
+Finally, thanks to S. Fartoukh for setting up the {\tt mask} files in
+the {\tt mask} directory.
 
+\begin{figure*}[tb]
+\centering
+\includegraphics*[width=200mm]{print.eps}
+\caption{Example of fu problems.}
+\label{dir}
+\end{figure*}
+
+\appendix
+\section{An overview of the w1/sixjobs directory}
+\label{sec:commands}
+See Figure \ref{dir}
+
+\section{A partial view of the track tree}
+\label{sec:track}
+For the purpose of illustration a very small study with just
+two seeds, two tune pairs, two amplitude and two angles is used.
+\begin{verbatim}
+Level 1
+track: 1 2 general_input
+
+Level 2
+track/1: simul
+
+Level 3
+track/1/simul: 62.311_60.321 62.31_60.32
+
+Level 4
+track/1/simul/62.31_60.32: 6-7 6.5_7 6_6.5 \
+betavalues mychrom sixdesktunes 
+
+Level 5
+track/1/simul/62.31_60.32/6-7: e3
+
+Level 6
+track/1/simul/62.31_60.32/6-7/e3: 30 60
+
+Level 7
+track/1/simul/62.31_60.32/6-7/e3/30: 
+fort.10.gz
+track/1/simul/62.31_60.32/6-7/e3/60: 
+fort.10.gz
+
+Level 6
+track/1/simul/62.31_60.32/6_6.5/e3: 30 60
+
+Level 7
+track/1/simul/62.31_60.32/6_6.5/e3/30:
+fort.10.gz
+fort.16.gz
+fort.2.gz
+fort.3.gz
+fort.8.gz
+job_tracking%1%s%62.31_60.32%6_6.5%3%30.log
+job_tracking%1%s%62.31_60.32%6_6.5%3%30.lsf
+
+track/1/simul/62.31_60.32/6_6.5/e3/60:
+fort.10.gz
+fort.16.gz
+fort.2.gz
+fort.3.gz
+fort.8.gz
+job_tracking%1%s%62.31_60.32%6_6.5%3%60.log
+job_tracking%1%s%62.31_60.32%6_6.5%3%60.lsf
+\end{verbatim}
+Note the correspondance between the LSF jobname and the name of the
+directory containing it, as described in Section \ref{sec:study}.
+\section{A partial view of the plot tree after post-processing}
+\label{sec:plot}
+In this view post-processing was performed with {\tt iplot=1} and {\tt kvar=1}.
+Again, a very small study with just
+two seeds, two tune pairs, two amplitudes and two angles is used.
+\begin{verbatim}
+plot: inc job_tracking
+job_tracking: 1 2 allseeds.eps.gz
+
+job_tracking/1: simul
+
+job_tracking/1/simul: 62.311_60.321 62.31_60.32
+
+job_tracking/1/simul/62.31_60.32: 6-7
+
+job_tracking/1/simul/62.31_60.32/6-7/e3: .1 .2
+
+job_tracking/1/simul/62.31_60.32/6-7/e3/.1:
+averem.eps.gz
+distance.eps.gz
+fort.10.gz
+fort.11
+fort.15.gz
+fort.28
+fort.30.gz
+fort.40
+kvar.eps.gz
+maxslope.eps.gz
+smear.eps.gz
+survival.eps.gz
+test.ps.gz
+
+job_tracking/1/simul/62.31_60.32/6-7/e3/.2:
+averem.eps.gz
+distance.eps.gz
+fort.10.gz
+fort.11
+fort.15.gz
+fort.28
+fort.30.gz
+fort.40
+kvar.eps.gz
+maxslope.eps.gz
+smear.eps.gz
+survival.eps.gz
+test.ps.gz
+\end{verbatim}
+Note the "hidden" directories {\tt .1} and {\tt .2} as mentioned in
+Section \ref{sec:run_post}.
+\section{Alphabetic list of supported commands and scripts}
+\label{sec:commandlist}
+\begin{itemize}
+\item backup\_study to CASTOR
+\item backup\_workspace to CASTOR
+\item bresume\_all Resume all suspended batch jobs
+\item bstop\_all Stop all batch jobs
+\item check\_all\_locks Tries to check for any locks in the workspace
+\item check\_lock Checks a specified directory or {\tt sixjobs}
+\item check\_locks Tries to check for any locks in the current study
+\item check\_mad6t Does minimal checks on the {\tt sixtrack\_input}
+\item correct\_cases Re-generates {completed\_cases} and {\tt incomplete\_cases}
+\item delete\_study deletes all or parts of a study based on replies to prompts
+\item dorun\_mad6t called by run\_mad6t
+\item get\_all\_betavalues Writes all betavalues to STDOUT
+\item get\_wpro A sample script for using from acron to get results
+\item mywhich Writes some important variables to STDOUT
+\item print\_env Writes the {\tt sixdeskenv sysenv} variables and values to STDOUT
+\item query\_all Does a {\tt run\_status} for each study in a workspace
+\item recall\_study from CASTOR
+\item recall\_workspace from CASTOR
+\item rerun\_all\_cases (Used to rerun\_all cases on BOINC)
+\item run\_awk Processes all the DAres* files and writes a summary to STDOUT
+\item run\_incomplete\_cases Re-submits incomplete cases to BOINC
+\item run\_incomplete\_tasks (Rarely used)
+\item run\_join10 Joins all {\tt fort.10.gz} files in preparation for {\tt run\_post}
+\item run\_missing\_jobs Re-submits any LSF jobs which have failed (after {\tt run\_status}
+\item run\_post Does the post-processing to produce graphics and the DAres* files
+\item run\_query A quick and brief status report
+\item run\_results Retrieves BOINC results
+\item run\_six Submits all LSF jobs or BOINC Work Units (after {run\_mad6t}
+\item run\_status Reports status and updates the database for the platform LSF
+\item set\_env Used to save the environment after changes to {\tt sixdeskenv sysenv},
+ to create a study, or to switch studies
+\item sub\_wpro A sample script for doing a {\tt run\_six} in batch LSF
+\item unlock Unlocks the specified directory or {\tt sixjobs}
+\item unlock\_all An unlock of all locks of the current study and any other 
+workspace locks not specific to a study {\tt sixjobs}, 
+{\tt plot} and {\tt sixdeskTaskIds}
+\end{itemize}
 \begin{thebibliography}{99}
 %
 \bibitem{Runsix} M.~Hayes and F.~Schmidt, ``Run Environment for SixTrack'',

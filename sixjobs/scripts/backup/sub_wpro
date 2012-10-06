@@ -1,4 +1,10 @@
 #!/bin/csh
-#
+if ($#argv != 2) then
+  echo "You must specify a Study and a Platform"
+  exit 1
+endif
+# The study is just the LHCDescrip e.g. lhc
+# The platform should be BOINC or LSF
+# See also the acrontab.entry
 cd ~/wpro/sixjobs
-run_six
+run_six $1 $2

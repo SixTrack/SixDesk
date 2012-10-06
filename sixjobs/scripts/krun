@@ -1,0 +1,10 @@
+#!/bin/sh
+# Run a command with nohup and with AFS token renewal
+# where command is e.g. run_six followed by a study
+# and platform BOINC is assumed
+if test $# -ne 2
+then
+  echo "You must specify a command and a study (uses BOINC)!!!"
+  exit 1
+fi
+k5reauth -R -- nohup $1 $2 BOINC >> blog_$2 2>&1 & 

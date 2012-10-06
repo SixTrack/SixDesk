@@ -73,6 +73,7 @@ compare_studies
 compare_workspaces
 exec_env
 get_wpro
+krun
 minav.awk
 plot_DA
 plot1.template

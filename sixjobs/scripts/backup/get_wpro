@@ -4,7 +4,7 @@ if ($#argv != 2) then
   exit 1
 endif
 # The study is just the LHCDescrip e.g. lhc
-# The platform should be boinc or cpss 
+# The platform should be BOINC or LSF
 # See also the acrontab.entry
 cd ~/wpro/sixjobs
 run_results $1 $2
