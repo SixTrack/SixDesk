@@ -2,7 +2,7 @@
 # Add a registered user to the AFS pts protection group.
 # The parameter sixdeskpts is defined is sysenv
 # export sixdeskpts=boinc:users
-# The group boinc:users is owned by boinc_admins
+# The group boinc:users is owned by boinc:admins
 # with mcintosh, pete, nils, boincadm, boinc, giovanno
 # being allowed to modify it.
 if test $# -ne 1
