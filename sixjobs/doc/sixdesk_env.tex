@@ -1,23 +1,30 @@
-\documentclass{cernatsnote}    % Specifies the document style.
+%%\documentclass{cernatsnote}    % Specifies the document style.
+\documentclass{article}    % Specifies the document style.
 \usepackage{times}
-\usepackage{epsfig} 
-\usepackage{html}
+\usepackage[english]{babel}
+%%\usepackage{epsfig}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\newcommand{\myhref}[2]{\href{#1}{\color{blue}#2}}
+
+%\usepackage{html}
 
 \textheight 23cm
 \voffset -2cm
 
 \begin{document}
 \begin{titlepage}
-\documentlabel{draft}
-\keywords{software, sixtrack, dynamic aperture}
+%\documentlabel{draft}
+%\keywords{software, sixtrack, dynamic aperture}
 \date{\today}
-\title{The SixDesk Run Environment for SixTrack} 
+\title{The SixDesk Run Environment for SixTrack (DRAFT)}
 \author{E.~McIntosh, R.~De~Maria}
-\email{Eric.McIntosh@cern.ch}
+%\email{Eric.McIntosh@cern.ch}
 
 \maketitle
- 
-\begin{abstract}
+
+%\begin{abstract}
   This document replaces the ``Run Environment for 
   SixTrack''~\cite{Runsix},
   and describes how massive tracking campaigns can be
@@ -26,65 +33,62 @@
   of UNIX BASH or Korn shell scripts which allow the use of 
   the Berkeley Open Infrastructure for
  Network Computing, BOINC~\cite{Boinc}) as an alternative to the Linux LSF batch system.
-\end{abstract}
+%\end{abstract}
 
 \end{titlepage}
 %
-Version 24 6th October, 2012.
+Version 25 24th October, 2012.
 
 \section{Objectives}
 %
-The principal objective of the SixDesk run environment was to allow a physicist to
-run a tracking campaign, on either the CERN LSF batch system or BOINC,
-using the familiar SixTrack run environment on Linux. 
-At the same time, the opportunity was taken to group all
-user modifiable parameters into two files, {\tt sixdeskenv} and {\tt sysenv}, 
-and to speed up
-{\tt run\_mad6t}, the madX to SixTrack conversion, by running in parallel in batch. 
-The specification of tune scans, fractional amplitude ranges and steps, and various
-other physics options were also added to the {\tt run\_six} script/command.
-All SixDesk scripts report activity to the {\tt sixdesk.log} file
-and exit with an error code if an unrecoverable error is detected.
-The messages are optionally sent to {\tt STDOUT}, your screen, in an interactive
+The principal objective of the SixDesk run environment was to allow a
+physicist to run a tracking campaign, on either the CERN LSF batch system or
+BOINC, using the familiar SixTrack run environment on Linux.  At the same
+time, the opportunity was taken to group all user modifiable parameters into
+two files, {\tt sixdeskenv} and {\tt sysenv}, and to speed up {\tt
+run\_mad6t}, the madX to SixTrack conversion, by running in parallel in batch.
+The specification of tune scans, fractional amplitude ranges and steps, and
+various other physics options were also added to the {\tt run\_six}
+script/command.  All SixDesk scripts report activity to the {\tt sixdesk.log}
+file and exit with an error code if an unrecoverable error is detected.  The
+messages are optionally sent to {\tt STDOUT}, your screen, in an interactive
 session.
 %
-\section{Getting Started}
-First note that in order to use BOINC you must not only have a CERN account
-but must also be registered in the
-AFS protection group boinc:users. This is done with the script
-{\tt add\_boinc\_user} but only E. McIntosh, M. Giovannozzi and
-IT BOINC administrators are authorised to do so.
+\section{Getting Started} First note that in order to use BOINC you must not
+only have a CERN account but must also be registered in the AFS protection
+group boinc:users. This is done with the script {\tt add\_boinc\_user} but
+only E. McIntosh, M. Giovannozzi and IT BOINC administrators are authorised to
+do so.
 
-All the user modifiable parameters have been collected 
-into the two scripts {\tt sixdeskenv, sysenv} obviating the need to look through all
-scripts and make matching changes, simplifying the usage of the scripts,
-and limiting the risk of error.
+All the user modifiable parameters have been collected into the two scripts
+{\tt sixdeskenv}, {\tt sysenv} obviating the need to look through all scripts
+and make matching changes, simplifying the usage of the scripts, and limiting
+the risk of error.
 
 It is assumed that there is a large amount (at least 1GB) of disk space
-available to be used as a workspace which we shall call
-{\tt w1} for illustration. The {\tt w1} directory must be a link in \$HOME
-to a directory with the same name, usually on an scratch disk 
-(AFS scratch0, scratch1, etc or in a /scratch directory).
-Note that by default access to all AFS files will be limited; it is useful
-to do a {\tt fs setacl w1 system:anyuser rl} so that everything in an
-AFS workspace can be read by support.
+available to be used as a workspace which we shall call {\tt w1} for
+illustration. The {\tt w1} directory must be a link in \$HOME to a directory
+with the same name, usually on an scratch disk (AFS scratch0, scratch1, etc or
+in a /scratch directory).  Note that by default access to all AFS files will
+be limited; it is useful to do a {\tt fs setacl w1 system:anyuser rl} so that
+everything in an AFS workspace can be read by support. Is is also assumed that the {\tt .} directory is in the {\$PATH} environment variable.
 
-A workspace is created by e.g. 
+A workspace is created by e.g.:
 \begin{verbatim}
  cd $HOME
- mkdir scratch0/w1
+ mkdir -p scratch0/w1
  ln -s ~/scratch0/w1 w1 
  cd w1
  fs setacl . system:anyuser rl
 \end{verbatim}
 and the SixDesk environment is created by 
 \begin{verbatim}
- cd w1
+ cd $HOME/w1
  svn checkout https://svn.cern.ch/reps/sixdesk
 \end{verbatim}
 or
 \begin{verbatim}
- cd w1
+ cd $HOME/w1
  gtar xvzf /afs/cern.ch/user/f/frs/public_html/\
 SixTrack_run_environment/SixDesk_run_environment.pro.tgz
 \end{verbatim}
@@ -472,7 +476,7 @@ Normally initial investigations are carried out with {\tt short}
 runs (and possibly {\tt sussix}).
 
 \begin{enumerate}
-\item Short run ---
+  \item Short run ---
   This run mode is used to find chromaticity and detuning as a
   function of $\delta$ and amplitude respectively. Typically this is
   done with just 1,000 turns (activate with {\tt short=1} in {\tt sixdeskenv}).
@@ -485,7 +489,7 @@ runs (and possibly {\tt sussix}).
 \item Differential Algebra (DA) run ---
   If high order Taylor maps are needed this is the mode to use
   (activate with {\tt da=1}). This mode is mostly for expert use. 
-  The {\tt SixTrack} author F. Schmidt should be consulted on how to make best use of it.
+ The {\tt SixTrack} author F. Schmidt should be consulted on how to make best use of it.
   In this case {\tt run\_six} calls the porgrams readda, dalie4 and dalie6
   in the directory {\tt bin}.  
 \end{enumerate}
@@ -1028,18 +1032,91 @@ These files contain the following columns:
 \item Upper bound of tracked amplitude range.
 \end{itemize}
 
+%/afs/cern.ch/project/lhcnap/projects/sixtrack/.@sys/six/extra/read10b.f,
+%which Eric reported to be the source of read10b used in run_post, there
+%are still questions on the physics reasons behind the code, although the
+%general algorithm looks more clear, but still not fully specified.
 
-{\tt run\_awk} uses the DAres* files from {\tt run\_post}, reports to the screen,
-and produces a simple plot file named DAres*.plot.
+%What follows is my interpretation with the current open questions.
+
+The algorith can be roughly described as the following. The code first read
+the joined {\tt fort}.10.  If the emittance of the mode I ({\tt emitI}) is
+smaller than {\tt 1E-10} then the initial coordinate $x$ is replaced by {\tt
+sqrt(betx*emitI)}. The same for $y$.
+
+%(1) Is emitI twice the action in mm**2?
+%(2) Why 1e-10 has been used as a threshold?
+%   a) because the determination of the emitI is unreliable for small
+%   numbers
+%   b) because the emitI is unreliable for small number
+
+The first amplitude of the {\tt fort.10} is analyzed to obtain:
+\begin{itemize}
+\item {\tt rat}: the tangent of the {\tt emitII/emitI}
+\item {\tt rad}: ratio between {\tt emitI / emit} (
+or {\tt emitII / emit} if {\tt rat>1}) if {\tt emit} is {\tt
+emitI**2+emitII**2} normalized with the real emittance of the beam specified
+by the user.  If {\tt emitI} are small then {\tt emitI} is estimated using the
+initial conditions
+\item {\tt rad1}: same quantity as {\tt rad} but evaluated as before using the
+average amplitudes if {\tt emitI} is small otherwise using the average
+amplitudes and the secondary beta functions
+\end{itemize}
+
+{\tt rat}, {\tt rad}, and {\tt rad1} will be used for all the other amplitudes
+in the following analysis.
+
+%(3) why the first amplitude is used and not the one turn map to
+%translate amplitude in real space to amplitudes in sigma for DA?
+%(4) same as 2 here
+%(5) how the amplitude average is computed?
+%  a) first 1000 turns
+%  b) first max number of turns / 100
+%  c) last turns 1000 before loss
+
+The analysis of all the amplitudes starts with:
+\begin{itemize}
+\item the chaotic boundary with slope method, {\tt achaos},
+\item distance in the phase space with slope method, {\tt achaos1}
+\item initial condition of lost particle, {\tt alost2}
+\item average initial condition, average corrected, of a lost particle,
+  {\tt alost1}
+\end{itemize}
+
+{\tt achaos} is set to first amplitude (normalized with {\tt rad}) until an
+amplitude is found chaotic. It means that if the first amplitude is
+chaotic or all amplitudes are chaotic the result does not change.
+%(6) why the threshold is chosen to be 2, 1/2 and not stricter?
+{\tt achaos1} is zero until an amplitude is found chaotic.
+%(7) in which unit the distance in the phase space is expressed?
+%(8) why the threshold for distance is set to 0.01
+{\tt alost2} is the amplitude normalized with rad of the first lost amplitude.
+
+For the amplitudes between the {\tt achaos} and {\tt achaos1}, the average
+ratio between {\tt rad*x} and {\tt rad1*x\_average} is computed. If the ratio
+is in between 0.9 and 1.1 than {\tt alost2} is corrected by this average ratio
+and stored in {\tt alost1}. If outside of the bounds {\tt alost1} is inverted.
+If there is no amplitudes in between {\tt achaos} and {\tt achaos1}, {\tt
+alost1==alost2}.
+
+%(9) is this correction robust and justified? The da normalization of one
+%amplitudes depends strongly on the one of the first amplitude and weakly
+%on the motion of all the others.
+
+The code ends reporting {\tt achaos}, {\tt achaos2}, {\tt alost1}, {\tt
+alost2}, {\tt rad} normalized first amplitude and last amplitude.
+
+{\tt run\_awk} uses the DAres* files from {\tt run\_post}, reports to the
+screen, and produces a simple plot file named DAres*.plot.
 
 \section{Running studies in batch and/or parallel}
 In summary a study can be run in the following steps:
 \begin{enumerate}
-\item Create a study by {\tt set\_env} and after creating the
+  \item [] Create a study by {\tt set\_env} and after creating the
 {\tt mask} file in the {\tt mask} directory do a {\tt run\_mad6t}.
 Repeat as often as necessary until {\tt check\_mad6t} is successful
 and the {\tt mad6t} output has been verified.
-\item For a large study use {\tt run\_six} in a batch job by
+\item [] For a large study use {\tt run\_six} in a batch job by
 for example:
 \begin{verbatim}
   bsub -q1nd 'cd w1/sixjobs;run_six job_tracking LSF' 
@@ -1403,7 +1480,7 @@ the {\tt mask} directory.
 
 \begin{figure*}[tb]
 \centering
-\includegraphics*[width=200mm]{print.eps}
+%\includegraphics*[width=200mm]{print}
 \caption{Example of fu problems.}
 \label{dir}
 \end{figure*}
@@ -1560,18 +1637,18 @@ workspace locks not specific to a study {\tt sixjobs},
 %
 \bibitem{Runsix} M.~Hayes and F.~Schmidt, ``Run Environment for SixTrack'',
   LHC Project Note 300,\\
-  (see also http://wwwslap.cern.ch/frs/SixTrack\_run\_environment/manual.ps).
+  (see also http://cern.ch/frs/SixTrack\_run\_environment/manual.ps).
 %
 \bibitem{SixTrack} F.~Schmidt, ``SixTrack: Version 3, Single Particle
   Tracking Code Treating Transverse Motion with Synchrotron
   Oscillations in a Symplectic Manner, User's Reference Manua'',
   CERN/SL/94--56 (AP)\\
-  (see also http://wwwslap.cern.ch/frs/Documentation/doc.htmlx).
+  (see also http://cern.ch/frs/Documentation/doc.htmlx).
 %
 \bibitem{hansnote} H.~Grote, ``Statistical significance of dynamic
   aperture calculations'', Beam Physics Note 34.
 %
-\bibitem{NIST} \htmladdnormallink{http://physics.nist.gov/cuu/Constants/index.html}
+\bibitem{NIST} \myhref{http://physics.nist.gov/cuu/Constants/index.html}
   {http://physics.nist.gov/cuu/Constants/index.html}.
 %
 \bibitem{lines3} R.~Bartolini and F.~Schmidt, ``SUSSIX: A Computer
@@ -1580,8 +1657,8 @@ workspace locks not specific to a study {\tt sixjobs},
   in Accelerators -- A Challenge to Theoretical and Computational
   Physics'', L\"uneburg, September 29 -- October 3, 1997, CERN SL/Note
   98--017 (AP),
-  \htmladdnormallink{http://wwwslap.cern.ch/frs/report/sussix\_manual\_sl.ps.gz}
-  {http://wwwslap.cern.ch/frs/report/sussix\_manual\_sl.ps.gz}.
+  \myhref{http://cern.ch/frs/report/sussix_manual_sl.pdf}
+  {http://cern.ch/frs/report/sussix\_manual\_sl.pdf}.
 %
 \bibitem{fandmpaper}
 M.~Giovannozzi and E.~McIntosh, ``Parameter scans and accuracy estimates
@@ -1589,18 +1666,18 @@ of the dynamical aperture of the CERN LHC'', EPAC'06, June 2006, Edinburgh.
 %
 \bibitem{SIXTRACK6} M.~B\"oge and F.~Schmidt, ``Data Organisation for
   the LHC Tracking Studies with SIXTRACK'', LHC Project Note 99,\\
-  \htmladdnormallink{http://wwwslap.cern.ch/frs/report/lhc$\_$pro$\_$note99.ps.Z}
-  {http://wwwslap.cern.ch/frs/report/lhc$\_$pro$\_$note99.ps.Z}.
+  \myhref{http://cern.ch/frs/report/lhc_pro_note99.pdf}
+  {http://cern.ch/frs/report/lhc\_pro\_note99.pdf}.
 %
 \bibitem{LHC8} M.~B\"oge and F.~Schmidt, ``Estimates for Long--Term
   Stability for the LHC'', LHC Project Report 114, presented in part
   at the Particle Accelerator Conference, Vancouver, 12--16 May,
   (1997), AIP Conference Proceedings 405 (1996),
-  \htmladdnormallink{http://wwwslap.cern.ch/frs/report/conj97lhc.ps.Z}
-  {http://wwwslap.cern.ch/frs/report/conj97lhc.ps.Z},\\
+  \myhref{http://cern.ch/frs/report/conj97lhc.pdf}
+  {http://cern.ch/frs/report/conj97lhc.pdf},\\
   the poster version:
-  \htmladdnormallink{http://wwwslap.cern.ch/frs/report/conj97post.ps.Z}
-  {http://wwwslap.cern.ch/frs/report/conj97post.ps.Z} \\
+  \myhref{http://cern.ch/frs/report/conj97post.pdf}
+  {http://cern.ch/frs/report/conj97post.pdf} \\
   and contribution to the workshop on ``New Ideas for Particle
   Accelerators'', Santa Barbara, November 1996.
 %
