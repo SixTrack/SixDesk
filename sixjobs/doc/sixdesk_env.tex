@@ -85,7 +85,7 @@ A workspace is created by e.g.:
 and the SixDesk environment is created by 
 \begin{verbatim}
  cd $HOME/w1
- svn checkout https://svn.cern.ch/reps/sixdesk
+ svn checkout  http://svn.cern.ch/guest/sixdesk/sixjobs
 \end{verbatim}
 or
 \begin{verbatim}
@@ -97,49 +97,55 @@ where the first method will get the latest SVN committed version
 and the second method uses a link to a tar file which will be updated 
 in parallel with the SVN commits.  
 
-This will create a directory subtree starting with
-the directory {\tt sixjobs}. An overview of this directory is
-shown in Appendix \ref{sec:commands}. 
-The latest source and postscript of this document can be found 
-in the directory {\tt sixjobs/doc}.
-All the scripts are stored in {\tt sixjobs} itself
-and the user should always do a
-{\tt cd w1/sixjobs} before executing any commands. It may be
-necessary to prefix any typed commands with a {\tt ./} if your 
-shell PATH does not include the current directory {\tt "."}. 
-(The source version of each script can be found
-in {\tt sixjobs/scripts} as will be discussed later.)
+This will create a directory subtree starting with the directory {\tt
+sixjobs}. An overview of this directory is shown in Appendix
+\ref{sec:commands}.  The latest source and postscript of this document can be
+found in the directory {\tt sixjobs/doc}.  All the scripts are stored in {\tt
+sixjobs} itself and the user should always do a {\tt cd w1/sixjobs} before
+executing any commands. It may be necessary to prefix any typed commands with
+a {\tt ./} if your shell PATH does not include the current directory {\tt
+"."}.  (The source version of each script can be found in {\tt
+sixjobs/scripts} as will be discussed later.)
+
+At this point it is important to check that the LOCALE environment variable
+LANG has the value C or other English-like setting, since it has been noted
+that the {\tt awk} program gives errors if this is not the case. (This is
+normally set, but it it is not the default on some laptops and on MacOS.)
 
 \section{Setting up a Study}
 \label{sec:study}
-At this point it is important to check that the LOCALE environment variable
-LANG has the value C. If not, {\tt setenv LOCALE "C"} in the {\tt csh}.
-It has been noted that the {\tt awk} program gives errors if this is not the
-case. (This is normally set, but it it is not the default on some laptops
-and on MacOS.)
-To facilitate the description of the various procedures we use this workspace
-{\tt w1} and a study {\tt job\_tracking} as an illustration using the mask
-file {\tt job\_tracking.mask} included in the release in the {\tt sixjobs/mask}
-directory. Note that the name of the
-study is contained in the variable {\tt LHCDescrip} i.e. if we have a study
-called {\tt lhc\_nob1} then we must define it 
-with {\tt export LHCDescrip=lhc\_nob1}. It should also be noted that amplitudes
-and amplitude ranges are specified in beam $\sigma$.
-There are several supported types of study, short studies using SixTrack and possibly
-Sussix, long tracking studies using SixTrack, and DA map production using the SixTrack DA version.
-Performing a tracking study involves running many jobs for an LHC configuration with
-many different initial phase space amplitudes and angles and linear tunes. The LHC configuration is
-defined by a mask file in the {\tt sixjobs/mask} sub-directory and the initial
-conditions in the {\tt sixdeskenv, sysenv} files.
 
-The first step is to edit the {\tt sixdeskenv} script and, if necessary, 
-the {\tt sysenv} script.
+To facilitate the description of the various procedures we use the directory
+{\tt w1} as workspace and a study named {\tt job\_tracking} as an illustration.
 
-NOTA BENE:It is essential to issue
-a {\tt set\_env} command after any modification to these files so that 
-they are saved in the {\tt studies/study} directory as described later.
-Note also, that as shown below all values must be exported.
+A study is controlled by the {\tt sixdeskenv} file that contains all the
+informations controlling the simulations: location of the madx input file
+(called {\tt .mask} files , the location of the temporary files, the
+definition of the beam distributions, the number of turns to be tracked or
+stored and the type of post processing. The corresponding mask file {\tt
+job\_tracking.mask} is included in the release in the {\tt sixjobs/mask}
+directory. Note that the name of the study is contained in the variable {\tt
+LHCDescrip} i.e. if we have a study called {\tt lhc\_nob1} then we must define
+it with {\tt export LHCDescrip=lhc\_nob1}. It should also be noted that
+amplitudes and amplitude ranges are specified in beam $\sigma$.
 
+There are several supported types of study, short studies using SixTrack and
+possibly Sussix, long tracking studies using SixTrack, and DA map production
+using the SixTrack DA version.  Performing a tracking study involves running
+many jobs for an LHC configuration with many different initial phase space
+amplitudes and angles and linear tunes. The LHC configuration is defined by a
+mask file in the {\tt sixjobs/mask} sub-directory and the initial conditions
+in the {\tt sixdeskenv, sysenv} files.
+
+The first step is to edit the {\tt sixdeskenv} script and, if necessary, the
+{\tt sysenv} script.
+
+NOTA BENE:It is essential to issue a {\tt set\_env} command after any
+modification to these files so that they are saved in the {\tt studies/study}
+directory as described later.  Note also, that as shown below all values must
+be exported.
+
+The main paremeter to be set in the {\tt sixdeskenv} file are:
 \begin{description}
 \item [export LHCDescrip=job\_tracking] the name of the study and of the mask file
 \item [export basedir=/afs/cern.ch/user/\$initial/\$LOGNAME]
@@ -149,44 +155,43 @@ Note also, that as shown below all values must be exported.
 \item [export sixtrack\_input=\$scratchdir/sixtrack\_input/\$workspace/\$LHCDescrip]
 (can be changed to point to, and use, an existing set of {\tt sixtrack\_input} files).
 \end{description}
-The above defaults, apart from the name of the study,
-are usually satisfactory but, once chosen,
-cannot be changed easily. Other parameters of the run can be decided later.
+
+The above defaults, apart from the name of the study, are usually satisfactory
+but, once chosen, cannot be changed easily. Other parameters of the run can be
+decided later.
 
 At this point:
 \begin{verbatim}
  cd ~/w1/sixjobs
  set_env
 \end{verbatim}
-will create the full directory structure of the environment.
-As already mentioned this command should also be used to save
-modified versions of the {\tt sixdeskenv, sysenv} files before doing
-anything else. The command also reports and logs changes. 
+will create the full directory structure of the environment.  As already
+mentioned this command should also be used to save modified versions of the
+{\tt sixdeskenv, sysenv} files before doing anything else. The command also
+reports and logs changes.
 
 While it is recommended to run one study per workspace, most users have
 multiple studies in the workspace. The command {\tt ls studies} can be used
 to list them and {\tt set\_env "name of the study"} to switch between studies.
-This switch copies the {\tt sixdeskenv, sysenv} files from the
-{\tt studies} directory to {\tt sixdeskhome} i.e. the current {\tt sixjobs} directory. 
+This switch copies the {\tt sixdeskenv, sysenv} files from the {\tt studies}
+directory to {\tt sixdeskhome} i.e. the current {\tt sixjobs} directory. 
 
 An important new feature is that it is possible to execute many commands
 on a specific study without switching. This facilitates running multiple
-studies in the same workspace and using commands in batch jobs.  
-Thus, instead of switching, a command can be suffixed with a
-"study" and optionally a "platform". Examples are shown later.
-This option is NOT available for the backup or recall, study or workspace, 
-commands described in section \ref{sec:backup}where a {\tt set\_env "study"}
-must first be performed.
+studies in the same workspace and using commands in batch jobs.  Thus, instead
+of switching, a command can be suffixed with a "study" and optionally a
+"platform". Examples are shown later.  This option is NOT available for the
+backup or recall, study or workspace, commands described in section
+\ref{sec:backup}where a {\tt set\_env "study"} must first be performed.
 
 The {\tt print\_env} command reports the complete environment to the screen;
 the command {\tt mywhich} reports a few important values.
 
-Finally note that it is vital that the same versions of SixTrack and madX are used for
-all cases in a study. Ideally the madX {\tt run\_mad6t} jobs should be run on the
-same type of computer to avoid small numeric differences. Compatible versions of these
-programs for LSF and BOINC are specified
-in {\tt sysenv}, the so-called "pro" versions. Any changes will
-be notified.
+Finally note that it is vital that the same versions of SixTrack and madX are
+used for all cases in a study. Ideally the madX {\tt run\_mad6t} jobs should
+be run on the same type of computer to avoid small numeric differences.
+Compatible versions of these programs for LSF and BOINC are specified
+in {\tt sysenv}, the so-called "pro" versions. Any changes will be notified.
 
 \section{Overview of the Data Structure}
 The {\tt set\_env} will have created the {\tt sixtrack\_input},
@@ -1040,10 +1045,11 @@ These files contain the following columns:
 
 %What follows is my interpretation with the current open questions.
 
-The algorith can be roughly described as the following. The code first read
-the joined {\tt fort}.10.  If the emittance of the mode I ({\tt emitI}) is
-smaller than {\tt 1E-10} then the initial coordinate $x$ is replaced by {\tt
-sqrt(betx*emitI)}. The same for $y$.
+The algorithm producing the values can be described in the following steps.
+The code ({\tt read10b}) first reads the joined {\tt fort}.10.  If the
+emittance of the mode I ({\tt emitI}) is smaller than {\tt 1E-10} then the
+initial coordinate $x$ is replaced by {\tt sqrt(betx*emitI)}. The same for
+$y$.
 
 %(1) Is emitI twice the action in mm**2?
 %(2) Why 1e-10 has been used as a threshold?
@@ -1053,15 +1059,15 @@ sqrt(betx*emitI)}. The same for $y$.
 
 The first amplitude of the {\tt fort.10} is analyzed to obtain:
 \begin{itemize}
-\item {\tt rat}: the tangent of the {\tt emitII/emitI}
+\item {\tt rat}: the tangent of the {\tt emitII/emitI};
 \item {\tt rad}: ratio between {\tt emitI / emit} (
 or {\tt emitII / emit} if {\tt rat>1}) if {\tt emit} is {\tt
 emitI**2+emitII**2} normalized with the real emittance of the beam specified
 by the user.  If {\tt emitI} are small then {\tt emitI} is estimated using the
-initial conditions
+initial conditions;
 \item {\tt rad1}: same quantity as {\tt rad} but evaluated as before using the
 average amplitudes if {\tt emitI} is small otherwise using the average
-amplitudes and the secondary beta functions
+amplitudes and the secondary beta functions;
 \end{itemize}
 
 {\tt rat}, {\tt rad}, and {\tt rad1} will be used for all the other amplitudes
@@ -1084,14 +1090,15 @@ The analysis of all the amplitudes starts with:
   {\tt alost1}
 \end{itemize}
 
-{\tt achaos} is set to first amplitude (normalized with {\tt rad}) until an
-amplitude is found chaotic. It means that if the first amplitude is
-chaotic or all amplitudes are chaotic the result does not change.
+{\tt achaos} is set to the first amplitude (normalized with {\tt rad}) until
+an amplitude is found chaotic. It means that if the first amplitude is chaotic
+or all amplitudes are chaotic the result does not change.
 %(6) why the threshold is chosen to be 2, 1/2 and not stricter?
 {\tt achaos1} is zero until an amplitude is found chaotic.
 %(7) in which unit the distance in the phase space is expressed?
 %(8) why the threshold for distance is set to 0.01
-{\tt alost2} is the amplitude normalized with rad of the first lost amplitude.
+{\tt alost2} is the amplitude normalized with {\tt rad} of the first lost
+amplitude.
 
 For the amplitudes between the {\tt achaos} and {\tt achaos1}, the average
 ratio between {\tt rad*x} and {\tt rad1*x\_average} is computed. If the ratio
