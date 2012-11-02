@@ -1,3 +1,6 @@
+Release 2nd November, 2012.
+A few minor improvements to check_locks and check_all_locks.
+
 Release 10th October, 2012.
 Added iplot and kvar to mywhich.
 Fixed a couple of spelling errors.

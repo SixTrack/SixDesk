@@ -41,6 +41,7 @@ fi
 . ./dot_env
 for locks in . .. ./plot sixdeskTaskIds $sixdeskstudy $sixtrack_input $sixdeskwork 
 do
+  echo "Checking $locks"
   mychecklocksub
 done
 for myplat in boinc cpss lsf

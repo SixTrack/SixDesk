@@ -16,36 +16,37 @@ mychecklocksub()
   fi
 }
 # First test in case the studies directory is locked!
-# Making sure we are in sixjobs.
+# Making sure we are in sixjobs and dot_profile exists.
 export sixdeskroot=`basename $PWD`
 if test "$sixdeskroot" != "sixjobs"
 then
   echo "This script must be run in the directory sixjobs!!!"
   exit 1
 fi
-if test -d "studies"
+if test ! -s dot_profile
 then
-  if test -f studies/sixdesklock
-  then
-    if test ! -w studies/sixdesklock
-    then
-      echo "The directory studies is locked by the script"
-      echo " `cat studies/sixdesklock`"
-      echo "We cannot continue checking until it is unlocked!!!"
-      exit 3
-    fi
-  fi
-else
+  echo "The script dot_profile appears to be missing!!!"
+  exit 4 
+fi
+. ./dot_profile
+if test ! -d "studies"
+then
   echo "The directory studies does not exist!!!"
   exit 2
 fi
-. ./dot_env
-# first check sixjobs workspace plot sixdeskTaskIds (coomon to all studies)
-echo "Checking sixjobs workspace plot sixdeskTaskIds"
-for locks in . .. ./plot sixdeskTaskIds
-do
+# first check sixjobs workspace plot sixdeskTaskIds (common to all studies)
+echo "Checking sixjobs"
+  locks="." 
   mychecklocksub
-done
+echo "Checking workspace"
+  locks=".." 
+  mychecklocksub
+echo "Checking plot"
+  locks="./plot" 
+  mychecklocksub
+echo "Checking sixdeskTaskIds"
+  locks="./sixdeskTaskIds" 
+  mychecklocksub
 # Now check all studies
 
 #MACRO mymktmp tmp /tmp
@@ -63,7 +64,7 @@ sixdeskmktmp
 tmp2=$sixdesktmp
 #MACRO mymktmp
 
-echo "check_all_locks using $tmp $tmp2"
+#echo "check_all_locks using $tmp $tmp2"
 ls -tr studies > $tmp
 while read myitem
 do
@@ -96,9 +97,4 @@ do
   done
 done < $tmp2
 rm $tmp2
-
-#MACRO myexit 0
-sixdeskexitparam=0
-sixdeskexit
-#MACRO myexit
-
+exit 0
