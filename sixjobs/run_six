@@ -163,43 +163,43 @@ fi
 #end of input of paths and tracking variables
 #
 # work out platform dependent stuff...
-qpref="undef"
-if test "$OS" = "OSF1"
-then
-    qpref=""
-fi
-if test "$OS" = "Linux"
-then
-    qpref=""
-fi
-if test "$qpref" = "undef"
-then
+qpref=""
+#if test "$OS" = "OSF1"
+#then
+#    qpref=""
+#fi
+#if test "$OS" = "Linux"
+#then
+#    qpref=""
+#fi
+#if test "$qpref" = "undef"
+#then
 
 #MACRO mymess 0 The OS $OS is not currently supported
-  sixdeskmesslevel=0
-  sixdeskmess="The OS $OS is not currently supported"
-  sixdeskmess
+#  sixdeskmesslevel=0
+#  sixdeskmess="The OS $OS is not currently supported"
+#  sixdeskmess
 #MACRO mymess
 
 
 #MACRO myunlock $sixdeskjobs_logs
-  ###sixdesklockdir=$sixdeskjobs_logs
-  ###sixdeskunlock
+#  ###sixdesklockdir=$sixdeskjobs_logs
+#  ###sixdeskunlock
 #MACRO myunlock
 
 
 #MACRO myunlock $sixdeskstudy
-  sixdesklockdir=$sixdeskstudy
-  sixdeskunlock
+#  sixdesklockdir=$sixdeskstudy
+#  sixdeskunlock
 #MACRO myunlock
 
 
 #MACRO myexit 3
-  sixdeskexitparam=3
-  sixdeskexit
+#  sixdeskexitparam=3
+#  sixdeskexit
 #MACRO myexit
 
-fi
+#fi
 #
 #basic set up of fort.3
 #

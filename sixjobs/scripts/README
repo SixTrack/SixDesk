@@ -1,3 +1,7 @@
+Release 8th May, 2013.
+Fixes to backup/restore study/workspace.
+Removed OS test for SLC6 compatibility in run_six.
+
 Release 2nd November, 2012.
 A few minor improvements to check_locks and check_all_locks.
 

@@ -50,8 +50,8 @@ cname=$CASTOR_HOME/workspace_backups
 # and get the environment for the current study
 . ./dot_env
 
-#MACRO mylock ..
-sixdesklockdir=..
+#MACRO mylock .. 
+sixdesklockdir=.. 
 sixdesklock
 #MACRO mylock
 

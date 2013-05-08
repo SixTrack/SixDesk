@@ -33,7 +33,12 @@ castorr()
       sixdeskmess
 #MACRO mymess
 
-      myexit99
+
+#MACRO myexit 99
+      sixdeskexitparam=99
+      sixdeskexit
+#MACRO myexit
+
     else
       echo "castor_recall failed!! See castor_recall.log."
       exit 99
@@ -158,7 +163,7 @@ then
   # First are we recalling to a different workspace or not........
   if test "$bworkspace" != "$currentws"
   then
-    # and now edit all the studies/study/sixdeskenv and ./sixdeskenv
+    # and now edit ALL the studies/study/sixdeskenv and ./sixdeskenv
     # to reflect the new workspace
     sed -e 's/\( *export *workspace=\).*/\1'$currentws'/' sixdeskenv > tmp$$
     mv tmp$$ sixdeskenv
@@ -234,7 +239,12 @@ then
   sixdeskmess
 #MACRO mymess
 
-  mymexit 11
+
+#MACRO myexit 11
+  sixdeskexitparam=11
+  sixdeskexit
+#MACRO myexit
+
 fi
 # Check we have a study match if using a study backup
 if test "$bstudy" != "$LHCDescrip"
@@ -328,9 +338,10 @@ do
     nsls $cname/$bname/logs/$LHCDescrip.1.tar > /dev/null 2>&1
     if test $? -eq 0 -a "$mysixdesklogdir" != ""
     then
-      cin=$cname/$bname/logs/$LHCDescrip
+      mkdir -p $mysixdesklogdir
       cd $mysixdesklogdir
       cd ..
+      cin=$cname/$bname/logs/$LHCDescrip
       if test "$cout" != ""
       then
         rm -rf $LHCDescrip
@@ -463,8 +474,8 @@ do
 
   fi
 done
-cd ..
 rm -f $sixdeskstudy/deleted
+# and here we are in sixjobs
 # and unlock study (set by the backup!)
 
 #MACRO myunlock $sixdeskstudy
@@ -472,19 +483,75 @@ sixdesklockdir=$sixdeskstudy
 sixdeskunlock
 #MACRO myunlock
 
-# and workspace
+# and sixjobs and workspace
+# and try full path (for SIXDESKLOCKED......)
 
-#MACRO myunlock sixjobs
-sixdesklockdir=sixjobs
+#MACRO myunlock $sixdeskhome
+sixdesklockdir=$sixdeskhome
 sixdeskunlock
 #MACRO myunlock
 
+# the workspace itself
+wspath=`dirname $sixdeskhome`
 
-#MACRO myunlock 
-sixdesklockdir=
+#MACRO myunlock $wspath
+sixdesklockdir=$wspath
 sixdeskunlock
 #MACRO myunlock
 
+# and now try creating the links (faster and avoids sixdesk.log messages)
+ln -sf $sixtrack_input sixtrack_input
+ln -sf $sixdesktrack/$LHCDescrip track
+ln -sf $sixdeskwork work
+ln -sf $sixdeskstudy study
+# and try all the logfiles
+ln -sf "$mysixdesklogdir"/sixdesk.log sixdesk.log
+ln -sf "$mysixdesklogdir"/sixdeskerror.log sixdeskerror.log
+ln -sf "$mysixdesklogdir"/restart.log restart.log
+ln -sf $cronlogdir/cron_results.log cron_results.log
+ln -sf $cronlogs cronlogs
+# and finally?! update the fort.2|8|16 links in the track tree
+if test "$bworkspace" != "$currentws"
+then
+
+#MACRO mymess 0 Updating the input links fort.2|8|16
+  sixdeskmesslevel=0
+  sixdeskmess="Updating the input links fort.2|8|16"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO mylock $sixdeskstudy
+  sixdesklockdir=$sixdeskstudy
+  sixdesklock
+#MACRO mylock
+
+  while read aline
+  do
+    Runnam=`echo $aline | cut -d " " -f1`
+
+#MACRO myrundir $Runnam Rundir
+    runnamename=$Runnam
+    sixdeskrundir
+    Rundir=$rundirname
+#MACRO myrundir
+
+    where=$sixdesktrack/$Rundir
+    seed=`echo $Runnam | cut -d% -f2`
+    cd $where
+    ln -sf $sixtrack_input/fort.2_${seed}.gz fort.2.gz
+    ln -sf $sixtrack_input/fort.8_${seed}.gz fort.8.gz
+    ln -sf $sixtrack_input/fort.16_${seed}.gz fort.16.gz
+    cd $sixdeskhome
+  done < $sixdeskwork/taskids
+
+#MACRO myunlock $sixdeskstudy
+  sixdesklockdir=$sixdeskstudy
+  sixdeskunlock
+#MACRO myunlock
+
+fi
+#
 
 #MACRO mymess 0 Recall of $mystudy to $myworkspace finished at `date +%d%m%y`/`date +%T`
 sixdeskmesslevel=0

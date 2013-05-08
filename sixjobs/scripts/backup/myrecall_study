@@ -21,7 +21,7 @@ castorr()
   if test "$nomessages" = ""
     then
       mymess 0 "castor_recall failed!! See castor_recall.log."
-      myexit99
+      myexit 99
     else
       echo "castor_recall failed!! See castor_recall.log."
       exit 99
@@ -129,7 +129,7 @@ then
   # First are we recalling to a different workspace or not........
   if test "$bworkspace" != "$currentws"
   then
-    # and now edit all the studies/study/sixdeskenv and ./sixdeskenv
+    # and now edit ALL the studies/study/sixdeskenv and ./sixdeskenv
     # to reflect the new workspace
     sed -e 's/\( *export *workspace=\).*/\1'$currentws'/' sixdeskenv > tmp$$
     mv tmp$$ sixdeskenv
@@ -199,7 +199,7 @@ sixdesklogdir="."
 if test "$workspace" != "$myworkspace"
 then
   mymess 0 "BUG there is a workspace mismatch!!!"
-  mymexit 11
+  myexit 11
 fi
 # Check we have a study match if using a study backup
 if test "$bstudy" != "$LHCDescrip"
@@ -237,9 +237,10 @@ do
     nsls $cname/$bname/logs/$LHCDescrip.1.tar > /dev/null 2>&1
     if test $? -eq 0 -a "$mysixdesklogdir" != ""
     then
-      cin=$cname/$bname/logs/$LHCDescrip
+      mkdir -p $mysixdesklogdir
       cd $mysixdesklogdir
       cd ..
+      cin=$cname/$bname/logs/$LHCDescrip
       if test "$cout" != ""
       then
         rm -rf $LHCDescrip
@@ -331,12 +332,46 @@ do
     myexit 99
   fi
 done
-cd ..
 rm -f $sixdeskstudy/deleted
+# and here we are in sixjobs
 # and unlock study (set by the backup!)
 myunlock $sixdeskstudy
-# and workspace
-myunlock sixjobs
-myunlock
+# and sixjobs and workspace
+# and try full path (for SIXDESKLOCKED......)
+myunlock $sixdeskhome
+# the workspace itself
+wspath=`dirname $sixdeskhome`
+myunlock $wspath
+# and now try creating the links (faster and avoids sixdesk.log messages)
+ln -sf $sixtrack_input sixtrack_input
+ln -sf $sixdesktrack/$LHCDescrip track
+ln -sf $sixdeskwork work
+ln -sf $sixdeskstudy study
+# and try all the logfiles
+ln -sf "$mysixdesklogdir"/sixdesk.log sixdesk.log
+ln -sf "$mysixdesklogdir"/sixdeskerror.log sixdeskerror.log
+ln -sf "$mysixdesklogdir"/restart.log restart.log
+ln -sf $cronlogdir/cron_results.log cron_results.log
+ln -sf $cronlogs cronlogs
+# and finally?! update the fort.2|8|16 links in the track tree
+if test "$bworkspace" != "$currentws"
+then
+  mymess 0 "Updating the input links fort.2|8|16"
+  mylock $sixdeskstudy
+  while read aline
+  do
+    Runnam=`echo $aline | cut -d " " -f1`
+    myrundir $Runnam Rundir
+    where=$sixdesktrack/$Rundir
+    seed=`echo $Runnam | cut -d% -f2`
+    cd $where
+    ln -sf $sixtrack_input/fort.2_${seed}.gz fort.2.gz
+    ln -sf $sixtrack_input/fort.8_${seed}.gz fort.8.gz
+    ln -sf $sixtrack_input/fort.16_${seed}.gz fort.16.gz
+    cd $sixdeskhome
+  done < $sixdeskwork/taskids
+  myunlock $sixdeskstudy
+fi
+#
 mymess 0 "Recall of $mystudy to $myworkspace finished at `date +%d%m%y`/`date +%T`"
 myexit 0

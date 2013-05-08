@@ -375,6 +375,28 @@ do
         myexit 99
       fi
     done 
+
+
+# Should be in sixjobs....
+    cd $sixdeskhome
+# and finally?! update the fort.2|8|16 links in the track tree
+if test "$bworkspace" != "$currentws"
+then
+  mymess 0 "Updating the input links fort.2|8|16"
+  while read aline
+  do
+    Runnam=`echo $aline | cut -d " " -f1`
+    myrundir $Runnam Rundir
+    where=$sixdesktrack/$Rundir
+    seed=`echo $Runnam | cut -d% -f2`
+    cd $where
+    ln -sf $sixtrack_input/fort.2_${seed}.gz fort.2.gz
+    ln -sf $sixtrack_input/fort.8_${seed}.gz fort.8.gz
+    ln -sf $sixtrack_input/fort.16_${seed}.gz fort.16.gz
+    cd $sixdeskhome
+  done < $sixdeskwork/taskids
+fi
+
     cd ..
     sixdesklogdir="."
     rm -f $sixdeskstudy/deleted

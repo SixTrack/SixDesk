@@ -13,6 +13,7 @@ mycheck_lock
 mycheck_locks
 mycheck_mad6t
 mycheck_really
+mycompare_inputs
 mycorrect_cases
 mydelete_all_error_results
 mydelete_cpss_tasks
@@ -43,6 +44,7 @@ myrun_join10
 myrun_missing_jobs
 myrun_missing_tasks
 myrun_post
+myrun_problem_cases
 myrun_query
 myrun_results
 myrun_six
@@ -57,7 +59,6 @@ createDAsurv
 DAsurv.tex
 
 acrontab.entry
-add_boinc_user
 bresume_all
 bstop_all
 check_seds
@@ -71,9 +72,9 @@ compare_results
 compare_scripts
 compare_studies
 compare_workspaces
+create_protection_group
 exec_env
 get_wpro
-krun
 minav.awk
 plot_DA
 plot1.template
@@ -81,6 +82,7 @@ plot2.template
 print_env
 query_all
 run_mad6t
+run_many_problem_cases
 sedboincnames
 stable.awk
 stable2.awk

@@ -81,22 +81,22 @@ fi
 #end of input of paths and tracking variables
 #
 # work out platform dependent stuff...
-qpref="undef"
-if test "$OS" = "OSF1"
-then
-    qpref=""
-fi
-if test "$OS" = "Linux"
-then
-    qpref=""
-fi
-if test "$qpref" = "undef"
-then
-  mymess 0 "The OS $OS is not currently supported"
-  ###myunlock $sixdeskjobs_logs
-  myunlock $sixdeskstudy
-  myexit 3
-fi
+qpref=""
+#if test "$OS" = "OSF1"
+#then
+#    qpref=""
+#fi
+#if test "$OS" = "Linux"
+#then
+#    qpref=""
+#fi
+#if test "$qpref" = "undef"
+#then
+#  mymess 0 "The OS $OS is not currently supported"
+#  ###myunlock $sixdeskjobs_logs
+#  myunlock $sixdeskstudy
+#  myexit 3
+#fi
 #
 #basic set up of fort.3
 #
