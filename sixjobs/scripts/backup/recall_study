@@ -543,7 +543,7 @@ then
     ln -sf $sixtrack_input/fort.8_${seed}.gz fort.8.gz
     ln -sf $sixtrack_input/fort.16_${seed}.gz fort.16.gz
     cd $sixdeskhome
-  done < work/taskids
+  done < $sixdeskwork/taskids
 
 #MACRO myunlock $sixdeskstudy
   sixdesklockdir=$sixdeskstudy

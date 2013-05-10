@@ -391,6 +391,7 @@ then
     echo "$LOGNAME" > $sixdeskboincdir/owner
   fi
   mkdir -p $sixdeskboinc/results
+  ln -sf $WORK/results_6 $sixdeskboincdir/results_6
   cd $sixdeskboinc/results
   find . -name ${workspace}_${LHCDesName}__[0-9]\*__[0-9.]\*_[0-9.]\*__[0-9.]\*_[0-9.]\*__[0-9]\*__[0-9.]\*_1_sixvf_boinc[0-9]\* > $tmp 2> /dev/null
   cd $sixdeskhome
@@ -827,6 +828,7 @@ do
               word27=`echo $line1 | cut -d" " -f27`
               word59=`echo $line1 | cut -d" " -f59`
               word60=`echo $line1 | cut -d" " -f60`
+              word52=`echo $line1 | cut -d" " -f52`
 
 #MACRO mymess 0 Maxturn $word1 Lost $word2 Qx/Qy $word3 $word4
               sixdeskmesslevel=0
@@ -849,9 +851,9 @@ do
 #MACRO mymess
 
 
-#MACRO mymess 0 CPU $word60 seconds
+#MACRO mymess 0 CPU $word60 seconds Version $word52
               sixdeskmesslevel=0
-              sixdeskmess="CPU $word60 seconds"
+              sixdeskmess="CPU $word60 seconds Version $word52"
               sixdeskmess
 #MACRO mymess
 

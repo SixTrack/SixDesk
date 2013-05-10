@@ -174,6 +174,7 @@ then
     echo "$LOGNAME" > $sixdeskboincdir/owner
   fi
   mkdir -p $sixdeskboinc/results
+  ln -sf $WORK/results_6 $sixdeskboincdir/results_6
   cd $sixdeskboinc/results
   find . -name ${workspace}_${LHCDesName}__[0-9]\*__[0-9.]\*_[0-9.]\*__[0-9.]\*_[0-9.]\*__[0-9]\*__[0-9.]\*_1_sixvf_boinc[0-9]\* > $tmp 2> /dev/null
   cd $sixdeskhome
@@ -422,10 +423,11 @@ do
               word27=`echo $line1 | cut -d" " -f27`
               word59=`echo $line1 | cut -d" " -f59`
               word60=`echo $line1 | cut -d" " -f60`
+              word52=`echo $line1 | cut -d" " -f52`
               mymess 0 "Maxturn $word1 Lost $word2 Qx/Qy $word3 $word4"
               mymess 0 " 1st Ampx/y $word7 $word8 2nd $word26 $word27"
               mymess 0 "DP $word9 Findist $word10 Maxslope $word11 Turns $word22 $word23"
-              mymess 0 "CPU $word60 seconds"
+              mymess 0 "CPU $word60 seconds Version $word52"
               gzip -f fort.10
               ignore="false"
               success="true"
