@@ -1,0 +1,109 @@
+#!/bin/ksh
+#
+. ./dot_env
+#
+# main loop
+#
+mkdir -p /tmp/mcintosh/comp_inputs
+w=/tmp/mcintosh/comp_inputs
+rm -f $w/*
+t1=/home/mcintosh/extra/scratch/W0w10cbb/track/w10cbb
+t2=/home/mcintosh/extra/scratch/W0w10cbb/track/w30cbb
+mytunes
+echo "Seeds $ista to $iend"
+i=$ista
+while test "$i" -le "$iend" 
+do
+  # And now we have a new loop over the tunescans
+  itunexx=$itunex
+  ituneyy=$ituney
+  if test "$ideltax" -eq 0 -a "$ideltay" -eq 0
+  then
+    ideltax=1000000
+    ideltay=1000000
+  fi
+  while test "$itunexx" -le "$itunex1" -o "$ituneyy" -le "$ituney1"
+  do
+    tunexx=`echo "$itunexx" | cut -c1-2`"."`echo "$itunexx" | cut -c3-6`
+    tunexx=`echo "$tunexx" | sed -e's/0*$//'`
+    tunexx=`echo "$tunexx" | sed -e's/^0//'`
+    tuneyy=`echo "$ituneyy" | cut -c1-2`"."`echo "$ituneyy" | cut -c3-6`
+    tuneyy=`echo "$tuneyy" | sed -e's/0*$//'`
+    tuneyy=`echo "$tuneyy" | sed -e's/^0//'`
+    sixdesktunes=$tunexx"_"$tuneyy
+    echo "Tunescan $sixdesktunes"
+    # compute inttunexx and inttuneyy
+    myinttunes
+    #
+    #run for longterm
+    #
+    # Now we have the new code to do integer arithmetic on amplitudes
+    myamps
+    while test "$ampstart" -lt "$ampfinish"
+    do
+      fampstart=`gawk 'END{fnn='$ampstart'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
+      fampstart=`echo $fampstart | sed -e's/0*$//'`
+      fampstart=`echo $fampstart | sed -e's/\.$//'`
+      ampend=`expr "$ampstart" + "$ampincl"`
+      fampend=`gawk 'END{fnn='$ampend'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
+      fampend=`echo $fampend | sed -e's/0*$//'`
+      fampend=`echo $fampend | sed -e's/\.$//'`
+      Ampl="$fampstart"_"$fampend" 
+      echo "Loop over amplitudes: $Ampl $ns1l $ns2l $nsincl"
+      echo "$ampstart $ampfinish $ampincl $fampstart $fampend"
+      k=$kinil
+      AngleStep=`gawk 'END{a=90/('$kmaxl'+1);print a}' /dev/null`
+      while test "$k" -le "$kendl"
+      do
+        Angle=`gawk 'END{a='$AngleStep'*'$k';print a}' /dev/null`
+        kang=`gawk 'END{kang='$k'/('$kmaxl'+1);print kang}' /dev/null`
+        echo $k, $kinil, $kmaxl, $kendl, $Angle, $AngleStep
+        Runnam=$LHCDesName"%"${i}"%s%"$sixdesktunes"%"$Ampl"%"$turnsle"%"$Angle
+        myrundir $Runnam Rundir 
+        echo $Rundir
+        idir=`echo $Rundir | sed -e's?[^/][^/]*/??'`
+        echo $idir
+        ###ls -l $t1/$idir
+        ###ls -l $t2/$idir
+        for fn in 2 3 8 16
+        do
+          echo "Comparing"
+          echo "$t1/$idir/fort.$fn"
+          ###echo "to"
+          ###echo "$t2/$idir/fort.$fn"
+          ###ls -l  $t1/$idir/fort.${fn}.gz
+          cp $t1/$idir/fort.${fn}.gz $w/old.gz
+          ###ls -l  $t2/$idir/fort.${fn}.gz
+          cp $t2/$idir/fort.${fn}.gz $w/new.gz
+          ###ls -l $w
+          gunzip $w/old.gz
+          gunzip $w/new.gz
+          if test $fn -eq 3
+          then
+          sed -e'/TITLE/d' $w/old > $w/tmp$$
+          mv $w/tmp$$ $w/old
+          sed -e'/TITLE/d' $w/new > $w/tmp$$
+          mv $w/tmp$$ $w/new
+          fi
+          ###ls -l $w
+          diff $w/old $w/new
+          if test $? -eq 0
+          then
+            echo "OK"
+          else
+            echo "DIFF"
+          fi
+          rm $w/*
+        done
+        k=`expr $k + $kstep`
+      done
+      # end of loop over angles
+      ampstart=`expr $ampstart + $ampincl`
+    done
+    # end of loop over amplitudes
+    itunexx=`expr $itunexx + $ideltax`
+    ituneyy=`expr $ituneyy + $ideltay`
+  done
+  # end of loop over tunescans
+  let i=i+1
+done

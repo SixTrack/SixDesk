@@ -1,0 +1,9 @@
+#!/bin/sh
+# Just run the problem cases 100 times
+#
+n=0
+while test "$n" -lt 100
+do
+  run_problem_cases
+  n=`expr $n + 1`
+done
