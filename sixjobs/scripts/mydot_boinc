@@ -117,7 +117,8 @@ then
     while test "$gotit" != "OK" -a $mytries -ne 11
     do
       mytries=`expr $mytries + 1`
-      $sixdeskpath/Bin/uploadWorkunit $sixdeskTaskName 1 sixvf $sixdeskjobs_logs/run $sixdesktaskid $sixdeskfpopse $sixdeskboincdir > $tmp 2>&1
+###  $sixdeskpath/Bin/uploadWorkunit_many $sixdeskTaskName 1 sixvf $sixdeskjobs_logs/run $sixdesktaskid $sixdeskfpopse $sixdeskboincdir > $tmp 2>&1
+     $sixdeskpath/Bin/uploadWorkunit $sixdeskTaskName 1 sixvf $sixdeskjobs_logs/run $sixdesktaskid $sixdeskfpopse $sixdeskboincdir > $tmp 2>&1
       sixdeskstat=$?
       if test $sixdeskstat -ne 0
       then

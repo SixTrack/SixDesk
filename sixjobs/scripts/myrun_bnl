@@ -20,22 +20,22 @@ mkdir -p $sixdeskjobs_logs
 tree=$sixdesktrack
 #
 # work out platform dependent stuff...
-qpref="undef"
-if test "$OS" = "OSF1"
-then
+#qpref="undef"
+#if test "$OS" = "OSF1"
+#then
     qpref=""
-fi
-if test "$OS" = "Linux"
-then
-    qpref=""
-fi
-if test "$qpref" = "undef"
-then
-  mymess 0 "The OS $OS is not currently supported"
+#fi
+#if test "$OS" = "Linux"
+#then
+#    qpref=""
+#fi
+#if test "$qpref" = "undef"
+#then
+#  mymess 0 "The OS $OS is not currently supported"
   ###myunlock $sixdeskjobs_logs
-  myunlock $sixdeskstudy
-  myexit 3
-fi
+#  myunlock $sixdeskstudy
+#  myexit 3
+#fi
 mymess 2 "Main loop (long) for Study $LHCDescrip, Seeds $bnlseeds to $bnlseede"
 bnlseed=$bnlseeds
 while test "$bnlseed" -le "$bnlseede"

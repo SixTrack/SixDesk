@@ -76,7 +76,6 @@ create_protection_group
 exec_env
 get_wpro
 minav.awk
-mkresults_6
 plot_DA
 plot1.template
 plot2.template

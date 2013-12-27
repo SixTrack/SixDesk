@@ -37,7 +37,8 @@ for myname in \
   sfar\
   frankz\
   bholzer\
-  xbuffat
+  xbuffat\
+  ynosochk
 do
  phonebook --terse login --login $myname
  if test $? -ne 0

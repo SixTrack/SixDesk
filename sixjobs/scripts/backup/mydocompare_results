@@ -15,7 +15,7 @@ bad=0
 unav=0
 header=0
 mymktmpdir tmp /tmp/$LOGNAME
-rm -rf result_differences
+rm -rf result_differences_$LHCDescrip
 for Runnam in `cat $sixdeskwork/completed_cases`
 do
   if test -s $sixdeskwork/taskids
@@ -44,9 +44,9 @@ do
     then
       if test "$header" -eq 0
       then
-        echo "===========================================================" >> result_differences
-        echo "Comparing $LHCDescrip to $arg2" >> result_differences
-        echo "===========================================================" >> result_differences
+        echo "===========================================================" >> result_differences_$LHCDescrip
+        echo "Comparing $LHCDescrip to $arg2" >> result_differences_$LHCDescrip
+        echo "===========================================================" >> result_differences_$LHCDescrip
         header=1
         echo "==========================================================="
         echo "Comparing $LHCDescrip to $arg2"
@@ -57,12 +57,12 @@ do
       gunzip $tmp/*.gz 
       diff $tmp/here $tmp/there > /dev/null
       echo "  "
-      echo "For $Runnam in $Rundir found Tasks $taskids" >> result_differences
-      echo "For $massnam in $massdir found fort.10.gz" >> result_differences
+      echo "For $Runnam in $Rundir found Tasks $taskids" >> result_differences_$LHCDescrip
+      echo "For $massnam in $massdir found fort.10.gz" >> result_differences_$LHCDescrip
       cd $tmp
       ln -sf here fort.20
       ln -sf there fort.21
-      $sixdeskpath/scripts/verify10 > tens
+      $sixdeskpath/scripts/verify1059 > tens
       rm fort.20 fort.21
       cd $sixdeskhome
       grep 'DIFF' $tmp/tens > /dev/null 2>&1
@@ -70,15 +70,15 @@ do
       then  
         bad=`expr $bad + 1`
         echo "FORT.10 files are different!!! $Runnam $Rundir"
-        echo "FORT.10 files are different!!!  $Runnam $Rundir" >> result_differences
-        cat result_differences $tmp/tens > $tmp/tempdiffs
-        mv $tmp/tempdiffs result_differences
+        echo "FORT.10 files are different!!!  $Runnam $Rundir" >> result_differences_$LHCDescrip
+        cat result_differences_$LHCDescrip $tmp/tens > $tmp/tempdiffs
+        mv $tmp/tempdiffs result_differences_$LHCDescrip
       else
         ok=`expr $ok + 1`
       fi
     else
       unav=`expr $unav + 1`
-      echo "$massnam in $massdir is not available yet!"
+      echo "$massnam in $massdir is not available yet!" >> result_differences_$LHCDescrip
     fi
     rm -r $tmp/*
   fi
@@ -87,5 +87,5 @@ done
 # end of all tasks
 rm -r $tmp
 echo "Of $ready Completed Jobs, $ok were compared successfully, $bad were different, $unav results unavailable"
-echo "Of $ready Completed Jobs, $ok were compared successfully, $bad were different, $unav results unavailable" >> result_differences
+echo "Of $ready Completed Jobs, $ok were compared successfully, $bad were different, $unav results unavailable" >> result_differences_$LHCDescrip
 myexit 0

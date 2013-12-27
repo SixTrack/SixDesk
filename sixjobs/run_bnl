@@ -59,22 +59,22 @@ mkdir -p $sixdeskjobs_logs
 tree=$sixdesktrack
 #
 # work out platform dependent stuff...
-qpref="undef"
-if test "$OS" = "OSF1"
-then
+#qpref="undef"
+#if test "$OS" = "OSF1"
+#then
     qpref=""
-fi
-if test "$OS" = "Linux"
-then
-    qpref=""
-fi
-if test "$qpref" = "undef"
-then
+#fi
+#if test "$OS" = "Linux"
+#then
+#    qpref=""
+#fi
+#if test "$qpref" = "undef"
+#then
 
 #MACRO mymess 0 The OS $OS is not currently supported
-  sixdeskmesslevel=0
-  sixdeskmess="The OS $OS is not currently supported"
-  sixdeskmess
+#  sixdeskmesslevel=0
+#  sixdeskmess="The OS $OS is not currently supported"
+#  sixdeskmess
 #MACRO mymess
 
 
@@ -85,17 +85,17 @@ then
 
 
 #MACRO myunlock $sixdeskstudy
-  sixdesklockdir=$sixdeskstudy
-  sixdeskunlock
+#  sixdesklockdir=$sixdeskstudy
+#  sixdeskunlock
 #MACRO myunlock
 
 
 #MACRO myexit 3
-  sixdeskexitparam=3
-  sixdeskexit
+#  sixdeskexitparam=3
+#  sixdeskexit
 #MACRO myexit
 
-fi
+#fi
 
 #MACRO mymess 2 Main loop (long) for Study $LHCDescrip, Seeds $bnlseeds to $bnlseede
 sixdeskmesslevel=2

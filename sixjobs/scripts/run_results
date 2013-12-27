@@ -391,7 +391,6 @@ then
     echo "$LOGNAME" > $sixdeskboincdir/owner
   fi
   mkdir -p $sixdeskboinc/results
-  ln -sf $WORK/results_6 $sixdeskboincdir/results_6
   cd $sixdeskboinc/results
   find . -name ${workspace}_${LHCDesName}__[0-9]\*__[0-9.]\*_[0-9.]\*__[0-9.]\*_[0-9.]\*__[0-9]\*__[0-9.]\*_1_sixvf_boinc[0-9]\* > $tmp 2> /dev/null
   cd $sixdeskhome
