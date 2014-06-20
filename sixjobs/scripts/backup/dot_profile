@@ -150,9 +150,9 @@ sixdeskunlock()
 #MACRO mymess
 
 
-#MACRO mymess 2 held by      `cat $sixdesklockdir/sixdesklock`)
+#MACRO mymess 2 held by `cat $sixdesklockdir/sixdesklock`)
     sixdeskmesslevel=2
-    sixdeskmess="held by      `cat $sixdesklockdir/sixdesklock`)"
+    sixdeskmess="held by `cat $sixdesklockdir/sixdesklock`)"
     sixdeskmess
 #MACRO mymess
 

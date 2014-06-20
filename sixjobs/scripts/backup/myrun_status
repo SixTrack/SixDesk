@@ -79,6 +79,13 @@ then
         rm -f $tmp
         touch $tmp
         bjobs -u $LOGNAME -w > blsfjobs 2>$tmp
+        if test $? -ne 0
+        then
+           mymess 0 "Error return from bjobs!!!"
+           myunlock $sixdeskstudy
+           rm -f $tmp
+           myexit 4
+        fi
         grep "End of file" $tmp > /dev/null 2>&1
         if test $? -eq 0
         then
@@ -86,7 +93,7 @@ then
           ###myunlock $sixdeskjobs
           ###myunlock $sixdeskwork
           myunlock $sixdeskstudy
-          rm $tmp
+          rm -f $tmp
           myexit 3
         fi
         grep " $LHCDesName""%" blsfjobs > $tmp

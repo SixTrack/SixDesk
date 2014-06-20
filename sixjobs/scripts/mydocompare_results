@@ -55,7 +55,7 @@ do
       echo "For $massnam in $massdir found fort.10.gz"
       cp $arg1/sixjobs/track/../$massdir/fort.10.gz $tmp/there.gz
       gunzip $tmp/*.gz 
-      diff $tmp/here $tmp/there > /dev/null
+#why??diff $tmp/here $tmp/there > /dev/null
       echo "  "
       echo "For $Runnam in $Rundir found Tasks $taskids" >> result_differences_$LHCDescrip
       echo "For $massnam in $massdir found fort.10.gz" >> result_differences_$LHCDescrip
@@ -73,11 +73,32 @@ do
         echo "FORT.10 files are different!!!  $Runnam $Rundir" >> result_differences_$LHCDescrip
         cat result_differences_$LHCDescrip $tmp/tens > $tmp/tempdiffs
         mv $tmp/tempdiffs result_differences_$LHCDescrip
+# and if we have a problem we check the sixtrack_input(s)
+        for fin in 2 3 8 16
+        do
+          rm -f $tmp/*
+          cp $where/fort.${fin}.gz $tmp/here.gz
+          cp $arg1/sixjobs/track/../$massdir/fort.${fin}.gz $tmp/there.gz
+          gunzip $tmp/here.gz
+          gunzip $tmp/there.gz
+          diff $tmp/here $tmp/there > /dev/null
+          if test $? -ne 0
+          then
+            echo "fort.${fin} different!!!"
+            echo "fort.${fin} different!!!" >> result_differences_$LHCDescrip
+            diff $tmp/here $tmp/there 
+            diff $tmp/here $tmp/there >> result_differences_$LHCDescrip
+          else
+            echo "fort.${fin} the SAME"
+            echo "fort.${fin} the SAME" >> result_differences_$LHCDescrip
+          fi
+        done
       else
         ok=`expr $ok + 1`
       fi
     else
       unav=`expr $unav + 1`
+      echo "$massnam in $massdir is not available yet!"
       echo "$massnam in $massdir is not available yet!" >> result_differences_$LHCDescrip
     fi
     rm -r $tmp/*

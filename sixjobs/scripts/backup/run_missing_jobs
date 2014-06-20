@@ -65,16 +65,16 @@ do
 
 
 #MACRO mylock $sixdeskjobs
-  sixdesklockdir=$sixdeskjobs
-  sixdesklock
+###  sixdesklockdir=$sixdeskjobs
+###  sixdesklock
 #MACRO mylock
 
   sed -e '/^'$Runnam'$/d' $sixdeskjobs/incomplete_jobs > $tmp
   mv $tmp $sixdeskjobs/incomplete_jobs
 
 #MACRO myunlock $sixdeskjobs
-  sixdesklockdir=$sixdeskjobs
-  sixdeskunlock
+###  sixdesklockdir=$sixdeskjobs
+###  sixdeskunlock
 #MACRO myunlock
 
   cp $sixdesktrack/$sixdeskRundir/$sixdeskRunnam.lsf $sixdeskjobs_logs

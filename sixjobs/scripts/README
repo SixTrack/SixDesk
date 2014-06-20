@@ -1,3 +1,12 @@
+Release 20th June, 2014
+Fix a problem in run_post, plot_dyb where the
+obsolete package here.sty is replaced by float.sty
+in sixjobs/plot/inc/test1.
+(Added a few more of my own scripts).
+
+Release 27th December, 2013.
+Just tidying up.
+
 Release 8th May, 2013.
 Fixes to backup/restore study/workspace.
 Removed OS test for SLC6 compatibility in run_six.

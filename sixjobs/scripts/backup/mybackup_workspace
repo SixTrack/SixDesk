@@ -32,7 +32,7 @@ cname=$CASTOR_HOME/workspace_backups
 # Lock the workspace (only one backup at a time)
 # and get the environment for the current study
 . ./dot_env
-mylock .. 
+mylock ..
 mylock
 # Now we worry about the mymess log messages
 # These are written to ./sixdesk.log i.e. sixjobs/..

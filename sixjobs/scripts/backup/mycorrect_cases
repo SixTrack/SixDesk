@@ -25,10 +25,18 @@ then
   ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
 fi
 mymess 0 "Before found $cases cases, $ccases complete ($icases incomplete)"
-mymktmpdir tmp /tmp/$LOGNAME
-cd $tmp
+mkdir -p $sixdeskwork/backup
 touch incomplete_cases
 touch completed_cases
+touch myincomplete_cases
+touch mycompleted_cases
+touch $sixdeskwork/taskids
+cp $sixdeskwork/completed_cases $sixdeskwork/backup
+cp $sixdeskwork/mycompleted_cases $sixdeskwork/backup
+cp $sixdeskwork/incompleted_case $sixdeskwork/backup
+cp $sixdeskwork/myincomplete_cases $sixdeskwork/backup
+mymktmpdir tmp /tmp/$LOGNAME
+cd $tmp
 touch $sixdeskwork/taskids
 cp $sixdeskwork/taskids .
 while read aline

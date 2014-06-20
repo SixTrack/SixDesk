@@ -1,0 +1,47 @@
+#!/bin/sh
+# a script to test "tryturns"
+sixdeskturns()
+{
+# Takes $newturns and produces $ename
+  EXPON=0
+  MANT=$newturns
+  remain=0
+  while test "$remain" -eq "0" -a "$MANT" -ne "0"
+  do
+    remain=`expr $MANT % 10` 
+    if test "$remain" -eq "0" 
+    then
+      EXPON=`expr $EXPON + 1`
+      MANT=`expr $MANT / 10`
+    fi
+  done
+  if test "$MANT" -eq "1"
+  then
+    MANT=""
+  fi
+  export ename="$MANT"e"$EXPON"
+}
+sixdeskname()
+{
+  newturns=`echo $ename | sed -e's/\(.*\)e\(.*\)/\1/'`
+# echo "newturns $newturns"
+  if test "$newturns" = ""
+  then
+    export newturns=1
+  fi
+  MYEXPON=`echo $ename | sed -e's/\(.*\)e\(.*\)/\2/'`
+# echo "MYEXPON $MYEXPON"
+  while test "$MYEXPON" -ne "0"
+  do
+    export newturns=`expr "$newturns" \* 10`
+    MYEXPON=`expr $MYEXPON - 1`
+  done
+}
+for newturns in 0 1 9 10 11 99 100 101 110 1000 5000 4999 200000 1000000
+do
+  echo ""
+  sixdeskturns
+  echo "newturns=$newturns M=$MANT E=$EXPON ename=$ename"
+  sixdeskname
+  echo "M=$MANT E=$EXPON ename=$ename newturns=$newturns"
+done

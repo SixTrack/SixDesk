@@ -154,6 +154,29 @@ then
         rm -f $tmp
         touch $tmp
         bjobs -u $LOGNAME -w > blsfjobs 2>$tmp
+        if test $? -ne 0
+        then
+
+#MACRO mymess 0 Error return from bjobs!!!
+           sixdeskmesslevel=0
+           sixdeskmess="Error return from bjobs!!!"
+           sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskstudy
+           sixdesklockdir=$sixdeskstudy
+           sixdeskunlock
+#MACRO myunlock
+
+           rm -f $tmp
+
+#MACRO myexit 4
+           sixdeskexitparam=4
+           sixdeskexit
+#MACRO myexit
+
+        fi
         grep "End of file" $tmp > /dev/null 2>&1
         if test $? -eq 0
         then
@@ -182,7 +205,7 @@ then
           sixdeskunlock
 #MACRO myunlock
 
-          rm $tmp
+          rm -f $tmp
 
 #MACRO myexit 3
           sixdeskexitparam=3

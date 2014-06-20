@@ -1,0 +1,183 @@
+#!/bin/ksh
+#
+. ./dot_env
+dir16=$sixtrack_input
+mymess 2 "Using sixtrack_input $dir16"
+if test ! -d "$dir16" 
+then
+  mymess 1 "The directory $dir16 does not exist!!!" 
+  myexit 1
+fi
+./check_mad6t
+if test $? -ne 0
+then
+  mymess 1 "sixtrack_input appears incomplete!!!"
+  myexit 2
+fi
+mylock $sixdeskstudy
+mkdir -p $sixdeskjobs_logs
+###mylock $sixdeskjobs_logs
+mymess 2 "Using $sixdeskjobs_logs"
+#
+tree=$sixdesktrack
+if test ! -d "$tree/$LHCDesHome"
+then
+  mkdir -p $tree/$LHCDesHome
+fi
+#
+if [ ! -s "$tree/$LHCDesHome/general_input" ];then
+  echo "general_input is missing!!!"
+  myexit 1
+fi
+#
+Ampl=$ns1l"_"$ns2l
+#
+# Amplitude range
+#
+if [ $long -eq 1 ] ;then
+  if [ -z "$Ampl" ] ;then
+    mymess 0 "Define Ampl for longterm tracking ..."
+    myunlock $sixdeskstudy
+    myexit 2
+  fi
+fi
+#
+# main loop
+#
+if test $long -eq 1
+then
+  mymess 0 "Main loop (long) for Study $LHCDescrip, Seeds $ista to $iend"
+  mytunes
+  mymess 0 "Amplitudes $ns1l to $ns2l by $nsincl, Angles $kinil, $kendl, $kmaxl by $kstep"
+elif test $short -eq 1 -o $da -eq 1
+then
+  mymess 0 "Main loop (short/da) for Study $LHCDescrip, Seeds $ista to $iend"
+  mytunes
+  mymess 0 "Amplitudes $ns1s to $ns2s by $nss, Angles $kini, $kend, $kmax by $kstep"
+fi
+i=$ista
+while test "$i" -le "$iend" 
+do
+  # And now we have a new loop over the tunescans
+  itunexx=$itunex
+  ituneyy=$ituney
+  if test "$ideltax" -eq 0 -a "$ideltay" -eq 0
+  then
+    ideltax=1000000
+    ideltay=1000000
+  fi
+  while test "$itunexx" -le "$itunex1" -o "$ituneyy" -le "$ituney1"
+  do
+    tunexx=`echo "$itunexx" | cut -c1-2`"."`echo "$itunexx" | cut -c3-6`
+    tunexx=`echo "$tunexx" | sed -e's/0*$//'`
+    tunexx=`echo "$tunexx" | sed -e's/^0//'`
+    tuneyy=`echo "$ituneyy" | cut -c1-2`"."`echo "$ituneyy" | cut -c3-6`
+    tuneyy=`echo "$tuneyy" | sed -e's/0*$//'`
+    tuneyy=`echo "$tuneyy" | sed -e's/^0//'`
+    sixdesktunes=$tunexx"_"$tuneyy
+    mymess 0 "Tunescan $sixdesktunes"
+    # compute inttunexx and inttuneyy
+    myinttunes
+    #
+    if [ ! -d "$tree/$LHCDesHome/$i/simul/$sixdesktunes" ]; then  
+       echo "Tunes directory is missing!!!"
+       myexit 2
+    fi  
+    # Check betavalues
+    nobetas=`cat $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues | wc -w`
+    if test "$nobetas" -ne 14
+    then 
+      mymess 0 "betavalues has only $nobetas words!!! Should be 14!"
+      rm -f $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues
+      myunlock $sixdeskstudy
+      myexit 98
+    fi
+    #
+    #run for longterm
+    #
+    if [ "$long" -eq 1 ] ;then
+    # Now we have the new code to do integer arithmetic on amplitudes
+      myamps
+      while test "$ampstart" -lt "$ampfinish"
+      do
+        fampstart=`gawk 'END{fnn='$ampstart'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
+        fampstart=`echo $fampstart | sed -e's/0*$//'`
+        fampstart=`echo $fampstart | sed -e's/\.$//'`
+        ampend=`expr "$ampstart" + "$ampincl"`
+        fampend=`gawk 'END{fnn='$ampend'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
+        fampend=`echo $fampend | sed -e's/0*$//'`
+        fampend=`echo $fampend | sed -e's/\.$//'`
+        Ampl="$fampstart"_"$fampend" 
+        mymess 0 "Loop over amplitudes: $Ampl $ns1l $ns2l $nsincl"
+        mymess 0 "$ampstart $ampfinish $ampincl $fampstart $fampend"
+        k=$kinil
+        AngleStep=`gawk 'END{a=90/('$kmaxl'+1);print a}' /dev/null`
+        while test "$k" -le "$kendl"
+        do
+          Angle=`gawk 'END{a='$AngleStep'*'$k';print a}' /dev/null`
+          kang=`gawk 'END{kang='$k'/('$kmaxl'+1);print kang}' /dev/null`
+          echo $k, $kinil, $kmaxl, $kendl, $Angle, $AngleStep
+          ###Rundir=$LHCDesHome/$i/simul/$sixdesktunes/$Ampl/e$turnsle/$Angle
+          Runnam=$LHCDesName"%"${i}"%s%"$sixdesktunes"%"$Ampl"%"$turnsle"%"$Angle
+          myrundir $Runnam Rundir 
+          #
+          if [ ! -d "$tree"/"$Rundir" ] ;then
+            echo "$Rundir is MISSING!!!"
+            myexit 3
+          fi
+          #
+          if [ ! -a "$dir16"/fort.2_"$i".gz ] ;then
+            mymess 0 "No SIXTRACK geometry file (fort.2): Run stopped"
+            ###myunlock $sixdeskjobs_logs
+            myunlock $sixdeskstudy
+            myexit 6
+          fi
+          if [ ! -a $sixdeskjobs_logs/fort.3 ] ;then
+            mymess 0 "No SIXTRACK control file (fort.3): Run stopped"
+            ###myunlock $sixdeskjobs_logs
+            myunlock $sixdeskstudy
+            myexit 7
+          fi
+          if [ ! -a "$dir16"/fort.8_"$i".gz ] ;then
+            mymess 0 "No SIXTRACK misalignment file (fort.8): dummy file created"
+            touch "$tree"/"$Rundir"/fort.8
+            gzip "$tree"/"$Rundir"/fort.8
+          fi
+          if [ ! -a "$dir16"/fort.16_"$i".gz ] ;then
+            mymess 0 "No SIXTRACK error file (fort.16): dummy file created"
+            touch "$tree"/"$Rundir"/fort.16
+            gzip "$tree"/"$Rundir"/fort.16
+          fi
+          #
+# Now try the FIX!
+          if test ! -d $tree/$Rundir 
+          then
+            echo "Something really bad, $Rundir does NOT exist!!!"
+            myexit 99
+          fi
+# Now add the taskid if missing
+          grep "$Runnam " $sixdeskwork/taskids
+          if test $? -ne 0
+          then
+            echo "$Runnam is MISSING"
+            echo "$Runnam " >> $sixdeskwork/taskids
+          fi  
+          k=`expr $k + $kstep`
+        done
+        # end of loop over angles
+        ampstart=`expr $ampstart + $ampincl`
+      done
+      # end of loop over amplitudes
+    fi
+    itunexx=`expr $itunexx + $ideltax`
+    ituneyy=`expr $ituneyy + $ideltay`
+  done
+  # end of loop over tunescans
+  let i=i+1
+done
+#
+# end main loop
+###myunlock $sixdeskjobs_logs
+myunlock $sixdeskstudy
+mymess 0 "Completed normally"
+myexit 0

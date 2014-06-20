@@ -47,6 +47,16 @@ sixdeskmess="Before found $cases cases, $ccases complete ($icases incomplete)"
 sixdeskmess
 #MACRO mymess
 
+mkdir -p $sixdeskwork/backup
+touch incomplete_cases
+touch completed_cases
+touch myincomplete_cases
+touch mycompleted_cases
+touch $sixdeskwork/taskids
+cp $sixdeskwork/completed_cases $sixdeskwork/backup
+cp $sixdeskwork/mycompleted_cases $sixdeskwork/backup
+cp $sixdeskwork/incompleted_case $sixdeskwork/backup
+cp $sixdeskwork/myincomplete_cases $sixdeskwork/backup
 
 #MACRO mymktmpdir tmp /tmp/$LOGNAME
 sixdesktmpdirname=tmp
@@ -56,8 +66,6 @@ tmp=$sixdesktmpdir
 #MACRO mymktmp
 
 cd $tmp
-touch incomplete_cases
-touch completed_cases
 touch $sixdeskwork/taskids
 cp $sixdeskwork/taskids .
 while read aline

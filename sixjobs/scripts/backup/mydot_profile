@@ -99,7 +99,7 @@ sixdeskunlock()
   if test -f "$sixdesklockdir/sixdesklock"
   then
     mymess 2 "Freeing lock $sixdesklockdir"
-    mymess 2 "held by      `cat $sixdesklockdir/sixdesklock`)"
+    mymess 2 "held by `cat $sixdesklockdir/sixdesklock`)"
     chmod 644 $sixdesklockdir/sixdesklock
     mymess 0 "Lock $sixdesklockdir unlocked"
     SIXDESKLOCKED=`echo "$SIXDESKLOCKED" | sed -e's?'"$sixdesklockdir "'??'`

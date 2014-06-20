@@ -18,10 +18,10 @@ do
   sixdeskRunnam=$Runnam
   myrundir $sixdeskRunnam sixdeskRundir
   mymktmp tmp
-  mylock $sixdeskjobs
+###  mylock $sixdeskjobs
   sed -e '/^'$Runnam'$/d' $sixdeskjobs/incomplete_jobs > $tmp
   mv $tmp $sixdeskjobs/incomplete_jobs
-  myunlock $sixdeskjobs
+###  myunlock $sixdeskjobs
   cp $sixdesktrack/$sixdeskRundir/$sixdeskRunnam.lsf $sixdeskjobs_logs
   sixdeskforce=2
   . ./dot_bsub
