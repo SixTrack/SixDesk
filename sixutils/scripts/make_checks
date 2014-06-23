@@ -1,0 +1,6 @@
+#!/bin/sh
+lf95 --o1 --tp -Wa,--32 -o checkf10 -static -m32 checkf10.f
+lf95 --o1 --tp -Wa,--32 -o checkf1014 -static -m32 checkf1014.f
+lf95 --o1 --tp -Wa,--32 -o verify10 -static -m32 verify10.f
+lf95 --o1 --tp -Wa,--32 -o readf10 -static -m32 readf10.f
+lf95 --o1 --tp -Wa,--32 -o compf10 -static -m32 compf10.f

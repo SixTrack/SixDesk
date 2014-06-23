@@ -1,0 +1,48 @@
+1a2
+> echo "uploadBNLWorkunit called: BNL=${BNL}."
+8c9
+< # and fort.16 files in the 'fileDir'.
+---
+> # and fort.16 files in the 'fileDir' and $sixdeskbnlin (fort.54) for BNL.
+30c31
+< memBound=100000000
+---
+> memBound=60000000
+40c41
+< # assigned to another client. Don't set this too low. 
+---
+> # assigned to another client. Don't set this to low. 
+44,45d44
+< delayBound=240000
+< #about 3 days...
+48c47
+< redundancy=2
+---
+> redundancy=3
+53c52
+< copies=2
+---
+> copies=5
+61c60
+< numIssues=10
+---
+> numIssues=20
+124a124,132
+> if test "$BNL" != ""
+> then
+>   if [ ! -f "$fileDir/$sixdeskbnlin" ]
+>   then
+>     echo "The file $fileDir/$sixdeskbnlin does not exist!"
+>     echo "Exiting.."
+>     exit 3
+>   fi
+> fi
+138c146,151
+< zip $workunitName.zip fort.2 fort.3 fort.8 fort.16 >/dev/null 2>&1
+---
+> if test "$BNL" = ""
+> then
+>   zip $workunitName.zip fort.2 fort.3 fort.8 fort.16 >/dev/null 2>&1
+> else
+>   zip $workunitName.zip fort.2 fort.3 fort.8 fort.16 $sixdeskbnlin >/dev/null 2>&1
+> fi

@@ -20,7 +20,7 @@ export bunch_charge=1.1500e+11
 # It must NOT contain a "%" (replacing "#") nor "_""_"
 # It now includes the Version info e.g. v64lhc
 # (If running mad6t you must have a $LHCDescrip.mask file in the subdirectory mask)
-export LHCDescrip=job_tracking
+export LHCDescrip=jobrefslhc_coll
 
 # The workspace for the scripts, sixdesk.log and links to sixtrack_input, track and work, 
 # It must NOT contain a "%" (replacing "#") nor "__" (two consecutive underscores)
@@ -220,8 +220,8 @@ then
   export turnsle=5
   export writebinl=1000
   export kinil=1
-  export kendl=19
-  export kmaxl=19
+  export kendl=5
+  export kmaxl=5
           # and set up the LSF job type and queue
   export lsfq=$longlsfq
   export lsfjobtype=sixtracking

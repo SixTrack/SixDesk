@@ -1,0 +1,6 @@
+#!/bin/sh
+FC=gfortran
+FCF="-O -m32 -frecord-marker=4 "
+FCL="-Bstatic -m32" 
+${FC} -c ${FCF} checkf10.f
+${FC} -o checkf10 ${FCL} checkf10.o 

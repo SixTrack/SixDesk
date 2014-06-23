@@ -1,0 +1,14 @@
+#!/bin/sh
+FC=gfortran
+FCF="-O -m32 -frecord-marker=4 "
+FCL="-Bstatic -m32" 
+${FC} -c ${FCF} checkf10.f
+${FC} -o checkf10 ${FCL} checkf10.o 
+lf95 --o1 --tp -Wa,--32 -o checkf1014 -static -m32 \
+-L/usr/lib/ -lc -L/usr/lib/gcc/x86_64-redhat-linux/3.4.6/32 -lgcc_eh checkf1014.f
+lf95 --o1 --tp -Wa,--32 -o checkf110 -static -m32 \
+ -L/usr/lib/ -lc -L/usr/lib/gcc/x86_64-redhat-linux/3.4.6/32 -lgcc_eh checkf110.f
+FCL="-static -m32 -L/usr/lib/ -lc -L/usr/lib/gcc/x86_64-redhat-linux/3.4.6/32 -lgcc_eh"
+lf95 --o1 --tp -Wa,--32 -o compf10 ${FCL} compf10.f
+lf95 --o1 --tp -Wa,--32 -o verify10 -static -m32 -L/usr/lib/ -lc -L/usr/lib/gcc/x86_64-redhat-linux/3.4.6/32 -lgcc_eh verify10.f
+lf95 --o1 --tp -Wa,--32 -o verify1059 -static -m32 -L/usr/lib/ -lc -L/usr/lib/gcc/x86_64-redhat-linux/3.4.6/32 -lgcc_eh verify1059.f
