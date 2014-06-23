@@ -1,0 +1,786 @@
+#!/bin/sh
+#
+# Version 1.3 05/12/2009
+# New -n option fro NO e-mail on successful compeletion
+# Version 1.2  13/02/2009
+# Just uses CASTOR Version 2 now, with three environment variables.
+# Version 1.1  10/03/2003
+# Yet another script to backup /scratch....
+# I have now changed it to be a bit more generic so that Charles
+# can try it out somewhere else.......Eric. 4/8/97.
+# Now uses CASTOR rather than tapes directly  23/12/00
+# THIS IS A SPECIAL FOR FRS.        19/2/2001 - Eric
+# THIS SHOULD NO LONGER BE A SPECIAL FOR FRS. 19/2/2001 -Frank Schmidt
+# Further modified to get user initial for the pathname
+# Subtract 10% from MAXTOT to allow for tar overhead  Eric 21/2/2001
+# This is very ropey indeed.......depends on no of files and if they are very small......
+# Modified Version 0.1
+# Now defaults the MAINDIR and SUBDIR to the current directory.
+# Does NO prompting when called with parameters.
+# Corrected a bug with : as delimiter in FREE calculations
+# Creates CASTORDEST if it doesn't exist
+# Uses /tmp/LOGNAME/backup  and $HOME/castor/logs for WORKDIR and LOGDIR 
+# (if/scratch and /local/work do not exist) so we can run on Linux
+# Modified Version 0.2 24/2/2001
+# Now checks for absolute or relative paths in the interactive dialogue
+# Version 0.3 26/2/2001
+# Fixes recursion bug with directories; checked on Linux as well.
+# Version 0.4 1/3/2001 
+# Allow a "." as the local specification.
+# Version 0.5 1/5/2001 
+# Fixes a problem with spaces in the filename.
+# Version 0.6  10/7/2001
+# Corrects treatment of a pathname in Castor relative to SIXDEST.
+# Version 0.7  11/7/2001
+# Replaces confusing SIXDEST with CASTORDEST....so SIXDEST if defined is
+# used to specify CASTORDEST as absolute path so that sixcpout, sixdir etc
+# don't use SIXDEST even if it is defined.
+# Version 0.8 13/7/2001 Added a -s option for Mark to specify WORKDIR
+# Version 0.9 16/4/2002. Uses gtar on Compaq OSF as it handles
+# long names/links. Should still be compatible and has been tested.
+# Version 1.0 16/12/2002. Fixes OS to be a quoted variable.
+# Handles a MAINDIR/SUBDIR like /usr without a double //
+# Allows multiple backups in parallel by using a unique directory.
+# Creates log files in this directory then copies them to final
+# destination with a unique date/time.
+# New user option -d to specify the LOGDIR absolute path.
+# Tries to give more diagnostics when exiting main loop.
+# HAD TO USE -d NOT -l or getopt messes up miserably.
+# Now processes gtar log looking for error messages, lists them
+# and mails them. The grep -v i"^a" was NOT working with gtar.
+# Change to grep "^gtar".
+# Version 1.1 10/03/2003
+# Now backs up only files, directories and links
+# Now checks for max file being less than the total max
+# including the margin....................
+#
+# The following new variables are introduced:
+#
+# $MAINDIR (/local/work/$LOGNAME) 
+# $MAINDIR/$SUBDIR  Only this subtree  will be handled.
+# $WORKDIR (/scratch/si/$LOGNAME/backup) $WORKDIR is used to store the tar files 
+#          and other temporary files.
+# $LOGDIR  (/local/work/$LOGNAME/castor/logs) contains the
+#                $dirname.$q.log one file per dataset on tape listing contents.
+# $EMAIL  whom to mail if problems.
+# $MAXTOT  size in bytes, not to be exceeded, of tarfile/dataset
+# $MAXFILE If a filesize in bytes exceeds $MAXFILE it is
+#                      written as a single tarfile.
+# $FREE Will send an error message and stop
+#       if there are less than $FREE bytes free in $WORKDIR.
+# $TEST ("") Should be set to "echo" for testing.
+#
+# $CASTORROOT the base destination in castor (defaults to $SIXDEST if
+# defined or to /castor/cern.ch/user/$initial/$LOGNAME otherwise.
+# $CASTORDEST the final destination in castor defaults to $CASTORROOT
+# Modified to append a subdirectory if necessary
+#
+# We first list $MAINDIR/$SUBDIR
+# and then accumulate up to $MAXTOT bytes in a tarfile.
+# Any file .GE. $MAXFILE is written to a tarfile immediately.
+# Write the tar to Castor
+# Delete the tar
+# and loop till we have processed all the listed files
+#
+# The remaining files are then tar'd and written out
+# The variable "TEST", if set to echo
+# provides for testing without writing to castor and you can set
+# different values and paths.
+#
+export RFIO_USE_CASTOR_V2="YES"
+export STAGE_HOST="castorpublic"
+export STAGE_SVCCLASS="default"
+initial=`echo $LOGNAME | cut -c 1`
+MYPWD=`pwd`
+MAINDIR=`dirname $MYPWD`
+if test "$MAINDIR" = "/"
+then
+  MAINDIR=""
+fi
+SUBDIR=`basename $MYPWD`
+WORKDIR="/scratch/$GROUP/$LOGNAME/backup$$"
+LOGDIR="/local/work/$LOGNAME/castor/logs"
+EMAIL=`phonebook --login $LOGNAME --terse email`
+EMAIL=`echo $EMAIL | sed -e's/;//g'`
+MAXTOT="1000000000"
+MAXFILE="500000000"
+FREE="1100000000"
+CASTORNAME="/castor/cern.ch/user/$initial/$LOGNAME"
+if test "$SIXDEST" = ""
+then
+  CASTORROOT="$CASTORNAME"
+else
+  CASTORROOT="$SIXDEST"
+fi
+CASTORDEST=$CASTORROOT
+cname=$SUBDIR
+TEST=""
+inter="true"
+# Now check if we have been called with any parameters
+if test $# -ne 0
+then
+  inter="false"
+# Now check if we have been called with any parameters
+# parse command line into arguments
+  help="false"
+  email="true"
+  uscratch=""
+  ulogdir=""
+  set -- `getopt d:hns: $*`
+  # check result of parsing
+  stat=$?
+  if [ $stat != 0 ]
+  then
+    echo " Seems to be a problem with command line arguments!"
+    exit $stat
+  fi
+  while [ $1 != -- ]
+  do
+    case $1 in
+    -d)     ulogdir="true"
+            LOGDIR=$2
+            shift;;
+    -h)     help="true";;
+    -n)     email="false";;
+    -s)     uscratch="true"
+            WORKDIR=$2
+            shift;;
+    esac
+    shift   # next flag
+  done
+  shift
+
+#  check in case of help 
+  if test "$help" = "true"
+  then
+    echo "   "
+    echo "   "
+    echo " Welcome to Castor backup/migration script. Version 1.2  13/02/2009"
+    echo " Available on Linux"
+    echo " Eric McIntosh 70047 or eric.mcintosh@cern.ch "
+    echo "   "
+    echo " Ths script can be called directly to back up a local directory to Castor,"
+    echo " or you can just execute with NO parameters or switches for a full interactive"
+    echo " dialogue, including the posssibility of a dummy test run with no Castor transfer."
+    echo "   "
+    echo " For example:"
+    echo "   "
+    echo " $0 test cpath"
+    echo "   "
+    echo " will make one or more tarfiles, test.1.tar test.2.tar etc of all the"
+    echo " files and subdirectories, the whole tree, in the directory test, and"
+    echo " write them to /castor/cern.ch/$initial/$LOGNAME/cpath/test.1.tar etc"
+    echo "   "
+    echo " cpath may be omitted:"
+    echo "   " 
+    echo " $0 . "
+    echo "   "
+    echo " just writes everything in current directory to /castor/cern.ch/$initial/$LOGNAME"
+    echo " as `basename $MYPWD`.1.tar (.2.tar etc if more than ~1GB)."
+    echo "   "
+    echo " The local name may be an absolute path, or a '.' or relative to '.' the current working directory."
+    echo " In all cases we use the 'basename' as the name for the tarfile(s)."
+    echo " For example:"
+    echo "   "
+    echo " $0 $LOGNAME/tests"
+    echo "   "
+    echo " will make a tar of ./$LOGNAME/tests and write the tarfiles"
+    echo " tests.1.tar tests.2.tar to /castor/cern.ch/$initial/$LOGNAME"
+    echo "  " 
+    echo " The script uses /scratch/$GROUP/$LOGNAME/backup (created if necessary)"
+    echo " for working space, of which there must be at least 1GB free, and logs"
+    echo " results in /local/work/$LOGNAME/castor/logs, both directories being"
+    echo " created if necessary. On Linux we use /tmp/$LOGNAME/backup and"
+    echo " $HOME/castor/logs instead."
+    echo "  The -s /absolutepath, can be used to specify an alternative WORKDIR."
+    echo "  The -d /absolutepath, can be used to specify a directory LOGDIR for the logs."
+    echo " The directories will be created if necessary:"
+    echo " e-mail castor.support@cern.ch if you are not a registered Castor user."
+    echo "  " 
+    echo " $0 -h or -help produce this message."
+    echo "  "
+    echo " Now defaults the MAINDIR and SUBDIR to the current directory."
+    echo " Does NO prompting when called with parameters."
+    echo " Corrected a bug with : as delimiter in FREE space calculations."
+    echo " Creates $CASTORDEST if it doesn't exist."
+    echo " Uses /tmp/$LOGNAME/backup and $HOME/castor/logs for WORKDIR and LOGDIR"
+    echo " (if/scratch and /local/work do not exist)."
+    echo " Now checks for absolute or relative paths in the interactive dialogue."
+    echo " Fixes recursion BUG with directories; runs on OSF1 and Linux."
+    echo " Now allows a "." as the local place and handles names with spaces."
+    echo " Now uses gtar on Compaq OSF"
+    echo " Version 1.0 16/12/2002. Fixes OS to be a quoted variable."
+    echo " Handles a MAINDIR/SUBDIR like /usr without a double //"
+    echo " Allows multiple backups in parallel by using a unique directory."
+    echo " Creates log files in this directory then copies them to final"
+    echo " destination with a unique date/time."
+    echo " Tries to give more diagnostics when exiting main loop."
+    echo " Version 1.1:  backs up only files, directories and links."
+    echo " Checks for max file being less than the total max tarfile."
+    echo " Version 1.2 uses CASTOR Vertsion 2."
+    echo "   "
+
+    exit
+  fi
+fi
+
+#if test "$OS" = "OSF1"
+#then
+# flist="-R"
+# mystrip="-"
+  flist="-T"
+  mystrip="-P"
+#elif test "$OS" = "Linux"
+#then
+#  flist="-T"
+#  mystrip="-P"
+#else
+#  echo " System ($OS) is not yet supported or tested by $0!"
+#  exit 10
+#fi
+
+#Create directory where needed
+if test "$uscratch" = ""
+then
+  ls -ld /scratch > /dev/null 2>&1
+  if test $? != 0
+  then
+    WORKDIR=/tmp/$LOGNAME/backup$$
+  fi
+# but if we are in batch/LSF use /pool
+  if test -d /pool/lsf/$LOGNAME
+  then
+    WORKDIR=/pool/lsf/$LOGNAME/backup$$
+  fi
+fi
+
+if test "$ulogdir" = ""
+then
+  ls -ld /local/work > /dev/null 2>&1
+  if test $? != 0 
+  then
+    LOGDIR=$HOME/castor/logs
+  fi
+fi
+
+##
+margin=`expr $MAXTOT / 10`
+maxtot=`expr $MAXTOT - $margin`
+maxfile=$MAXFILE
+
+# make sure maxfile is LESS than the max tar
+if test $maxfile -ge $maxtot
+then
+  maxfile=`expr $maxtot - 1`
+fi
+
+# We are going to put logs in WORKDIR now and
+# then move them to LOGDIR later.
+path=$WORKDIR
+# Now let us make sure the user is CASTOR registered.
+sixdir $CASTORROOT > /dev/null
+stat=$?
+if test "$stat" -ne 0
+then
+  echo "You do not seem to be registered in CASTOR"
+  echo "Please e-mail castor.support@cern.ch requesting an account."
+  exit 88
+fi 
+# Now check if we have been called with any parameters
+if test $# != 0
+then
+  if test $# -gt 2
+  then
+    echo " Too many parameters! try $0 -h for help."
+    exit 89
+  fi
+  if test $# -eq 2
+  then
+    begname=`echo $2 | cut -c 1`
+    if test "$begname" != "/"
+    then
+      CASTORDEST=$CASTORROOT/$2
+    else
+      CASTORDEST=$2
+    fi
+  fi  
+  flocal=`echo $1 | cut -c 1`
+  if test "$flocal" != "/"
+  then
+    if test "$flocal" = "."
+    then
+      localname=$MYPWD
+    else
+      localname=$MYPWD/$1
+    fi
+  else
+    localname=$1
+  fi
+  MAINDIR=`dirname $localname`
+  if test "$MAINDIR" = "/"
+  then
+    MAINDIR=""
+  fi
+  SUBDIR=`basename $localname` 
+  cname=$SUBDIR
+else
+  echo "  "
+  echo " Do you want to make a TEST run??"
+  echo " yes, YES, y, Y, or CR/LF, will be interpreted as YES"
+  read mytest
+  if test "$mytest" = "" -o "$mytest" = "y" -o "$mytest" = "Y" -o "$mytest" = "YES" -o "$mytest" = "yes"
+  then
+    TEST="echo"
+  else
+    TEST=""
+  fi
+  echo "  "
+  #
+  echo " "
+  if test "$TEST" = "echo"
+  then
+    echo " This wil be a TEST RUN which makes tar files etc but"
+    echo " just deletes them without any transfer to CASTOR"
+  else
+    echo " This will be a PRODUCTION RUN"
+  fi
+  echo "     "
+
+  # Now let us give the user a chance to modify WORKDIR
+  ok="false"
+  while test $ok != "true"
+  do
+    echo "   "
+    echo " We will use $WORKDIR for creating tar files"
+    MBFREE=`expr $FREE / 1000000`
+    echo " It must have ~$MBFREE Megabytes available."
+    echo " Is this OK? (CR/LF, Y, YES, y, yes, all mean OK)"
+    read junk
+    if test "$junk" = "" -o "$junk" = "y" -o "$junk" = "Y" -o "$junk" = "YES" -o "$junk" = "yes"
+    then
+      ok="true"
+    else
+      echo "   "
+      echo " Please give a new absolute path for WORKDIR"
+      read WORKDIR
+    fi
+  done
+
+  # Now let us give the user a chance to modify LOGDIR
+  ok="false"
+  while test $ok != "true"
+  do
+    echo "   "
+    echo " We will use $LOGDIR for storing the tar of logfiles"
+    echo " Is this OK? (CR/LF, Y, YES, y, yes, all mean OK)"
+    read junk
+    if test "$junk" = "" -o "$junk" = "y" -o "$junk" = "Y" -o "$junk" = "YES" -o "$junk" = "yes"
+    then
+      ok="true"
+    else
+      echo "   "
+      echo " Please give a new absolute path for LOGDIR"
+      read LOGDIR
+    fi
+  done
+
+  # Now let us give the user a chance to modify directories
+  ok="false"
+  while test $ok != "true"
+  do
+    echo "   "
+    echo " We will backup to CASTOR all the files and directories in the tree:"
+    echo "    $MAINDIR/$SUBDIR"
+    echo " Is this OK? (CR/LF, Y, YES, y, yes, all mean OK)"
+    read junk
+    if test "$junk" = "" -o "$junk" = "y" -o "$junk" = "Y" -o "$junk" = "YES" -o "$junk" = "yes"
+    then
+      ls -ld $MAINDIR/$SUBDIR  > /dev/null 2>&1
+      if test $? != 0
+      then
+        echo " Apparently $MAINDIR/$SUBDIR does not exist!"
+        echo " Please check."
+      else
+        ok="true"
+      fi
+    else
+      echo "   "
+      echo " Please give a new MAINDIR/SUBDIR (full path name) or relative to"
+      echo " $MYPWD or type CR/LF if $MAINDIR is OK"
+      read mynewname
+      if test "$mynewname" != ""
+      then
+        flocal=`echo $mynewname | cut -c 1`
+        if test "$flocal" != "/"
+        then
+          if test "$flocal" = "."
+          then
+            localname=$MYPWD
+          else
+            localname=$MYPWD/$mynewname
+          fi
+        else
+          localname=$mynewname
+        fi
+        MAINDIR=`dirname $localname`
+        if test "$MAINDIR" = "/"
+        then
+          MAINDIR=""
+        fi
+        SUBDIR=`basename $localname`
+        cname=$SUBDIR
+      fi   
+    fi
+  done
+  
+  ok="false"
+  while test $ok != "true" 
+  do
+    echo "   "
+    echo " We will write the files to the following CASTOR namespace"
+    echo " $CASTORDEST" 
+    echo " using the names $cname.1.tar, $cname.2.tar etc"
+    echo " Is this OK? (CR/LF, Y, YES, y, yes, all mean OK)"
+    read junk
+    if test "$junk" = "" -o "$junk" = "y" -o "$junk" = "Y" -o "$junk" = "YES" -o "$junk" = "yes"
+    then
+      sixdir $CASTORNAME > /dev/null 2>&1
+      if test $? != 0
+      then
+        echo " Apparently $CASTORDEST does not exist so I shall"
+        echo " try and create it for you (unless this is a TEST run)."
+        $TEST sixmkdir -p $CASTORDEST
+        if test $? = 0
+        then
+          ok="true" 
+        else
+          echo " Could not create $CASTORDEST !"
+        fi
+      else
+        ok="true"
+      fi
+    else
+      echo "   "
+      echo " Please give a new CASTORDEST full path name or relative to"
+      echo " $CASTORROOT or type CR/LF if $CASTORDEST is OK"
+      read mynewname
+      if test "$mynewname" != ""
+      then
+        fmyname=`echo $mynewname | cut -c 1`
+        if test "$fmyname" !=  "/"
+        then
+          CASTORDEST=$CASTORROOT/$mynewname
+        else 
+          CASTORDEST=$mynewname
+        fi
+      fi
+      echo "   "
+      echo " Please give a new name for the tarfiles or type CR/LF if $cname is OK"
+      read mynewname
+      if test "$mynewname" != ""
+      then
+        cname=$mynewname
+      fi
+    fi
+  done
+fi
+
+echo " CASTORDEST=$CASTORDEST, the castor destination for the tarfiles."
+echo " cname=$cname, the tarfiles will be called $cname.1.tar etc."
+if test "$MAINDIR" = ""
+then
+  MAINDIR="/"
+fi
+echo " MAINDIR=$MAINDIR, the base directory for backup."
+if test "$MAINDIR" = "/"
+then
+  MAINDIR=""
+fi
+echo " SUBDIR=$SUBDIR, the subdirectory of the base to be backed up."
+echo " WORKDIR=$WORKDIR, where to put the tarfiles and other temporaries."
+echo " LOGDIR=$LOGDIR, where to put the gzipped tarfile logs."
+echo " EMAIL=$EMAIL, where to send mail if there are problems."
+echo " "
+MBTOT=`expr $MAXTOT / 1000000`
+MBFIL=`expr $MAXFILE / 1000000`
+MBFREE=`expr $FREE / 1000000`
+echo " MAXTOT=$MAXTOT Bytes, ~$MBTOT Megabytes, the maximum size of a tar file."
+echo " MAXFILE=$maxfile Bytes, ~$MBFIL Megabytes, files larger/equal to this are written individually."
+echo " FREE=$FREE Bytes, ~$MBFREE Megabytes, MUST have this free in $WORKDIR or we abort."
+
+sixdir $CASTORDEST > /dev/null 2>&1
+if test $? != 0
+then
+  echo " Creating $CASTORDEST in Castor" 
+  $TEST sixmkdir -p $CASTORDEST
+  if test $? != 0
+  then
+    echo " sixmkdir failed to create $CASTORDEST!"
+    exit 86
+  fi
+fi
+
+ls -ld $MAINDIR/$SUBDIR > /dev/null 2>&1
+if test $? != 0
+then
+  echo " Cannot read  $MAINDIR/$SUBDIR !"
+  exit 85
+fi
+
+if [ ! -d "$LOGDIR" ] ;then
+  mkdir -p $LOGDIR
+  if test $? != 0
+  then
+    echo "Could not create $LOGDIR !"
+    exit 71
+  fi
+fi
+
+if [ ! -d "$WORKDIR" ] ;then
+  mkdir -p $WORKDIR
+  if test $? != 0
+  then
+    echo " Could not create $WORKDIR !"
+    exit 70
+  fi
+fi
+cd $WORKDIR
+
+echo " "
+echo " All the files in $MAINDIR/$SUBDIR will be written to"
+echo " $CASTORDEST/$cname.1.tar $cname.2.tar etc "
+echo " "
+if test $inter = "true"
+then
+  echo " Type CR/LF if this is OK, or CTRL-C to exit and try again:"
+  read junk
+fi
+
+# Check our LOGDIR and WORKDIR are writeable
+touch $WORKDIR/junk$$
+if test $? != 0
+then
+  echo " Cannot create files in $WORKDIR, permissions/token problem?"
+  exit 83
+else
+  rm $WORKDIR/junk$$
+fi 
+touch $LOGDIR/junk$$
+if test $? != 0
+then
+  echo " Cannot create files in $LOGDIR, permissions/token problem?"
+  exit 82
+else
+  rm $LOGDIR/junk$$
+fi
+
+echo " `hostname` $MAINDIR/$SUBDIR backup started"
+date
+
+# check for $FREE free
+FREE=`expr $FREE / 1000 `
+free=`df -k $WORKDIR | tail -1 | sed -e "s/  */;/g" | cut -d";" -f4`
+if [ $free -lt $FREE ]
+then
+  echo " `hostname` $WORKDIR < $FREE free!! $free KB, backup cancelled."
+  echo " `hostname` $WORKDIR < $FREE free!! $free KB, backup cancelled." | mail $EMAIL
+  exit 98
+fi
+#
+q=1
+echo $q > lastqvalue
+totsize=0
+[ -f tarlist ] && rm tarlist
+[ -f listofall ] && rm listofall
+[ -f $path/$cname.$q.log ] && rm $path/$cname.$q.log
+for i in $SUBDIR
+do
+  find $MAINDIR/$i \( -type d -o -type f -o -type l \) -print >> listofall 2>/dev/null
+###  find $MAINDIR/$i -print >> listofall
+done
+# now we have terrible problems with spaces, backslashes etc in the filenames....
+# and an even worse one with directories! recursion!
+# Loop 0 over all names in listofall
+while read name
+do
+  ls -ld "$name" > /dev/null 2>&1
+# Loop 1 if we can list the file, link, or directory
+  if test $? -eq 0 -a -r "$name"
+  then
+    ourname=`ls -ld "$name"`
+    size=`echo "$ourname" | sed -e "s/  */;/g" | cut -d";" -f5`
+# Loop 2 if NOT a directory
+    if test `echo "$ourname" | cut -c 1` != "d"
+    then
+# then we have a file or a link NOT a directory
+# Loop 3 if this a BIG file
+      if [ "$size" -gt $maxfile ]
+      then
+        echo " File is bigger than $maxfile"
+# so write it out anyway
+        echo " A big file tar $name $size File No $q"
+        qq=`expr $q + 1 `
+        [ -f $path/$cname.$q.log ] && mv $path/$cname.$q.log $path/$cname.$qq.log
+        ls -ld "$name" > $path/$cname.$q.log
+        gtar "$mystrip"cvf $cname.$q.tar "$name" > $cname.$q.tar.log 2>&1
+        stat=$?
+        if [ $stat -ne 0 ]
+        then
+          echo " Problem with tar $cname.$q.tar `hostname` $MAINDIR" > tmp
+          grep "^gtar:" $cname.$q.tar.log >> tmp
+          cat tmp
+          cat tmp | mail $EMAIL
+          rm tmp
+        fi    
+        rm $cname.$q.tar.log
+        ls -l $cname.$q.tar
+        date
+        $TEST sixcpout $cname.$q.tar $CASTORDEST/$cname.$q.tar
+        stat=$?
+        if [ $stat -ne 0 ]
+        then
+          echo " Problem with copying $cname.$q.tar `hostname` $MAINDIR"
+          echo " Problem with copying $cname.$q.tar `hostname` $MAINDIR" | mail $EMAIL
+        fi
+        date
+        rm $cname.$q.tar
+        q=$qq
+        echo $q > lastqvalue
+      else
+# Loop 3 was NOT a BIG file 
+        totsize=`expr $totsize + $size`
+# Loop 4 TOO MUCH
+        if [ $totsize -gt $maxtot ] 
+        then
+# too much so write a tape
+          totsize=`expr $totsize - $size`
+          echo " Too much, tar $totsize $name $size File No $q"
+          gtar "$mystrip"cvf $cname.$q.tar $flist tarlist > $cname.$q.tar.log 2>&1
+          stat=$?
+          if [ $stat -ne 0 ]
+          then
+            echo " Problem with tar $cname.$q.tar `hostname` $MAINDIR" > tmp
+            grep "^gtar:" $cname.$q.tar.log >> tmp
+            cat tmp
+            cat tmp | mail $EMAIL
+            rm tmp
+          fi   
+          rm $cname.$q.tar.log
+          ls -l $cname.$q.tar
+          date
+          $TEST sixcpout $cname.$q.tar $CASTORDEST/$cname.$q.tar
+          stat=$?
+          if [ $stat -ne 0 ]
+          then
+            echo " Problem with copying $cname.$q.tar `hostname` $MAINDIR"
+            echo " Problem with copying $cname.$q.tar `hostname` $MAINDIR" | mail $EMAIL
+          fi
+          date
+          rm $cname.$q.tar
+          q=`expr $q + 1`
+          echo $q > lastqvalue
+# get ready for next tar
+          totsize=$size
+          echo "$name" > tarlist
+          ls -ld "$name" > $path/$cname.$q.log
+        else
+# just add it to the list
+          echo "$name" >> tarlist
+          ls -ld "$name" >> $path/$cname.$q.log
+        fi 
+# end Loop 4
+      fi
+# end Loop 3
+    else
+# we have a directory so check its size
+# if it is non-empty we will write all the files twice!
+      mylines=`ls "$name" | wc -l`
+      if test "$mylines" -eq 0 
+      then
+# directory is empty! if nonempty, files will be dumped anyway (no recusrion)
+        echo "$name" >> tarlist
+        ls -ld "$name" >> $path/$cname.$q.log
+      fi
+    fi
+# end Loop 2
+  else
+# if not, probably some backslashes or whatever
+# DON'T DO ANYTHING AT ALL
+      echo "WARNING: $name ignored"
+  fi
+# end Loop 1
+done < listofall
+# end Loop 0
+stat=$?
+# maybe this (separate) process has bombed out
+if [ $stat -ne 0 ] 
+then
+echo " Exited from while read loop on $cname with $stat"
+echo " Problem with main loop, Status $stat for $cname on `hostname` $MAINDIR backup" | mail $EMAIL
+fi
+# anyway
+# don't forget to tar what is left, if anything!
+echo " Exited main loop, writing remaining files."
+q=`cat lastqvalue`
+if test -s tarlist
+then
+  gtar "$mystrip"cvf $cname.$q.tar $flist tarlist > $cname.$q.tar.log 2>&1
+  stat=$?
+  if [ $stat -ne 0 ]
+  then
+    echo " Problem with tar $cname.$q.tar `hostname` $MAINDIR" > tmp
+    grep "^gtar:" $cname.$q.tar.log >> tmp
+    cat tmp
+    cat tmp | mail $EMAIL
+    rm tmp
+  fi  
+  rm $cname.$q.tar.log
+  ls -l $cname.$q.tar
+  date
+  $TEST sixcpout $cname.$q.tar $CASTORDEST/$cname.$q.tar
+  stat=$?
+  if [ $stat -ne 0 ]
+  then
+    echo " Problem with staging $cname.$q.tar `hostname` $MAINDIR"
+    echo " Problem with staging $cname.$q.tar `hostname` $MAINDIR" | mail $EMAIL
+  fi
+  date
+  rm $cname.$q.tar
+else
+  echo " Interesting case where we have nothing left...."
+fi
+echo " `hostname` $MAINDIR/$SUBDIR backup to $CASTORDEST/$cname finished"
+if test "$email" = "true"
+then
+  echo " `hostname` $MAINDIR/$SUBDIR backup to $CASTORDEST/$cname finished" | mail $EMAIL
+fi
+date
+# clean up WORKDIR and move the tarfiles
+[ -f tarlist ] && rm tarlist
+[ -f listofall ] && rm listofall
+[ -f lastqvalue ] && rm lastqvalue
+echo " Now making a tar file of the logs and compressing it."
+gtar -cvf $cname.logs.tar $cname.*.log > /dev/null
+if [ $? -eq 0 ]
+then
+  rm $cname.*.log
+  [ -f $cname.logs.tar.gz ] && rm $cname.logs.tar.gz
+  gzip $cname.logs.tar
+  DATE=`date --iso-8601=seconds`
+  nname=$LOGDIR/$cname.logs.tar.gz"_"$DATE
+  echo $nname
+  mv $cname.logs.tar.gz $nname
+  if [ $? -ne 0 ]
+  then
+    echo " Could not store gzipped tar of logfiles in $LOGDIR!"
+  else
+    echo "The gzipped tarfile of the logs has been stored as"
+    echo "     $nname"
+    cd $MYPWD
+    rm -r $WORKDIR
+    exit 0
+  fi
+else
+  echo " Problem with creating $cname.logs.tar `hostname` $path"
+  echo " Problem with creating $cname.logs.tar `hostname` $path" | mail $EMAIL
+fi

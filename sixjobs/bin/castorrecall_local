@@ -1,0 +1,562 @@
+#!/bin/sh
+#
+# Version 1.2  13/02/2009
+# Just uses CASTOR Version 2 now, with three environment variables.
+# A script to recall files from castor and do an absolute or relative tar -x.
+# Version 0.9  10/03/2003 
+# The following new variables are introduced:
+# $WORKDIR (/scratch/si/$LOGNAME/backup) $WORKDIR is used to store the tar files 
+#          and other temporary files.
+# $EMAIL  whom to mail if problems.
+# $FREE Will send an error message and stop
+#       if there are less than $FREE bytes free in $WORKDIR.
+# $TEST ("") Should be set to "echo" for testing.
+#
+# $CASTORDEST the base destination in castor /castor/cern.ch/user/$initial/$LOGNAME
+#
+# We either use or get the parameters, fetch the tar files one at a time from Castor,
+# Do a tar -x (-P Digital -r Linux) and then delete the tar
+#
+# The variable "TEST", if set to echo
+# provides for testing without Doing the tar -x just a tar -v instead."
+# We allow a 3rd parameter as the destination for the "/" stripped files.
+# Version 0.2 1/3/2001
+# We allow only two parameters, and when the "/" is removed we try and also strip
+# the redundant stuff in the full pathname.
+#   $0 source [dest] the base of the source is interpreted as the tarfile name
+#   dest if specified forces / removal and strips full path. -P forces a strip anyway. 
+#   $0 source tries to restore to original place (NO leading / stripping).
+# Version 0.3 3/3/2001 Fixes a typo so that absolute paths for $2 dest were not
+# not being handled correctly.
+# Version 0.4 3/3/2001 Implemented new switch (default no listing)
+# -v makes a listing of the tar files to the screen
+# Version 0.5 11/7/2001 Cleans up SIXDEST CASTORDEST etc
+# Version 0.6  13/7/2001 Added a -s option for Mark to specify WORKDIR
+# Version 0.7 16/4/2002. Uses gtar on Compaq OSF as it handles
+# long names/links. Should still be compatible and tested OK.
+# Version 0.8 16/12/2002. Quoted variable OS in case undefined. 
+# Version 0.9  10/03/2003. Makes the WORKDIR name unique hopefully.
+export RFIO_USE_CASTOR_V2="YES"
+export STAGE_HOST="castorpublic"
+export STAGE_SVCCLASS="default"
+initial=`echo $LOGNAME | cut -c 1`
+MYPWD=`pwd`
+ORIGPWD=$MYPWD
+WORKDIR="/scratch/$GROUP/$LOGNAME/backup$$"
+EMAIL=`phonebook --login $LOGNAME --terse email`
+EMAIL=`echo $EMAIL | sed -e's/;//g'`
+FREE="1100000000"
+CASTORNAME="/castor/cern.ch/user/$initial/$LOGNAME"
+if test "$SIXDEST" = ""
+then
+  CASTORROOT="$CASTORNAME"
+else
+  CASTORROOT=$SIXDEST
+fi
+CASTORDEST="$CASTORROOT"
+TEST=""
+inter="true"
+tarname=`basename $MYPWD`
+cpath=""
+# Now check if we have been called with any parameters
+# parse command line into arguments
+help="false"
+strip="false"
+myv=""
+uscratch=""
+set -- `getopt hPs:v $*`
+# check result of parsing
+stat=$?
+if [ $stat != 0 ]
+then
+  echo " Seems to be a problem with command line arguments!"
+  exit $stat
+fi
+while [ $1 != -- ]
+do
+  case $1 in
+  -h)     help="true";;
+  -P)     strip="true";;
+  -s)     uscratch="true"
+          WORKDIR=$2
+          shift;;
+  -v)     myv="v";;
+  esac
+  shift   # next flag
+done
+shift
+
+#  check in case of help 
+if test "$help" = "true"
+then
+  echo "   "
+  echo " Welcome to Castor recall script. Version 1.2 13/02/2009"
+  echo " Available on Linux"
+  echo " Eric McIntosh 70047 or eric.mcintosh@cern.ch "
+  echo "   "
+  echo " The script can be called directly to recall tar files from Castor,"
+  echo " or you can just execute with NO parameters or switches for a full interactive"
+  echo " dialogue, including the posssibility of a dummy test run with NO tar -x."
+  echo "   "
+  echo " For example:"
+  echo "   "
+  echo " $0 cpath/tarname"
+  echo "   "
+  echo " will try and get all the tarfiles, tarname.1.tar tarname.2.tar etc of the"
+  echo " Castor pool /castor/cern.ch/user/$initial/$LOGNAME/cpath"
+  echo " and then extract the files restoring them to their original location."
+  echo "   "
+  echo " cpath may be omitted:"
+  echo "   " 
+  echo " $0 tarname"
+  echo "   "
+  echo " just reads  tarname.1.tar etc from /castor/cern.ch/user/$initial/$LOGNAME"
+  echo "   "
+  echo " The environment variable SIXDEST if defined, will be used for the Castor name"
+  echo " The script uses /scratch/$GROUP/$LOGNAME/backup or /tmp on Linux (created"
+  echo " if necessary) for working space, of which there must be at least 1GB free."
+  echo " The tarfiles are read one at a time and untarred using the full path name."
+  echo " This may not work if the path does not exist for some reason."
+  echo " You can specify -P to get rid of the leading / "
+  echo " or a 2nd parameter as the relative or absolute destination (-P) assumed."
+  echo " When the leading / is removed we also try and get rid of the prefix like"
+  echo " /tmp_mnt/local/work/$LOGNAME/....down to the tarname if it matches an element"
+  echo " of the path."
+  echo "  " 
+  echo " $0 [cpath/]tarname dest "
+  echo " where dest may be . meaning the current directory $ORIGPWD"
+  echo "  "
+  echo " will recall $CASTORDEST/[cpath/]tarname.1.tar etc "
+  echo " and extract files to $ORIGPWD/dest."
+  echo " The recall to a specified location forces the leading / to be stripped, and an"
+  echo " effort is made to get rid of the prefix like /tmp_mnt/local/work/$LOGNAME/..../ etc"
+  echo " until we arrive at the last element which matches the tarname."
+  echo " This sounds a bit complicated, but is compatible with the backup script I hope!" 
+  echo "  " 
+  echo " Finally, by default tar extraction does not list the files:"
+  echo "  -l          makes a listing of the tar files to the screen as they are extracted"
+  echo "  "
+  echo " $0 -h produces this message."
+  echo "  "
+  echo " Does NO prompting when called with parameters."
+  echo " Uses /tmp/$LOGNAME/backup for WORKDIR (if/scratch does not exist),"
+  echo " or -s /absolutepath will be used instead (and created if necessary)."
+  echo " Changed to accept only 2 parameters including a "." as local place."
+  echo " When stripping tries to remove as much prefix as seems sensible."
+  echo " Handles an absolute "dest" correctly in Version 0.3"
+  echo " Now uses gtar on Compaq OSF, Version 0.7 and later"
+  echo " Version 0.9 fixes problem with OS variable and uses unique recall directory"
+  echo " Version 1.2 uses CASTOR Version 2."
+
+  exit 
+fi
+#if test "$OS" != "Linux" -a "$OS" != "OSF1"
+#then
+  #echo " System ($OS) not supported/tested by $0!"
+  #exit 10
+#fi
+
+# See if we have /scratch available, else use /tmp
+# unless user specified WORKDIR himself with -s
+if test "$uscratch" = ""
+then
+  ls -ld /scratch > /dev/null 2>&1
+  if test $? != 0
+  then
+    WORKDIR=/tmp/$LOGNAME/backup$$
+  fi
+fi
+
+# Now let us make sure the user is CASTOR registered.
+sixdir $CASTORNAME > /dev/null
+stat=$?
+if test "$stat" -ne 0
+then
+  echo "You do not seem to be registered in CASTOR"
+  echo "Please e-mail castor.support@cern.ch requesting an account."
+  exit 88
+fi 
+# Now check if we have been called with any parameters
+if test $# != 0
+then
+  inter="false"
+  if test $# -gt 2
+  then
+    echo " Too many parameters! try $0 -h for help."
+    exit 89
+  fi
+# we have 1 or 2 parameters
+  if test $# -eq 2
+  then
+    strip="true"
+    dest=$2
+    fdest=`echo $dest | cut -c 1`
+    if test "$fdest" != "/"
+    then
+      if test "$fdest" = "."
+      then
+        MYPWD=$ORIGPWD
+      else
+        MYPWD=$ORIGPWD/$dest
+      fi
+    else
+      MYPWD=$dest
+    fi
+# remember we already set MYPWD to ORIGPWD as a default  
+  fi 
+  cpath=$1  
+  hcpath=`echo $cpath | cut -c 1`
+  if test "$hcpath" != "/"
+  then
+    if test "$cpath" != "."
+    then
+      cpath=$CASTORDEST/$cpath
+    else
+      cpath=$CASTORDEST
+    fi
+  fi
+  tarname=`basename $cpath`
+  cpath=`dirname $cpath`
+  sixdir $cpath > /dev/null 2>&1
+  if test $? != 0
+  then
+    echo " Apparently $cpath does not exist!"
+    exit 89
+  fi
+else
+# we have no parameters apart from -P or -h
+  echo "  "
+  echo " Do you want to make a TEST run??"
+  echo " yes, YES, y, Y, or CR/LF, will be interpreted as YES"
+  read mytest
+  if test "$mytest" = "" -o "$mytest" = "y" -o "$mytest" = "Y" -o "$mytest" = "YES" -o "$mytest" = "yes"
+  then
+    TEST="echo"
+  else
+    TEST=""
+  fi
+  echo "  "
+  #
+  echo " "
+  if test "$TEST" = "echo"
+  then
+    echo " This wil be a TEST RUN which will get the tar files and list them"
+  else
+    echo " This will be a PRODUCTION RUN"
+  fi
+  echo "     "
+
+  # Now let us give the user a chance to modify WORKDIR
+  ok="false"
+  while test $ok != "true"
+  do
+    echo "   "
+    echo " We will use $WORKDIR for creating tar files"
+    MBFREE=`expr $FREE / 1000000`
+    echo " It must have ~$MBFREE Megabytes available."
+    echo " Is this OK? (CR/LF, Y, YES, y, yes, all mean OK)"
+    read junk
+    if test "$junk" = "" -o "$junk" = "y" -o "$junk" = "Y" -o "$junk" = "YES" -o "$junk" = "yes"
+    then
+      ok="true"
+    else
+      echo "   "
+      echo " Please give a new absolute path for WORKDIR"
+      read WORKDIR
+    fi
+  done
+
+  # Now let us give the user a chance to modify directories
+  ok="false"
+  while test $ok != "true"
+  do
+    echo "   "
+    echo " We will recall from CASTOR all the tar files"
+    echo "    called $tarname.1.tar $tarname.2.tar etc"
+    echo " Is this OK? (CR/LF, Y, YES, y, yes, all mean OK)"
+    read junk
+    if test "$junk" = "" -o "$junk" = "y" -o "$junk" = "Y" -o "$junk" = "YES" -o "$junk" = "yes"
+    then
+      ok="true"
+    else
+      echo "   "
+      echo " Please give a new tarname"
+      read tarname
+    fi
+  done
+  
+  ok="false"
+  cpath=$CASTORDEST
+  while test $ok != "true" 
+  do
+    echo "   "
+    echo " We will copy the tarfiles from the following CASTOR namespace"
+    echo " $cpath" 
+    echo " Is this OK? (CR/LF, Y, YES, y, yes, all mean OK)"
+    read junk
+    if test "$junk" = "" -o "$junk" = "y" -o "$junk" = "Y" -o "$junk" = "YES" -o "$junk" = "yes"
+    then
+      sixdir $cpath > /dev/null 2>&1
+      if test $? != 0
+      then
+        echo " Apparently $cpath does not exist"
+      else
+        ok="true"
+      fi
+    else
+      echo "   "
+      echo " Please give a new Castor full path name or relative to"
+      echo " $CASTORDEST or type CR/LF if $CASTORDEST is OK"
+      read mynewname
+      fmyname=`echo $mynewname | cut -c 1`
+      if test "$fmyname" !=  "/"
+      then
+        cpath=$CASTORDEST/$mynewname
+      else 
+        cpath=$mynewname
+      fi
+    fi
+  done
+
+  ok="false"
+  mydest=$MYPWD
+  while test $ok != "true"
+  do
+    if test "$strip" != "true"
+    then
+      echo " The files will be restored using the full absolute path name." 
+      echo " Is this OK? (CR/LF, Y, YES, y, yes, all mean OK)"
+      read junk
+      if test "$junk" = "" -o "$junk" = "y" -o "$junk" = "Y" -o "$junk" = "YES" -o "$junk" = "yes"
+      then
+        ok="true"
+      else
+      strip="true"
+      fi
+    else
+      echo " The files will be restored to the directory $mydest"
+      echo " with the leading / stripped, and more will be stripped if possible."
+      echo " Is this OK? (CR/LF, Y, YES, y, yes, all mean OK)"
+      read junk
+      if test "$junk" = "" -o "$junk" = "y" -o "$junk" = "Y" -o "$junk" = "YES" -o "$junk" = "yes"
+      then
+        ls -ld $mydest > /dev/null 2>&1
+        if test $? -ne 0
+        then
+          echo " Apparently $mydest does not exist!"
+        else
+          ok="true"
+        fi
+      else
+        echo " Give a relative or fullpathname for the files"
+        read newpath
+        fnewpath=`echo $newpath | cut -c 1`
+        if test "$fnewpath" != "/"
+        then
+          if test "$fnewpath" = "."
+          then
+            mydest=$MYPWD
+          else
+            mydest=$MYPWD/$newpath
+          fi
+        else
+          mydest=$newpath
+        fi
+      fi
+    fi
+  done
+  MYPWD=$mydest
+fi
+
+if test "$strip" = "true"
+then
+# if test $OS = "Linux"
+# then
+    mystrip="-"
+# else
+#   mystrip="-"
+#   mystrip="-s"
+# fi
+else
+# if test $OS = "Linux"
+# then
+    mystrip="-P"
+# else
+#   mystrip="-"
+#   mystrip="-P"
+# fi
+fi
+
+echo " WORKDIR=$WORKDIR, where to put the tarfiles and other temporaries."
+echo " EMAIL=$EMAIL, where to send mail if there are problems."
+MBFREE=`expr $FREE / 1000000`
+echo " FREE=$FREE Bytes, ~$MBFREE Megabytes, MUST have this free in $WORKDIR or we abort."
+echo " "
+echo " All the tarfiles in $cpath called $tarname.1.tar etc will be read and the files extracted"
+if test "$strip" != "true"
+then
+  echo " The files will be extracted to their original location; use the -P option"
+  echo " if you want the leading "/" stripped and files restored to $MYPWD."
+else
+  echo " The files will be restored to $MYPWD with the leading "/" stripped;"
+  echo " ...and more will be stripped if possible."
+fi
+echo " "
+if test $inter = "true"
+then
+  echo " Type CR/LF if this is OK, or CTRL-C to exit and try again:"
+  read junk
+fi
+
+if [ ! -d "$WORKDIR" ] ;then
+  mkdir -p $WORKDIR
+  if test $? != 0
+  then
+    echo " Could not create $WORKDIR !"
+    exit 70
+  fi
+fi
+##
+cd $WORKDIR
+# Check our WORKDIR is writeable
+touch junk$$
+if test $? != 0
+then
+  echo " Cannot create files in $WORKDIR, permissions/token problem?"
+  exit 83
+else
+  rm junk$$
+fi
+
+ls -ld $MYPWD > /dev/null 2>&1
+if test $? -ne 0
+then
+  echo " Apparently $MYPWD does not exist!! Please try again."
+  exit 30
+fi
+
+echo " `hostname`;  all $tarname.*.tar recall started"
+date
+
+# check for $FREE free
+FREE=`expr $FREE / 1000 `
+free=`df -k $WORKDIR | tail -1 | sed -e "s/  */;/g" | cut -d";" -f4`
+if [ $free -lt $FREE ]
+then
+  echo " `hostname` $WORKDIR < $FREE free!! $free KB, recall cancelled."
+  echo " `hostname` $WORKDIR < $FREE free!! $free KB, recall cancelled." | mail $EMAIL
+  exit 98
+fi
+ 
+q=1
+finished="false"
+while test $finished != "true"
+do
+  sixdir $cpath/$tarname.$q.tar > /dev/null 2>&1
+  stat=$?
+  if test $stat != "0"
+  then
+    if test $q -ne 1
+    then
+      finished="true"
+    else
+      echo " Could not access $cpath/$tarname.$q.tar!!"
+      echo " Recall aborted."
+      exit $stat
+    fi
+  else
+    sixcpin $cpath/$tarname.$q.tar $tarname.$q.tar
+    stat=$?
+    if test $stat != "0" 
+    then
+      echo " Recall of $cpath/$tarname.$q.tar failed!!"
+      exit $stat
+    fi
+# remember to handle TEST
+    cd $MYPWD
+    if test "$TEST" = "echo"
+    then
+      gtar "$mystrip"t"$myv"f $WORKDIR/$tarname.$q.tar
+      stat=$?
+    else
+      gtar "$mystrip"x"$myv"f $WORKDIR/$tarname.$q.tar
+      stat=$?
+    fi
+    cd $WORKDIR
+    rm $tarname.$q.tar
+    q=`expr $q + 1 `
+  fi
+done
+q=`expr $q - 1`
+# Now let us try and strip some prefix
+#
+if test $strip = "true"
+then
+  morestrip="false"
+  cd $MYPWD
+  myprefix=`find . -type d -name $tarname -print`
+  if test $? -ne 0
+  then
+    echo " Could not find the prefix to strip from the filenames!" 
+  else
+    mycount=` find . -type d -name $tarname -print | wc -l`
+    if test "$mycount" -ne 1
+    then
+      echo " Cannot uniquely determine what to strip; $myprefix is ambiguous!"
+      echo " Will use the first occurrence."
+      myprefix=`find . -type d -name $tarname -print | head -1`
+    fi
+    echo " Stripping `dirname $myprefix` from all restored files by moving them."  
+    if test $inter = "true"
+    then
+      echo " Is this OK? (CR/LF, Y, YES, y, yes, all mean OK)"
+      read junk
+      if test "$junk" = "" -o "$junk" = "y" -o "$junk" = "Y" -o "$junk" = "YES" -o "$junk" = "yes"
+      then
+        morestrip="true"
+      fi
+    else
+      morestrip="true"
+    fi
+  fi
+  if test "$morestrip" = "true"
+  then
+# OK let us try and move the files
+    mydirname=$myprefix
+    rdir=$mydirname
+    while test "$mydirname" != "." -a "$mydirname" != "/"
+    do
+      rdir=$mydirname
+      mydirname=`dirname $mydirname`
+    done
+    ls -ld ./$tarname > /dev/null 2>&1
+    if test $? -eq 0
+    then
+      echo " Stripping abandoned because $tarname exists already in $MYPWD!"
+    else
+      mv $myprefix .
+      if test $? -eq 0
+      then
+        mymyprefix=`dirname $myprefix`
+        rmdir $mymyprefix
+        stat=$?
+        mymyprefix=`dirname $mymyprefix`
+# this should fail if the directory is non-empty.........
+        while test "$mymyprefix" != "." -a "$mymyprefix " != "/" -a $stat -eq 0
+        do
+          rmdir $mymyprefix
+          stat=$?
+          mymyprefix=`dirname $mymyprefix`
+        done
+      else
+        echo " Moving $myprefix failed!"
+      fi
+    fi
+  fi
+fi    
+#
+date
+echo " $0 of $q tarfiles completed"
+cd $ORIGPWD
+rm -r $WORKDIR
+exit

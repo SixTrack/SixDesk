@@ -1,0 +1,190 @@
+#!/bin/ksh
+#
+# A remote touch interface for sixtrack.
+# Just does a local touch of junk$$ and an rfcp to $SIXDEST or  
+# default remote destination.
+# DANGEROUS AS IT DESTROYS AN EXISTING FILE
+# Modified to do nothing if file exists 11/7/2001
+# Checks the status of the result. Retries if necessary
+# and warns user.
+#
+# Calling Sequence: sixtouch ......anything...... filename
+# Simulates remote touch by touch locally filename$$ and then
+# doing an rfcp to $SIXDEST/filename ignoring all options.
+
+export RFIO_USE_CASTOR_V2="YES"
+export STAGE_HOST="castorpublic"
+export STAGE_SVCCLASS="default"
+
+EMAIL=`phonebook --login $LOGNAME --terse email`
+EMAIL=`echo $EMAIL | sed -e's/;//g'`
+mymail=""
+cpath=""
+#====================================================================================
+# This is a temporary kludge until systems are updated.
+#system=`ASISUname`
+#system=${system%%_*}
+#if test "$system" = "alpha"
+#then
+#  cpath="/afs/cern.ch/asis/packages/CASTOR/castor-1.3.1.1/alpha_dux40/usr.local/bin/"
+#fi
+#if test "$system" = "i386"
+#then
+#  cpath="/afs/cern.ch/asis/packages/CASTOR/castor-1.3.1.1/i386_redhat61/usr.local/bin/"
+#fi
+#====================================================================================
+
+REMOTE=""
+if test "$SIXDEST" = ""
+then
+  initial=`echo $LOGNAME | cut -c 1`
+  SIXDEST="/castor/cern.ch/user/$initial/$LOGNAME"
+fi
+
+command="$0 $@"
+
+if test $# -eq 0
+then
+  echo "sixtouch called with no parameters"
+  exit 99
+fi
+
+while test $# -gt 0
+do
+  name=$1
+  shift
+done
+
+# Now check if we have an absolute path ("hostname:" or path begins with a "/" )
+pinit=`echo $name | cut -c 1`
+if test "$pinit" != "/"
+then
+  fpath=$name
+  while test "$fpath" != "."
+  do
+    mypath=$fpath
+    fpath=`dirname $mypath`
+  done
+  myhost=`echo $mypath | grep ':$'`
+  if test "$myhost" = ""
+  then
+ #  we have neither an absolute pathname /.... nor a hostid: path
+ #  so we can prefix SIXDEST (but only if it is valid!)
+ #  Now  we check SIXDEST for an absolute path ("hostname:" or path begins with a "/" )
+    pinit=`echo $SIXDEST | cut -c 1`
+    if test "$pinit" != "/"
+    then
+      fpath=$SIXDEST
+      while test "$fpath" != "."
+      do
+        mypath=$fpath
+        fpath=`dirname $mypath`
+      done
+      myhost=`echo $mypath | grep ':$'`
+      if test "$myhost" = ""
+      then
+# Oops; something strange as we have no absolute path nor a hostid!"
+        echo " Invalid destination SIXDEST $SIXDEST"
+        exit 98
+      fi
+    fi
+    REMOTE=$SIXDEST"/"
+  fi
+fi
+
+# Modified to NOT destroy an existing file
+"$cpath"rfdir $REMOTE$name > junk$$ 2>&1
+stat=$?
+if test "$stat" -ne 0
+then
+  grep "error 2" junk$$ > /dev/null
+  gstat=$?
+  if test "$gstat" -ne 0
+  then
+#   something strange
+    echo " sixtouch problem with $REMOTE$name, text follows:"
+    cat junk$$
+    echo " sixtouch exits, cannot status $REMOTE$name"
+    echo "Job $LSB_JOBNAME on `hostname` sixtouch cannot status $REMOTE$name" | mail Eric.McIntosh@cern.ch
+    cat junk$$ | mail Eric.McIntosh@cern.ch
+    if test "$LSB_JOBNAME" != ""
+    then
+      echo "Job $LSB_JOBNAME on `hostname` sixtouch cannot status $REMOTE$name" | mail $EMAIL
+    fi
+    rm junk$$
+    exit 76
+  fi
+else
+  echo " sixtouch exits, file $REMOTE$name exists."
+  rm junk$$
+  exit 0
+fi
+rm junk$$
+
+echo "sixtouch creating $REMOTE$name"
+myname=`basename $name`
+stat=1
+while test $stat -ne 0
+do
+  touch $myname$$
+  stat1=$?
+  "$cpath"rfcp $myname$$ $REMOTE$name
+  stat2=$?
+  rm $myname$$
+  stat=`expr $stat1 + $stat2`
+  if test $stat -ne 0
+  then
+     echo "PROBLEM with: rfcp $myname$$ $REMOTE$name"
+     echo "Command was: $command"
+     sleep 5
+  else
+    exit 0
+  fi
+
+  touch $myname$$
+  stat1=$?
+  "$cpath"rfcp $myname$$ $REMOTE$name
+  stat2=$?
+  rm $myname$$
+  stat=$stat1|$stat2
+  if test $stat -ne 0
+  then
+     echo "PROBLEM with: rfcp $myname$$ $REMOTE$name"
+     echo "Command was: $command"
+     sleep 5
+  else
+    exit 0
+  fi
+
+  touch $myname$$
+  stat1=$?
+  "$cpath"rfcp $myname$$ $REMOTE$name
+  stat2=$?
+  rm $myname$$
+  stat=$stat1|$stat2
+  if test $stat -ne 0
+  then
+     echo "PROBLEM with: rfcp $myname$$ $REMOTE$name"
+     echo "Command was: $command"
+     sleep 5
+  else
+    exit 0
+  fi
+
+# should now mail to the USER (once only!)
+  if test "$mymail" = ""
+  then
+    mymail="sent"
+  else
+    echo "Failed three times, twice"
+    if test "$LSB_JOBNAME" != ""
+    then
+      echo "Job $LSB_JOBNAME on `hostname` sixtouch failed three times" | mail $EMAIL
+    fi
+    exit 77
+  fi
+  sleep 600
+# and loop for a second attempt
+done
+exit 0
+

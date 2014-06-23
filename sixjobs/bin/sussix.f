@@ -1,0 +1,351 @@
+C=================================================================
+C  
+C  MAIN PROGRAM FOR THE SPECTRAL ANALYSIS OF TRACKING OR BEAM DATA
+C
+C  TWO TYPES OF DATA MAY BE ANALYSED ACCORDING TO THE ISIX OPTION:
+C
+C  ISIX=0 ---> TRACKING DATA FROM A USER PROVIDED ASCII FILE
+C  ISIX=1 ---> SIXTRACK BINARY OUTPUT, 
+C  
+C  IF ISIX=1 IT TRANSFORMS THE SIXTRACK BINARY OUTPUT INTO AN ASCII
+C  FILE (SUBROUTINE READRIC), 
+C
+C  MORE THAN ONE FILE CAN BE TREATED: 
+C  NTOT IS THE TOTAL NUMBER OF FILES TO BE PROCESSED
+C  THE ASCII DATA FILES MUST START WITH FORT.90 IN DESCENDING ORDER
+C  AND IT MUST HAVE TWO COLUMNS FOR EACH PLANE!!!!!!!!!!!!!!!!!!!!!
+C
+C  ONCE THE DATA ARE READ THE SPECTRUM IS CALCULATED, ORDERED AND
+C  THE OUTPUT OF ALL THE CASES IS WRITTEN IN THE FILE FORT.300
+C  (SUBROUTINE DAT_SPE ---> SUBROUTINE RSPECTRUM, ORDRES, ETC.)
+C 
+C  DIFFERENT KIND OF POSTPROCESSING ARE AVALIABLE AN ARE SWITCHED
+C  ON WITH THE CORRESPONDING FLAG, BY READING THE FORT.300 WITH 
+C  THE SUBROUTINE READ_RES.
+C  NSUS GE 1 ---> SUBTRACTS THE NEXT TO LEADING FREQUENCIES
+C  (SUBROUTINE SUSRES). IN THIS CASE THE PROGRAM ALSO WRITES THE MODIFIED 
+C  DATA BACK INTO THE STARTING SIXTRACK BYNARY OUTPUT 
+C  (SUBROUTINE WRITERIC). WARNING: IT OVERWRITES THE FILES.
+C  IUSME=1 ---> SMEAR CALCULATION
+C  (SUBROUTINE READ_SME)
+C  INV=1 ---> INVARIANT CALCULATION
+C  (SUBROUTINE READ_INV)
+C
+C  N.B.: IF THE OUTPUT IN FORT.300 IS ALREADY AVALIABLE THE OPTION
+C  IANA=0 ALLOWS TO SKIP DATA ANALYSIS, STARTING DIRECTLY WITH THE
+C  FORT.300 ANALYSIS.
+C
+C  DESCRIPTION OF ALL INPUT ITEMS:
+C 
+C  ISIX FLAG FOR SIXTRACK (1) OR ASCII (0) DATA
+C  NTOT TOTAL NUMBER OF DATA FILES TO BE ANALYZED
+C  IANA FLAG FOR FULL ANALYSIS OF DATA
+C  ICONV IS THE FLAG FOR LINEAR TRASFORMATION (YES=1)
+C  NT1,NT2 initial & final turn number
+C  NARM THE MUNBER OF HARMONIC TO BE CALCULATED
+C  ISTUNE IS THE FLAG FOR FUNDAMENTALFREQUENCIES
+C  ISTUNE=0 => off
+C  ISTUNE=1 uses Qx,y,z values as guess values
+C  ISTUNE=2 takes the Qx,y,z values as fundamental frequencies
+C  etune(3) allowed distance to Qx,y,z
+C  TUNEX,TUNEY,TUNEZ guess or fundamental tunes
+C  NSUS THE NUMBER OF HARMONIC TO BE SUBTRACTED
+C  IDAM IS THE DIMENSION OF PHASE SPACE
+C  NTWIX IS A FLAG FOR THE TWIN PARTICLES
+C  IR IS A FLAG FOR REAL SIGNAL (YES=1)
+C  IMETH IS A FLAG FOR WINDOWING (HANNING=1, NO FILTER=0)
+C  NRC IS THE MAXIMUM ORDER OF LINEAR COMBINATION OF FREQUENCIES
+C  EPS IS THE TOLERANCE ON THE IDENTIFICATION OF FREQUENCIES
+C  NLINE IS THE NUMBER OF LINES TO BE LOOKED FOR
+C  LR MR KR SPECIFY THE LINE
+C  IDAMX SELECT THE PLANE TO ANALYZE
+C  IFIN IS THE UNIT FOR THE FINAL OUTPUT
+C  ISME FLAG FOR SMEAR CALCULATION
+C  IUSME UNIT FOR SMEAR OUTPUT
+C  INV FLAG FOR INVARIANTS CALCULATION
+C  IINV UNIT FOR INVARIANTS OUTPUT
+C  ICF FLAG FOR INVARIANTS CALCULATION
+C  IICF UNIT FOR INVARIANTS OUTPUT
+C
+C  THE SPECTRUM IS WRITTEN IN THE UNIT 300
+C
+C  AUTHORS: R.BARTOLINI & F.SCHMIDT 
+C  MODIFIED 16/09/1996: ADDED THE ICONV OPTION
+C  MODIFIED 17/09/1996: ADDED THE INPUT FROM FILE
+C  MODIFIED 20/08/1997: ADDED THE INVARIANT CALCULATION
+C  MODIFIED 17/09/1997: ADDED THE TREATEMENT OF ASCII BEAM DATA
+C  MODIFIED 30/05/1998: ADDED DEFAULT VALUES, AND FFT
+C
+
+      PROGRAM SUSSIX_V4
+      IMPLICIT DOUBLE PRECISION(A-H,O-Y)
+      PARAMETER(MTERM=300)
+      dimension lr(100),mr(100),kr(100),etune(3)
+      character*80 ch,ch1
+
+C===================
+C.....INIZIALIZATION
+C===================
+C=========================
+C.....DEFAULT VALUES FIRST
+C=========================
+      ISIX=1
+      NTOT=1
+      IANA=1
+      ICONV=1
+      NT1=1
+      NT2=1024
+      NARM=1
+      ISTUNE=0
+      ETUNE(1)=1D-2
+      ETUNE(2)=1D-2
+      ETUNE(3)=1D-2
+      TUNEX=0.28
+      TUNEY=0.31
+      TUNEZ=0.006
+      NSUS=0
+      IDAM=2
+      NTWIX=1
+      IR=0
+      IMETH=2
+      NRC=10
+      EPS=1D-6
+      NLINE=1
+      DO 1 I=1,100
+        LR(I)=0
+        MR(I)=0
+        KR(I)=0
+ 1    CONTINUE
+      LR(1)=1
+      IDAMX=1
+      IFIN=500
+      ISME=0
+      IUSME=200
+      INV=0
+      IINV=250
+      ICF=0
+      IICF=350
+C=========================
+C.....READS THE INPUT FILE
+C=========================
+
+      OPEN(10,FILE='sussix_v4.inp',
+     .        STATUS='OLD')
+      READ(10,'(4(/))')
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)ISIX
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)NTOT
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)IANA
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)ICONV
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)NT1,NT2
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)NARM
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)ISTUNE,ETUNE(1),ETUNE(2),ETUNE(3)
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)TUNEX,TUNEY,TUNEZ
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)NSUS
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)IDAM
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)NTWIX
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)IR
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)IMETH
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)NRC
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)EPS
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)NLINE
+      DO K=1,NLINE
+        READ(10,'(A80)') CH
+        CH1=CH(9:80)//' / '
+        READ(CH1,*) LR(K),MR(K),KR(K) 
+      ENDDO
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)IDAMX
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)IFIN
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)ISME
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)IUSME
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)INV
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)IINV
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)ICF
+      READ(10,'(A80)') CH
+      CH1=CH(9:80)//' / '
+      READ(CH1,*)IICF
+
+C.....CHECKS
+      if(narm.le.0) then
+        write(6,*) 'NARM too small'
+        stop
+      endif
+      if(narm.gt.MTERM) then
+        write(6,*) 'NARM too big => reduced to maximum: ',MTERM
+        narm=MTERM
+      endif
+      if(NT1.le.0) then
+        write(6,*) 'NT1 too small'
+        stop
+      endif
+      if(NT2.le.NT1) then
+        write(6,*) 'NT2 smaller than NT1'
+        stop
+      endif
+      if(idam.ne.1.and.idam.ne.2.and.idam.ne.3) then
+        write(6,*) 'The order of phase space IDAM must be 1, 2 or 3'
+        stop
+      endif
+
+C==============================
+C.....END OF THE INIZIALIZATION
+C==============================
+C===========================
+C.....STARTING DATA ANALYSIS
+C===========================
+
+C.....1) CHECK IF THE FORT.300 IS ALREADY PRODUCED
+C.....IF NOT (IANA=1 or 2)
+C........2) CHECK THE ISIX OPTION
+C........3) PROCEED WITH SPECTRUM CALCULATION 
+C........4) FFT IF IANA=2
+C.....IF YES (IANA=0)
+C........2) PROCEED WITH POSTPROCESSING
+
+      IF(IANA.EQ.1.OR.IANA.EQ.2) THEN
+        IF(ISIX.EQ.1) THEN
+C@@@@@@@@@@@@@@@@@@@@@@
+C.....SIXTRACK DATA   @
+C@@@@@@@@@@@@@@@@@@@@@@
+          NLST=90-NTOT+1
+          DO N=90,NLST,-1
+            CALL READRIC(N,IDAM,NTWIN,ICONV)
+C.....NOW READRIC HAS CREATED NTWIN ASCII FILES IN UNIT 91 AND 
+C.....EVENTUALLY 92. NTWIN IS AN OUTPUT PARAMETER OF READRIC!!
+            IF(NTWIX.LT.NTWIN) THEN
+              WRITE(6,*)'WARNING: THE TWIN PARTICLE IS IGNORED'
+              IF(NSUS.GE.2) THEN
+                WRITE(6,*)'ERROR: TWIN PARTICLE NEEDED'
+                STOP
+              ENDIF
+            ENDIF
+            DO NF=1,NTWIX
+              IUNIT=90+NF
+              CALL DAT_SPE(EPS,IUNIT,IDAM,IR,NT1,NT2,NTURN,
+     .             IMETH,NARM,NRC,IANA)
+C.....N.B. NTURN IS AN OUTPUT PARAMETER OF DAT_SPE
+              CALL ORDRES(EPS,NARM,NRC,IR,IDAM,IUNIT,NTURN,
+     .             -TUNEX,-TUNEY,-TUNEZ,ISTUNE,ETUNE)
+              IF(NSUS.GE.2) THEN
+C.....SUBTRACTS AND OVERWRITE UNIT IUNIT
+                CALL SUSRES(IUNIT,NSUS,NTURN,3) 
+              ENDIF
+            ENDDO
+            IF(NSUS.GE.2) THEN
+C.....N.B. WRITERIC NEEDS BOTH THE FILES TREATED WITH SUSRES
+C.....     IT OVERWRITES THE INITIAL SIXTRACK OUTPUT!!!!!!!!
+              CALL WRITERIC(N,NTOTAL,NTWIN,NTURN,ICONV)
+            ENDIF
+          ENDDO
+        ELSEIF(ISIX.EQ.0) THEN
+C@@@@@@@@@@@@@@@@@@@@
+C......ASCII DATA   @
+C@@@@@@@@@@@@@@@@@@@@
+          DO N=1,NTOT
+            IUNIT=91-N
+            CALL DAT_SPE(EPS,IUNIT,IDAM,IR,NT1,NT2,NTURN,
+     .           IMETH,NARM,NRC,IANA)
+            CALL ORDRES(EPS,NARM,NRC,IR,IDAM,IUNIT,NTURN,
+     .             -TUNEX,-TUNEY,-TUNEZ,ISTUNE,ETUNE)
+          ENDDO
+        ENDIF
+      ENDIF
+
+C=============================================
+C.....STARTING POSTPROCESSING OF ANALYZED DATA
+C=============================================
+
+C......1) SELECTION OF LINES
+C......2) SMEAR CALCULATION
+C......3) INVARIANT CALCULATION
+
+      IF(ISIX.EQ.1) THEN
+C.......NTOT*NTWIX CASES ANALYZED FROM FORT.300 
+        INI=90
+        IFI=INI-NTOT*NTWIX+1
+      ELSEIF(ISIX.EQ.0) THEN
+C.......NTOT CASES ANALYZED FROM FORT.300 
+        INI=90
+        IFI=INI-NTOT+1
+      ENDIF
+
+      WRITE(6,*)' '
+      WRITE(6,*)'*************************************** '
+      WRITE(6,*)'STARTING THE FORT.300 ANALYSIS OF CASES:',INI,IFI
+      WRITE(6,*)'*************************************** '
+
+C.....SELECTION OF NLINE LINES SPECIFIED IN THE ARRAY LR,MR,KR
+C.....THE RESULTS ARE WRITTEN IN THE UNIT IOUK, IDAMX IS THE 
+C.....PLANE TO BE ANALYZED
+      DO K=1,NLINE
+        IOUK=IFIN+K
+        CALL READ_RES(INI,IFI,LR(K),MR(K),KR(K),NARM,
+     .                  IDAM,IDAMX,IOUK)
+      ENDDO
+C.....SMEAR CALCULATION: OUTPUT IN THE UNIT IUSME
+      IF(ISME.EQ.1) THEN
+        WRITE(6,*)'SMEAR CALCULATION: OUTPUT IN THE UNIT',IUSME
+        CALL READ_SME(INI,IFI,NARM,IDAM,IDAMX,IUSME)
+      ENDIF
+C.....INVARIANT CALCULATION: OUTPUT IN THE UNIT IINV
+      IF(INV.EQ.1) THEN
+        WRITE(6,*)'INVARIANT CALCULATION: OUTPUT IN THE UNIT',IINV
+        CALL READ_INV(INI,IFI,NARM,IDAM,IDAMX,IINV)
+      ENDIF
+C.....3-RD ORDER CONJUGATING FUNCTION CALCULATION: OUTPUT IN THE UNIT ICF
+      IF(ICF.EQ.1) THEN
+        WRITE(6,*)'3-RD ORDER CONJUG. FUNC.: OUTPUT IN THE UNIT',IICF
+        CALL READ_DT3(INI,IFI,NARM,IDAM,IDAMX,IICF)
+        CALL READ_DT4(INI,IFI,NARM,IDAM,IDAMX,IICF)
+      ENDIF
+
+      END
+
+
+
+

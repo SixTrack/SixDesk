@@ -1,0 +1,203 @@
+#!/bin/ksh
+#
+# Changed to use nsrm (not rfrm) which is much better. 27th July, 2004.
+#
+# Calling Sequence: sixrm [-r] [-f] [-i] filename|dirname
+# where -r means recursive and removes all children as well 
+# and -i produces prompts, and -f does not report non-existence
+
+export RFIO_USE_CASTOR_V2="YES"
+export STAGE_HOST="castorpublic"
+export STAGE_SVCCLASS="default"
+
+EMAIL=`phonebook --login $LOGNAME --terse email`
+EMAIL=`echo $EMAIL | sed -e's/;//g'`
+mymail=""
+REMOTE=""
+if test "$SIXDEST" = ""
+then
+  initial=`echo $LOGNAME | cut -c 1`
+  SIXDEST="/castor/cern.ch/user/$initial/$LOGNAME"
+fi
+
+if test $# -eq 0
+then
+  echo "sixrm called with no parameters"
+  exit 99
+elif test $# -eq 1
+then
+  filename=$1
+elif test $# -eq 2
+then
+  filename=$2 
+elif test $# -eq 3
+then
+  filename=$3
+elif test $# -eq 4
+then
+  filename=$4
+else
+  echo " Too many parameters for sixrm...."
+  exit 97
+fi
+
+# Now check if we have an absolute path ("hostname:" or path begins with a "/" )
+pinit=`echo $filename | cut -c 1`
+if test "$pinit" != "/"
+then
+  fpath=$filename
+  while test "$fpath" != "."
+  do
+    mypath=$fpath
+    fpath=`dirname $mypath`
+  done
+  myhost=`echo $mypath | grep ':$'`
+  if test "$myhost" = ""
+  then
+ #  we have neither an absolute pathname /.... nor a hostid: path
+ #  so we can prefix SIXDEST (but only if it is valid!)
+ #  Now  we check SIXDEST for an absolute path ("hostname:" or path begins with a "/" )
+    pinit=`echo $SIXDEST | cut -c 1`
+    if test "$pinit" != "/"
+    then
+      fpath=$SIXDEST
+      while test "$fpath" != "."
+      do
+        mypath=$fpath
+        fpath=`dirname $mypath`
+      done
+      myhost=`echo $mypath | grep ':$'`
+      if test "$myhost" = ""
+      then
+# Oops; something strange as we have no absolute path nor a hostid!"
+        echo " Invalid destination SIXDEST $SIXDEST"
+        exit 98
+      fi
+    fi
+    REMOTE=$SIXDEST"/"
+  fi
+fi
+
+command="$0 $@"
+echo "sixrm: removing $REMOTE$filename"
+stat=1
+while test $stat -ne 0
+do
+  if test $# -eq 1
+  then
+    command="nsrm $REMOTE$1"
+    nsrm $REMOTE$1
+    stat=$?
+  elif test $# -eq 2
+  then
+    command="nsrm $1 $REMOTE$2"
+    nsrm $1 $REMOTE$2
+    stat=$?
+  elif test $# -eq 3
+  then
+    command="nsrm $1 $2 $REMOTE$3"
+    nsrm $1 $2 $REMOTE$3
+    stat=$?
+  else
+    command="nsrm $1 $2 $3 $REMOTE$3"
+    nsrm $1 $2 $3 $REMOTE$3
+    stat=$?
+  fi
+  if test $stat -eq 2
+  then
+     echo "No file: exit"
+     exit 0
+  fi
+  if test $stat -ne 0
+  then
+     echo "PROBLEM with: $command"
+     echo "Command was: $0 $@"
+     sleep 5
+  else
+  exit 0
+  fi
+
+  if test $# -eq 1
+  then
+    command="nsrm $REMOTE$1"
+    nsrm $REMOTE$1
+    stat=$?
+  elif test $# -eq 2
+  then
+    command="nsrm $1 $REMOTE$2"
+    nsrm $1 $REMOTE$2
+    stat=$?
+  elif test $# -eq 3
+  then
+    command="nsrm $1 $2 $REMOTE$3"
+    nsrm $1 $2 $REMOTE$3
+    stat=$?
+  else
+    command="nsrm $1 $2 $3 $REMOTE$3"
+    nsrm $1 $2 $3 $REMOTE$3
+    stat=$?
+  fi
+  if test $stat -eq 2
+  then
+     echo "No file: exit"
+     exit 0
+  fi
+  if test $stat -ne 0
+  then
+     echo "PROBLEM with: $command"
+     echo "Command was: $0 $@"
+     sleep 5
+  else
+  exit 0
+  fi
+
+  if test $# -eq 1
+  then
+    command="nsrm $REMOTE$1"
+    nsrm $REMOTE$1
+    stat=$?
+  elif test $# -eq 2
+  then
+    command="nsrm $1 $REMOTE$2"
+    nsrm $1 $REMOTE$2
+    stat=$?
+  elif test $# -eq 3
+  then
+    command="nsrm $1 $2 $REMOTE$3"
+    nsrm $1 $2 $REMOTE$3
+    stat=$?
+  else
+    command="nsrm $1 $2 $3 $REMOTE$3"
+    nsrm $1 $2 $3 $REMOTE$3
+    stat=$?
+  fi
+  if test $stat -eq 2
+  then
+     echo "No file: exit"
+     exit 0
+  fi
+  if test $stat -ne 0
+  then
+     echo "PROBLEM with: $command"
+     echo "Command was: $0 $@"
+     sleep 5
+  else
+  exit 0
+  fi
+
+# should now mail to the USER (once only!)
+  if test "$mymail" = ""
+  then
+    mymail="sent"
+  else
+    echo "Failed three times, twice"
+    if test "$LSB_JOBNAME" != ""
+    then
+      echo "Job $LSB_JOBNAME on `hostname` sixrm failed three times" | mail $EMAIL
+    fi
+    exit 77
+  fi
+  sleep 600
+# and loop for a second attempt
+done
+exit 0
