@@ -1,3 +1,8 @@
+Release 3rd July, 2014
+Fixed a problem with fort.15 (and for.10 when kvar=1)
+Thanks Miriam. Changed plot_dyb to cp fort.15 earlier
+immediately after the first call to readplotb.
+
 Release 20th June, 2014
 Fix a problem in run_post, plot_dyb where the
 obsolete package here.sty is replaced by float.sty

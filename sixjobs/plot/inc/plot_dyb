@@ -165,6 +165,16 @@ if [ -s $1 -a "$5" -eq 1 ] ;then
   echo "set title \"$Filename Average Amplitude ("$iqs"), $extra Turns\" " > averem
   cat inc/averem.save >> averem
   echo "$elhc $einj" | $bindir/readplotb
+# MF: start fix for copying the right fort.15
+  if [ ! -d "$Fileps" ] ;then
+    mkdir -p $Fileps
+  fi
+  echo "copy fort.15 and fort.10 for file $1 to folder $Fileps"
+  cp fort.15 $Fileps
+  gzip -f $Fileps/fort.15
+  cp fort.10 $Fileps
+  gzip -f $Fileps/fort.10
+# MF: end fix for copying the right fort.15
   gnuplot maxslope >  maxslope.eps
   gnuplot distance >  distance.eps
   gnuplot survival >  survival.eps
@@ -339,8 +349,8 @@ then
   do_it=1
 fi  
 if [ do_it -eq 1 -a $3 -gt 0 ] ;then
-  latex test > /dev/null
-  dvips -q test -o test.ps
+#  latex test > /dev/null
+#  dvips -q test -o test.ps
   if [ $3 -eq 2 ]
     then 
     if test "$PRINT_CMD" = ""
@@ -354,7 +364,7 @@ if [ do_it -eq 1 -a $3 -gt 0 ] ;then
     mkdir -p $Fileps
   fi
   mv *.eps $Fileps
-  mv test.ps $Fileps
+#  mv test.ps $Fileps
   #
   if [ -s fort.40 ] ;then
     mv fort.40 $Fileps
@@ -364,8 +374,8 @@ if [ do_it -eq 1 -a $3 -gt 0 ] ;then
     mv fort.28 $Fileps
   fi
 # Added at Massimo's suggestion
-  cp fort.15 $Fileps
-  gzip -f $Fileps/fort.15
+#  cp fort.15 $Fileps
+#  gzip -f $Fileps/fort.15
   gzip -f $Fileps/*.*ps
 else
   rm -f averem.eps distance.eps kvar.eps maxslope.eps smear.eps survival.eps
