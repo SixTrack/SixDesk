@@ -7,15 +7,29 @@
 #
 . ./dot_env
 #
-# and ONLY one at a time just now
-# uses plot and local files
+
+###set -x 
+
 # Is rather slow with iplot and kvar=1 (can look at this later)
-# Locks plot so only one at a time in the workspace
+# Now we can run multiple run_post on different studies in the same workspace.
+# using the study private plot/study directory
+PLOT=$sixdeskhome/plot
+PLOTHOME=$PLOT/$LHCDescrip
+mkdir -p $PLOTHOME
+mkdir -p $PLOTHOME/inc
+cd $PLOTHOME
+
+#MACRO mymess 0 Running on `hostname` using directory $plottmp
+sixdeskmesslevel=0
+sixdeskmess="Running on `hostname` using directory $plottmp"
+sixdeskmess
+#MACRO mymess
+
 # Locks study (as does join10)
 
 #MACRO mylock $sixdeskhome/plot
-sixdesklockdir=$sixdeskhome/plot
-sixdesklock
+###sixdesklockdir=$sixdeskhome/plot
+###sixdesklock
 #MACRO mylock
 
 
@@ -87,8 +101,8 @@ if [ $long -eq 1 ] ;then
 
 
 #MACRO myunlock $sixdeskhome/plot
-    sixdesklockdir=$sixdeskhome/plot
-    sixdeskunlock
+###    sixdesklockdir=$sixdeskhome/plot
+###    sixdeskunlock
 #MACRO myunlock
 
 
@@ -124,8 +138,8 @@ else
 
 
 #MACRO myunlock $sixdeskhome/plot
-  sixdesklockdir=$sixdeskhome/plot
-  sixdeskunlock
+###  sixdesklockdir=$sixdeskhome/plot
+###  sixdeskunlock
 #MACRO myunlock
 
 
@@ -136,39 +150,43 @@ else
 
 fi
 #
+# and first copy minmax.awk (forgotten)
+cp $sixdeskhome/plot/inc/minmax.awk inc
+# and also .sty just in case....seem not to be needed....
+cp $sixdeskhome/plot/inc/*.sty inc
 sed -e 's/%a0/'$a0'/g' \
-    -e 's/%a1/'$a1'/g' plot/inc/distance.mask  > plot/inc/distance.save
+    -e 's/%a1/'$a1'/g' $sixdeskhome/plot/inc/distance.mask  > inc/distance.save
 sed -e 's/%a0/'$a0'/g' \
-    -e 's/%a1/'$a1'/g' plot/inc/maxslope.mask  > plot/inc/maxslope.save 
+    -e 's/%a1/'$a1'/g' $sixdeskhome/plot/inc/maxslope.mask  > inc/maxslope.save 
 sed -e 's/%a0/'$a0'/g' \
-    -e 's/%a1/'$a1'/g' plot/inc/survival.mask  > plot/inc/survival.save
+    -e 's/%a1/'$a1'/g' $sixdeskhome/plot/inc/survival.mask  > inc/survival.save
 sed -e 's/%a0/'$a0'/g' \
-    -e 's/%a1/'$a1'/g' plot/inc/smear.mask     > plot/inc/smear.save
+    -e 's/%a1/'$a1'/g' $sixdeskhome/plot/inc/smear.mask     > inc/smear.save
 sed -e 's/%a0/'$a0'/g' \
-    -e 's/%a1/'$a1'/g' plot/inc/averem.mask    > plot/inc/averem.save
+    -e 's/%a1/'$a1'/g' $sixdeskhome/plot/inc/averem.mask    > inc/averem.save
 sed -e 's/%a0/'$a0'/g' \
-    -e 's/%a1/'$a1'/g' plot/inc/kvar.mask      > plot/inc/kvar.save
+    -e 's/%a1/'$a1'/g' $sixdeskhome/plot/inc/kvar.mask      > inc/kvar.save
 #
-echo "$a0 $a0" > plot/linear
-echo "$a1 $a1" >> plot/linear
-cat plot/inc/test1 > plot/test.tex
+echo "$a0 $a0" > linear
+echo "$a1 $a1" >> linear
+cat $sixdeskhome/plot/inc/test1 > test.tex
 if [ "$short" -eq 1 ] 
-then cat plot/inc/test2 >> plot/test.tex 
+then cat $sixdeskhome/plot/inc/test2 >> test.tex 
 fi
 if [ "$long" -eq 1 ] 
-then cat plot/inc/test3 >> plot/test.tex 
+then cat $sixdeskhome/plot/inc/test3 >> test.tex 
 fi
 #
 if [ "$kvar" -eq 1 ] 
-then cat plot/inc/test4 >> plot/test.tex 
+then cat $sixdeskhome/plot/inc/test4 >> test.tex 
 fi
-cat plot/inc/test5 >> plot/test.tex 
+cat $sixdeskhome/plot/inc/test5 >> test.tex 
 # and also get the "missing" .save from .mask
-cp plot/inc/beamweb.mask plot/inc/beamweb.save
-cp plot/inc/detuning.mask plot/inc/detuning.save
-cp plot/inc/detuningh.mask plot/inc/detuningh.save
-cp plot/inc/detuningv.mask plot/inc/detuningv.save
-cp plot/inc/tunedp.mask plot/inc/tunedp.save
+cp $sixdeskhome/plot/inc/beamweb.mask inc/beamweb.save
+cp $sixdeskhome/plot/inc/detuning.mask inc/detuning.save
+cp $sixdeskhome/plot/inc/detuningh.mask inc/detuningh.save
+cp $sixdeskhome/plot/inc/detuningv.mask inc/detuningv.save
+cp $sixdeskhome/plot/inc/tunedp.mask inc/tunedp.save
 # and fix the tunes for Frank!
 xrangelo=`gawk 'END{xrangelo='$tunex'-.02;print xrangelo}' /dev/null`
 xrangehi=`gawk 'END{xrangehi='$tunex1'+.02;print xrangehi}' /dev/null`
@@ -179,7 +197,7 @@ sed -e 's/%xrangelo/'$xrangelo'/g' \
     -e 's/%xrangehi/'$xrangehi'/g' \
     -e 's/%yrangelo/'$yrangelo'/g' \
     -e 's/%yrangehi/'$yrangehi'/g' \
-plot/inc/web.mask > plot/inc/web.save
+$sixdeskhome/plot/inc/web.mask > inc/web.save
 # and hit the loop
 
 #MACRO mytunes
@@ -240,50 +258,62 @@ do
          echo "No_fort10" >> DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j
        else
          echo "file: " $dir " okay, analysis started"
+# debug
+#        echo "DOLLARDIR:  $dir "
+#        echo "DOLLARFILE:  $file "
+#        ls -l fort.30
+# debug
          if [ -s "$file" -a "$long" -eq 1 ] ;then
            gzip -cd $file > fort.10
            echo "$elhc $einj backslashn $Runnam" | sed -e's/backslashn/\n/' | $sixdeskhome/bin/read10b
+# debug
+#          echo "FORT30?"
+#          ls -l fort.30
            echo "$dir" >> fort.31
            cat fort.30 >> fort.31
+# debug
+#        echo "FORT17: `ls -l fort.17`"
            if [ "$cremona" -eq 1 ] ;then
              cat fort.17 >> DAres.${LHCDesName}c.${sixdesktunes}.${myTaylorOrder}$blah.$j
            else 
              cat fort.17 >> DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j
            fi
-           plot/inc/plot_dyb $file $dir1 $iplot $short $long $kvar $sixdesktrack/$LHCDesHome
-           if [ "$iplot" -gt 0 ] ;then
-             cp fort.30 $sixdeskhome/plot/$dir
-             gzip -f $sixdeskhome/plot/$dir/fort.30
-             cp $file $sixdeskhome/plot/$dir
-           fi
+           $sixdeskhome/plot/inc/plot_dyb $file $dir1 $iplot $short $long $kvar $sixdesktrack/$LHCDesHome
+### Moved the following code to plot_dyb BEFORE the rm
+###        if [ "$iplot" -gt 0 ] ;then
+#debug
+###          ls -l fort.30
+###          echo "DIR $dir"
+###          echo "FILE $file"
+#debug
+###          cp fort.30 $dir
+###          gzip -f $dir/fort.30
+###          cp $file ../$dir
+#debug
+###        fi
          else
-           plot/inc/plot_dyb $file $dir1 $iplot $short $long $kvar $sixdesktrack/$LHCDesHome
+# Presumably a "short" study
+           $sixdeskhome/plot/inc/plot_dyb $file $dir1 $iplot $short $long $kvar $sixdesktrack/$LHCDesHome
          fi
        fi
        ((i=i+1))
      done
      ((j=j+$kstep))
   done
+  rm -f fort.10 fort.17 fort.30 fort.31
   itunexx=`expr $itunexx + $ideltax`
   ituneyy=`expr $ituneyy + $ideltay`
 done
-# Remove all the .save (they are re-generated on every call)
-# What about these fort.*??? e.g. fort.17 for Riccardo?
-# rm -f fort.10 fort.17 fort.30 fort.31
-rm -f plot/test.tex
-rm -f plot/inc/distance.save
-rm -f plot/inc/maxslope.save
-rm -f plot/inc/survival.save
-rm -f plot/inc/smear.save
-rm -f plot/inc/averem.save
-rm -f plot/inc/kvar.save
-rm -f plot/inc/beamweb.save
-rm -f plot/inc/detuning.save
-rm -f plot/inc/detuningh.save
-rm -f plot/inc/detuningv.save
-rm -f plot/inc/tunedp.save
-rm -f plot/inc/web.save
-rm -f plot/linear
+### Moved rm to do it for each and every tune
+###rm -f fort.10 fort.17 fort.30 fort.31
+if test "$long" -eq 1
+then
+  mv DAres* $sixdeskhome
+fi
+cd $sixdeskhome
+###rm $PLOTHOME/linear
+###rm $PLOTHOME/test.tex
+rm -r $PLOTHOME/inc
 
 #MACRO mymess 0 Completed normally
 sixdeskmesslevel=0
@@ -299,8 +329,8 @@ sixdeskunlock
 
 
 #MACRO myunlock $sixdeskhome/plot
-sixdesklockdir=$sixdeskhome/plot
-sixdeskunlock
+###sixdesklockdir=$sixdeskhome/plot
+###sixdeskunlock
 #MACRO myunlock
 
 

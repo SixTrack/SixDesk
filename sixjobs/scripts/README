@@ -1,3 +1,7 @@
+Release 29th September, 2014
+New run_post which locks only the study and enabling
+multiple run_post execution in the same workspace at the same time.
+
 Release 3rd July, 2014
 Fixed a problem with fort.15 (and for.10 when kvar=1)
 Thanks Miriam. Changed plot_dyb to cp fort.15 earlier
