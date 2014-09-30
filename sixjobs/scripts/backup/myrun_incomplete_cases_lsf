@@ -1,0 +1,58 @@
+#!/bin/sh
+#
+# This script will (re-)submit a case if its status is incomplete 
+# and it will submit to LSF for a BOINC study with results returned
+# to the BOINC buffer
+. ./dot_env
+if test $sixdeskplatform != "boinc"
+then
+  echo "This command is intended to run incomplete cases"
+  echo "on LSF in order to finish a BOINC study!!!"
+  myexit 98
+fi
+mylock $sixdeskstudy
+mkdir -p $sixdeskjobs
+mymktmp copy $sixdeskjobs
+cp $sixdeskwork/incomplete_cases $copy
+while read line
+do
+  export sixdeskRunnam=`echo $line | cut -d" " -f1`
+  entry=`grep "$sixdeskRunnam " $sixdeskwork/taskids`
+  if test "$entry" = ""
+  then
+    mymess 0 "Something badly wrong!!! We cannot find $sixdeskRunnam in $sixdeskwork/taskids"
+    myunlock $sixdeskstudy
+    myexit 1
+  fi
+  myrundir $sixdeskRunnam sixdeskRundir
+  export sixdeskRundir
+  where=$sixdesktrack/$sixdeskRundir
+  taskids=`echo $entry | cut -d" " -f2-`
+  if test ! -d "$where"
+  then
+    mymess 0 "The directory $sixdeskRundir for job $sixdeskRunnam does NOT exist!!!"
+    myunlock $sixdeskstudy
+    myexit 2
+  fi
+  if test ! -s "$where/fort.10.gz" -o $sixdeskforce -ge 2
+  then
+    mymess 1 "Job incomplete $taskids for $sixdeskRunnam"
+    if test $sixdeskforce -eq 0
+    then
+      export sixdeskforce=1 
+    fi
+# Now do we need to define anything else for this call????
+    export lsfjobtype=sixtrackingboinc
+    . ./dot_boinclsf
+    stat=$?
+    if test "$stat" -ne 0
+    then
+      mymess 0 "dot_boinclsf failed!!!"
+      myexit 99
+    fi
+  fi
+done < $copy
+rm $copy
+myunlock $sixdeskstudy
+mymess 0 "Completed normally"
+myexit 0

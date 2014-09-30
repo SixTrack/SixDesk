@@ -229,7 +229,6 @@ fi
 #MACRO myunlock
 
 
-
 #MACRO mymess 0 Running on `hostname`
 sixdeskmesslevel=0
 sixdeskmess="Running on `hostname`"
@@ -1373,7 +1372,7 @@ do
 #MACRO myexit
 
     else
-      rm $tmp
+      rm -f $tmp
     fi
     dicases=`wc -l $sixdeskwork/incomplete_cases`
     dicases=`echo $dicases | sed -e 's? *\([0-9]*\).*?\1?'`
@@ -1419,7 +1418,7 @@ do
 #MACRO myexit
 
       else
-        rm $tmp
+        rm -f $tmp
       fi
     fi
     echo $Runnam >> $sixdeskwork/completed_cases
@@ -1485,18 +1484,35 @@ do
 #  Do NOT remove input files when using CPSS , BOINC or GRID???
 #  rm $where/fort.2.gz $where/fort.3.gz $where/fort.8.gz $where/fort.16.gz
   fi
+
+#MACRO mymktmp tmp 
+  sixdesktmpname=tmp
+  sixdesktmpdirarg=
+  sixdeskmktmp
+  tmp=$sixdesktmp
+#MACRO mymktmp
+
   if test "$where" != ""
   then
     if test -d $where
     then
       if test -d $where/sixtrack
       then
+# Note this removes latest $tmp !!!
         rm -r $where/sixtrack
       fi
       echo "Final state of $where"
       ls -l $where
     fi
   fi
+
+#MACRO mymktmp tmp 
+  sixdesktmpname=tmp
+  sixdesktmpdirarg=
+  sixdeskmktmp
+  tmp=$sixdesktmp
+#MACRO mymktmp
+
   if test "$delete" = "true"
   then
     # success = true => delete = true
@@ -1683,6 +1699,8 @@ sixdeskmess
 #MACRO mymess
 
 update_cases
+# just to be sure
+rm -f $tmp
 
 #MACRO myunlock $sixdeskwork
 ###sixdesklockdir=$sixdeskwork

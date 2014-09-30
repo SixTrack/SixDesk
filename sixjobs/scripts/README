@@ -1,3 +1,17 @@
+Release 30th September, 2014
+A new script run_incomplete_cases_lsf
+which submits LSF jobs one for each incomplete case in
+a BOINC study. This can help finish of a study when there
+is an annoying tail of incomplete Work Units.
+NOTA BENE: you might need to set the longlsfq to, for
+example, 1nw in sixdeskenv for a million turn study.
+Otherwise it can just be called from sixjobs as usual.
+The results are returned to the BOINC buffer where they are
+processed by run_results thus maintaining the
+integrity of the database "work" files.
+A modifified run_status shows the number of such  running LSF jobs.
+run_results changed to remove annoying messages about old tmp in sixtrack.
+
 Release 29th September, 2014
 New run_post which locks only the study and enabling
 multiple run_post execution in the same workspace at the same time.

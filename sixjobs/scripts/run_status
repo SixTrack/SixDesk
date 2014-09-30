@@ -528,6 +528,18 @@ then
       sixdeskmess
 #MACRO mymess
 
+      ls -l $sixdeskstudy/LSF > /dev/null 2>&1
+      if test $? -eq 0
+      then
+        mylsfjobs=`bjobs -w | grep ${workspace}_${LHCDescrip} | wc -l`
+
+#MACRO mymess 0 There are $mylsfjobs LSF jobs running to complete this study
+        sixdeskmesslevel=0
+        sixdeskmess="There are $mylsfjobs LSF jobs running to complete this study"
+        sixdeskmess
+#MACRO mymess
+
+      fi
     fi
   fi
   if test $sixdeskplatform = "grid"

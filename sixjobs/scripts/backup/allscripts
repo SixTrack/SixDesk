@@ -24,6 +24,7 @@ mydocompare_results
 mydoplot_DA
 mydorun_mad6t
 mydot_boinc
+mydot_boinclsf
 mydot_bsub
 mydot_env
 mydot_profile
@@ -40,6 +41,7 @@ myrerun_all_cases
 myrun_awk
 myrun_bnl
 myrun_incomplete_cases
+myrun_incomplete_cases_lsf
 myrun_incomplete_tasks
 myrun_join10
 myrun_missing_jobs

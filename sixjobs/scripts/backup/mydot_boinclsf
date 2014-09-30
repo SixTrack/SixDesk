@@ -1,12 +1,13 @@
 #!/bin/sh
 #
 # This script will submit a task 
-# using the sixdeskRunnam and the corresponding directory sixdeskRundir
+# using the sixdeskRunnam and the correspoding directory sixdeskRundir
 # The task is NEVER submitted if fort.10.gz exists
 # The sixdeskRundir is relative to $sixdesktrack
 # It then creates or updates the taskids file to include the new taskid
-# The variables sixdeskRunam and sixdeskforce must
+# The variables sixdeskRunam sixdeskRundir and sixdeskforce must
 # be set before calling by . ./dot_boinc
+# This variation looks like BOINC but submits to LSF
 myrundir $sixdeskRunnam sixdeskRundir
 if test ! -d $sixdeskboincdir
 then
@@ -38,6 +39,9 @@ then
   mkdir -p $sixdeskhome/sixdeskTaskIds/$LHCDescrip
   echo "0" > $sixdeskhome/sixdeskTaskIds/$LHCDescrip/sixdeskTaskId
 fi
+# set flag for run_status to do a bjobs
+touch $sixdeskstudy/LSF
+#
 SIXDESKWHERE=$sixdesktrack/$sixdeskRundir
 echo "sixdeskRunnam $sixdeskRunnam SIXDESKWHERE $SIXDESKWHERE FORCE $sixdeskforce sixdeskboincdir  $sixdeskboincdir"
 if test ! -d $SIXDESKWHERE
@@ -75,7 +79,6 @@ fi
 if test $sixdeskrunit = "true"
 then
   mymktmp tmp
-  mkdir -p $sixdeskjobs_logs/run
   # We are going to (re-)submit it
   sixdeskexists=0
   for sixdeski in 2 3 8 16
@@ -94,45 +97,67 @@ then
     mymess 0 "Skipping this case which will require a RUN_SIX!!!"
     rm -f $tmp
   else
-    # Make sure we are clean (in case of a run_six or system crash)
-    rm -f $sixdeskjobs_logs/run/fort.*
-    for sixdeski in 2 3 8 16
-    do
-      cp $SIXDESKWHERE/fort.$sixdeski.gz $sixdeskjobs_logs/run
-      gunzip -f $sixdeskjobs_logs/run/fort.$sixdeski.gz
-    done
     sixdeskTaskName=$workspace"_"$sixdeskRunnam
     sixdeskTaskName=`echo $sixdeskTaskName | sed -e's?%?__?g'`
-    sixdeskfileDir=$sixdeskjobs_logs/run
   # mylock $sixdeskhome/sixdeskTaskIds
     sixdeskTaskId=`cat $sixdeskhome/sixdeskTaskIds/$LHCDescrip/sixdeskTaskId`
     sixdeskTaskId=`expr $sixdeskTaskId + 1`
     echo $sixdeskTaskId > $sixdeskhome/sixdeskTaskIds/$LHCDescrip/sixdeskTaskId
   # myunlock $sixdeskhome/sixdeskTaskIds
     sixdesktaskid=boinc$sixdeskTaskId
+    sed -e 's?SIXJOBNAME?'$sixdeskRunnam'?g' \
+        -e 's?SIXBOINCRESULTDIR?'${sixdeskboincdir}'/results?g' \
+        -e 's?SIXBOINCRESULTNAME?'${sixdeskTaskName}'_1_sixvf_'$sixdesktaskid'?g' \
+        -e 's?SIXJOBDIR?'$sixdeskRundir'?g' \
+        -e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
+        -e 's?SIXTRACKEXE?'$SIXTRACKEXE'?g' \
+        -e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' "$sixdeskhome"/utilities/"${lsfjobtype}".lsf > $sixdesktrack/$sixdeskRundir/${sixdeskTaskName}.lsf
+    chmod 755 $sixdesktrack/$sixdeskRundir/${sixdeskTaskName}.lsf
     gotit=""
     mytries=0
     while test "$gotit" != "OK" -a $mytries -ne 11
     do
       mytries=`expr $mytries + 1`
 
-#      uploadWU uses workunitName=$1\_$2\_$3\_$5
+###    echo -q ${qpref}${lsfq} 
+       bsub -q ${qpref}${lsfq} $sixdeskM -o $sixdesktrack/$sixdeskRundir/${sixdeskTaskName}.log \
+            $sixdesktrack/$sixdeskRundir/${sixdeskTaskName}.lsf > $tmp 2>&1
 
-###  $sixdeskpath/Bin/uploadWorkunit_many $sixdeskTaskName 1 sixvf $sixdeskjobs_logs/run $sixdesktaskid $sixdeskfpopse $sixdeskboincdir > $tmp 2>&1
-     $sixdeskpath/Bin/uploadWorkunit $sixdeskTaskName 1 sixvf $sixdeskjobs_logs/run $sixdesktaskid $sixdeskfpopse $sixdeskboincdir > $tmp 2>&1
       sixdeskstat=$?
-      if test $sixdeskstat -ne 0
+      cat $tmp
+      if test "$sixdeskstat" -eq 0
       then
-        mymess 0 "UploadWorkunit failed with Status $sixdeskstat !!! `cat $tmp`"
-        rm $tmp
-      else
+        lsfjobid=`tail -1 $tmp | sed -e's/Job <\([0-9]*\)> is submitted to queue.*/\1/'`
+        numid=`echo $lsfjobid | sed -e's/[0-9 ]//g'`
+        if test "$numid" != ""
+        then
+          mymess 0 "bsub did NOT return a jobid !!!"
+          mymess 0 "`cat $tmp`"
+
+          rm $tmp
+
+          myexit 21
+        fi
+
+###     lsfjobid="91919191"
+
+        mymess 0  "${sixdeskTaskName}.lsf submitted"
+        mymess 0  "submitted to Queue ${qpref}${longlsfq}"
+        mymess 0  "with LSF JID $lsfjobid for $sixdesktaskid"
+        touch $sixdesktrack/$sixdeskRundir/JOB_NOT_YET_STARTED
+        rm -f $tmp
         gotit="OK"
+      else
+        rm -f $sixdesktrack/$sixdeskRundir/JOB_NOT_YET_STARTED
+        mymess 0 "bsub of ${sixdeskTaskName}.lsf to Queue ${qpref}${longlsfq} failed !!!"
+        mymess 0 "`cat $tmp`"
+        rm $tmp
+        myexit 10
       fi
     done 
-    rm $sixdeskjobs_logs/run/fort.2 $sixdeskjobs_logs/run/fort.3 $sixdeskjobs_logs/run/fort.8 $sixdeskjobs_logs/run/fort.16
     if test "$gotit" != "OK"
     then
-      mymess 0 "FAILED to submit task 10 times!!"
+      mymess 0 "FAILED to submit job 10 times!!"
       rm -f $tmp
       myexit 10
     fi

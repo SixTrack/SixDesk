@@ -718,7 +718,9 @@ with a {\tt rm track/* work/*} command and restart.
 
 With BOINC the situation is simpler; near the end of a study a
 {run\_incomplete\_cases} command will re-submit jobs for those cases where no
-results are available.
+results are available. The script {run\_incomplete\_cases\_lsf} can also be
+used to submit LSF jobs instead to get rid of the annoying tail of
+unfinished Work Units.
 
 \section{Monitoring the progress of the study.} \label{sec:status} The script
 {\tt run\_status} looks into the database {\tt work} directory and updates and

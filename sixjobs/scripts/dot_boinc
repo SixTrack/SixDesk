@@ -1,13 +1,11 @@
 #!/bin/sh
 #
 # This script will submit a task 
-# using the $1 sixdeskRunnam and the $2 directory sixdeskRundir
-# $3=0 mean submit only if not submitted already
-# $3=1 means (re-)submit anyway
+# using the sixdeskRunnam and the corresponding directory sixdeskRundir
 # The task is NEVER submitted if fort.10.gz exists
 # The sixdeskRundir is relative to $sixdesktrack
 # It then creates or updates the taskids file to include the new taskid
-# The variables sixdeskRunam sixdeskRundir and sixdeskforce must
+# The variables sixdeskRunam and sixdeskforce must
 # be set before calling by . ./dot_boinc
 
 #MACRO myrundir $sixdeskRunnam sixdeskRundir
@@ -202,6 +200,9 @@ then
     while test "$gotit" != "OK" -a $mytries -ne 11
     do
       mytries=`expr $mytries + 1`
+
+#      uploadWU uses workunitName=$1\_$2\_$3\_$5
+
 ###  $sixdeskpath/Bin/uploadWorkunit_many $sixdeskTaskName 1 sixvf $sixdeskjobs_logs/run $sixdesktaskid $sixdeskfpopse $sixdeskboincdir > $tmp 2>&1
      $sixdeskpath/Bin/uploadWorkunit $sixdeskTaskName 1 sixvf $sixdeskjobs_logs/run $sixdesktaskid $sixdeskfpopse $sixdeskboincdir > $tmp 2>&1
       sixdeskstat=$?

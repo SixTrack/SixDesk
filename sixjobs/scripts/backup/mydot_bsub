@@ -1,9 +1,6 @@
 #!/bin/sh
 # The little script to do a bsub and the job management
-# using the $1 sixdeskRunnam and the $2 directory sixdeskRundir
-# $3 sixdeskforce=0 mean submit only if not submitted already
-# $3 sixdeskforce=1 means (re-)submit if no fort.10.z exists
-# $3 sixdeskforce=2,3 means (re-)submit anyway ( run_six handles this)
+# using the sixdeskRunnam and the directory sixdeskRundir
 # The sixdeskRundir is relative to $sixdesktrack
 # It then creates or updates the taskids file to include the new taskid
 # It adds a new job to the incomplete_jobs file
@@ -13,7 +10,7 @@ then
   mymess 0 "You can only bsub if platform=LSF"
   myexit 20
 fi
-mymess 2 "sixdeskRunnam $sixdeskRunnam sixdeskRundir $sixdeskRundir sideskwork $sixdeskwork"
+mymess 2 "sixdeskRunnam $sixdeskRunnam sixdeskRundir $sixdeskRundir sixdeskwork $sixdeskwork"
 if test ! -d $sixdesktrack/$sixdeskRundir
 then
   mymess 0 "$sixdesktrack/$sixdeskRundir is NOT a directory!!!" 
