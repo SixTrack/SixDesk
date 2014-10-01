@@ -1,3 +1,6 @@
+Release 1st October, 2014
+First and last? small fix for the tmp problem.
+
 Release 30th September, 2014
 A new script run_incomplete_cases_lsf
 which submits LSF jobs one for each incomplete case in

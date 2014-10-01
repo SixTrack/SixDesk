@@ -229,6 +229,7 @@ fi
 #MACRO myunlock
 
 
+
 #MACRO mymess 0 Running on `hostname`
 sixdeskmesslevel=0
 sixdeskmess="Running on `hostname`"
@@ -630,14 +631,6 @@ do
           mkdir -p sixtrack
           awk -f $sixdeskpath/scripts/remover $sixdeskboincdir/results/$workspace"_"$boincRunnam"_1_sixvf_"$taskid > sixtrack/fort.10
           cd sixtrack
-
-#MACRO mymktmp tmp 
-          sixdesktmpname=tmp
-          sixdesktmpdirarg=
-          sixdeskmktmp
-          tmp=$sixdesktmp
-#MACRO mymktmp
-
           if test -s ../fort.10.gz
           then
             cp ../fort.10.gz old.10.gz
@@ -1215,14 +1208,6 @@ do
                   nsrm -rf $CASTOR > /dev/null 2>&1
                   nsmkdir -p $CASTOR
                 fi
-
-#MACRO mymktmp tmp 
-                sixdesktmpname=tmp
-                sixdesktmpdirarg=
-                sixdeskmktmp
-                tmp=$sixdesktmp
-#MACRO mymktmp
-
                 cd sixtrack
                 tar cvf ../$Runnam.tar fort.*.gz > $tmp 2>&1
                 stat=$?
@@ -1322,14 +1307,6 @@ do
 
 # Now we make a file completed_this_run which we will
 # use to update a parallel mycompleted_cases and myincomplete_cases
-
-#MACRO mymktmp tmp $sixdeskwork
-    sixdesktmpname=tmp
-    sixdesktmpdirarg=$sixdeskwork
-    sixdeskmktmp
-    tmp=$sixdesktmp
-#MACRO mymktmp
-
     echo "$Runnam" >> $sixdeskwork/completed_this_run
     touch $sixdeskwork/DEBUG
     sed -e'/^'$Runnam'$/d' $sixdeskwork/incomplete_cases > $tmp
@@ -1372,7 +1349,7 @@ do
 #MACRO myexit
 
     else
-      rm -f $tmp
+      rm $tmp
     fi
     dicases=`wc -l $sixdeskwork/incomplete_cases`
     dicases=`echo $dicases | sed -e 's? *\([0-9]*\).*?\1?'`
@@ -1418,7 +1395,7 @@ do
 #MACRO myexit
 
       else
-        rm -f $tmp
+        rm $tmp
       fi
     fi
     echo $Runnam >> $sixdeskwork/completed_cases
@@ -1484,35 +1461,18 @@ do
 #  Do NOT remove input files when using CPSS , BOINC or GRID???
 #  rm $where/fort.2.gz $where/fort.3.gz $where/fort.8.gz $where/fort.16.gz
   fi
-
-#MACRO mymktmp tmp 
-  sixdesktmpname=tmp
-  sixdesktmpdirarg=
-  sixdeskmktmp
-  tmp=$sixdesktmp
-#MACRO mymktmp
-
   if test "$where" != ""
   then
     if test -d $where
     then
       if test -d $where/sixtrack
       then
-# Note this removes latest $tmp !!!
         rm -r $where/sixtrack
       fi
       echo "Final state of $where"
       ls -l $where
     fi
   fi
-
-#MACRO mymktmp tmp 
-  sixdesktmpname=tmp
-  sixdesktmpdirarg=
-  sixdeskmktmp
-  tmp=$sixdesktmp
-#MACRO mymktmp
-
   if test "$delete" = "true"
   then
     # success = true => delete = true
@@ -1699,7 +1659,6 @@ sixdeskmess
 #MACRO mymess
 
 update_cases
-# just to be sure
 rm -f $tmp
 
 #MACRO myunlock $sixdeskwork
