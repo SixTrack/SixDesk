@@ -694,7 +694,7 @@ run\_status} commands.
 Each batch job returns a result file \texttt{fort.10.gz} to the \texttt{track}
 tree/hierarchy. For LSF studies, if the CASTOR switch is on in the \texttt{sysenv}
 file, all the result files, including the binary files and the \texttt{fort.6}
-output, are compressed in a tar file and written to {\tt
+output, are compressed in a tar file and written to \texttt{
 \$CASTOR\_HOME/direct\_track/*} where the \texttt{direct\_track} tree matches the
 \texttt{track} tree in AFS.
 
@@ -709,23 +709,24 @@ necessary, but by default will not re-submit jobs. The \texttt{run\_six} can
 either be submitted as a batch job and/or with a different seed range ({\tt
 ista, iend}).  The \texttt{run\_six} script also keeps a copy of each LSF job in
 the \texttt{track} hierarchy along with the data files or links {\tt fort.2.gz
-fort.3.gz fort.8.gz fort.16.gz}.  It also updates the {\tt taskids file in
-the}\texttt{sixjobs/work} directory.  The \texttt{taskids} file contains one line for
-each case. Each line contains the JobName (which can be mapped to the case
-directory) and the associated LSF job\_ID(s) or BOINC ID(s).  If \texttt{run\_six}
-is called more than once, it ignores cases where a non-zero fort.10.gz exists,
-but otherwise deletes the tracking input files and re-generates them. Even
-simpler recovery is available with the \texttt{run\_missing\_jobs} command.
-\emph{It is essential to wait for existing LSF jobs to complete, or to cancel
-them, and do at least two \texttt{run\_status} commands before invoking {\tt
-run\_missing\_jobs}.} This procedure has proven to be extremely effective.  In
+fort.3.gz fort.8.gz fort.16.gz}.  It also updates the \texttt{taskids} file in
+the \texttt{sixjobs/work} directory.  The \texttt{taskids} file contains one
+line for each case. Each line contains the JobName (which can be mapped to the
+case directory) and the associated LSF job\_ID(s) or BOINC ID(s).  If
+\texttt{run\_six} is called more than once, it ignores cases where a non-zero
+fort.10.gz exists, but otherwise deletes the tracking input files and
+re-generates them. Even simpler recovery is available with the
+\texttt{run\_missing\_jobs} command.  \emph{It is essential to wait for
+  existing LSF jobs to complete, or to cancel
+them, and do at least two \texttt{run\_status} commands before invoking \texttt{
+run\_missing\_jobs}}. This procedure has proven to be extremely effective.  In
 the worst of all cases wait for, or cancel, outstanding batch jobs with the
 \texttt{bkill 0} command, and delete everything except the \texttt{sixtrack\_input}
 with a \texttt{rm track/* work/*} command and restart.  
 
 With BOINC the situation is simpler; near the end of a study a
-{run\_incomplete\_cases} command will re-submit jobs for those cases where no
-results are available. The script {run\_incomplete\_cases\_lsf} can also be
+\texttt{run\_incomplete\_cases} command will re-submit jobs for those cases where no
+results are available. The script \texttt{run\_incomplete\_cases\_lsf} can also be
 used to submit LSF jobs instead to get rid of the annoying tail of
 unfinished Work Units.
 
