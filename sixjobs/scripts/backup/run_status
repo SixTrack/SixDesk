@@ -228,6 +228,36 @@ then
         sixdeskmess
 #MACRO mymess
 
+# new test for Massimo
+        egrep 'UNKWN|ZOMBI' blsfjobs > $tmp
+        if test $? -eq 0
+        then
+
+#MACRO mymess 0 There appear to be some UNKNOWN or ZOMBIE LSF jobs.
+          sixdeskmesslevel=0
+          sixdeskmess="There appear to be some UNKNOWN or ZOMBIE LSF jobs."
+          sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 You may want to kill them (list appended).
+          sixdeskmesslevel=0
+          sixdeskmess="You may want to kill them (list appended)."
+          sixdeskmess
+#MACRO mymess
+
+          while read aline
+          do
+
+#MACRO mymess 0 $aline
+            sixdeskmesslevel=0
+            sixdeskmess="$aline"
+            sixdeskmess
+#MACRO mymess
+
+          done < $tmp
+        fi
+        rm -f $tmp
         touch $sixdeskjobs/incomplete_jobs
         cp $sixdeskjobs/incomplete_jobs .
         touch $sixdeskjobs/completed_jobs

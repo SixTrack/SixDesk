@@ -105,6 +105,18 @@ then
           nlsfjobs="0"
         fi
         mymess 0 "LSF bjobs found $nlsfjobs batch jobs (running, pending, or suspended)"
+# new test for Massimo
+        egrep 'UNKWN|ZOMBI' blsfjobs > $tmp
+        if test $? -eq 0
+        then
+          mymess 0 "There appear to be some UNKNOWN or ZOMBIE LSF jobs."
+          mymess 0 "You may want to kill them (list appended)."
+          while read aline
+          do
+            mymess 0 "$aline"
+          done < $tmp
+        fi
+        rm -f $tmp
         touch $sixdeskjobs/incomplete_jobs
         cp $sixdeskjobs/incomplete_jobs .
         touch $sixdeskjobs/completed_jobs
