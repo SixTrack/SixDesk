@@ -12,6 +12,9 @@ $MADX_PATH/$MADX < $junktmp/$filejob."$i" > $filejob.out."$i"
 
 ls -l
 touch fc.3
+if [ -f fc.3.aper ]; then
+  cat fc.3.aper >> fc.3
+fi
 cp -f fc.3 $sixtrack_input/fort.3.mad
 
 touch fc.2
