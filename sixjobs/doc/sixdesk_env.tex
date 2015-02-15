@@ -57,7 +57,7 @@ on the web page
 
 \end{titlepage}
 %
-Version 26, \today.
+Version 27, \today.
 
 \sloppy
 \section{Objectives}
@@ -66,7 +66,7 @@ The principal objective of the SixDesk run environment is to allow a physicist
 to run a tracking campaign, on either the CERN LSF batch system or BOINC, using
 the familiar SixTrack run environment on Linux.  At the same time, the
 opportunity was taken to group all user modifiable parameters into two files,
-\texttt{sixdeskenv} and \texttt{sysenv}, and to speed up \texttt{run\_mad6t}, the madX
+\texttt{sixdeskenv} and \texttt{sysenv}, and to speed up \texttt{run\_mad6t}, the MAD-X
 to SixTrack conversion, by running in parallel in batch.  The specification of
 tune scans, fractional amplitude ranges and steps, and various other physics
 options were also added to the \texttt{run\_six} script/command.  All SixDesk
@@ -139,8 +139,8 @@ To facilitate the description of the various procedures we use the directory
 \texttt{w1} as workspace and a study named \texttt{job\_tracking} as an illustration.
 Both names can and should be adapted to the user needs.
 
-A study is controlled by the \texttt{sixdeskenv} file that contains all the
-informations controlling the simulations: location of the madx input file
+A study is controlled by the \texttt{sixdeskenv} file that contains all the MAD-X
+information controlling the simulations: location of the  input file
 (called \texttt{.mask} files), the location of the temporary files, the definition
 of the beam distributions, the number of turns to be tracked or stored and the
 type of post processing. The corresponding mask file \texttt{job\_tracking.mask}
@@ -209,11 +209,15 @@ backup or recall, study or workspace, commands described in section
 The \texttt{print\_env} command reports the complete environment to the screen;
 the command \texttt{mywhich} reports a few important values.
 
-Finally note that it is vital that the same versions of SixTrack and madX are
+Finally note that it is vital that the same versions of SixTrack and MAD-X are
 used for all cases in a study. Ideally the madX \texttt{run\_mad6t} jobs should
 be run on the same type of computer to avoid small numeric differences.
 Compatible versions of these programs for LSF and BOINC are specified
 in \texttt{sysenv}, the so-called "pro" versions. Any changes will be notified.
+
+In view of some problems uncovered with MAD-X result differences the run_mad6t
+and {\tt check\_mad6t} scripts have been modified to make further checks on
+the results. See section \ref{sec:mad_6t} for details.
 
 \section{Overview of the Data Structure}
 
@@ -323,7 +327,7 @@ and \texttt{run\_post} (\texttt{read10b}) \item [control\_files] the SixTrack mo
   SixTrack input files
 \item [doc] The Latex source and Postscript of this document
 \item [inc] other mask files and the prepare\_fort.3 script
-\item [mask] the LHC description mask files for madX
+\item [mask] the LHC description mask files for MAD-X
 \item [plot] the plotting mask files and scripts in the sub-directory {\tt
   plot/inc}.  The sub-directory \texttt{plot/"study"} will contain a hierarchy
   matching the \texttt{track} hierarchy, but with the \texttt{angle} directory
@@ -337,7 +341,7 @@ and \texttt{run\_post} (\texttt{read10b}) \item [control\_files] the SixTrack mo
 \section{Running mad6t to produce the basic SixTrack input files}
 \label{sec:mad_6t}
 NOTA BENE: It is essential to have a \$LHCDescrip.mask file in the subdirectory
-\texttt{mask} in order to run madX to produce the SixTrack input files. This mask
+\texttt{mask} in order to run MAD-X to produce the SixTrack input files. This mask
 file in turn references many LHC Database files and this often requires some
 checking.  Sample mask files can be found in the directory mask:
 \begin{verbatim}
@@ -375,7 +379,7 @@ Please note that the MAD-X \texttt{sixtrack} command takes its information from
 the last \texttt{Twiss, save} command. It is a sensible precaution to put these
 commands consecutively in the MAD script and mask files.
 
-The version of madX to be used for the conversion runs is defined in {\tt
+The version of MAD-X to be used for the conversion runs is defined in {\tt
 sysenv} and defaults to the current production version.  At this point it is
 also necessary to specify in \texttt{sixdeskenv}
 \begin{description}
@@ -393,7 +397,7 @@ for each seed into one file in sixtrack\_input.
   sixtrack\_input} directory. These files define the multipole strengths for
   the linear lattice when doing Second Order Detuning and Distortion (SODD)
   analysis in expert mode.
-\item [istamad=1] first seed for madX.
+\item [istamad=1] first seed for MAD-X.
 \item [iendmad=] normally 60 (maximum 64) but it is recommended to use
   iendmad=1 until the results of the \texttt{run\_mad6t} are considered
   satisfactory.  The seeds are used to generate variations of the basic LHC
@@ -402,23 +406,28 @@ for each seed into one file in sixtrack\_input.
   normalised hour for the \texttt{run\_mad6t} LSF jobs where 8nm is often enough
   but \texttt{1nh} may be necessary.
 \end{description}
-After a \texttt{set\_env}, a \texttt{run\_mad6t} or \texttt{run\_mad6t -i} may
-be performed.  The \texttt{-i} option means run interactively and get the
-output to the screen or redirected to a file and can be useful for testing the
-mask file and mad6t run.  The \texttt{platform} option is ignored as mad6t
-runs are either performed on the desktop or on LSF. For reasons of numerical
-compatibility all the \texttt{run\_mad6t} runs should be performed on the same
-type of machine.  Subsequently, LSF jobs may be used by {run\_mad6t}, one per
-seed, and they will run in parallel.  In the case of multiple studies in a
-workspace, either a {\tt set\_env "study"} can be performed or the study can
-be specified on the command as \texttt{run\_mad6t} ``study''.  In all cases,
-the success/failure/correctness of these runs should be verified.  The script
-\texttt{check\_mad6t} checks what it can but it is essential to have a look at
-the madX output. This output can be found in the most recent {\tt
-sixtrack\_input/mad.run\_mad6t*} directory.  Once the madX run has completed
+After a \texttt{set\_env}, a \texttt{run\_mad6t} or \texttt{run\_mad6t -i} may be
+performed.  The \texttt{-i} option means run interactively and get the output to
+the screen or redirected to a file and can be useful for testing the mask file
+and mad6t run.  The \texttt{platform} option is ignored as mad6t runs are either
+performed on the desktop or on LSF. For reasons of numerical compatibility all
+the \texttt{run\_mad6t} runs should be performed on the same type of machine.
+Subsequently, LSF jobs may be used by {run\_mad6t}, one per seed, and they will
+run in parallel.  In the case of multiple studies in a workspace, either a {\tt
+set\_env "study"} can be performed or the study can be specified on the command
+as \texttt{run\_mad6t} ``study''.
+In all cases, the success/failure/correctness of these runs should be verified.
+The script \texttt{check\_mad6t} checks what it can but it is essential to have a
+look at the MAD-X output. This output can be found in the most recent {\tt
+sixtrack\_input/mad.run\_mad6t*} directory.  Once the MAD-X run has completed
 successfully for one seed, \texttt{iendmad} can be set to the desired value
 (typically 60/64) and a new \texttt{run\_mad6t} command performed. Every {\tt
-run\_six}, see later, starts with an internal \texttt{check\_mad6t}.
+run\_six}, see later, starts with an internal \texttt{check\_mad6t}. To facilitate
+checking the mad6t1.lsf and mad6t.lsf scripts now do some additional checking.
+Two files ERRORS and WARNINGS may be produced and can be found in sixtrack\_input.
+Ideally, after initial tests, the contents of sixtrack\_input should be deleted
+and one \texttt{run\_mad6t} should be done for all seeds to ensure consistency. 
+\texttt{run\_six} will not run if the ERRORS file exists.
 
 \section{Problems, cleaning up, and support}
 
