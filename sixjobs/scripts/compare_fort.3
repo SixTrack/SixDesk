@@ -1,0 +1,35 @@
+#!/bin/ksh
+#
+. ./dot_env
+#
+# main loop
+#
+w=/tmp/mcintosh/comp_inputs
+mkdir -p $w
+rm -f $w/*
+t1=$sixtrack_input
+t2=/afs/cern.ch/user/m/mfittere/w14/sixjobs/sixtrack_input
+### t2=/afs/cern.ch/user/m/mfittere/w14miriam/sixjobs/sixtrack_input
+
+echo "Seeds $ista to $iend"
+i=$ista
+while test "$i" -le "$iend" 
+do
+  for fn in aux mad mother1 mother1.tmp mother2 mother2.tmp
+  do
+    echo "Comparing"
+    echo "$t1/fort.3.$fn"
+    echo "$t2/fort.3.$fn"
+    cp $t1/fort.3.${fn} $w/old
+    cp $t2/fort.3.${fn} $w/new
+    diff $w/old $w/new
+    if test $? -eq 0
+    then
+      echo "OK"
+    else
+      echo "DIFF"
+    fi
+    rm $w/*
+  done
+  let i=i+1
+done

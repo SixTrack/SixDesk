@@ -13,11 +13,103 @@ sixdeskmess
 jobs=`bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t`
 if test "$jobs" != ""
 then
-  echo "There appear to be some mad6t jobs still not finished"
   bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t
+  echo "There appear to be some mad6t jobs still not finished"
 
 #MACRO myexit 1
   sixdeskexitparam=1
+  sixdeskexit
+#MACRO myexit
+
+fi
+if test -s $sixtrack_input/ERRORS
+then
+
+#MACRO mymess 1 There appear to be some MADX errors!
+  sixdeskmesslevel=1
+  sixdeskmess="There appear to be some MADX errors!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 1 If these messages are annoying you and
+  sixdeskmesslevel=1
+  sixdeskmess="If these messages are annoying you and"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 1 you have checked them carefully then
+  sixdeskmesslevel=1
+  sixdeskmess="you have checked them carefully then"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 1 just remove sixtrack_input/ERRORS or!
+  sixdeskmesslevel=1
+  sixdeskmess="just remove sixtrack_input/ERRORS or!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 1 rm sixtrack_input/* and rerun run_mad6t
+  sixdeskmesslevel=1
+  sixdeskmess="rm sixtrack_input/* and rerun run_mad6t"
+  sixdeskmess
+#MACRO mymess
+
+  echo "ERRORS"
+  cat sixtrack_input/ERRORS
+
+#MACRO myexit 999
+  sixdeskexitparam=999
+  sixdeskexit
+#MACRO myexit
+
+fi
+if test -s $sixtrack_input/WARNINGS
+then
+
+#MACRO mymess 1 There appear to be some MADX result warnings!
+  sixdeskmesslevel=1
+  sixdeskmess="There appear to be some MADX result warnings!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 1 Some files are being changed; details in sixtrack_input/WARNINGS
+  sixdeskmesslevel=1
+  sixdeskmess="Some files are being changed; details in sixtrack_input/WARNINGS"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 1 If these messages are annoying you and
+  sixdeskmesslevel=1
+  sixdeskmess="If these messages are annoying you and"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 1 you have checked them carefully then
+  sixdeskmesslevel=1
+  sixdeskmess="you have checked them carefully then"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 1 just remove sixtrack_input/WARNINGS
+  sixdeskmesslevel=1
+  sixdeskmess="just remove sixtrack_input/WARNINGS"
+  sixdeskmess
+#MACRO mymess
+
+  echo "WARNINGS"
+  cat sixtrack_input/WARNINGS
+
+#MACRO myexit 998
+  sixdeskexitparam=998
   sixdeskexit
 #MACRO myexit
 
@@ -207,6 +299,13 @@ sixdeskmess
 #MACRO mymess 0 All jobs/logs/output are in sixtrack_input/mad.run_mad6t directories
 sixdeskmesslevel=0
 sixdeskmess="All jobs/logs/output are in sixtrack_input/mad.run_mad6t directories"
+sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 Appears to have finished normally
+sixdeskmesslevel=0
+sixdeskmess="Appears to have finished normally"
 sixdeskmess
 #MACRO mymess
 

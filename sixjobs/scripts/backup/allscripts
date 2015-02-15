@@ -12,6 +12,7 @@ mycheck_joined10
 mycheck_lock
 mycheck_locks
 mycheck_mad6t
+mycheck_missing_jobs
 mycheck_really
 mycompare_inputs
 mycorrect_cases
@@ -70,9 +71,11 @@ clone_w
 compare_DA
 compare_DAS
 compare_envs
+compare_fort.3
 compare_myscripts
 compare_results
 compare_scripts
+compare_sixtrack_input
 compare_studies
 compare_workspaces
 create_protection_group

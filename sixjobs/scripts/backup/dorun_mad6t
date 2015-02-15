@@ -211,6 +211,13 @@ done
 # End loop over seeds
 cd $sixdeskhome
 
+#MACRO mymess 0 Appears to have completed normally
+sixdeskmesslevel=0
+sixdeskmess="Appears to have completed normally"
+sixdeskmess
+#MACRO mymess
+
+
 #MACRO myunlock $sixtrack_input
 sixdesklockdir=$sixtrack_input
 sixdeskunlock

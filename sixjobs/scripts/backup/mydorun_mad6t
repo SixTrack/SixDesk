@@ -108,6 +108,7 @@ do
 done
 # End loop over seeds
 cd $sixdeskhome
+mymess 0 "Appears to have completed normally"
 myunlock $sixtrack_input
 myunlock $sixdeskstudy
 myexit 0

@@ -88,6 +88,8 @@ do
             echo "fort.${fin} different!!!" >> result_differences_$LHCDescrip
             diff $tmp/here $tmp/there 
             diff $tmp/here $tmp/there >> result_differences_$LHCDescrip
+            ls -l $where/fort.${fin}.gz
+            ls -l $arg1/sixjobs/track/../$massdir/fort.${fin}.gz
           else
             echo "fort.${fin} the SAME"
             echo "fort.${fin} the SAME" >> result_differences_$LHCDescrip

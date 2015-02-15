@@ -17,14 +17,24 @@ while read Runnam
 do
   sixdeskRunnam=$Runnam
   myrundir $sixdeskRunnam sixdeskRundir
-  mymktmp tmp
+  if test ! -d $sixdesktrack/$sixdeskRundir \
+      -o  ! -s $sixdesktrack/$sixdeskRundir/fort.2.gz \
+      -o  ! -s $sixdesktrack/$sixdeskRundir/fort.3.gz \
+      -o  ! -s $sixdesktrack/$sixdeskRundir/fort.8.gz \
+      -o  ! -s $sixdesktrack/$sixdeskRundir/fort.16.gz
+  then
+    mymess 0 "Skipping $sixdeskRunnam sixdeskRundir because of missing files!!!"
+    mymess 0 "Run check_missing_jobs for details"
+  else
+    mymktmp tmp
 ###  mylock $sixdeskjobs
-  sed -e '/^'$Runnam'$/d' $sixdeskjobs/incomplete_jobs > $tmp
-  mv $tmp $sixdeskjobs/incomplete_jobs
+    sed -e '/^'$Runnam'$/d' $sixdeskjobs/incomplete_jobs > $tmp
+    mv $tmp $sixdeskjobs/incomplete_jobs
 ###  myunlock $sixdeskjobs
-  cp $sixdesktrack/$sixdeskRundir/$sixdeskRunnam.lsf $sixdeskjobs_logs
-  sixdeskforce=2
-  . ./dot_bsub
+    cp $sixdesktrack/$sixdeskRundir/$sixdeskRunnam.lsf $sixdeskjobs_logs
+    sixdeskforce=2
+    . ./dot_bsub
+  fi
 done < $sixdeskjobs/missing_jobs
 rm -f $sixdeskjobs/missing_jobs
 ###myunlock $sixdeskjobs_logs

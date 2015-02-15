@@ -1,0 +1,49 @@
+#!/bin/sh
+#
+. ./dot_env
+if test $sixdeskplatform != "lsf"
+then
+  mymess 0 "run_missing_jobs can be used only with LSF !!!"
+  myexit 0
+fi
+if test ! -s "$sixdeskjobs/missing_jobs"
+then
+  mymess 0 "The file $sixdeskjobs/missing_jobs is empty!!!"
+  myexit 0
+fi
+mylock $sixdeskstudy
+###mylock $sixdeskjobs_logs
+while read Runnam
+do
+  sixdeskRunnam=$Runnam
+  myrundir $sixdeskRunnam sixdeskRundir
+###  mylock $sixdeskjobs
+###  myunlock $sixdeskjobs
+  if test ! -d $sixdesktrack/$sixdeskRundir
+  then
+    mymess 0 "The $sixdeskRundir is missing for $sixdeskRunnam!!!"
+  else
+    if test ! -s $sixdesktrack/$sixdeskRundir/$sixdeskRunnam.lsf
+    then
+      mymess 0 "The .lsf job is missing for $sixdeskRunnam in sixdeskRundir!!!"
+    fi
+    for fn in 2 3 8 16
+    do
+      if test ! -s $sixdesktrack/$sixdeskRundir/fort.${fn}.gz
+      then
+        mymess 0 "The fort.${fn}.gz is missing for $sixdeskRunnam in sixdeskRundir"
+      else 
+        cp $sixdesktrack/$sixdeskRundir/fort.${fn}.gz tmp$$.gz
+        gunzip tmp$$.gz
+        if test ! -f tmp$$
+        then
+          mymess 0 "The fort.${fn}.gz is missing for $sixdeskRunnam in sixdeskRundir"
+        fi
+        rm -f tmp$$
+      fi
+    done
+  fi
+done < $sixdeskjobs/missing_jobs
+###myunlock $sixdeskjobs_logs
+myunlock $sixdeskstudy
+myexit 0

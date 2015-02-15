@@ -7,9 +7,31 @@ mymess 0 "Checking $LHCDescrip"
 jobs=`bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t`
 if test "$jobs" != ""
 then
-  echo "There appear to be some mad6t jobs still not finished"
   bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t
+  echo "There appear to be some mad6t jobs still not finished"
   myexit 1
+fi
+if test -s $sixtrack_input/ERRORS
+then
+  mymess 1 "There appear to be some MADX errors!"
+  mymess 1 "If these messages are annoying you and"
+  mymess 1 "you have checked them carefully then"
+  mymess 1 "just remove sixtrack_input/ERRORS or!"
+  mymess 1 "rm sixtrack_input/* and rerun run_mad6t"
+  echo "ERRORS"
+  cat sixtrack_input/ERRORS
+  myexit 999
+fi
+if test -s $sixtrack_input/WARNINGS
+then
+  mymess 1 "There appear to be some MADX result warnings!"
+  mymess 1 "Some files are being changed; details in sixtrack_input/WARNINGS"
+  mymess 1 "If these messages are annoying you and"
+  mymess 1 "you have checked them carefully then"
+  mymess 1 "just remove sixtrack_input/WARNINGS"
+  echo "WARNINGS"
+  cat sixtrack_input/WARNINGS
+  myexit 998
 fi
 njobs=`expr $iendmad - $istamad`
 njobs=`expr $njobs + 1`
@@ -107,4 +129,5 @@ mymess 0 "using madx -X Version $MADX in $MADX_PATH"
 mymess 0 "Please check the sixtrack_input directory as the mad6t"
 mymess 0 "runs may have failed and just produced empty files!!!"
 mymess 0 "All jobs/logs/output are in sixtrack_input/mad.run_mad6t directories"
+mymess 0 "Appears to have finished normally"
 myexit 0
