@@ -14,6 +14,11 @@ ok=0
 bad=0
 unav=0
 header=0
+ows=`basename $arg1`
+ouser=`dirname $arg1`
+mymess 0 "Comparing $LOGNAME to `basename $ouser`" 
+mymess 0 "Comparing WS $workspace to `basename $arg1`"
+mymess 0 "Comparing STUDY $LHCDescrip to $arg2"
 mymktmpdir tmp /tmp/$LOGNAME
 rm -rf result_differences_$LHCDescrip
 for Runnam in `cat $sixdeskwork/completed_cases`

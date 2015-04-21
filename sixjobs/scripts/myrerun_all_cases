@@ -46,5 +46,6 @@ do
   fi
 done < $mytaskids
 rm $mytaskids
+mymess 0 "Appears to have finished normally"
 myunlock $sixdeskstudy
 myexit 0

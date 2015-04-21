@@ -1,3 +1,10 @@
+Release 22nd April, 2015
+And a couple of minor changes.
+
+Release 21st April, 2015
+Added a couple of scripts for fixing taskids and debugging.
+Ready for version with no local scripts(use PATH instead).
+
 Release 15th February, 2015
 Added Riccardo's fc.3.aper to mad6t1.lsf
 Added a lot of checks to mad6t.sf, mad6t1.lsf, check_mad6t

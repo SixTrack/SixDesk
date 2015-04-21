@@ -102,6 +102,13 @@ do
 done < $mytaskids
 rm $mytaskids
 
+#MACRO mymess 0 Appears to have finished normally
+sixdeskmesslevel=0
+sixdeskmess="Appears to have finished normally"
+sixdeskmess
+#MACRO mymess
+
+
 #MACRO myunlock $sixdeskstudy
 sixdesklockdir=$sixdeskstudy
 sixdeskunlock
