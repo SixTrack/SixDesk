@@ -39,6 +39,7 @@ myprepare_bnl
 myrecall_study
 myrecall_workspace
 myrerun_all_cases
+myrerun_mycases
 myrun_awk
 myrun_bnl
 myrun_incomplete_cases
@@ -57,6 +58,7 @@ myset_env
 myunlock
 myunlock_all
 myupdate_incomplete
+myupdate_results
 myupdate_sixjobs
 
 createDAsurv

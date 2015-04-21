@@ -1,0 +1,10 @@
+#!/bin/sh
+# update scripts and utilities to install
+# run_incomplete_cases_lsf
+# Should be run in the sixjobs directory
+if test "`basename $PWD`" != "sixjobs"
+then
+  echo "This script must be run in the sixjobs directory!!!"
+  exit 1
+fi
+cp -r ~mcintosh/BOINCLSF/* .

@@ -1,0 +1,36 @@
+#!/bin/ksh
+#BSUB -J SIXJOBNAME   	# job name
+
+STAGE_HOST=stageslap
+export STAGE_HOST
+junktmp=SIXJUNKTMP
+export junktmp
+TRACKDIR=SIXTRACKDIR
+pwd		# where am I?
+touch $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_COMPLETED
+rm -f $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_STARTED
+# copy compressed fortran files from the designated"job"  directory to our work dir
+# pick up inputfiles
+cp $TRACKDIR/SIXJOBDIR/fort.2.gz .
+cp $TRACKDIR/SIXJOBDIR/fort.3.gz .
+cp $TRACKDIR/SIXJOBDIR/fort.8.gz .
+cp $TRACKDIR/SIXJOBDIR/fort.16.gz .
+gunzip fort.2.gz
+gunzip fort.3.gz
+gunzip fort.8.gz
+gunzip fort.16.gz
+
+#get  sixtrack image
+cp SIXTRACKEXE sixtrack
+ls -al
+./sixtrack > fort.6  
+ls -al
+tail -100 fort.6
+
+if [ ! -s fort.10 ];then
+  touch fort.10
+fi
+# and now we copy fort.10 to the BOINC buffer
+# N.B. NOT .gz for BOINC compatibility
+cp fort.10 SIXBOINCRESULTDIR/SIXBOINCRESULTNAME
+rm -f $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_COMPLETED
