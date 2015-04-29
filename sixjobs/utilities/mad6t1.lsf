@@ -27,14 +27,20 @@ then
   echo "$filejob.out.${i} MADX TWISS appears to have failed!" >> $sixtrack_input/ERRORS
   exit 2
 fi
-if test ! -s fc.3
+#  RDM 28/4/2015
+#  Mad conversion can have an empty fc.3 in some cases (no multipole errors)
+#  RDM 28/4/2015
+#if test ! -s fc.3
+#then
+#  touch $sixtrack_input/ERRORS
+#  echo "MADX has produced an empty fc.3/fort.3.mad!"
+#  echo "$filejob.out.${i} MADX has produced an empty fc.3/fort.3.mad!" >> $sixtrack_input/ERRORS
+#  exit 3
+#fi
+if test ! -f fc.3
 then
-  touch $sixtrack_input/ERRORS
-  echo "MADX has produced an empty fc.3/fort.3.mad!"
-  echo "$filejob.out.${i} MADX has produced an empty fc.3/fort.3.mad!" >> $sixtrack_input/ERRORS
-  exit 3
+  touch fc.3
 fi
-touch fc.3
 if [ -f fc.3.aper ]; then
   cat fc.3.aper >> fc.3
 fi
