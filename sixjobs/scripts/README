@@ -1,3 +1,10 @@
+Release 3rd March, 2016
+Using GIT on scratch3.
+bnl_results NO lock on $sixdeskwork.
+delete_study removes BOINC buffers.
+Fixes for setacl checking and error
+to try and stop looping.
+
 Release 22nd April, 2015
 And a couple of minor changes.
 

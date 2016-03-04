@@ -157,6 +157,11 @@ then
     mkdir -p $sixdeskboincdir
     # and here use AFS protection group stuff to fix access control list
     fs setacl $sixdeskboincdir $LOGNAME rlidwka
+  if test $? -ne 0
+  then
+    mymess 0 "Cannot setacl for $sixdeskboincdir: AFS Token??? !!!"
+    myexit 777
+  fi
     fs setacl $sixdeskboincdir $sixdeskpts rl
   fi
   if test -s $sixdeskboincdir/owner
