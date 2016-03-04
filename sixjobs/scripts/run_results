@@ -358,6 +358,22 @@ then
     mkdir -p $sixdeskboincdir
     # and here use AFS protection group stuff to fix access control list
     fs setacl $sixdeskboincdir $LOGNAME rlidwka
+  if test $? -ne 0
+  then
+
+#MACRO mymess 0 Cannot setacl for $sixdeskboincdir: AFS Token??? !!!
+    sixdeskmesslevel=0
+    sixdeskmess="Cannot setacl for $sixdeskboincdir: AFS Token??? !!!"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 777
+    sixdeskexitparam=777
+    sixdeskexit
+#MACRO myexit
+
+  fi
     fs setacl $sixdeskboincdir $sixdeskpts rl
   fi
   if test -s $sixdeskboincdir/owner
