@@ -1,6 +1,8 @@
 #!/bin/sh
 # This script deletes all or part of a study.
 # It never deletes the CPSS TaskGroup info, nor the BOINC TaskID.
+# It now deletes the BOINC work and results buffers as well to
+# which will be re-created automatically by SixDesk or BOINC.
 # The sixdeskenv/sysenv files saved in the studies sub-directory
 # are not deleted. The study is flagged as deleted if everything
 # is deleted.
@@ -11,6 +13,7 @@
 # with a study.
 # If everything is deleted a deleted flag is set in the studies directory.
 # The backup_workspace study NEVER backs up a deleted study.
+# To re-use the study a set_env is required.
 # If not everything is to be deleted it asks about logs (could be useful to save space)
 # and then the database (work), sixtrack_input, sixtrack input files,
 # LSF jobs/logs and the sixtrack results and he plotting if any. 
@@ -269,6 +272,10 @@ then
   echo rm -f sixdesk.log sixeskerror.log restart.log cron_results.log
   rm -f sixdesk.log sixdeskerror.log restart.log cron_results.log
 fi
+# Now delete the boinc buffers etc to cleanup the BOINC area.
+# BUT note BOINC may now save redundant results on NFS???
+mymess 0 "Deleting the BOINC buffers"
+rm -rf $sixdeskboincdir
 # and finally mark study as deleted if "all" is true
 if test "$deleteall" = "y"
 then
