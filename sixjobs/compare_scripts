@@ -11,6 +11,6 @@ do
   #  diff ~tpieloni/w1/sixjobs/scripts/$i $i
   #   diff $i ~/w3march10/sixjobs/scripts/$i
   #  diff $i ~giovanno//w3/sixjobs/scripts/$i
-     diff $i $SIXDESK/sixjobs/scripts/$i
+     diff $i $HOME/wzero/sixjobs/scripts/$i
   fi
 done

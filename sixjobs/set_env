@@ -30,7 +30,13 @@ fi
 # and make sure we have a studies directory!
 if test ! -d studies
 then
-  mkdir studies
+  mymess "There is no studies directory in sixjobs!!!"
+
+#MACRO myexit 1
+  sixdeskexitparam=1
+  sixdeskexit
+#MACRO myexit
+
 fi
 cworkspace=`basename $sixdeskwhere`
 aline=`egrep "^ *export *workspace=" sixdeskenv | tail -1`
