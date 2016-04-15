@@ -7,8 +7,9 @@
 mkdir -p /tmp/mcintosh/comp_inputs
 w=/tmp/mcintosh/comp_inputs
 rm -f $w/*
-t1=/home/mcintosh/extra/scratch/W0w10cbb/track/w10cbb
-t2=/home/mcintosh/extra/scratch/W0w10cbb/track/w30cbb
+t1=$trackdir/track/$LHCDescrip
+t2=/afs/cern.ch/work/m/mfittere/scratch0/w14ericlsf/track/job_tracking_bb_2_cc_om1
+t2=/afs/cern.ch/work/m/mcintosh/scratch/w14ericlsf/track/job_tracking_bb_2_cc_om1
 
 #MACRO mytunes
 sixdesktunes
