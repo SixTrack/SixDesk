@@ -134,6 +134,7 @@ else
 
 fi
 sed -e 's?%pmass?'$pmass'?g' \
+    -e 's?%emit_beam?'$emit'?g' \
     $sixdeskhome/control_files/fort.3.mother1_${runtype} > $sixtrack_input/fort.3.mother1.tmp
 cp $sixdeskhome/control_files/fort.3.mother2_${runtype}${appendbeam} $sixtrack_input/fort.3.mother2.tmp
 # Clear the flag for check_mad6t
@@ -170,6 +171,7 @@ do
     rm -rf $sixtrack_input/fort.$f"_"$i.gz
   done
   sed -e 's?%NPART?'$bunch_charge'?g' \
+      -e 's?%EMIT_BEAM'$emit'?g' \
       -e 's?%SEEDSYS?'$i'?g' \
       -e 's?%SEEDRAN?'$i'?g' $filejob.mask > $filejob."$i"
 
