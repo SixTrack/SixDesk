@@ -1,0 +1,6 @@
+#!/bin/sh
+
+export SCAN_QPRIME="02 05 08 11 14 17 20"
+export SCAN_I_MO="050 150 250 350 450 550"
+
+
