@@ -20,18 +20,18 @@ export bunch_charge=1.1500e+11
 # It must NOT contain a "%" (replacing "#") nor "_""_"
 # It now includes the Version info e.g. v64lhc
 # (If running mad6t you must have a $LHCDescrip.mask file in the subdirectory mask)
-export LHCDescrip=jobrefslhc_coll
+export LHCDescrip=lhc2016_template_chr_oct
 
 # The workspace for the scripts, sixdesk.log and links to sixtrack_input, track and work, 
 # It must NOT contain a "%" (replacing "#") nor "__" (two consecutive underscores)
-export workspace=w1
+export workspace=ChrOctScan
 
 # The directory for the workspace normally $HOME
 initial=`echo $LOGNAME | cut -c 1`
-export basedir=/afs/cern.ch/user/$initial/$LOGNAME
+export basedir=/afs/cern.ch/work/d/dpellegr/private/LHC
 
 # The scratch directory for temporary input files, jobs, sixdesk databases etc (not normally backed up)
-export scratchdir=/afs/cern.ch/user/$initial/$LOGNAME/scratch0
+export scratchdir=$basedir/scratch0
 
 # The root track directory for all the tracking input and output
 # This directory can be used by multiple workspaces for scalability
@@ -71,7 +71,7 @@ export fort_34=""
 
 # Start and end seed for mad6t
 export istamad=1
-export iendmad=60
+export iendmad=1
 
 # Note that all mad6t runs are with the local LSF batch system,
 # even if tracking is being performed on BOINC, CPSS or the GRID,
@@ -171,12 +171,12 @@ then
 elif test $runtype = "col"
 then
   #tunes (collision)
-  export tunex=62.31
-  export tuney=60.32
+  export tunex=64.31
+  export tuney=59.32
   export deltax=0.001
   export deltay=0.001
-  export tunex1=62.31
-  export tuney1=60.32
+  export tunex1=$tunex
+  export tuney1=$tuney
 fi
 
 #switch for Guignard resonance calculation
@@ -217,7 +217,7 @@ then
   export ns2l=14
   export nsincl=2
   #
-  export turnsl=100000
+  export turnsl=1000000
   export turnsle=5
   export writebinl=1000
   export kinil=1
