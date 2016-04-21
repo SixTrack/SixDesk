@@ -116,6 +116,7 @@ export kstep=1
 
 #normalized emittance
 export emit=3.75
+export emit_beam=$emit
 
 # e0 gamma
 if test $runtype = "inj"
