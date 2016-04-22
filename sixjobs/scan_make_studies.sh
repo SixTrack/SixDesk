@@ -22,7 +22,6 @@ do
   echo "##########################################"
   echo "### SETTING ENV FOR MASK: $mask"
   echo
-  sed -i "s/lhc2016_template_chr_oct/$mask/" sixdeskenv
+  sed -i 's/export LHCDescrip=.*/export LHCDescrip='$mask'/' sixdeskenv
   ./set_env
-  sed -i "s/$mask/lhc2016_template_chr_oct/" sixdeskenv
 done

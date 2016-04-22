@@ -1,8 +1,6 @@
 #!/bin/sh
 
 source ./scan_set_def
-echo QPRIME: $SCAN_QPRIME
-echo I_MO: $SCAN_I_MO
 
 rm -f mask/lhc2016_scan*.mask
 

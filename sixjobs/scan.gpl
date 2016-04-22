@@ -1,0 +1,26 @@
+set terminal pdfcairo color solid enhanced size 4.8,3.6
+
+set grid
+set tit "Minimum Dynamic Aperture [{/Symbol s}]"
+set xlab "Chromaticity [#]" rot parallel off 0,0
+set ylab "Octupole Current [A]" rotate parallel off 0,0
+set zlab "Dynamic Aperture [{/Symbol s}]" rotate parallel
+
+#set datafile missing '?'
+#set view 30,240
+#set ticslevel 0
+
+set palette defined (\
+0 "#b2182b",\
+2 "#ef8a62",\
+4 "#CCCCCC",\
+6 "#67a9cf",\
+8 "#2166ac")
+
+set xran [1:21]
+set yran [0:600]
+
+set output "scan_chroma_octupo_20160422.pdf"
+set pm3d map
+pl "scan.dat" us 1:2:3 with image tit "Minimum Dynamic Aperture [\sigma]"
+
