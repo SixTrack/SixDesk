@@ -1,5 +1,7 @@
 import glob
 import re
+import numpy as np
+from scipy.interpolate import griddata
 
 dco = {}
 
@@ -21,16 +23,28 @@ for filename in glob.glob('DAres.lhc2016_scan_*'):
 
 out = []
 for key, value in dco.iteritems():
-  out.append(key+' '+value)
+  out.append(key+' '+str(value))
 out.sort()
 
-print "#chroma octupo aperture"
-prev_chroma = None
-for line in out:
-  chroma = line.split()[0]
-  if chroma != prev_chroma:
-    print
-  prev_chroma = chroma
+xyz = zip(*[[float(val) for val in line.split()] for line in out])
 
-  print line
+grid_x, grid_y = np.mgrid[1:20:70j, 50:550:50j]
+z = griddata((xyz[0], xyz[1]), xyz[2], (grid_x, grid_y), method='cubic')
+
+x0 = [row[0] for row in grid_x]
+y0 = grid_y[0]
+
+for i in range(len(x0)):
+  for j in range(len(y0)):
+    print x0[i], y0[j], z[i][j]
+  print
+
+#print "#chroma octupo aperture"
+#prev_chroma = None
+#for line in out:
+#  chroma = line.split()[0]
+#  if chroma != prev_chroma:
+#    print
+#  prev_chroma = chroma
+#  print line
 

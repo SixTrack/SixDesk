@@ -20,7 +20,7 @@ export bunch_charge=1.1500e+11
 # It must NOT contain a "%" (replacing "#") nor "_""_"
 # It now includes the Version info e.g. v64lhc
 # (If running mad6t you must have a $LHCDescrip.mask file in the subdirectory mask)
-export LHCDescrip=lhc2016_scan_20_550
+export LHCDescrip=lhc2016_scan_19_550
 
 # The workspace for the scripts, sixdesk.log and links to sixtrack_input, track and work, 
 # It must NOT contain a "%" (replacing "#") nor "__" (two consecutive underscores)
@@ -214,7 +214,7 @@ if test $long -eq 1
 then
 # amplitudes which must be 0 <= amplitude < 100 in format [d][d][.][d][d][d]
   export ns1l=4
-  export ns2l=14
+  export ns2l=10
   export nsincl=2
   #
   export turnsl=1000000

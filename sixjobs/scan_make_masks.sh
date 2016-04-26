@@ -2,6 +2,7 @@
 
 source ./scan_set_def
 
+echo "Recreating the masks from the template"
 rm -f mask/lhc2016_scan*.mask
 
 for qp in $SCAN_QPRIME

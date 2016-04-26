@@ -3,7 +3,7 @@ set terminal pdfcairo color solid enhanced size 4.8,3.6
 set grid front
 set tit "Minimum Dynamic Aperture [{/Symbol s}]"
 set xlab "Chromaticity [#]" rot parallel off 0,0
-set ylab "Octupole Current [A]" rotate parallel off 0,0
+set ylab "Octupole Current (normalised at 7 TeV) [A]" rotate parallel off 0,0
 set zlab "Dynamic Aperture [{/Symbol s}]" rotate parallel
 
 #set datafile missing '?'
@@ -17,11 +17,10 @@ set palette defined (\
 6 "#67a9cf",\
 8 "#2166ac")
 
-set xran [0:20]
+set xran [0:21]
 set yran [0:600]
 
 set output "scan_chroma_octupo_".strftime("%Y%m%d", time(0)).".pdf"
-set pm3d map
-f(x)=3*(x-23)**2-40
-pl "scan.dat" us 1:2:3 with image tit "", f(x) with line lw 4 lt 7 tit ""
 
+f(x)=2.2*(x-27)**2-150
+pl "scan.dat" us 1:2:3 with image tit "", f(x) with line lw 4 lt 7 tit ""
