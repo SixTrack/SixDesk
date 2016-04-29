@@ -129,6 +129,9 @@ then
   export gamma=7460.5
 fi
 
+#crossing angle urad
+export xing=185
+
 #phase space dimension
 export dimen=6
 

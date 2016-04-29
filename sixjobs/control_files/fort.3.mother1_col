@@ -30,8 +30,8 @@ SYNCHROTRON OSCILLATIONS--------'PLACE AFTER TRACKING PARAMETERS'-------
 NEXT
 BEAM
 %bunch_charge   %emit_beam  %emit_beam  0.7700e-01  1.1000e-04  1  %ibtype 1 0
-bb_ho5b1_0 5  0.185e-3 0.0
-bb_ho1b1_0 5 -0.185e-3 1.5707963268
+bb_ho5b1_0 5  %xing 0.0
+bb_ho1b1_0 5 -%xing 1.5707963268
 NEXT
 ITERATION-ACCURACY------------------------------------------------------
        50 1D-12 1D-15
