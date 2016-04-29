@@ -26,19 +26,6 @@ for key, value in dco.iteritems():
   out.append(key+' '+str(value))
 out.sort()
 
-xyz = zip(*[[float(val) for val in line.split()] for line in out])
-
-grid_x, grid_y = np.mgrid[1:20:70j, 50:550:50j]
-z = griddata((xyz[0], xyz[1]), xyz[2], (grid_x, grid_y), method='cubic')
-
-x0 = [row[0] for row in grid_x]
-y0 = grid_y[0]
-
-for i in range(len(x0)):
-  for j in range(len(y0)):
-    print x0[i], y0[j], z[i][j]
-  print
-
 #print "#chroma octupo aperture"
 #prev_chroma = None
 #for line in out:
@@ -47,4 +34,19 @@ for i in range(len(x0)):
 #    print
 #  prev_chroma = chroma
 #  print line
+
+# interpolating
+
+xyz = zip(*[[float(val) for val in line.split()] for line in out])
+
+grid_x, grid_y = np.mgrid[1:20:70j, 50:550:50j]
+z = griddata((xyz[0], xyz[1]), xyz[2], (grid_x, grid_y), method='linear')
+
+x0 = [row[0] for row in grid_x]
+y0 = grid_y[0]
+
+for i in range(len(x0)):
+  for j in range(len(y0)):
+    print x0[i], y0[j], z[i][j]
+  print
 
