@@ -25,7 +25,7 @@ then
 #MACRO myexit
 
 fi
-./check_mad6t
+./check_mad6t $1 $2
 if test $? -ne 0
 then
 
