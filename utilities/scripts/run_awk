@@ -1,5 +1,14 @@
-#!/bin/sh
-. ./dot_env
+#!/bin/bash
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
 
 #MACRO mylock $sixdeskstudy
 sixdesklockdir=$sixdeskstudy
@@ -65,7 +74,7 @@ do
 
     if test -s "DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
     then
-      awk -f minav.awk "DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
+      awk -f ${SCRIPTDIR}/minav.awk "DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
     else
 
 #MACRO mymess 0 Skipping Angle $j; DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j missing or empty

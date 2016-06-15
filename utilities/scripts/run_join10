@@ -1,11 +1,20 @@
-#!/bin/ksh
+#!/bin/bash
 #***************************************************************************
 #
 # Merge over amplitudes SixTrack output file fort.10 for seeds and angles
 #
 #***************************************************************************
 #
-. ./dot_env
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
 # Order of number of turns
 # imported from sixdeskenv
 # Merge Range (amplitudes shown below)
@@ -80,7 +89,7 @@ mode=simul
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #
 # Result directory
-Ampl=${e[jsta]}-${e[jend+1]}
+let Ampl=${e[$jsta]}-${e[$jend+1]}
 #
 AngleStep=`awk 'END{a=90/('$kmaxl'+1);print a}' /dev/null`
 #
@@ -106,7 +115,7 @@ sixdeskmess
 #MACRO mymess
 
 let i=ista
-while [ i -le iend ] ;do
+while [ $i -le $iend ] ;do
   echo "Processing Seed $i"
   itunexx=$itunex
   ituneyy=$ituney
@@ -142,34 +151,34 @@ while [ i -le iend ] ;do
     let k=$kinil
     while [ $k -le $kendl ] ;do
       Angle=`awk 'END{a='$AngleStep'*'$k';print a}' /dev/null`
-      let jst=jsta
-      let te=turnse
-      while [ te -le turnsemax ] ;do
+      let jst=$jsta
+      let te=$turnse
+      while [ $te -le $turnsemax ] ;do
         #  
-        let j=jst
+        let j=$jst
         dir0=${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl/e$te/$Angle
         dir1=${tree[1]}/$dirs/$i/$mode/$sixdesktunes/${e[j]}_${e[j+1]}/e$te/$Angle
         #
         file[0]="$dir0"/fort.10
         file[j]="$dir1"/fort.10.gz
-        echo ${file[j]}
+        echo ${file[$j]}
         #
-        if [ -s "${file[j]}" ] ;then
-          gzip -cdf ${file[j]} > fort.11
+        if [ -s "${file[$j]}" ] ;then
+          gzip -cdf ${file[$j]} > fort.11
           ((j=j+1))
-          while [ j -le jend ] ;do
-            dir1=${tree[1]}/$dirs/$i/$mode/$sixdesktunes/${e[j]}_${e[j+1]}/e$te/$Angle
-            file[j]="$dir1"/fort.10.gz
-            if [ -s "${file[j]}" -a -s fort.11 ] ;then
-              echo ${file[j]}
+          while [ $j -le $jend ] ;do
+            dir1=${tree[1]}/$dirs/$i/$mode/$sixdesktunes/${e[$j]}_${e[$j+1]}/e$te/$Angle
+            file[$j]="$dir1"/fort.10.gz
+            if [ -s "${file[$j]}" -a -s fort.11 ] ;then
+              echo ${file[$j]}
               cp fort.11 fort.22
-              gzip -cdf ${file[j]} > fort.23
+              gzip -cdf ${file[$j]} > fort.23
               $sixdeskhome/bin/joinf10
             else
 
-#MACRO mymess 0 File not found:  ${file[j]} !!!
+#MACRO mymess 0 File not found:  ${file[$j]} !!!
               sixdeskmesslevel=0
-              sixdeskmess="File not found:  ${file[j]} !!!"
+              sixdeskmess="File not found:  ${file[$j]} !!!"
               sixdeskmess
 #MACRO mymess
 
@@ -194,11 +203,11 @@ while [ i -le iend ] ;do
 
 #MACRO mymess 0 File not found Seed $i ${file[j]} !!!
           sixdeskmesslevel=0
-          sixdeskmess="File not found Seed $i ${file[j]} !!!"
+          sixdeskmess="File not found Seed $i ${file[$j]} !!!"
           sixdeskmess
 #MACRO mymess
 
-          if [ jst -lt jend ] ;then
+          if [ $jst -lt $jend ] ;then
             ((jst=jst+1))
           else
             ((te=te+1))
@@ -208,7 +217,7 @@ while [ i -le iend ] ;do
       #
       # Loop over turn numbers
       #
-      if [ turnmin -lt turnmax ] ;then
+      if [ $turnmin -lt $turnmax ] ;then
         dira=${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl/e${turnse}-$turnsemax
         if [ ! -d "$dira" ] ;then
           mkdir -p "$dira"
@@ -221,26 +230,26 @@ while [ i -le iend ] ;do
         #
         file[0]=$dir0/fort.10
         file[te]=$dir1/fort.10.gz
-        echo ${file[te]}
+        echo ${file[$te]}
         #
         if [ -s "${file[te]}" ] ;then
-          gzip -cdf ${file[te]} > fort.11
+          gzip -cdf ${file[$te]} > fort.11
           ((te=te+1))
           #
           while [ te -le turnmax ] ;do
             dir1=${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl/e$te/$Angle
-            file[te]=$dir1/fort.10.gz
+            file[$te]=$dir1/fort.10.gz
             #
-            if [ -s "${file[te]}" -a -s fort.11 ] ;then
-              echo ${file[te]}
+            if [ -s "${file[$te]}" -a -s fort.11 ] ;then
+              echo ${file[$te]}
               cp fort.11 fort.22
-              gzip -cdf ${file[te]} > fort.23
+              gzip -cdf ${file[$te]} > fort.23
               $sixdeskhome/bin/joinf10
             else
 
-#MACRO mymess 0 Seed $i File not found: ${file[te]} !!!
+#MACRO mymess 0 Seed $i File not found: ${file[$te]} !!!
               sixdeskmesslevel=0
-              sixdeskmess="Seed $i File not found: ${file[te]} !!!"
+              sixdeskmess="Seed $i File not found: ${file[$te]} !!!"
               sixdeskmess
 #MACRO mymess
 
@@ -267,7 +276,7 @@ while [ i -le iend ] ;do
 
 #MACRO mymess 0 Seed $i File not found: ${file[te]} !!!
           sixdeskmesslevel=0
-          sixdeskmess="Seed $i File not found: ${file[te]} !!!"
+          sixdeskmess="Seed $i File not found: ${file[$te]} !!!"
           sixdeskmess
 #MACRO mymess
 
