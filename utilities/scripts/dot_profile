@@ -17,7 +17,7 @@ sixdeskmess()
     then
       echo "$sixdeskday $sixdeskdate $sixdesktime ""$sixdeskname"" $sixdeskmess" >> "$sixdesklogdir"/sixdesk.log
     else
-      echo "$sixdeskday $sixdeskdate $sixdesktime ""$sixdeskname"" $sixdeskmess" >> ./sixdesk.log
+      echo "$sixdeskday $sixdeskdate $sixdesktime ""$sixdeskname"" $sixdeskmess" >> sixdesk.log
     fi
   fi
 }

@@ -1,5 +1,14 @@
-#!/bin/sh
+#!/bin/bash
 # Checks workspace for ONLY the current study
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
 mychecklocksub()
 {
   if test -d "$locks"
@@ -38,8 +47,8 @@ else
   echo "The directory studies does not exist!!!"
   exit 2
 fi
-. ./dot_env
-for locks in . .. ./plot sixdeskTaskIds $sixdeskstudy $sixtrack_input $sixdeskwork 
+source ${SCRIPTDIR}/dot_env
+for locks in . .. plot sixdeskTaskIds $sixdeskstudy $sixtrack_input $sixdeskwork 
 do
   echo "Checking $locks"
   mychecklocksub

@@ -2,8 +2,8 @@
 #
 # executes the specified script and report variables to stdout
 #
-. $1
-. $2
+source $1
+source $2
 if test "$BNL" != ""
 then
   echo "=============="

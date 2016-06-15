@@ -1,0 +1,34 @@
+#!/bin/bash
+# Unlocks workspace and ONLY locks for the current study
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
+for locks in . .. plot $sixdeskhome/sixdeskTaskIds $sixdeskstudy $sixtrack_input `find $sixdeskwork -type d`
+do
+  if test -d $locks
+  then
+    if test -f $locks/sixdesklock
+    then
+      if test ! -w $locks/sixdesklock
+      then
+        echo "The directory $locks locked by"
+        echo "Script:Machine:Process `cat $locks/sixdesklock`"
+        echo "is being unlocked!"
+        chmod 644 $locks/sixdesklock 
+       fi
+    fi
+  fi
+done
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

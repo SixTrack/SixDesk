@@ -246,8 +246,8 @@ then
 else
   # We are just USING the newLHCDescrip study without changes
   # and will NOT modify sixjobs
-  source ./studies/$newLHCDescrip/sixdeskenv
-  source ./studies/$newLHCDescrip/sysenv
+  source studies/$newLHCDescrip/sixdeskenv
+  source studies/$newLHCDescrip/sysenv
 fi
 PTEXT="["$sixdeskplatform"]"
 if test "$newplatform" != ""

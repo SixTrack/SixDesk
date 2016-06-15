@@ -24,7 +24,7 @@ then
   newenv=$sixdesktmp
 #MACRO mymktmp
 
-  ${SCRIPTDIR}/exec_env ./sixdeskenv ./sysenv > $newenv
+  ${SCRIPTDIR}/exec_env sixdeskenv sysenv > $newenv
 
 #MACRO mymktmp oldenv 
   sixdesktmpname=oldenv
