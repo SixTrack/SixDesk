@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Recalls a study to the original workspace,
 # or to a completely different workspace.
@@ -71,6 +71,15 @@ check_dir()
 
   fi
 }
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
 # We have no sixjobs possibly so set nomessages
   nomessages="true"
 # This should always be defined
@@ -209,12 +218,12 @@ else
 fi
 # and do a ". ./dot_env" to prepare recall of rest of study
 # except I have to simulate because of $1
-if test ! -s ./sixjobs/dot_profile
+if test ! -s ${SCRIPTDIR}/dot_profile
 then
   echo "dot_profile is missing!!!"
   exit 1
 fi
-. ./sixjobs/dot_profile
+source ${SCRIPTDIR}/dot_profile
 nomessages=""
 # Is this a straight recall to the same place?
 # or are we recalling to a different workspace.
@@ -225,8 +234,8 @@ then
 fi
 myworkspace=$currentws
 mystudy=$bstudy
-. ./sixjobs/studies/$bstudy/sixdeskenv
-. ./sixjobs/studies/$bstudy/sysenv
+source ./sixjobs/studies/$bstudy/sixdeskenv
+source ./sixjobs/studies/$bstudy/sysenv
 mysixdesklogdir=$sixdesklogdir
 sixdesklogdir="."
 # and this should be redundant!

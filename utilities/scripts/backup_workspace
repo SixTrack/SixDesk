@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Does a backup to CASTOR of the current workspace and all studies in it.
 # Must be run in the directory sixjobs, but actually runs in ...
 # The script can be restarted at any time and will continue.
@@ -34,6 +34,15 @@ castorb()
 
   fi
 }
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
 if test $? -ne 0
 then
   echo "No parameters allowed!!!"
@@ -48,7 +57,7 @@ fi
 cname=$CASTOR_HOME/workspace_backups
 # Lock the workspace (only one backup at a time)
 # and get the environment for the current study
-. ./dot_env
+source ${SCRIPTDIR}/dot_env
 
 #MACRO mylock ..
 sixdesklockdir=..
@@ -262,8 +271,8 @@ do
 #MACRO myexit
 
           fi
-          . sixjobs/studies/$nextb/sixdeskenv 
-          . sixjobs/studies/$nextb/sysenv 
+          source sixjobs/studies/$nextb/sixdeskenv 
+          source sixjobs/studies/$nextb/sysenv 
           mysixdesklogdir=$sixdesklogdir
           export sixdesklogdir="."
           if test "$LHCDescrip" != "$nextb"
