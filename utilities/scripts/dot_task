@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # This script will submit a task 
 # using the $1 sixdeskRunnam and the $2 directory sixdeskRundir
@@ -15,6 +15,15 @@ sixdeskPriority="Normal"
 # sixdeskOsMin="5.0", sixdeskOsMax="9.9" and sixdeskCpuSpeedMin ="100" MHz are inherited from sixdeskenv
 # July 19th, 2004 added sixdeskcr and sixdeskclientv
 # August 19th, 2004 added sixdeskout (fort.6 or STDOUT for sixtrackcr)
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
 if test "$sixdeskcr" = ""
 then
   sixdeskcr=0
@@ -50,7 +59,7 @@ sixdeskmess
 
 if test ! -s "$sixdeskstudy/TaskGroupId"
 then
-  . ./dot_taskgroup
+  source ${SCRIPTDIR}/dot_taskgroup
 fi
 if test ! -s "$sixdeskstudy/TaskGroupId"
 then

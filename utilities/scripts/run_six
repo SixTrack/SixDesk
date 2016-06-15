@@ -1,6 +1,15 @@
-#!/bin/ksh
+#!/bin/bash
 #
-. ./dot_env
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
 dir16=$sixtrack_input
 
 #MACRO mymess 2 Using sixtrack_input $dir16
@@ -25,7 +34,7 @@ then
 #MACRO myexit
 
 fi
-./check_mad6t $newLHCDescrip
+${SCRIPTDIR}/check_mad6t $newLHCDescrip
 if test $? -ne 0
 then
 
@@ -144,7 +153,7 @@ fi
 #
 #da run postprocessing
 #
-if [ da -eq 1 ] ;then
+if [ $da -eq 1 ] ;then
   if [ $dimda -eq 6 ] ;then
     cp inc/dalie6.data $sixdeskjobs_logs/dalie.data
     sed -e 's/%NO/'$NO1'/g' \
@@ -1349,13 +1358,13 @@ do
               chmod 755 $sixdeskjobs_logs/"$Runnam".lsf
               sixdeskRunnam="$Runnam"
               sixdeskRundir="$Rundir"
-              . ./dot_bsub $Runnam $Rundir
+              source ${SCRIPTDIR}/dot_bsub $Runnam $Rundir
             elif test "$sixdeskplatform" = "cpss"
             then
               # The 3rd param 0 means only if not submitted already
               sixdeskRunnam="$Runnam"
               sixdeskRundir="$Rundir"
-              . ./dot_task
+              source ${SCRIPTDIR}/dot_task
             elif test "$sixdeskplatform" = "grid"
             then
               # Create $Runnam.grid in $sixdeskwork/$Runnam
@@ -1389,7 +1398,7 @@ do
               # The 3rd param 0 means only if not submitted already
               sixdeskRunnam="$Runnam"
               sixdeskRundir="$Rundir"
-              . ./dot_boinc
+              source ${SCRIPTDIR}/dot_boinc
             else
               # Should be impossible
 
@@ -1565,7 +1574,7 @@ do
         chmod 755 $sixdeskjobs_logs/"$Runnam".lsf
         sixdeskRunnam="$Runnam"
         sixdeskRundir="$Rundir"
-        . ./dot_bsub $Runnam $Rundir
+        source ${SCRIPTDIR}/dot_bsub $Runnam $Rundir
       fi
     fi
     itunexx=`expr $itunexx + $ideltax`

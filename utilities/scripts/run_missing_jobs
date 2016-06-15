@@ -1,6 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 #
-. ./dot_env
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
 if test $sixdeskplatform != "lsf"
 then
 
@@ -100,7 +109,7 @@ do
 
     cp $sixdesktrack/$sixdeskRundir/$sixdeskRunnam.lsf $sixdeskjobs_logs
     sixdeskforce=2
-    . ./dot_bsub
+    source ${SCRIPTDIR}/dot_bsub
   fi
 done < $sixdeskjobs/missing_jobs
 rm -f $sixdeskjobs/missing_jobs

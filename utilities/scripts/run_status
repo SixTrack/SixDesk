@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Gives an overview, and more importantly .......
 # updates the job status for LSF jobs and for the study
@@ -10,7 +10,16 @@
 #
 # See if we have any results or report on a specific task
 #
-. ./dot_env
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
 
 #MACRO mymess 0 Checking Study $LHCDescrip
 sixdeskmesslevel=0

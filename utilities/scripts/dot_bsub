@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # The little script to do a bsub and the job management
 # using the sixdeskRunnam and the directory sixdeskRundir
 # The sixdeskRundir is relative to $sixdesktrack

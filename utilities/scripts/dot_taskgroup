@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # This script is called by dot_task to create a TaskGroup
 # and store the TaskId and ProgramId in sixdeskstudy.
 # It keeps a record/log in sixdeskhome/TaskGroups so that they

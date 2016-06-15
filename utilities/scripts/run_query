@@ -1,10 +1,20 @@
-#!/bin/sh
+#!/bin/bash
 # Special because we may have a parameter
 # but we now insist it must be the THIRD.
 # run_query / run_query STUDY / run_query STUDY PLATFORM /
 # run_query STUDY PLATFORM RUNNAM
 # No locks are held (except by dot_env itself).
-. ./dot_env
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
+
 cases=0
 if test -f $sixdeskwork/taskids
 then

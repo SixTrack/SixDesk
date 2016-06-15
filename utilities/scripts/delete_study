@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # This script deletes all or part of a study.
 # It never deletes the CPSS TaskGroup info, nor the BOINC TaskID.
 # It now deletes the BOINC work and results buffers as well to
@@ -17,18 +17,27 @@
 # If not everything is to be deleted it asks about logs (could be useful to save space)
 # and then the database (work), sixtrack_input, sixtrack input files,
 # LSF jobs/logs and the sixtrack results and he plotting if any. 
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
 sixdeskroot=`basename $PWD`
 if test "$sixdeskroot" != "sixjobs"
 then
   echo "The script delete_study must be run in the directory sixjobs!!!"
   exit 1
 fi
-if test ! -s dot_env
+if test ! -s ${SCRIPTDIR}/dot_env
 then
   echo "The script dot_env is missing!!!"
   exit 2 
 fi
-. ./dot_env
+source ${SCRIPTDIR}/dot_env
 
 #MACRO mylock $sixdeskstudy
 sixdesklockdir=$sixdeskstudy

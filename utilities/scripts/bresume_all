@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Resume all my suspended jobs
 
