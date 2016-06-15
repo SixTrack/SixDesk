@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # executes the specified script and report variables to stdout
 #

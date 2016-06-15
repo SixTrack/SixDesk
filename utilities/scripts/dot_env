@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # This script is called by (almost) everyone to set up the environment.
 # just checks the environment for dot_profile, sixjobs etc
 # imports the dot_profile subroutines
@@ -10,6 +10,15 @@
 # and was the technique used by run_results anyway.)
 # It will NOT handle a deleted study NOR a new study.
 # It must be called by . ./dot_env so that values are available to the caller.
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
 export sixdeskhostname=`hostname`
 export sixdeskname=`basename $0`
 export sixdeskroot=`basename $PWD`
@@ -25,12 +34,12 @@ then
   echo "This script must be run in the directory sixjobs!!!"
   exit 1
 fi
-if test ! -s dot_profile
+if test ! -s ${SCRIPTDIR}/dot_profile
 then
   echo "dot_profile is missing!!!"
   exit 1
 fi
-. ./dot_profile
+source ${SCRIPTDIR}/dot_profile
 # and make sure we have a studies directory!
 if test ! -d studies
 then
@@ -219,13 +228,13 @@ then
   sixdesklock
 #MACRO mylock
 
-  . ./sixdeskenv
-  . ./sysenv
+  source sixdeskenv
+  source sysenv
   # We now call update_sixjobs in case there were changes
   # and to create for example the logfile directories
-  . ./update_sixjobs
+  source ${SCRIPTDIR}/update_sixjobs
   # and now we can check 
-  . ./check_envs
+  source ${SCRIPTDIR}/check_envs
   # and save the env files
   cp sixdeskenv sysenv studies/$LHCDescrip
 
@@ -237,8 +246,8 @@ then
 else
   # We are just USING the newLHCDescrip study without changes
   # and will NOT modify sixjobs
-  . ./studies/$newLHCDescrip/sixdeskenv
-  . ./studies/$newLHCDescrip/sysenv
+  source ./studies/$newLHCDescrip/sixdeskenv
+  source ./studies/$newLHCDescrip/sysenv
 fi
 PTEXT="["$sixdeskplatform"]"
 if test "$newplatform" != ""

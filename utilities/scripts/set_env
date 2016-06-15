@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # This script is called to set up, modify, or check the 
 # environment or to create a new study, or to undelete it. 
 # It can just be called for checking/updating  e.g. set_env
@@ -6,6 +6,15 @@
 # to switch studies and update sixjobs, or to create, a new study.
 # It basically imitates dot_env.
 # It locks the workspace.
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
 export sixdeskhostname=`hostname`
 export sixdeskname=`basename $0`
 export sixdeskroot=`basename $PWD`
@@ -21,12 +30,12 @@ then
   echo "This script must be run in the directory sixjobs!!!"
   exit 1
 fi
-if test ! -s dot_profile
+if test ! -s ${SCRIPTDIR}/dot_profile
 then
   echo "dot_profile is missing!!!"
   exit 1
 fi
-. ./dot_profile
+source ${SCRIPTDIR}/dot_profile
 # and make sure we have a studies directory!
 if test ! -d studies
 then
@@ -289,7 +298,7 @@ sixdesklockdir=studies
 sixdeskunlock
 #MACRO myunlock
 
-. ./dot_env 
+source ${SCRIPTDIR}/dot_env 
 # Now clear the deleted flag (if set)
 if test -e "$sixdeskstudy"/deleted
 then

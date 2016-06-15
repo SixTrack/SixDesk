@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Setting the environment for dot_env or set_env
 # after the files have been changed or for safety
 

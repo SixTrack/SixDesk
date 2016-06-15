@@ -1,5 +1,14 @@
-#!/bin/sh
+#!/bin/bash
 # Used by dot_env and set_env with the study locked
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
 diff --brief $sixdeskstudy/sixdeskenv sixdeskenv > /dev/null
 stat1=$?
 diff --brief $sixdeskstudy/sysenv sysenv > /dev/null
@@ -15,7 +24,7 @@ then
   newenv=$sixdesktmp
 #MACRO mymktmp
 
-  ./exec_env ./sixdeskenv ./sysenv > $newenv
+  ${SCRIPTDIR}/exec_env ./sixdeskenv ./sysenv > $newenv
 
 #MACRO mymktmp oldenv 
   sixdesktmpname=oldenv
@@ -24,7 +33,7 @@ then
   oldenv=$sixdesktmp
 #MACRO mymktmp
 
-  ./exec_env $sixdeskstudy/sixdeskenv $sixdeskstudy/sysenv > $oldenv
+  ${SCRIPTDIR}/exec_env $sixdeskstudy/sixdeskenv $sixdeskstudy/sysenv > $oldenv
 
 #MACRO mymess 0 Environment changed for $LHCDescrip
   sixdeskmesslevel=0
