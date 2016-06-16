@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Recalls a workspace.
 # Requires the backup name as $1
@@ -58,6 +58,15 @@ check_dir()
 
   fi
 }
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
 # We have no sixjobs possibly so set nomessages
   nomessages="true"
 # This should always be defined
@@ -214,12 +223,12 @@ else
   touch recall_workspace.finished
 fi
 # Get the subroutines (we have never done a dot_env)
-if test ! -s ./sixjobs/dot_profile
+if test ! -s ${SCRIPTDIR}/dot_profile
 then
   echo "dot_profile is missing!!!"
   exit 1
 fi
-. ./sixjobs/dot_profile
+source ${SCRIPTDIR}/dot_profile
 # and set some defaults
 nomessages=""
 export sixdesklevel=1
@@ -318,8 +327,8 @@ do
 #MACRO myexit
 
     fi
-    . ./studies/$mystudy/sixdeskenv
-    . ./studies/$mystudy/sysenv
+    source studies/$mystudy/sixdeskenv
+    source studies/$mystudy/sysenv
     mysixdesklogdir="$sixdesklogdir"
     sixdesklogdir=".."
     if test "$workspace" != "$currentws"
