@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # This script will submit a task 
 # using the sixdeskRunnam and the correspoding directory sixdeskRundir

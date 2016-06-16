@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # See if we have any results and download them
 # uses a lock on the Study
@@ -82,10 +82,19 @@ update_cases()
 #MACRO mymess
 
 }
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
 #
 # Even if called with a Study ($1) and a Platform ($2)
 # we can now use dot_env
-. ./dot_env
+source ${SCRIPTDIR}/dot_env
 if test -s $sixdeskstudy/sixdesklock
 then
   if test ! -w $sixdeskstudy/sixdesklock

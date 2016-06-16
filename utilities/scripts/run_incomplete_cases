@@ -1,7 +1,17 @@
-#!/bin/sh
+#!/bin/bash
 #
 # This script will (re-)submit a case if its status is incomplete 
-. ./dot_env
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
+
 if test $sixdeskplatform = "lsf"
 then
   echo "This command is NOT available for LSF"
@@ -100,15 +110,15 @@ do
     fi
     if test "$sixdeskplatform" = "cpss"
     then
-      . ./dot_task
+      source ${SCRIPTDIR}/dot_task
       stat=$?
     elif test "$sixdeskplatform" = "boinc"
     then
-      . ./dot_boinc
+      source ${SCRIPTDIR}/dot_boinc
       stat=$?
     elif test "$sixdeskplatform" = "grid"
     then
-      . ./dot_grid
+      source ${SCRIPTDIR}/dot_grid
       stat=$?
     fi
     if test $stat -ne 0
