@@ -1,8 +1,17 @@
-#!/bin/sh
+#!/bin/bash
 # Plots the results of compare_DA 
 # Expects a LOGNAME, workspace and study
 # Uses the DAres for the current study and the one specified.
 # Calls doplot_DA to do it.
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
 if test $# -lt 3 
 then
   echo "You must specify a LOGNAME, Workspace and LHCDescrip for comparison"
@@ -23,4 +32,4 @@ else
   name2=b
 fi
 echo "$w2 $s2 $lognam $name1 $name2" > plot_DA_args
-./doplot_DA
+${SCRIPTDIR}/doplot_DA

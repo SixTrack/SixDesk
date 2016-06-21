@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Tries to implement a comparison of the
 # DA produced by two studies as proposed by Massimo.
 # Expects a LOGNAME, workspace and study
@@ -11,6 +11,15 @@
 # one line per seed S, stable from first s1, stable from second s2,
 # s1 - s2, (s1 - s2) / s1    
 # and added name1 name2
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
 if test $# -lt 3 
 then
   echo "You must specify a LOGNAME, Workspace and LHCDescrip for comparison"
@@ -32,4 +41,4 @@ else
 fi
 echo "Calling compare_DA $w2 $s2 $lognam $name1 $name2"
 echo "$w2 $s2 $lognam $name1 $name2" > compare_DA_args
-./docompare_DA
+${SCRIPTDIR}/docompare_DA

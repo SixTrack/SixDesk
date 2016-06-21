@@ -1,9 +1,18 @@
-#!/bin/sh
+#!/bin/bash
 # A script to do a compare_DA and a plot_DA
 # expects two study letters $1 $2
 #
 # Make a match for the name of the study from the letter.
 #
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
 if test $# -ne 2
 then
   echo "Must specify two studies!!!"
@@ -195,4 +204,4 @@ do
   shift
 done
 echo "compare_studies calling compareDAS with $p1 $p2 $name1/$name2"
-./compare_DAS "$p1" "$user2" "$ws2" "$p2" "$name1" "$name2"
+${SCRIPTDIR}/compare_DAS "$p1" "$user2" "$ws2" "$p2" "$name1" "$name2"

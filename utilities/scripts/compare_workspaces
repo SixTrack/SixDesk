@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Should be in run in the directory sixjobs
 # Requires name of new workspace as $1

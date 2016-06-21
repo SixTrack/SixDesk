@@ -1,6 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 # and get the environment of the current study
-. ./dot_env
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
 # We have been called with no arguments so we use current study etc
 # but we read the parameters w2 and s2, logname2, and name1 name2
 args=`cat plot_DA_args`
@@ -91,7 +100,7 @@ do
         -e's/%j%/'$j'/g' \
         -e's/%myend%/'$myend'/g' \
         -e's?%mynames%?'$mynames'?g' \
-         plot1.template > plot1.plot
+         ${SCRIPTDIR}/plot1.template > plot1.plot
     gnuplot < plot1.plot
     rm plot1.plot
     rm ${myname}.${j}.stable
@@ -112,7 +121,7 @@ do
       -e's/%mybegin%/'$mybegin'/g' \
       -e's/%myend%/'$myend'/g' \
       -e's?%mynames%?'$mynames'?g' \
-       plot2.template > plot2.plot
+       ${SCRIPTDIR}/plot2.template > plot2.plot
   gnuplot < plot2.plot
   rm plot2.plot
 # rm ${myname}.sum
@@ -130,10 +139,10 @@ do
         ((j=j+$kstep))
         ((k=k+$kstep))
     done
-    createDAsurv jktemp
+    ${SCRIPTDIR}/createDAsurv jktemp
 #   rm jktemp.*
   else
-    createDAsurv $mynames
+    ${SCRIPTDIR}/createDAsurv $mynames
   fi
   mv DAsurv.pdf ${mynames}.pdf
 

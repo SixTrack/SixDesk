@@ -1,6 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 # and get the environment for the current study
-. ./dot_env
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
 # We have been called with no arguments so we use current study etc
 # but we read the parameters w2 and s2, logname2, and name1 and name2
 args=`cat compare_DA_args`
@@ -90,7 +99,7 @@ do
     then
       rm -f ${myname}.${j}.stable1
       touch ${myname}.${j}.stable1
-      awk -f stable.awk "$w1/${myname1}.$j" > ${myname}.${j}.stable1
+      awk -f ${SCRIPTDIR}/stable.awk "$w1/${myname1}.$j" > ${myname}.${j}.stable1
     else
 
 #MACRO mymess 0 Skipping Angle $j; DAres.${s1}.${sixdesktunes}.${turnse}.$j missing or empty
@@ -112,7 +121,7 @@ do
     then
       rm -f "${myname}.${j}.stable2"
       touch "${myname}.${j}.stable2"
-      awk -f stable.awk "$w2/${myname2}.$j" > ${myname}.${j}.stable2
+      awk -f ${SCRIPTDIR}/stable.awk "$w2/${myname2}.$j" > ${myname}.${j}.stable2
     else
 
 #MACRO mymess 0 Skipping Angle $j; DAres.${s2}.${sixdesktunes}.${turnse}.$j missing or empty
@@ -129,7 +138,7 @@ do
       join ${myname}.${j}.stable1 ${myname}.${j}.stable2 > ${myname}.${j}.tmp
       rm ${myname}.${j}.stable1 
       rm ${myname}.${j}.stable2
-      awk -f stable2.awk ${myname}.${j}.tmp > ${myname}.${j}.stable
+      awk -f ${SCRIPTDIR}/stable2.awk ${myname}.${j}.tmp > ${myname}.${j}.stable
       ln -sf ${myname}.${j}.stable ${nickname}.${j}.stable
       rm ${myname}.${j}.tmp
     fi

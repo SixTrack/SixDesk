@@ -3,7 +3,16 @@
 # Actually compare_results for current LHCDescrip 
 # but with $# = 0 for dot_env
 #
-. ./dot_env
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
 args=`cat compare_results_args`
 arg1=`echo "$args" | cut -d" " -f1`
 arg2=`echo "$args" | cut -d" " -f2`
