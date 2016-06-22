@@ -86,9 +86,12 @@ update_cases()
 # ------------------------------------------------------------------------------
 # preliminary to any action
 # ------------------------------------------------------------------------------
-# - get path to calling script and normalise it
-SCRIPTDIR=`dirname $0`
-SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# - get path to scripts (normalised)
+if [ -z "${SCRIPTDIR}" ] ; then
+    SCRIPTDIR=`dirname $0`
+    SCRIPTDIR="`cd ${SCRIPTDIR};pwd`"
+    export SCRIPTDIR=`dirname ${SCRIPTDIR}`
+fi
 # ------------------------------------------------------------------------------
 
 #
@@ -673,7 +676,7 @@ do
             cp old.10 $diffs/fort.20
             cp fort.10 $diffs/fort.21
             cd $diffs
-            ${SCRIPTDIR}/verify10 | grep DIFF > diffs
+            ${SCRIPTDIR}/fortran/verify10.exe | grep DIFF > diffs
             stat=$?
             cd ..
             if test $stat -ne 0
@@ -741,7 +744,7 @@ do
                 ln -sf old.10 fort.20
                 ln -sf fort.10 fort.21
 #               ${SCRIPTDIR}/checktens > $tmp
-                ${SCRIPTDIR}/verify10 > $tmp
+                ${SCRIPTDIR}/fortan/verify10.exe > $tmp
                 vermess=`grep "VERSION" $tmp`
 
 #MACRO mymess 1 fort.10 check $vermess
@@ -1105,7 +1108,7 @@ do
                     cp ../fort.10 $diffs/fort.20
                     cp fort.10 $diffs/fort.21
                     cd $diffs
-                    ${SCRIPTDIR}/verify10 > diffs
+                    ${SCRIPTDIR}/fortran/verify10.exe > diffs
                     stat=$?
                     cd ..
                     if test $stat -ne 0 

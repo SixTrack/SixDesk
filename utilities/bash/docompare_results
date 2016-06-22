@@ -7,9 +7,12 @@
 # ------------------------------------------------------------------------------
 # preliminary to any action
 # ------------------------------------------------------------------------------
-# - get path to calling script and normalise it
-SCRIPTDIR=`dirname $0`
-SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# - get path to scripts (normalised)
+if [ -z "${SCRIPTDIR}" ] ; then
+    SCRIPTDIR=`dirname $0`
+    SCRIPTDIR="`cd ${SCRIPTDIR};pwd`"
+    export SCRIPTDIR=`dirname ${SCRIPTDIR}`
+fi
 # ------------------------------------------------------------------------------
 
 source ${SCRIPTDIR}/dot_env
@@ -95,7 +98,7 @@ do
       cd $tmp
       ln -sf here fort.20
       ln -sf there fort.21
-      ${SCRIPTDIR}/verify1059 > tens
+      ${SCRIPTDIR}/fortran/verify1059.exe > tens
       rm fort.20 fort.21
       cd $sixdeskhome
       grep 'DIFF' $tmp/tens > /dev/null 2>&1

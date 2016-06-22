@@ -4,9 +4,12 @@
 # ------------------------------------------------------------------------------
 # preliminary to any action
 # ------------------------------------------------------------------------------
-# - get path to calling script and normalise it
-SCRIPTDIR=`dirname $0`
-SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# - get path to scripts (normalised)
+if [ -z "${SCRIPTDIR}" ] ; then
+    SCRIPTDIR=`dirname $0`
+    SCRIPTDIR="`cd ${SCRIPTDIR};pwd`"
+    export SCRIPTDIR=`dirname ${SCRIPTDIR}`
+fi
 # ------------------------------------------------------------------------------
 
 diff --brief $sixdeskstudy/sixdeskenv sixdeskenv > /dev/null
