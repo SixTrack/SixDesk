@@ -1,0 +1,24 @@
+#!/bin/bash
+#
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
+declare -a bfiles
+declare -a bforts
+#bnlfiles="title.dat beambeam-output.dat beambeam-lostID.dat SixTwiss.dat checkdist.dat"
+#bnlforts="fort.10 fort.52 fort.53 fort.51 fort.97"
+source ${SCRIPTDIR}/dot_env
+bfiles=($bnlfiles)
+bforts=($bnlforts)
+
+for i in 0 1 2 3 4
+do
+  echo "File: ${bfiles[$i]} Fort: ${bforts[$i]}"
+done

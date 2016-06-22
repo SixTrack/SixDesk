@@ -1,6 +1,15 @@
-#!/bin/ksh
+#!/bin/bash
 #
-. ./dot_env
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
 if test "$BNL" = ""
 then
 
@@ -385,13 +394,13 @@ do
         chmod 755 $sixdeskjobs_logs/"$Runnam".lsf
         sixdeskRunnam="$Runnam"
         sixdeskRundir="$Rundir"
-        . ./dot_bsub $Runnam $Rundir
+        source ${SCRIPTDIR}/dot_bsub $Runnam $Rundir
       elif test "$sixdeskplatform" = "cpss"
       then
         # The 3rd param 0 means only if not submitted already
         sixdeskRunnam="$Runnam"
         sixdeskRundir="$Rundir"
-        . ./dot_task
+        source ${SCRIPTDIR}/dot_task
       elif test "$sixdeskplatform" = "grid"
       then
         # Create $Runnam.grid in $sixdeskwork/$Runnam
@@ -425,7 +434,7 @@ do
         # The 3rd param 0 means only if not submitted already
         sixdeskRunnam="$Runnam"
         sixdeskRundir="$Rundir"
-        . ./dot_boinc
+        source ${SCRIPTDIR}/dot_boinc
       else
         # Should be impossible
 

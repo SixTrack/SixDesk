@@ -1,11 +1,20 @@
-#!/bin/ksh
+#!/bin/bash
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
 #
 # This script should be run before run_bnl which submits
 # the jobs or tasks or workunits
 # sixdeskenv (sysenv) should have been edited and
 # the files beambeamdist.dat, fort.2, fort.3.mother,
 # fort.8, and fort.16 put in the directory (link) sixtrack_input
-. ./dot_env
+source ${SCRIPTDIR}/dot_env
 if test "$BNL" = ""
 then
 
@@ -14,7 +23,6 @@ then
   sixdeskmess="Something up!! prepare_bnl expects BNL $BNL"
   sixdeskmess
 #MACRO mymess
- to be set
 fi
 dir16=$sixtrack_input
 

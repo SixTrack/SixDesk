@@ -1,11 +1,20 @@
-#!/bin/ksh
+#!/bin/bash
 #
 # This script should be run after (all) results are available.
 # It looks for all the beambeam-output.dat files (and beambeam-lostID.dat)
 # and sums up the variables in the correct under to provide a repeatable
 # result. The summation is done in fortran, with the lf95 compiler, using
 # the same compile options as SixTrack itself.
-. ./dot_env
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
 if test "$BNL" = ""
 then
 

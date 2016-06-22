@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Special run_results for BNL
 # See if we have any results and download them
 # uses a lock on the Study
@@ -83,7 +83,16 @@ update_cases()
 }
 # If called with a Study ($1) and a Platform ($2)
 # we now use dot_env 
-. ./dot_env
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
 # and now we can define our arrays
 # Declare our new BNL arrays
 declare -a bfiles
@@ -302,7 +311,7 @@ then
   sixdeskresults=$sixdesktmp
 #MACRO mymktmp
 
-  awk -f $sixdeskpath/scripts/remover $tmp > $sixdeskresults
+  awk -f ${SCRIPTDIR}/remover $tmp > $sixdeskresults
   rm $tmp
   tot=`grep TotalTasks $sixdeskresults | sed -e 's/TotalTasks: *//'`
   ready=`grep ResultsReady $sixdeskresults | sed -e 's/ResultsReady: *//'`
@@ -325,7 +334,7 @@ then
 #MACRO mymktmp
 
   echo "$tasks" > $sixdesktasks
-  awk -f $sixdeskpath/scripts/splitter $sixdesktasks > $sixdesktasklist
+  awk -f ${SCRIPTDIR}/splitter $sixdesktasks > $sixdesktasklist
   rm $sixdesktasks 
 elif test $sixdeskplatform = "boinc"
 then
@@ -396,7 +405,7 @@ then
   sixdeskresults=$sixdesktmp
 #MACRO mymktmp
 
-  sed -f sedboincnames $tmp > $sixdeskresults
+  sed -f ${SCRIPTDIR}/sedboincnames $tmp > $sixdeskresults
   rm $tmp
   ready=`wc -l $sixdeskresults`
   ready=`echo $ready | sed -e 's? *\([0-9]*\).*?\1?'`
@@ -621,7 +630,7 @@ do
         if test "$found" = "true"
         then
           mkdir -p sixtrack
-          awk -f $sixdeskpath/scripts/remover $sixdeskboincdir/results/$workspace"_"$boincRunnam"_1_sixvf_"$taskid > sixtrack/fort.10
+          awk -f ${SCRIPTDIR}/remover $sixdeskboincdir/results/$workspace"_"$boincRunnam"_1_sixvf_"$taskid > sixtrack/fort.10
 #Eric BOINC marker
           cd sixtrack
 
@@ -898,7 +907,7 @@ do
                   file $myfil | egrep "CRLF" > /dev/null 2>&1
                   if test $? -eq 0
                   then
-                    awk -f $sixdeskpath/scripts/remover $myfil > $tmp
+                    awk -f ${SCRIPTDIR}/remover $myfil > $tmp
                     mv $tmp $myfil
                   fi
                 fi
