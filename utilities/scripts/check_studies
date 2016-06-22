@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # A script to try and check letter to study mapping
 # and the executable used.
 #
