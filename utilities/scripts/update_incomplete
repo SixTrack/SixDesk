@@ -1,8 +1,17 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Update incomplete_cases, in case of overlap or manual intervention
 #
-. ./dot_env
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
 if test -s $sixdeskstudy/sixdesklock
 then
   if test ! -w $sixdeskstudy/sixdesklock

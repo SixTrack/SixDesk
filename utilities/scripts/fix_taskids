@@ -1,6 +1,16 @@
-#!/bin/ksh
+#!/bin/bash
 #
-. ./dot_env
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
+
 dir16=$sixtrack_input
 
 #MACRO mymess 2 Using sixtrack_input $dir16
@@ -25,7 +35,7 @@ then
 #MACRO myexit
 
 fi
-./check_mad6t
+${SCRIPTDIR}/check_mad6t
 if test $? -ne 0
 then
 

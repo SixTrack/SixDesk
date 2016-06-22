@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # See if we have any results and download them
 # uses a lock on the Study
@@ -82,10 +82,19 @@ update_cases()
 #MACRO mymess
 
 }
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
 #
 # Even if called with a Study ($1) and a Platform ($2)
 # we can now use dot_env
-. ./dot_env
+source ${SCRIPTDIR}/dot_env
 if test -s $sixdeskstudy/sixdesklock
 then
   if test ! -w $sixdeskstudy/sixdesklock
@@ -343,7 +352,7 @@ then
   sixdeskresults=$sixdesktmp
 #MACRO mymktmp
 
-  awk -f $sixdeskpath/scripts/remover $tmp > $sixdeskresults
+  awk -f ${SCRIPTDIR}/remover $tmp > $sixdeskresults
   rm $tmp
   tot=`grep TotalTasks $sixdeskresults | sed -e 's/TotalTasks: *//'`
   ready=`grep ResultsReady $sixdeskresults | sed -e 's/ResultsReady: *//'`
@@ -366,7 +375,7 @@ then
 #MACRO mymktmp
 
   echo "$tasks" > $sixdesktasks
-  awk -f $sixdeskpath/scripts/splitter $sixdesktasks > $sixdesktasklist
+  awk -f ${SCRIPTDIR}/splitter $sixdesktasks > $sixdesktasklist
   rm $sixdesktasks 
 elif test $sixdeskplatform = "boinc"
 then
@@ -437,7 +446,7 @@ then
   sixdeskresults=$sixdesktmp
 #MACRO mymktmp
 
-  sed -f sedboincnames $tmp > $sixdeskresults
+  sed -f ${SCRIPTDIR}/sedboincnames $tmp > $sixdeskresults
   rm $tmp
   ready=`wc -l $sixdeskresults`
   ready=`echo $ready | sed -e 's? *\([0-9]*\).*?\1?'`
@@ -664,7 +673,7 @@ do
         if test "$found" = "true"
         then
           mkdir -p sixtrack
-          awk -f $sixdeskpath/scripts/remover $sixdeskboincdir/results/$workspace"_"$boincRunnam"_1_sixvf_"$taskid > sixtrack/fort.10
+          awk -f ${SCRIPTDIR}/remover $sixdeskboincdir/results/$workspace"_"$boincRunnam"_1_sixvf_"$taskid > sixtrack/fort.10
           cd sixtrack
           if test -s ../fort.10.gz
           then
@@ -750,7 +759,7 @@ do
               else
                 ln -sf old.10 fort.20
                 ln -sf fort.10 fort.21
-#               $sixdeskpath/scripts/mychecktens > $tmp
+#               ${SCRIPTDIR}/checktens > $tmp
                 $sixdeskpath/scripts/verify10 > $tmp
                 vermess=`grep "VERSION" $tmp`
 
@@ -1016,7 +1025,7 @@ do
                   file $myfil | egrep "CRLF" > /dev/null 2>&1
                   if test $? -ne 0
                   then
-                    awk -f $sixdeskpath/scripts/remover $myfil > $tmp
+                    awk -f ${SCRIPTDIR}/remover $myfil > $tmp
                     mv $tmp $myfil
                   fi
                 fi

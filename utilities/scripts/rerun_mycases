@@ -1,7 +1,19 @@
-#!/bin/sh
+#!/bin/bash
 #
-# This script will (re-)submit problem cases in work/problem_cases
-. ./dot_env
+# This script will re-submit tasks
+# It uses the taskids file to get relevant info
+# Runnam Rundir (relative to $sixdeskdata)
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
+
 if test $sixdeskplatform = "lsf"
 then
   echo "This command is NOT available for LSF"
@@ -18,42 +30,30 @@ sixdesklockdir=$sixdeskstudy
 sixdesklock
 #MACRO mylock
 
-mkdir -p $sixdeskjobs
 
-#MACRO mymktmp copy $sixdeskjobs
-sixdesktmpname=copy
-sixdesktmpdirarg=$sixdeskjobs
+#MACRO mymktmp mytaskids 
+sixdesktmpname=mytaskids
+sixdesktmpdirarg=
 sixdeskmktmp
-copy=$sixdesktmp
+mytaskids=$sixdesktmp
 #MACRO mymktmp
 
-cp $sixdeskwork/problem_cases $copy
+
+#MACRO mylock $sixdeskwork
+###sixdesklockdir=$sixdeskwork
+###sixdesklock
+#MACRO mylock
+
+cp $sixdeskwork/mytaskids $mytaskids 
+
+#MACRO myunlock $sixdeskwork
+###sixdesklockdir=$sixdeskwork
+###sixdeskunlock
+#MACRO myunlock
+
 while read line
 do
   sixdeskRunnam=`echo $line | cut -d" " -f1`
-  entry=`grep "$sixdeskRunnam " $sixdeskwork/taskids`
-  if test "$entry" = ""
-  then
-
-#MACRO mymess 0 Something badly wrong!!! We cannot find $sixdeskRunnam in $sixdeskwork/taskids
-    sixdeskmesslevel=0
-    sixdeskmess="Something badly wrong!!! We cannot find $sixdeskRunnam in $sixdeskwork/taskids"
-    sixdeskmess
-#MACRO mymess
-
-
-#MACRO myunlock $sixdeskstudy
-    sixdesklockdir=$sixdeskstudy
-    sixdeskunlock
-#MACRO myunlock
-
-
-#MACRO myexit 1
-    sixdeskexitparam=1
-    sixdeskexit
-#MACRO myexit
-
-  fi
 
 #MACRO myrundir $sixdeskRunnam sixdeskRundir
   runnamename=$sixdeskRunnam
@@ -73,37 +73,24 @@ do
 #MACRO mymess
 
 
-#MACRO myunlock $sixdeskstudy
-    sixdesklockdir=$sixdeskstudy
-    sixdeskunlock
-#MACRO myunlock
-
-
 #MACRO myexit 2
     sixdeskexitparam=2
     sixdeskexit
 #MACRO myexit
 
   fi
-
-#MACRO mymess 1 Problem case $taskids for $sixdeskRunnam
-  sixdeskmesslevel=1
-  sixdeskmess="Problem case $taskids for $sixdeskRunnam"
-  sixdeskmess
-#MACRO mymess
-
   export sixdeskforce=2 
   if test "$sixdeskplatform" = "cpss"
   then
-    . ./dot_task
+    source ${SCRIPTDIR}/dot_task
     stat=$?
   elif test "$sixdeskplatform" = "boinc"
   then
-    . ./dot_boinc
+    source ${SCRIPTDIR}/dot_boinc
     stat=$?
   elif test "$sixdeskplatform" = "grid"
   then
-    . ./dot_grid
+    source ${SCRIPTDIR}/dot_grid
     stat=$?
   fi
   if test $stat -ne 0
@@ -122,20 +109,20 @@ do
 #MACRO myexit
 
   fi
-done < $copy
-rm $copy
+done < $mytaskids
+rm $mytaskids
+
+#MACRO mymess 0 Appears to have finished normally
+sixdeskmesslevel=0
+sixdeskmess="Appears to have finished normally"
+sixdeskmess
+#MACRO mymess
+
 
 #MACRO myunlock $sixdeskstudy
 sixdesklockdir=$sixdeskstudy
 sixdeskunlock
 #MACRO myunlock
-
-
-#MACRO mymess 0 Completed normally
-sixdeskmesslevel=0
-sixdeskmess="Completed normally"
-sixdeskmess
-#MACRO mymess
 
 
 #MACRO myexit 0

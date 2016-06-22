@@ -1,8 +1,17 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Delete all the fort.10s etc for the failing cases
 #
-. ./dot_env
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/dot_env
 
 #MACRO mylock $sixdeskstudy
 sixdesklockdir=$sixdeskstudy
@@ -119,7 +128,7 @@ do
       fi
       if test -s fort.21
       then
-        $sixdeskpath/scripts/checktens
+        ${SCRIPTDIR}/checktens
       else
         echo "Second fort.10 is empty!!"
       fi

@@ -1,8 +1,17 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Delete all failed Results in sixdeskerror.log (by TaskId)
 #
-. ./dot_env
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+source ${SCIRPTDIR}/dot_env
 
 #MACRO mylock $sixdeskstudy
 sixdesklockdir=$sixdeskstudy
