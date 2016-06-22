@@ -333,7 +333,7 @@ then
   sixdeskresults=$sixdesktmp
 #MACRO mymktmp
 
-  awk -f $sixdeskpath/scripts/remover $tmp > $sixdeskresults
+  awk -f ${SCRIPTDIR}/remover $tmp > $sixdeskresults
   rm $tmp
   tot=`grep TotalTasks $sixdeskresults | sed -e 's/TotalTasks: *//'`
   ready=`grep ResultsReady $sixdeskresults | sed -e 's/ResultsReady: *//'`
@@ -356,7 +356,7 @@ then
 #MACRO mymktmp
 
   echo "$tasks" > $sixdesktasks
-  awk -f $sixdeskpath/scripts/splitter $sixdesktasks > $sixdesktasklist
+  awk -f ${SCRIPTDIR}/splitter $sixdesktasks > $sixdesktasklist
   rm $sixdesktasks 
 elif test $sixdeskplatform = "boinc"
 then
@@ -654,7 +654,7 @@ do
         if test "$found" = "true"
         then
           mkdir -p sixtrack
-          awk -f $sixdeskpath/scripts/remover $sixdeskboincdir/results/$workspace"_"$boincRunnam"_1_sixvf_"$taskid > sixtrack/fort.10
+          awk -f ${SCRIPTDIR}/remover $sixdeskboincdir/results/$workspace"_"$boincRunnam"_1_sixvf_"$taskid > sixtrack/fort.10
           cd sixtrack
           if test -s ../fort.10.gz
           then
@@ -673,7 +673,7 @@ do
             cp old.10 $diffs/fort.20
             cp fort.10 $diffs/fort.21
             cd $diffs
-            $sixdeskpath/scripts/verify10 | grep DIFF > diffs
+            ${SCRIPTDIR}/verify10 | grep DIFF > diffs
             stat=$?
             cd ..
             if test $stat -ne 0
@@ -740,8 +740,8 @@ do
               else
                 ln -sf old.10 fort.20
                 ln -sf fort.10 fort.21
-#               $sixdeskpath/scripts/mychecktens > $tmp
-                $sixdeskpath/scripts/verify10 > $tmp
+#               ${SCRIPTDIR}/checktens > $tmp
+                ${SCRIPTDIR}/verify10 > $tmp
                 vermess=`grep "VERSION" $tmp`
 
 #MACRO mymess 1 fort.10 check $vermess
@@ -1006,7 +1006,7 @@ do
                   file $myfil | egrep "CRLF" > /dev/null 2>&1
                   if test $? -ne 0
                   then
-                    awk -f $sixdeskpath/scripts/remover $myfil > $tmp
+                    awk -f ${SCRIPTDIR}/remover $myfil > $tmp
                     mv $tmp $myfil
                   fi
                 fi
@@ -1105,7 +1105,7 @@ do
                     cp ../fort.10 $diffs/fort.20
                     cp fort.10 $diffs/fort.21
                     cd $diffs
-                    $sixdeskpath/scripts/verify10 > diffs
+                    ${SCRIPTDIR}/verify10 > diffs
                     stat=$?
                     cd ..
                     if test $stat -ne 0 

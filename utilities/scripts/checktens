@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Split and compare two fort.10s to stdout
 #
 /afs/cern.ch/user/m/mcintosh/bin/check10 

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Actually compare_results for current LHCDescrip 
 # but with $# = 0 for dot_env
@@ -95,7 +95,7 @@ do
       cd $tmp
       ln -sf here fort.20
       ln -sf there fort.21
-      $sixdeskpath/scripts/verify1059 > tens
+      ${SCRIPTDIR}/verify1059 > tens
       rm fort.20 fort.21
       cd $sixdeskhome
       grep 'DIFF' $tmp/tens > /dev/null 2>&1

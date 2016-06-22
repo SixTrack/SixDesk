@@ -496,7 +496,7 @@ then
 
     fi
     # remove the \r's............
-    awk -f $sixdeskpath/scripts/remover $tmp > $results
+    awk -f ${SCRIPTDIR}/remover $tmp > $results
     rm $tmp
     tot=`grep TotalTasks $results | sed -e 's/TotalTasks: *//'`
     ready=`grep ResultsReady $results | sed -e 's/ResultsReady: *//'`

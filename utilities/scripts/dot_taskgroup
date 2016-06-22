@@ -4,6 +4,15 @@
 # It keeps a record/log in sixdeskhome/TaskGroups so that they
 # can be re-created if accidentally deleted.
 
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to calling script and normalise it
+SCRIPTDIR=`dirname $0`
+SCRIPTDIR="`cd "${SCRIPTDIR}";pwd`"
+# ------------------------------------------------------------------------------
+
+
 #MACRO mymess 0 Uploading the Program $sixdeskFileName to $sixdeskTargetFileName
 sixdeskmesslevel=0
 sixdeskmess="Uploading the Program $sixdeskFileName to $sixdeskTargetFileName"
@@ -22,7 +31,7 @@ sixdeskmktmp
 tmp=$sixdesktmp
 #MACRO mymktmp
 
-awk -f $sixdeskpath/scripts/remover $sixdeskstudy/ProgramId > $tmp
+awk -f ${SCRIPTDIR}/remover $sixdeskstudy/ProgramId > $tmp
 mv $tmp $sixdeskstudy/ProgramId
 if test $sixdeskstat -ne 0
 then
@@ -106,7 +115,7 @@ else
   perl $sixdeskpath/Bin/createTaskGroup.pl "$sixdeskTaskGroupName" "$sixdeskDescription" "$sixdeskProgramId" "$sixdeskStatus" "$sixdeskPriority" "$sixdeskComments" > $tmpg 2>&1
   sixdeskstat=$?
   # get rid of \r if any....I saw it once at least!
-  awk -f $sixdeskpath/scripts/remover $tmpg > $sixdeskstudy/TaskGroupId
+  awk -f ${SCRIPTDIR}/remover $tmpg > $sixdeskstudy/TaskGroupId
   if test $sixdeskstat -ne 0
   then
 
