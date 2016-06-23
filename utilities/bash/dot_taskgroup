@@ -23,7 +23,7 @@ sixdeskmess
 #MACRO mymess
 
 echo "Perl uploadProgram" "$sixdeskProgramName" "$sixdeskFileName" "$sixdeskTargetFileName" "$sixdeskVersion" "$sixdeskAuthor" "$sixdeskDescription"
-perl $sixdeskpath/Bin/uploadProgram.pl "$sixdeskProgramName" "$sixdeskFileName" "$sixdeskTargetFileName" "$sixdeskVersion" "$sixdeskAuthor" "$sixdeskDescription" > $sixdeskstudy/ProgramId 2>&1
+perl ${SCRIPTDIR}/perl/uploadProgram.pl "$sixdeskProgramName" "$sixdeskFileName" "$sixdeskTargetFileName" "$sixdeskVersion" "$sixdeskAuthor" "$sixdeskDescription" > $sixdeskstudy/ProgramId 2>&1
 sixdeskstat=$?
 # get rid of \r if any............
 
@@ -115,7 +115,7 @@ else
 #MACRO mymktmp
 
   echo "Perl createTaskGroup" "$sixdeskTaskGroupName" "$sixdeskDescription" "$sixdeskProgramId" "$sixdeskStatus" "$sixdeskPriority" "$sixdeskComments"
-  perl $sixdeskpath/Bin/createTaskGroup.pl "$sixdeskTaskGroupName" "$sixdeskDescription" "$sixdeskProgramId" "$sixdeskStatus" "$sixdeskPriority" "$sixdeskComments" > $tmpg 2>&1
+  perl ${SCRIPTDIR}/perl/createTaskGroup.pl "$sixdeskTaskGroupName" "$sixdeskDescription" "$sixdeskProgramId" "$sixdeskStatus" "$sixdeskPriority" "$sixdeskComments" > $tmpg 2>&1
   sixdeskstat=$?
   # get rid of \r if any....I saw it once at least!
   awk -f ${SCRIPTDIR}/remover $tmpg > $sixdeskstudy/TaskGroupId

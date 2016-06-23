@@ -479,7 +479,7 @@ then
     results=$sixdesktmp
 #MACRO mymktmp
 
-    perl $sixdeskpath/Bin/queryReadyResults.pl $mysixdesktgid > $tmp
+    perl ${SCRIPTDIR}/perl/queryReadyResults.pl $mysixdesktgid > $tmp
     stat=$?
     if test $stat -ne 0
     then

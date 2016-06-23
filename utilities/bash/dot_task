@@ -233,7 +233,7 @@ then
   do
     mytries=`expr $mytries + 1`
     echo "Perl uploadTask" "$sixdeskTaskName" "$sixdeskTaskGroupId" "$sixdeskProgramId" "$sixdeskfileDir" "$sixdeskPriority" "$sixdeskOsMin" "$sixdeskOsMax" "$sixdeskCpuSpeedMin" "$sixdeskcr" "$sixdeskclientv" "$sixdeskout"
-    perl $sixdeskpath/Bin/uploadTask.pl "$sixdeskTaskName" "$sixdeskTaskGroupId" "$sixdeskProgramId" "$sixdeskfileDir" "$sixdeskPriority" "$sixdeskOsMin" "$sixdeskOsMax" "$sixdeskCpuSpeedMin" "$sixdeskcr" "$sixdeskclientv" "$sixdeskout" > $tmp 2>&1
+    perl ${SCRIPTDIR}/perl/uploadTask.pl "$sixdeskTaskName" "$sixdeskTaskGroupId" "$sixdeskProgramId" "$sixdeskfileDir" "$sixdeskPriority" "$sixdeskOsMin" "$sixdeskOsMax" "$sixdeskCpuSpeedMin" "$sixdeskcr" "$sixdeskclientv" "$sixdeskout" > $tmp 2>&1
     sixdeskstat=$?
     if test $sixdeskstat -ne 0
     then

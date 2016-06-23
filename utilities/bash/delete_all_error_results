@@ -66,7 +66,7 @@ do
     tmp=$sixdesktmp
 #MACRO mymktmp
 
-    perl $sixdeskpath/Bin/confirmResultDownload.pl $ntaskid > $tmp 2>&1
+    perl ${SCRIPTDIR}/perl/confirmResultDownload.pl $ntaskid > $tmp 2>&1
     stat=$?
     if test $stat -ne 0
     then
@@ -80,7 +80,7 @@ do
     fi
     rm $tmp
     mymess="Deleting task $taskid in $mytgid from the server"
-    perl $sixdeskpath/Bin/deleteTask.pl $ntaskid $mytgid > $tmp 2>&1
+    perl ${SCRIPTDIR}/perl/deleteTask.pl $ntaskid $mytgid > $tmp 2>&1
     stat=$? 
     if test $stat -ne 0
     then

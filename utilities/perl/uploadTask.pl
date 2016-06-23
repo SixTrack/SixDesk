@@ -1,7 +1,8 @@
 
 use strict;
 use FindBin;
-use lib ("$FindBin::/afs/cern.ch/user/m/mcintosh/sixdesk/slap/Bin/perllib");
+$ScriptDir=$env{'SCRIPTDIR'};
+use lib ("$FindBin::$ScriptDir/perl/lib");
 
 use TaskHandler;
 
@@ -17,8 +18,8 @@ if ($#ARGV != 10)
   exit(2);
 }
 
-my $batDir = '/afs/cern.ch/user/m/mcintosh/sixdesk/slap/bats';
-my $exeDir = '/afs/cern.ch/user/m/mcintosh/sixdesk/slap/exes';
+my $batDir = '$ScriptDir/bats';
+my $exeDir = '$ScriptDir/exes';
 
 my $TaskName = $ARGV[0];
 my $TaskGroupId = $ARGV[1];

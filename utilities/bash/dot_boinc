@@ -203,8 +203,7 @@ then
 
 #      uploadWU uses workunitName=$1\_$2\_$3\_$5
 
-###  $sixdeskpath/Bin/uploadWorkunit_many $sixdeskTaskName 1 sixvf $sixdeskjobs_logs/run $sixdesktaskid $sixdeskfpopse $sixdeskboincdir > $tmp 2>&1
-     $sixdeskpath/Bin/uploadWorkunit $sixdeskTaskName 1 sixvf $sixdeskjobs_logs/run $sixdesktaskid $sixdeskfpopse $sixdeskboincdir > $tmp 2>&1
+     ${SCRIPTDIR}/bash/uploadWorkunit $sixdeskTaskName 1 sixvf $sixdeskjobs_logs/run $sixdesktaskid $sixdeskfpopse $sixdeskboincdir > $tmp 2>&1
       sixdeskstat=$?
       if test $sixdeskstat -ne 0
       then

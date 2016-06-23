@@ -51,7 +51,7 @@ do
   sixdeskmess
 #MACRO mymess
 
-  perl $sixdeskpath/Bin/deleteTask.pl $ntaskid $mytgid > $tmp 2>&1
+  perl ${SCRIPTDIR}/perl/deleteTask.pl $ntaskid $mytgid > $tmp 2>&1
   stat=$? 
   if test $stat -ne 0
   then

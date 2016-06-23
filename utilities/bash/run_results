@@ -301,7 +301,7 @@ then
   sixdeskmess
 #MACRO mymess
 
-  perl $sixdeskpath/Bin/queryReadyResults.pl $mytgid > $tmp
+  perl ${SCRIPTDIR}/perl/queryReadyResults.pl $mytgid > $tmp
   stat=$?
   if test $stat -ne 0
   then
@@ -634,7 +634,7 @@ do
       cd $where
       if test $sixdeskplatform = "cpss"
       then
-        perl $sixdeskpath/Bin/downloadResult.pl $mytgid $ntaskid > down 2>&1
+        perl ${SCRIPTDIR}/perl/downloadResult.pl $mytgid $ntaskid > down 2>&1
         stat=$?
       elif test $sixdeskplatform = "boinc"
       then
@@ -1535,7 +1535,7 @@ do
       sixdeskmess
 #MACRO mymess
 
-      perl $sixdeskpath/Bin/confirmResultDownload.pl $ntaskid > $tmp 2>&1
+      perl ${SCRIPTDIR}/perl/confirmResultDownload.pl $ntaskid > $tmp 2>&1
       stat=$?
       if test $stat -ne 0
       then

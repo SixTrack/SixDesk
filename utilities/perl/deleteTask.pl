@@ -1,7 +1,8 @@
 
 use strict;
 use FindBin;
-use lib ("$FindBin::Bin/perllib");
+$ScriptDir=$env{'SCRIPTDIR'};
+use lib ("$FindBin::$ScriptDir/perl/lib");
 
 use TaskHandler;
 
