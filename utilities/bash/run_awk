@@ -77,7 +77,7 @@ do
 
     if test -s "DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
     then
-      awk -f ${SCRIPTDIR}/minav.awk "DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
+      awk -f ${SCRIPTDIR}/awk/minav.awk "DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
     else
 
 #MACRO mymess 0 Skipping Angle $j; DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j missing or empty

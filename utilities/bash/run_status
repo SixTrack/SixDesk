@@ -499,7 +499,7 @@ then
 
     fi
     # remove the \r's............
-    awk -f ${SCRIPTDIR}/remover $tmp > $results
+    awk -f ${SCRIPTDIR}/awk/remover.awk $tmp > $results
     rm $tmp
     tot=`grep TotalTasks $results | sed -e 's/TotalTasks: *//'`
     ready=`grep ResultsReady $results | sed -e 's/ResultsReady: *//'`

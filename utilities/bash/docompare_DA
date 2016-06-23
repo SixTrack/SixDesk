@@ -102,7 +102,7 @@ do
     then
       rm -f ${myname}.${j}.stable1
       touch ${myname}.${j}.stable1
-      awk -f ${SCRIPTDIR}/stable.awk "$w1/${myname1}.$j" > ${myname}.${j}.stable1
+      awk -f ${SCRIPTDIR}/awk/stable.awk "$w1/${myname1}.$j" > ${myname}.${j}.stable1
     else
 
 #MACRO mymess 0 Skipping Angle $j; DAres.${s1}.${sixdesktunes}.${turnse}.$j missing or empty
@@ -124,7 +124,7 @@ do
     then
       rm -f "${myname}.${j}.stable2"
       touch "${myname}.${j}.stable2"
-      awk -f ${SCRIPTDIR}/stable.awk "$w2/${myname2}.$j" > ${myname}.${j}.stable2
+      awk -f ${SCRIPTDIR}/awk/stable.awk "$w2/${myname2}.$j" > ${myname}.${j}.stable2
     else
 
 #MACRO mymess 0 Skipping Angle $j; DAres.${s2}.${sixdesktunes}.${turnse}.$j missing or empty
@@ -141,7 +141,7 @@ do
       join ${myname}.${j}.stable1 ${myname}.${j}.stable2 > ${myname}.${j}.tmp
       rm ${myname}.${j}.stable1 
       rm ${myname}.${j}.stable2
-      awk -f ${SCRIPTDIR}/stable2.awk ${myname}.${j}.tmp > ${myname}.${j}.stable
+      awk -f ${SCRIPTDIR}/awk/stable2.awk ${myname}.${j}.tmp > ${myname}.${j}.stable
       ln -sf ${myname}.${j}.stable ${nickname}.${j}.stable
       rm ${myname}.${j}.tmp
     fi
