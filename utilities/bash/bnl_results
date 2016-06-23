@@ -28,14 +28,14 @@ update_cases()
   cat $sixdeskwork/mycompleted_cases $sixdeskwork/completed_this_run > $newccases
   sort --unique $newccases > $sixdeskwork/mycompleted_cases
   rm $newccases
-  rm -f $sixdeskwork/sedscript
-  touch $sixdeskwork/sedscript
+  rm -f $sixdeskwork/sedscript.sed
+  touch $sixdeskwork/sedscript.sed
   while read mycase
   do
   #make a sed script
-    echo '/^'$mycase'$/d' >> $sixdeskwork/sedscript
+    echo '/^'$mycase'$/d' >> $sixdeskwork/sedscript.sed
   done < $sixdeskwork/completed_this_run
-  sed -f $sixdeskwork/sedscript $sixdeskwork/myincomplete_cases > $newicases
+  sed -f $sixdeskwork/sedscript.sed $sixdeskwork/myincomplete_cases > $newicases
   cp $newicases $sixdeskwork/myincomplete_cases
   rm -f $newicases
   rm -f $sixdeskwork/completed_this_run
@@ -408,7 +408,7 @@ then
   sixdeskresults=$sixdesktmp
 #MACRO mymktmp
 
-  sed -f ${SCRIPTDIR}/sedboincnames $tmp > $sixdeskresults
+  sed -f ${SCRIPTDIR}/sed/boincnames.sed $tmp > $sixdeskresults
   rm $tmp
   ready=`wc -l $sixdeskresults`
   ready=`echo $ready | sed -e 's? *\([0-9]*\).*?\1?'`

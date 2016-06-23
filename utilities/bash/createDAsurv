@@ -12,5 +12,5 @@ fi
 # ------------------------------------------------------------------------------
 
 
-pdflatex "\newcommand{\filename}{"$1"} \input{"${SCRIPTDIR}/"DAsurv.tex}"
+pdflatex "\newcommand{\filename}{"$1"} \input{"${SCRIPTDIR}/"tex/DAsurv.tex}"
 rm DAsurv.log DAsurv.aux

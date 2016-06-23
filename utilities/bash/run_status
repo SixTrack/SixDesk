@@ -546,7 +546,7 @@ then
       cd $sixdeskboincdir/results
       find . -name ${workspace}_${LHCDesName}__[0-9]\*__[0-9.]\*_[0-9.]\*__[0-9.]\*_[0-9.]\*__[0-9]\*__[0-9.]\*_1_sixvf_boinc[0-9]\* > $tmp 2> /dev/null
       cd $sixdeskhome
-      ready=`sed -f sedboincnames $tmp | wc -l`
+      ready=`sed -f ${SCRIPTDIR}/sed/boincnames.sed $tmp | wc -l`
       ready=`echo $ready | sed -e 's? *\([0-9]*\).*?\1?'`
 
 #MACRO mymess 2 For BOINC $ready Results are available

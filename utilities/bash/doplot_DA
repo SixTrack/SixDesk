@@ -103,9 +103,9 @@ do
         -e's/%j%/'$j'/g' \
         -e's/%myend%/'$myend'/g' \
         -e's?%mynames%?'$mynames'?g' \
-         ${SCRIPTDIR}/plot1.template > plot1.plot
-    gnuplot < plot1.plot
-    rm plot1.plot
+         ${SCRIPTDIR}/gnu/plot1_template.gp > plot1.gp
+    gnuplot < plot1.gp
+    rm plot1.gp
     rm ${myname}.${j}.stable
     rm ${mynames}.${j}.stable
     mv ${myname}.${j}.eps ${mynames}.${j}.eps
@@ -124,9 +124,9 @@ do
       -e's/%mybegin%/'$mybegin'/g' \
       -e's/%myend%/'$myend'/g' \
       -e's?%mynames%?'$mynames'?g' \
-       ${SCRIPTDIR}/plot2.template > plot2.plot
-  gnuplot < plot2.plot
-  rm plot2.plot
+       ${SCRIPTDIR}/gnu/plot2_template.gp > plot2.gp
+  gnuplot < plot2.gp
+  rm plot2.gp
 # rm ${myname}.sum
   mv ${myname}.${myend}.eps ${mynames}.${myend}.eps
   epstopdf ${mynames}.${myend}.eps 
