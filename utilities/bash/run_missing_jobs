@@ -12,7 +12,7 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 if test $sixdeskplatform != "lsf"
 then
 
@@ -112,7 +112,7 @@ do
 
     cp $sixdesktrack/$sixdeskRundir/$sixdeskRunnam.lsf $sixdeskjobs_logs
     sixdeskforce=2
-    source ${SCRIPTDIR}/dot_bsub
+    source ${SCRIPTDIR}/bash/dot_bsub
   fi
 done < $sixdeskjobs/missing_jobs
 rm -f $sixdeskjobs/missing_jobs

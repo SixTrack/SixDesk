@@ -27,7 +27,7 @@ then
   newenv=$sixdesktmp
 #MACRO mymktmp
 
-  ${SCRIPTDIR}/exec_env sixdeskenv sysenv > $newenv
+  ${SCRIPTDIR}/bash/exec_env sixdeskenv sysenv > $newenv
 
 #MACRO mymktmp oldenv 
   sixdesktmpname=oldenv
@@ -36,7 +36,7 @@ then
   oldenv=$sixdesktmp
 #MACRO mymktmp
 
-  ${SCRIPTDIR}/exec_env $sixdeskstudy/sixdeskenv $sixdeskstudy/sysenv > $oldenv
+  ${SCRIPTDIR}/bash/exec_env $sixdeskstudy/sixdeskenv $sixdeskstudy/sysenv > $oldenv
 
 #MACRO mymess 0 Environment changed for $LHCDescrip
   sixdeskmesslevel=0

@@ -44,4 +44,4 @@ else
 fi
 echo "Calling compare_DA $w2 $s2 $lognam $name1 $name2"
 echo "$w2 $s2 $lognam $name1 $name2" > compare_DA_args
-${SCRIPTDIR}/docompare_DA
+${SCRIPTDIR}/bash/docompare_DA

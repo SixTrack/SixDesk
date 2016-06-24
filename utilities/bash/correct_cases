@@ -13,7 +13,7 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 # Now first report current situation
 
 #MACRO mymess 0 Correcting Study $LHCDescrip

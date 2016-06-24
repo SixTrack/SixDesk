@@ -65,7 +65,7 @@ then
     exit 1
   fi
 fi
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 mysixdesklogdir=$sixdesklogdir
 sixdesklogdir=".."
 # Don't backup a deleted study

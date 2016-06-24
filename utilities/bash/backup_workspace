@@ -60,7 +60,7 @@ fi
 cname=$CASTOR_HOME/workspace_backups
 # Lock the workspace (only one backup at a time)
 # and get the environment for the current study
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 
 #MACRO mylock ..
 sixdesklockdir=..

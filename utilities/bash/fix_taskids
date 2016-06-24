@@ -12,7 +12,7 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 
 dir16=$sixtrack_input
 
@@ -38,7 +38,7 @@ then
 #MACRO myexit
 
 fi
-${SCRIPTDIR}/check_mad6t
+${SCRIPTDIR}/bash/check_mad6t
 if test $? -ne 0
 then
 

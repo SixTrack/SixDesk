@@ -15,7 +15,7 @@ fi
 # ------------------------------------------------------------------------------
 
 # Paths and tracking variables
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 # Now check for an interactive request -i
 inter="false"
 if test -s mad6t_interactive

@@ -25,5 +25,5 @@ argw=$2
 arg2=$3
 arg1="/afs/cern.ch/user/$initial/$lognam/$argw"
 echo "$arg1 $arg2" > compare_results_args
-${SCRIPTDIR}/docompare_results
+${SCRIPTDIR}/bash/docompare_results
 exit 0

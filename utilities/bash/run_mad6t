@@ -47,4 +47,4 @@ then
     fi
   fi
 fi
-${SCRIPTDIR}/dorun_mad6t $param1 $param2
+${SCRIPTDIR}/bash/dorun_mad6t $param1 $param2

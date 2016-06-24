@@ -15,7 +15,7 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 if test $sixdeskplatform != "boinc"
 then
   echo "This command is intended to run incomplete cases"
@@ -116,7 +116,7 @@ do
     fi
 # Now do we need to define anything else for this call????
     export lsfjobtype=sixtrackingboinc
-    source ${SCRIPTDIR}/dot_boinclsf
+    source ${SCRIPTDIR}/bash/dot_boinclsf
     stat=$?
     if test "$stat" -ne 0
     then

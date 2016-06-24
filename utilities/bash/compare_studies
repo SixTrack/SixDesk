@@ -207,4 +207,4 @@ do
   shift
 done
 echo "compare_studies calling compareDAS with $p1 $p2 $name1/$name2"
-${SCRIPTDIR}/compare_DAS "$p1" "$user2" "$ws2" "$p2" "$name1" "$name2"
+${SCRIPTDIR}/bash/compare_DAS "$p1" "$user2" "$ws2" "$p2" "$name1" "$name2"

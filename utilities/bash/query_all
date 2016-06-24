@@ -17,6 +17,6 @@ do
   if test -d studies/"$mystudy"
   then
     echo ""
-    ${SCRIPTDIR}/run_query "$mystudy"
+    ${SCRIPTDIR}/bash/run_query "$mystudy"
   fi
 done

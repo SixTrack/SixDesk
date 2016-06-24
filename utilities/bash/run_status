@@ -22,7 +22,7 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 
 #MACRO mymess 0 Checking Study $LHCDescrip
 sixdeskmesslevel=0

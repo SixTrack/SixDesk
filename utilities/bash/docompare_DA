@@ -12,7 +12,7 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 # We have been called with no arguments so we use current study etc
 # but we read the parameters w2 and s2, logname2, and name1 and name2
 args=`cat compare_DA_args`

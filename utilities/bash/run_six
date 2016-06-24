@@ -12,7 +12,7 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 dir16=$sixtrack_input
 
 #MACRO mymess 2 Using sixtrack_input $dir16
@@ -37,7 +37,7 @@ then
 #MACRO myexit
 
 fi
-${SCRIPTDIR}/check_mad6t $newLHCDescrip
+${SCRIPTDIR}/bash/check_mad6t $newLHCDescrip
 if test $? -ne 0
 then
 
@@ -1361,13 +1361,13 @@ do
               chmod 755 $sixdeskjobs_logs/"$Runnam".lsf
               sixdeskRunnam="$Runnam"
               sixdeskRundir="$Rundir"
-              source ${SCRIPTDIR}/dot_bsub $Runnam $Rundir
+              source ${SCRIPTDIR}/bash/dot_bsub $Runnam $Rundir
             elif test "$sixdeskplatform" = "cpss"
             then
               # The 3rd param 0 means only if not submitted already
               sixdeskRunnam="$Runnam"
               sixdeskRundir="$Rundir"
-              source ${SCRIPTDIR}/dot_task
+              source ${SCRIPTDIR}/bash/dot_task
             elif test "$sixdeskplatform" = "grid"
             then
               # Create $Runnam.grid in $sixdeskwork/$Runnam
@@ -1401,7 +1401,7 @@ do
               # The 3rd param 0 means only if not submitted already
               sixdeskRunnam="$Runnam"
               sixdeskRundir="$Rundir"
-              source ${SCRIPTDIR}/dot_boinc
+              source ${SCRIPTDIR}/bash/dot_boinc
             else
               # Should be impossible
 
@@ -1577,7 +1577,7 @@ do
         chmod 755 $sixdeskjobs_logs/"$Runnam".lsf
         sixdeskRunnam="$Runnam"
         sixdeskRundir="$Rundir"
-        source ${SCRIPTDIR}/dot_bsub $Runnam $Rundir
+        source ${SCRIPTDIR}/bash/dot_bsub $Runnam $Rundir
       fi
     fi
     itunexx=`expr $itunexx + $ideltax`

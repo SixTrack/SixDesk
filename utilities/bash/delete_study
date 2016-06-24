@@ -35,12 +35,12 @@ then
   echo "The script delete_study must be run in the directory sixjobs!!!"
   exit 1
 fi
-if test ! -s ${SCRIPTDIR}/dot_env
+if test ! -s ${SCRIPTDIR}/bash/dot_env
 then
   echo "The script dot_env is missing!!!"
   exit 2 
 fi
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 
 #MACRO mylock $sixdeskstudy
 sixdesklockdir=$sixdeskstudy

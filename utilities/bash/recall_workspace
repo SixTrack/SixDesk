@@ -226,12 +226,12 @@ else
   touch recall_workspace.finished
 fi
 # Get the subroutines (we have never done a dot_env)
-if test ! -s ${SCRIPTDIR}/dot_profile
+if test ! -s ${SCRIPTDIR}/bash/dot_profile
 then
   echo "dot_profile is missing!!!"
   exit 1
 fi
-source ${SCRIPTDIR}/dot_profile
+source ${SCRIPTDIR}/bash/dot_profile
 # and set some defaults
 nomessages=""
 export sixdesklevel=1

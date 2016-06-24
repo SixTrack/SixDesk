@@ -15,7 +15,7 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 args=`cat compare_results_args`
 arg1=`echo "$args" | cut -d" " -f1`
 arg2=`echo "$args" | cut -d" " -f2`

@@ -97,7 +97,7 @@ fi
 #
 # Even if called with a Study ($1) and a Platform ($2)
 # we can now use dot_env
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 if test -s $sixdeskstudy/sixdesklock
 then
   if test ! -w $sixdeskstudy/sixdesklock
@@ -762,7 +762,7 @@ do
               else
                 ln -sf old.10 fort.20
                 ln -sf fort.10 fort.21
-#               ${SCRIPTDIR}/checktens > $tmp
+#               ${SCRIPTDIR}/bash/checktens > $tmp
                 ${SCRIPTDIR}/fortran/verify10.exe > $tmp
                 vermess=`grep "VERSION" $tmp`
 

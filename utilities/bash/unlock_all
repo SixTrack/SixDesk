@@ -12,7 +12,7 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 for locks in . .. plot $sixdeskhome/sixdeskTaskIds $sixdeskstudy $sixtrack_input `find $sixdeskwork -type d`
 do
   if test -d $locks

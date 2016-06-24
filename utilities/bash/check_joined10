@@ -11,7 +11,7 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 mydir=$PWD
 rm -f joined10
 find track/1/simul/64.31_59.32/8-30 -name fort.10.gz > all_joined

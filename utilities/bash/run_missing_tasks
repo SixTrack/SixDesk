@@ -12,7 +12,7 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 if test $sixdeskplatform = "lsf"
 then
 
@@ -42,13 +42,13 @@ do
   sixdeskforce=2
   if test $sixdeskplatform = "cpss"
   then
-    source ${SCRIPTDIR}/dot_task
+    source ${SCRIPTDIR}/bash/dot_task
   elif test $sixdeskplatform = "boinc"
   then
-    source ${SCRIPTDIR}/dot_boinc
+    source ${SCRIPTDIR}/bash/dot_boinc
   elif test $sixdeskplatform = "grid"
   then
-    source ${SCRIPTDIR}/dot_grid
+    source ${SCRIPTDIR}/bash/dot_grid
   fi
 done < $sixdeskjobs/missing_tasks
 

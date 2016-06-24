@@ -12,7 +12,7 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 # We have been called with no arguments so we use current study etc
 # but we read the parameters w2 and s2, logname2, and name1 name2
 args=`cat plot_DA_args`
@@ -142,10 +142,10 @@ do
         ((j=j+$kstep))
         ((k=k+$kstep))
     done
-    ${SCRIPTDIR}/createDAsurv jktemp
+    ${SCRIPTDIR}/bash/createDAsurv jktemp
 #   rm jktemp.*
   else
-    ${SCRIPTDIR}/createDAsurv $mynames
+    ${SCRIPTDIR}/bash/createDAsurv $mynames
   fi
   mv DAsurv.pdf ${mynames}.pdf
 

@@ -62,7 +62,7 @@ sixdeskmess
 
 if test ! -s "$sixdeskstudy/TaskGroupId"
 then
-  source ${SCRIPTDIR}/dot_taskgroup
+  source ${SCRIPTDIR}/bash/dot_taskgroup
 fi
 if test ! -s "$sixdeskstudy/TaskGroupId"
 then

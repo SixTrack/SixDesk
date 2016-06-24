@@ -17,7 +17,7 @@ fi
 # sixdeskenv (sysenv) should have been edited and
 # the files beambeamdist.dat, fort.2, fort.3.mother,
 # fort.8, and fort.16 put in the directory (link) sixtrack_input
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 if test "$BNL" = ""
 then
 

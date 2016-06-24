@@ -14,7 +14,7 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 
 #MACRO mylock $sixdeskstudy
 sixdesklockdir=$sixdeskstudy
@@ -131,7 +131,7 @@ do
       fi
       if test -s fort.21
       then
-        ${SCRIPTDIR}/checktens
+        ${SCRIPTDIR}/bash/checktens
       else
         echo "Second fort.10 is empty!!"
       fi

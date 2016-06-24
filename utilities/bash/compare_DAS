@@ -19,8 +19,8 @@ s2=$4
 name1=$5
 name2=$6
 echo "Switching to study $name1 $s1"
-${SCRIPTDIR}/set_env $s1
+${SCRIPTDIR}/bash/set_env $s1
 echo "Calling compare_DA ($LOGNAME $workspace $s1) $user2 $ws2 $s2 $name1 $name2"
-${SCRIPTDIR}/compare_DA $user2 $ws2 $s2 $name1 $name2
+${SCRIPTDIR}/bash/compare_DA $user2 $ws2 $s2 $name1 $name2
 echo "Calling plot_DA ($LOGNAME $workspace $s1) $user2 $ws2 $s2 $name1 $name2" 
-${SCRIPTDIR}/plot_DA $user2 $ws2 $s2 $name1 $name2
+${SCRIPTDIR}/bash/plot_DA $user2 $ws2 $s2 $name1 $name2

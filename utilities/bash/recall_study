@@ -221,12 +221,12 @@ else
 fi
 # and do a ". ./dot_env" to prepare recall of rest of study
 # except I have to simulate because of $1
-if test ! -s ${SCRIPTDIR}/dot_profile
+if test ! -s ${SCRIPTDIR}/bash/dot_profile
 then
   echo "dot_profile is missing!!!"
   exit 1
 fi
-source ${SCRIPTDIR}/dot_profile
+source ${SCRIPTDIR}/bash/dot_profile
 nomessages=""
 # Is this a straight recall to the same place?
 # or are we recalling to a different workspace.

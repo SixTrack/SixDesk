@@ -35,4 +35,4 @@ else
   name2=b
 fi
 echo "$w2 $s2 $lognam $name1 $name2" > plot_DA_args
-${SCRIPTDIR}/doplot_DA
+${SCRIPTDIR}/bash/doplot_DA

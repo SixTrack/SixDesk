@@ -37,12 +37,12 @@ then
   echo "This script must be run in the directory sixjobs!!!"
   exit 1
 fi
-if test ! -s ${SCRIPTDIR}/dot_profile
+if test ! -s ${SCRIPTDIR}/bash/dot_profile
 then
   echo "dot_profile is missing!!!"
   exit 1
 fi
-source ${SCRIPTDIR}/dot_profile
+source ${SCRIPTDIR}/bash/dot_profile
 # and make sure we have a studies directory!
 if test ! -d studies
 then
@@ -235,9 +235,9 @@ then
   source sysenv
   # We now call update_sixjobs in case there were changes
   # and to create for example the logfile directories
-  source ${SCRIPTDIR}/update_sixjobs
+  source ${SCRIPTDIR}/bash/update_sixjobs
   # and now we can check 
-  source ${SCRIPTDIR}/check_envs
+  source ${SCRIPTDIR}/bash/check_envs
   # and save the env files
   cp sixdeskenv sysenv studies/$LHCDescrip
 

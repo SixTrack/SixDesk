@@ -50,7 +50,7 @@ else
   echo "The directory studies does not exist!!!"
   exit 2
 fi
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 for locks in . .. plot sixdeskTaskIds $sixdeskstudy $sixtrack_input $sixdeskwork 
 do
   echo "Checking $locks"

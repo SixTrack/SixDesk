@@ -12,4 +12,4 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-${SCRIPTDIR}/exec_env sixdeskenv sysenv
+${SCRIPTDIR}/bash/exec_env sixdeskenv sysenv

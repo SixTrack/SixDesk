@@ -14,7 +14,7 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-source ${SCRIPTDIR}/dot_env
+source ${SCRIPTDIR}/bash/dot_env
 if test $sixdeskplatform != "cpss"
 then
   echo "This command is available for CPSS only!"
