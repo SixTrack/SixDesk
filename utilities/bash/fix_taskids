@@ -38,7 +38,7 @@ then
 #MACRO myexit
 
 fi
-${SCRIPTDIR}/bash/check_mad6t
+${SCRIPTDIR}/bash/mad6t.sh -c
 if test $? -ne 0
 then
 

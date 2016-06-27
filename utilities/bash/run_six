@@ -37,7 +37,7 @@ then
 #MACRO myexit
 
 fi
-${SCRIPTDIR}/bash/check_mad6t $newLHCDescrip
+${SCRIPTDIR}/bash/mad6t.sh -c $newLHCDescrip
 if test $? -ne 0
 then
 

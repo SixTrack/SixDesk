@@ -2,6 +2,9 @@
 # A set of Subroutines called by Macros for the SixDesk environment
 sixdeskmess()
 {
+  if [ $# -eq 1 ] ; then
+      sixdeskmesslevel=$1
+  fi
   if test "$sixdeskmesslevel" -le "$sixdesklevel"
   then
     sixdeskday="`date +%a`"
@@ -106,6 +109,9 @@ sixdeskmktmpdir()
 }
 sixdeskexit()
 {
+  if [ $# -eq 1 ] ; then
+      sixdeskexitparam=$1
+  fi
   if test "$SIXDESKLOCKED" != ""
   then
 
@@ -130,6 +136,9 @@ sixdeskexit()
 }
 sixdeskunlock()
 {
+  if [ $# -eq 1 ] ; then
+      sixdesklockdir=$1
+  fi
   if test "$sixdesklockdir" = ""
   then
     sixdesklockdir="$PWD"
@@ -150,9 +159,9 @@ sixdeskunlock()
 #MACRO mymess
 
 
-#MACRO mymess 2 held by `cat $sixdesklockdir/sixdesklock`)
+#MACRO mymess 2 held by `cat $sixdesklockdir/sixdesklock`
     sixdeskmesslevel=2
-    sixdeskmess="held by `cat $sixdesklockdir/sixdesklock`)"
+    sixdeskmess="held by `cat $sixdesklockdir/sixdesklock`"
     sixdeskmess
 #MACRO mymess
 
@@ -177,6 +186,9 @@ sixdeskunlock()
 }
 sixdesklock()
 {
+  if [ $# -eq 1 ] ; then
+      sixdesklockdir=$1
+  fi
   if test "$sixdesklockdir" = ""
   then
     sixdesklockdir="$PWD"
@@ -342,6 +354,31 @@ sixdesklock()
       fi
     done
   fi
+}
+sixdeskchecklock()
+{
+    # $1: dir where to check
+    dirToCheck=$1
+    sixdeskmesslevel=1
+    if [ ! -d ${dirToCheck} ] ; then
+	sixdeskmess="The directory ${dirToCheck} does not exist!!!"
+        sixdeskmess
+    elif [ ! -f ${dirToCheck}/sixdesklock ] ; then
+	sixdeskmess="The lockfile ${dirToCheck}/sixdesklock does not exist!!!"
+        sixdeskmess
+    elif [ ! -w ${dirToCheck}/sixdesklock ] ; then
+	sixdeskmess="The directory ${dirToCheck} is currently locked by"
+        sixdeskmess
+        sixdeskmess="script `cat ${dirToCheck}/sixdesklock`"
+        sixdeskmess
+    else
+	sixdeskmess="The directory ${dirToCheck} is currently unlocked"
+        sixdeskmess
+	sixdeskmess="last lock: `ls -l ${dirToCheck}/sixdesklock`"
+        sixdeskmess
+	sixdeskmess="`cat ${dirToCheck}/sixdesklock`"
+        sixdeskmess
+    fi
 }
 sixdesktunes()
 {
@@ -602,4 +639,153 @@ sixdeskrundir()
   else
     rundirname=`echo $runnamename | sed -e's?%?\/?g'`
   fi
+}
+sixdeskDefineUserTree(){
+    # define the tree in the userspace
+    
+    # input variables are the starting points:
+    # $1: root dir (ie $basedir in sixdeskenv)
+    # $2: scratch dir (ie $scratchdir in sixdeskenv)
+    # $3: workspace name (ie $workspace in sixdeskenv)
+
+    # unset all that is exported by sixdeskenv that can be re-set
+    unset  trackdir
+    unset  sixtrack_input
+    
+    # basic paths (back-compatibility)
+    export basedir=$1               # eg /afs/cern.ch/user/$initial/$LOGNAME
+    export scratchdir=$2            # eg $basedir/scratch0
+    export trackdir=$scratchdir/$3  # eg $scratchdir/w2
+    export sixdeskhome=$basedir/$3/sixjobs # eg $trackdir/sixjobs
+    export sixdeskhomeStudies=$sixdeskhome/studies
+
+    # 
+    export sixtrack_input=$scratchdir/sixtrack_input/$workspace/$LHCDescrip
+    export sixdesklogs=$scratchdir/sixdesklogs/$workspace
+    export sixdesklogdir=$sixdesklogs/$LHCDescrip
+    export cronlogs=$scratchdir/cronlogs/$workspace
+    export cronlogdir=$cronlogs/$LHCDescrip
+    export sixdesktrack=$trackdir/track
+    export sixdeskwork=$scratchdir/work/$workspace/$LHCDescrip
+    export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
+    export sixdeskjobs_logs=$sixdeskjobs/jobs_logs
+    export sixdeskstudy=$studiesDir/$LHCDescrip
+}
+sixDeskDefineMADXtree(){
+    # The following version of mad-X is used by the mad6t jobs.
+    # All now call a madx executable so -X is no longer required.
+    export MADX_PATH="/afs/cern.ch/user/m/mad/bin"
+    # Doesn't seem to work!
+    #export MADX="madx_pro"
+    # and the MUST? use for Massimo
+    #export MADX="madx_dev"
+    # and the new default
+    export MADX="madx"
+    export maskFilesPath=$sixdeskhome/mask
+    export controlFilesPath=$sixdeskhome/control_files
+    export lsfFilesPath=$sixdeskhome/utilities
+}
+sixdeskCreateUserTree(){
+    if [ ! -d $sixdeskhomeStudies ] ; then
+	mkdir $sixdeskhomeStudies
+    fi
+}
+sixdeskSetExes(){
+    # The path to all scripts etc bin,Bin,scripts, exes, dots
+    # NB: actually used only for the listed exes
+    sixdeskpath=/afs/cern.ch/group/si/slap/bin/sixdesk
+    if [ $# -eq 1 ] ; then
+	sixdeskpath=$1
+    fi
+    export sixdeskpath
+    # The following SixTrack version is used for the one-turn
+    # SixTrack run to get the Beta values and for all LSF tasks (except DA)
+    # and the BNL EXE which is the same I hope
+    export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_pro
+    if test "$BIGNBLZ" != ""
+    then
+	export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_bignblz_pro
+    fi
+    export SIXTRACKBNLEXE=$sixdeskpath/exes/SixTrack_bnl_pro
+    # Latest DA version from
+    export SIXTRACKDAEXE=$sixdeskpath/exes/SixTrack_crlibm_da_lf95v4200
+}
+sixdeskSetPlatForm(){
+    export sixdeskplatform=`echo "$platform" | tr '[A-Z]' '[a-z]'`
+    if [ "$BNL" != "" ] ; then
+	export sixdeskbnlin="fort.54"
+	export bnlfilenames="beambeam-output.dat beambeamlostID.dat SixTwiss.dat checkdist.dat"
+	export bnlfortnames="fort.52 fort.53 fort.51 fort.97"
+	if [ "$sixdeskplatform" == "boinc" ] ; then
+	    export sixdeskbnlout="fort.10"
+	elif [ "$sixdeskplatform" == "cpss" ] ; then
+	    export sixdeskbnlout=$bnlfortnames
+	elif [ "$sixdeskplatform" == "lsf" ] ; then
+	    export sixdeskbnlout=$bnlfilenames
+	else
+	    echo "UNKNOWN sixdeskplatform $sixdeskplatform"
+	    exit 1
+	fi
+    fi
+}
+sixDeskSetBOINCVars(){
+    # The SixTrack executable is now ????.
+    export sixdeskpts=boinc:users
+    export boincdir=/afs/cern.ch/user/b/boinc/scratch0
+    export sixdeskboincdirname=$workspace"_"$LHCDescrip
+    # and use boinctest (for Igor and new BOINC release)
+    export sixdeskboinctest="false"
+    sixdeskboincdir=$boincdir/boinc/$sixdeskboincdirname
+    if [ "$sixdeskboinctest" == "true" ] ; then
+	sixdeskboincdir=$boincdir/boinctest/$sixdeskboincdirname
+    fi
+    export sixdeskboincdir
+    export sixdeskparts=`expr $sixdeskpairs \* 2`
+    if [ $short -eq 1 ] -o [ $da -eq 1 ] ; then
+	sixdeskturns=$turnss
+    elif [ $long -eq 1 ] ; then
+	sixdeskturns=$turnsl
+    fi
+    if [ "$BNL" != "" ] ; then
+	sixdeskturns=$bnlturns
+    fi
+    export sixdeskturns
+    sixdeskfpopse=`expr $sixdeskturns \* $sixdeskparts`
+    #sixdeskfpopse=`expr $sixdeskfpopse \* 2`
+    #sixdeskfpopse=`expr $sixdeskfpopse / 3`
+    sixdeskfpopse=`expr $sixdeskfpopse / 2`
+    #sixdeskfpopse=`expr $sixdeskfpopse \* 3`
+    export sixdeskfpopse=$sixdeskfpopse"000000"
+}
+sixdeskSetCPSSVars(){
+    # sixdeskprog/uploadProgram Variables
+    # sixdeskProgramName, sixdeskFileName, sixdeskTargetFileName
+    # sixdeskVersion, sixdeskAuthor, sixdeskDescription
+    export sixdeskexec="$sixdeskpath/exes/SixTrack_4411_crlibm_bnl_ifort_icpss.exe"
+    export sixdeskOsMin="5.0"
+    export sixdeskOsMax="9.9"
+    export sixdeskCpuSpeedMin="100"
+    export sixdeskclientv=2.5
+    export sixdeskProgramName="Sixtrack V4211 Tilt Lost CRLIBM CR BNL"
+    export sixdeskFileName="$sixdeskexec"
+    export sixdeskTargetFileName="sixtrack.exe"
+    export sixdeskVersion="4.2.11 BNL"
+    export sixdeskAuthor="Frank Schmidt & Eric McIntosh"
+    export sixdeskProgramDescription="Lahey 7.1 Sixtrack[CR] with crlibm made fom .s"
+    # sixdeskgroup/createTaskGroup Variables
+    # sixdeskTaskGroupName, sixdeskTaskGroupDescription,
+    # sixdeskStatus, sixdeskPriority, sixdeskComments
+    export sixdeskTaskGroupName=$LOGNAME"_"$workspace"_"$LHCDescrip
+    export sixdeskTaskGroupDescription=$workspace"_"$LHCDescrip
+    export sixdeskStatus="Active"
+    export sixdeskPriority="Normal"
+    export sixdeskComments="$LHCDescrip"
+}
+sixdeskSetOtherVars(){
+    # Turn ON/OFF CASTOR........... true or false 
+    export sixdeskcastor="true"
+    # Not really needed anymore but must be non-zero!
+    export sixdeskcr=1 
+    export LHCDesName=$LHCDescrip
+    export LHCDesHome=$LHCDescrip
 }
