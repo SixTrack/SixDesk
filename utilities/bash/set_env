@@ -33,12 +33,12 @@ then
   echo "This script must be run in the directory sixjobs!!!"
   exit 1
 fi
-if test ! -s ${SCRIPTDIR}/dot_profile
+if test ! -s ${SCRIPTDIR}/bash/dot_profile
 then
   echo "dot_profile is missing!!!"
   exit 1
 fi
-source ${SCRIPTDIR}/dot_profile
+source ${SCRIPTDIR}/bash/dot_profile
 # and make sure we have a studies directory!
 if test ! -d studies
 then
@@ -70,8 +70,8 @@ then
 #MACRO myexit
 
 fi
-# and lock the workspace
 
+# lock the workspace
 #MACRO mylock 
 sixdesklockdir=
 sixdesklock
@@ -237,59 +237,42 @@ then
   fi
   cp studies/$newLHCDescrip/sixdeskenv .
   cp studies/$newLHCDescrip/sysenv .
-fi
-if test "$NEW" != "" -o "$UPDATE" != ""
+
+elif test "$NEW" != ""
 then
-  if test "$NEW" != ""
-  then
+  # We are creating a NEW study $newLHCDescrip
+ 
+  sixdeskmesslevel=0
+  sixdeskmess="Creating a NEW study $newLHCDescrip"
+  sixdeskmess
 
-#MACRO mymess 0 Creating a NEW study $newLHCDescrip
-    sixdeskmesslevel=0
-    sixdeskmess="Creating a NEW study $newLHCDescrip"
-    sixdeskmess
-#MACRO mymess
-
-  else
-
-#MACRO mymess 0 Updating sixdeskenv/sysenv for $LHCDescrip
-    sixdeskmesslevel=0
-    sixdeskmess="Updating sixdeskenv/sysenv for $LHCDescrip"
-    sixdeskmess
-#MACRO mymess
-
-  fi
   mkdir -p studies/$newLHCDescrip
   cp sixdeskenv studies/$newLHCDescrip
   cp sysenv studies/$newLHCDescrip
+
+elif test "$UPDATE" != ""
+then
+
+  # We are updating study $LHCDescrip
+  sixdeskmesslevel=0
+  sixdeskmess="Updating sixdeskenv/sysenv for $LHCDescrip"
+  sixdeskmess
+  cp sixdeskenv studies/$LHCDescrip
+  cp sysenv studies/$LHCDescrip
+
 else
-  if test "$SWITCH" = ""
-  then
 
-#MACRO mymess 0 BUG!!! None of NEW/SWITCH/UPDATE is defined!!!
-    sixdeskmesslevel=0
-    sixdeskmess="BUG!!! None of NEW/SWITCH/UPDATE is defined!!!"
-    sixdeskmess
-#MACRO mymess
+  # error
+  sixdeskmesslevel=0
+  sixdeskmess="BUG!!! None of NEW/SWITCH/UPDATE is defined!!!"
+  sixdeskmess
+  sixdesklockdir=studies
+  sixdeskunlock
+  sixdesklockdir=
+  sixdeskunlock
+  sixdeskexitparam=5
+  sixdeskexit
 
-
-#MACRO myunlock studies
-    sixdesklockdir=studies
-    sixdeskunlock
-#MACRO myunlock
-
-
-#MACRO myunlock 
-    sixdesklockdir=
-    sixdeskunlock
-#MACRO myunlock
-
-
-#MACRO myexit 5
-    sixdeskexitparam=5
-    sixdeskexit
-#MACRO myexit
-
-  fi
 fi
 # and in all case we now do a dot_env which should
 # create and check everything as it will NOT see a switch
@@ -301,7 +284,7 @@ sixdesklockdir=studies
 sixdeskunlock
 #MACRO myunlock
 
-source ${SCRIPTDIR}/dot_env 
+source ${SCRIPTDIR}/bash/dot_env 
 # Now clear the deleted flag (if set)
 if test -e "$sixdeskstudy"/deleted
 then
