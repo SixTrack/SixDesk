@@ -1120,7 +1120,7 @@ do
             chmod 755 $sixdeskjobs_logs/"$Runnam".lsf
             sixdeskRunnam="$Runnam"
             sixdeskRundir="$Rundir"
-            . ./dot_bsub $Runnam $Rundir
+            source ${SCRIPTDIR}/bash/dot_bsub $Runnam $Rundir
           else
             sed -e 's?SIXJOBNAME?'$Runnam'?g' \
                 -e 's?SIXJOBDIR?'$Rundir'?g' \
@@ -1130,7 +1130,7 @@ do
             chmod 755 $sixdeskjobs_logs/"$Runnam".lsf
             sixdeskRunnam="$Runnam"
             sixdeskRundir="$Rundir"
-            . ./dot_bsub $Runnam $Rundir
+            source ${SCRIPTDIR}/bash/dot_bsub $Runnam $Rundir
           fi
         fi
         #
