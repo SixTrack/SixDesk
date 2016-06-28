@@ -1111,7 +1111,7 @@ do
           #
           #start LSF job for short run
           #
-          if [ k -eq 0 ] ;then
+          if [ $k -eq 0 ] ;then
             sed -e 's?SIXJOBNAME?'$Runnam'?g' \
                 -e 's?SIXJOBDIR?'$Rundir'?g' \
                 -e 's?SIXTRACKDIR?'$sixdesktrack'?g' \

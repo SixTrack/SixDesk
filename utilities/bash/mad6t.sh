@@ -307,7 +307,7 @@ fi
 # in case, additional optional args $1/$2 are for dot_env
 source ${SCRIPTDIR}/bash/dot_env
 # build paths
-sixDeskDefineMADXtree
+sixDeskDefineMADXTree
 # sixdeskmess level
 sixdeskmesslevel=0
 
