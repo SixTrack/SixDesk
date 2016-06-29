@@ -638,16 +638,17 @@ sixdeskamps()
 }
 sixdeskrundir()
 {
-  if test "$BNL" = ""
-  then
-    rundirname=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/e\6/?'`
-    rundirname=`echo $rundirname | sed -e's?/s/?/simul/?'`
-    rundirname=`echo $rundirname | sed -e's?/t/?/trans/?'`
-    rundirname=`echo $rundirname | sed -e's?/m/?/momen/?'`
-    rundirname=`echo $rundirname | sed -e's?/d/?/da/?'`
-  else
-    rundirname=`echo $runnamename | sed -e's?%?\/?g'`
-  fi
+    if test "$BNL" = "" ; then
+	rundirname=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/\6/?'`
+	rundirname=`echo $rundirname | sed -e's?/s/?/simul/?'`
+	rundirname=`echo $rundirname | sed -e's?/t/?/trans/?'`
+	rundirname=`echo $rundirname | sed -e's?/m/?/momen/?'`
+	rundirname=`echo $rundirname | sed -e's?/d/?/da/?'`
+    else
+	rundirname=`echo $runnamename | sed -e 's?%?\/?g'`
+    fi
+    # remove trailing slashes
+    rundirname=`echo ${rundirname} | sed 's:/*$::'`
 }
 sixdeskDefineUserTree(){
     # define the tree in the userspace
@@ -679,16 +680,7 @@ sixdeskDefineUserTree(){
     export sixdeskwork=$scratchdir/work/$workspace/$LHCDescrip
     export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
     export sixdeskjobs_logs=$sixdeskjobs/jobs_logs
-    export sixdeskstudy=$studiesDir/$LHCDescrip
-}
-sixDeskDefineRunSixTree(){
-    # define the tree of tracking results
-    # $1: tree
-    # $2: study name
-    # $3: MADX seed
-    # $4: sixdesktunes
-    # eg: $tree/$LHCDesHome/$i/simul/$sixdesktunes
-    simulPath=$1/$2/$3/simul/$4
+    export sixdeskstudy=$sixdeskhomeStudies/$LHCDescrip
 }
 sixDeskDefineMADXTree(){
     # The following version of mad-X is used by the mad6t jobs.
@@ -707,74 +699,61 @@ sixDeskDefineMADXTree(){
 sixdeskDefinePointTree(){
     # $1: $LHCDesName
     # $2: MadX seed
-    # $3: tag (t: track)
+    # $3: tag (see sixdeskrundir)
     # $4: $sixdesktunes
     # $5: $Ampl
     # $6: turn exponent
     # $7: angle
     # $8: $kk
+    # $9: tree to $LHCDesName
 
-    if [ "$3" == "t" ] ; then
-	actualDirTag="trans"
-    elif [ "$3" == "m" ] ; then
-	actualDirTag="momen"
-    elif [ "$3" == "s" ] ; then
-	actualDirTag="simul"
-    elif [ "$3" == "d" ] ; then
-	actualDirTag="damap"
+    Runnam=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
+    if [ -z $6 ] ; then
+	runnamename1=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
+	runnamename2=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%.'$8
+    else
+	runnamename1=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%'$7
+	runnamename2=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%.'$8
     fi
 
     # return Rundir
-    Runnam="$1%$2%$3%$4%$5%$6%$7"
-    runnamename=$Runnam
+    runnamename=$runnamename1
     sixdeskrundir
     Rundir=$rundirname
+    RundirFullPath="$9/$Rundir"
 
     # return actualDirName
-    runnamename="$1%$2%${actualDirTag}%$4%$5%e$6%.$8"
+    runnamename=$runnamename2
     sixdeskrundir
     actualDirName=$rundirname
-
+    actualDirNameFullPath="$9/$actualDirName"
 }
 sixdeskAngleStep(){
-    local __angle=$1
-    local __kk=$2
-    AngleStep=`echo "${__angle} ${__kk}" | awk '{print ($1/($2+1))}'`
+    AngleStep=`gawk -v "angle=$1" -v "kk=$2" 'END{print (angle/(kk+1))}' /dev/null`
 }
 sixdeskAngle(){
-    local __angleStep=$1
-    local __kk=$2
-    Angle=`echo "${__angleStep} ${__kk}" | awk '{print ($1*$2)}'`
+    Angle=`gawk -v "angleStep=$1" -v "kk=$2" 'END{print (angleStep*kk)}' /dev/null`
 }
 sixdeskkang(){
-    local __kk=$1
-    local __kmax=$2
-    Angle=`echo "${__kk} ${__kmax}" | awk '{print ($1/($2+1))}'`
+    kang=`gawk -v "kk=$1" -v "kmax=$2" 'END{print (kk/(kmax+1))}' /dev/null`
 }
 sixdeskRatio(){
-    local __kang=$1
-    ratio=`gawk 'BEGIN{hpi=1.5707963267948966}END{ratio=exp(2*log(sin(hpi*'$__kang')/cos(hpi*'$__kang')));print ratio}' /dev/null`
+    ratio=`gawk -v "kang=$1" 'BEGIN{hpi=1.5707963267948966}END{tan=sin(hpi*kang)/cos(hpi*kang); if (tan<0) {tan=-tan}; if (tan<1.0E-15) {tan=0.0}; ratio=exp(2*log(tan));print ratio}' /dev/null`
 }
 sixdeskax0(){
-    local __factor=$1
-    local __beta_x=$2
-    local __beta_x2=$3
-    local __ratio=$4
-    local __kang=$5
-    local __square=$6
-    local __ns1=$7
-    local __ns2=$8
-    if [ $__square -eq 0 ] ;then
-	ax0t=`gawk 'BEGIN{hpi=1.5707963267948966}END{ax0='$__factor'*(sqrt('$__beta_x')+sqrt('$__beta_x2'*'$__ratio'))*cos(hpi*'$__kang');print ax0}' /dev/null`
+    local __ratio=$6
+    local __square=$8
+    if [ $__square -eq 0 ] ; then
+	ax0t=`gawk -v "factor=$1" -v "beta_x=$2" -v "beta_x2=$3" -v "ratio=$__ratio" -v "kang=$7" 'BEGIN{hpi=1.5707963267948966}END{ax0=factor*(sqrt(beta_x)+sqrt(beta_x2*ratio))*cos(hpi*kang);print ax0}' /dev/null`
     else
-	if [ "$ratio" -le "$one" ] ;then
-	    ax0t=`gawk 'END{ax0='$__factor'*(sqrt('$__beta_x')+sqrt('$__beta_x2'*'$__ratio'));print ax0}' /dev/null`
+	if [ $__ratio -le "$one" ] ;then
+	    ax0t=`gawk -v "factor=$1" -v "beta_x=$2" -v "beta_x2=$3" -v "ratio=$__ratio" 'END{ax0=factor*(sqrt(beta_x)+sqrt(beta_x2*ratio));print ax0}' /dev/null`
 	else
-	    ax0t=`gawk 'END{ax0='$__factor'*(sqrt('$__beta_y2'/'$__ratio')+sqrt('$__beta_y'))*cos(hpi*'$__kang')/sin(hpi*'$__kang');print ax0}' /dev/null`
+	    ax0t=`gawk -v "factor=$1" -v "beta_y=$4" -v "beta_y2=$5" -v "ratio=$__ratio" -v "kang=$7" 'END{ax0=factor*(sqrt(beta_y2/ratio)+sqrt(beta_y))*cos(hpi*kang)/sin(hpi*kang);print ax0}' /dev/null`
 	fi
     fi
-    ax0=`gawk 'END{ax0='$ax0t'*'$__ns1';print ax0}' /dev/null`
-    ax1=`gawk 'END{ax1='$ax0t'*'$__ns2';print ax1}' /dev/null`
+    ax0=`gawk -v "ax0t=${ax0t}" -v "ns1=$9"  'END{ax0=ax0t*ns1;print ax0}' /dev/null`
+    ax1=`gawk -v "ax0t=${ax0t}" -v "ns2=$10" 'END{ax1=ax0t*ns2;print ax1}' /dev/null`
 }
 sixdeskCreateUserTree(){
     if [ ! -d $sixdeskhomeStudies ] ; then
