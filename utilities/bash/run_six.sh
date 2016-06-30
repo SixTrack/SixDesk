@@ -276,7 +276,7 @@ function preProcessShort(){
             -e 's/%LR/'$__LR'/g' \
             -e 's/%MR/'$__MR'/g' \
             -e 's/%KR/'$__KR'/g' \
-            -e 's/%dimline/'$__dimline'/g' $sixdeskhome/inc/sussix.inp.mask > \
+            -e 's/%dimline/'$__dimline'/g' ${SCRIPTDIR}/templates/sussix/sussix.inp > \
             $sixdeskjobs_logs/sussix.tmp.1
 	local __IANA=0
 	local __LR=0
@@ -289,7 +289,7 @@ function preProcessShort(){
             -e 's/%LR/'$__LR'/g' \
             -e 's/%MR/'$__MR'/g' \
             -e 's/%KR/'$__KR'/g' \
-            -e 's/%dimline/'$__dimline'/g' $sixdeskhome/inc/sussix.inp.mask > \
+            -e 's/%dimline/'$__dimline'/g' ${SCRIPTDIR}/templates/sussix/sussix.inp > \
             $sixdeskjobs_logs/sussix.tmp.2
 	local __MR=0
 	local __KR=1
@@ -301,25 +301,23 @@ function preProcessShort(){
             -e 's/%LR/'$__LR'/g' \
             -e 's/%MR/'$__MR'/g' \
             -e 's/%KR/'$__KR'/g' \
-            -e 's/%dimline/'$__dimline'/g' $sixdeskhome/inc/sussix.inp.mask > \
+            -e 's/%dimline/'$__dimline'/g' ${SCRIPTDIR}/templates/sussix/sussix.inp > \
             $sixdeskjobs_logs/sussix.tmp.3
 	sed -e 's/%suss//g' \
-            -e 's?SIXTRACKEXE?'$SIXTRACKEXE'?g' \
-            -e 's?SIXDESKHOME?'$sixdeskhome'?g' \
-            $sixdeskhome/utilities/${lsfjobtype}.lsf.mask > $sixdeskjobs_logs/${lsfjobtype}.lsf
-	chmod 755 $sixdeskjobs_logs/${lsfjobtype}.lsf
+	    ${SCRIPTDIR}/templates/lsf/${lsfjobtype}.job > $sixdeskjobs_logs/${lsfjobtype}.job
     else
 	sed -e 's/%suss/'#'/g' \
-            -e 's?SIXTRACKEXE?'$SIXTRACKEXE'?g' \
-            -e 's?SIXDESKHOME?'$sixdeskhome'?g' \
-            $sixdeskhome/utilities/${lsfjobtype}.lsf.mask > $sixdeskjobs_logs/${lsfjobtype}.lsf
-	chmod 755 $sixdeskjobs_logs/${lsfjobtype}.lsf 
+            ${SCRIPTDIR}/templates/lsf/${lsfjobtype}.job > $sixdeskjobs_logs/${lsfjobtype}.job
+	chmod 755 $sixdeskjobs_logs/${lsfjobtype}.job
     fi
+    sed -i -e 's?SIXTRACKEXE?'$SIXTRACKEXE'?g' \
+           -e 's?SIXDESKHOME?'$sixdeskhome'?g' $sixdeskjobs_logs/${lsfjobtype}.job
+    chmod 755 $sixdeskjobs_logs/${lsfjobtype}.job
     sed -e 's/%suss/'#'/g' \
         -e 's?SIXTRACKEXE?'$SIXTRACKEXE'?g' \
 	-e 's?SIXDESKHOME?'$sixdeskhome'?g' \
-        $sixdeskhome/utilities/${lsfjobtype}.lsf.mask > $sixdeskjobs_logs/${lsfjobtype}0.lsf
-    chmod 755 $sixdeskjobs_logs/${lsfjobtype}0.lsf
+        ${SCRIPTDIR}/templates/lsf/${lsfjobtype}.job > $sixdeskjobs_logs/${lsfjobtype}0.job
+    chmod 755 $sixdeskjobs_logs/${lsfjobtype}0.job
 }
 
 function preProcessDA(){
@@ -687,7 +685,7 @@ function dot_bsub(){
     fi
     
     # actually submit
-    bsub -q $lsfq $sixdeskM -o $RundirFullPath/$Runnam.log < $RundirFullPath/$Runnam.lsf > tmp 2>&1
+    bsub -q $lsfq $sixdeskM -o $RundirFullPath/$Runnam.log < $RundirFullPath/$Runnam.job > tmp 2>&1
 
     # verify that submission was successfull
     if  [ $? -eq 0 ] ; then
@@ -701,7 +699,7 @@ function dot_bsub(){
 	touch $RundirFullPath/JOB_NOT_YET_STARTED
     else
 	rm -f $RundirFullPath/JOB_NOT_YET_STARTED 
-	sixdeskmess="bsub of $RundirFullPath/$Runnam.lsf to Queue ${lsfq} failed !!!"
+	sixdeskmess="bsub of $RundirFullPath/$Runnam.job to Queue ${lsfq} failed !!!"
 	sixdeskmess
 	sixdeskexit 10
     fi
@@ -789,7 +787,7 @@ function treatShort(){
 	    if ${lselected} ; then
 		lerr=0
 		inspectPrerequisites $RundirFullPath -d ""
-		inspectPrerequisites $RundirFullPath -s $Runnam.lsf
+		inspectPrerequisites $RundirFullPath -s $Runnam.job
 		inspectPrerequisites $RundirFullPath -s fort.2.gz fort.3.gz fort.8.gz fort.16.gz
 		if [ $sussix -eq 1 ] ; then
 		    inspectPrerequisites $RundirFullPath -s sussix.inp.1 sussix.inp.2 sussix.inp.3
@@ -797,10 +795,10 @@ function treatShort(){
 		if [ ${lerr} -gt 0 ] ; then
 		    sixdeskmess="$RundirFullPath NOT ready for submission - regenerating ALL input files!"
 		    sixdeskmess
-		    __lGenerate=True
+		    __lGenerate=true
 		fi
 	    else
-		__lGenerate=True
+		__lGenerate=true
 	    fi
 
 	    if ${__lGenerate} ; then
@@ -848,14 +846,14 @@ function treatShort(){
 		    sed -e 's?SIXJOBNAME?'$Runnam'?g' \
 			-e 's?SIXJOBDIR?'$Rundir'?g' \
 			-e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
-			-e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' $sixdeskjobs_logs/${lsfjobtype}0.lsf > $RundirFullPath/$Runnam.lsf
+			-e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' $sixdeskjobs_logs/${lsfjobtype}0.job > $RundirFullPath/$Runnam.job
 		else
 		    sed -e 's?SIXJOBNAME?'$Runnam'?g' \
 			-e 's?SIXJOBDIR?'$Rundir'?g' \
 			-e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
-			-e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' $sixdeskjobs_logs/${lsfjobtype}.lsf > $RundirFullPath/$Runnam.lsf
+			-e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' $sixdeskjobs_logs/${lsfjobtype}.job > $RundirFullPath/$Runnam.job
 		fi
-		chmod 755 $RundirFullPath/$Runnam.lsf
+		chmod 755 $RundirFullPath/$Runnam.job
 	    fi
 	fi
 	if ${lcheck} ; then
@@ -866,7 +864,7 @@ function treatShort(){
 		let lerr+=$?
 	    fi
 	    inspectPrerequisites $RundirFullPath -d ""
-	    inspectPrerequisites $RundirFullPath -s $Runnam.lsf
+	    inspectPrerequisites $RundirFullPath -s $Runnam.job
 	    inspectPrerequisites $RundirFullPath -s fort.2.gz fort.3.gz fort.8.gz fort.16.gz
 	    if [ $sussix -eq 1 ] ; then
 		inspectPrerequisites $RundirFullPath -s sussix.inp.1 sussix.inp.2 sussix.inp.3
@@ -961,8 +959,8 @@ function treatLong(){
 			-e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
 			-e 's?SIXTRACKEXE?'$SIXTRACKEXE'?g' \
 			-e 's?SIXCASTOR?'$sixdeskcastor'?g' \
-			-e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' $sixdeskhome/utilities/${lsfjobtype}.lsf > $RundirFullPath/$Runnam.lsf
-		    chmod 755 $RundirFullPath/$Runnam.lsf
+			-e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' $sixdeskhome/utilities/${lsfjobtype}.job > $RundirFullPath/$Runnam.job
+		    chmod 755 $RundirFullPath/$Runnam.job
 		elif [ "$sixdeskplatform" == "grid" ] ; then
 		    # Create $Runnam.grid in $sixdeskwork/$Runnam
 		    sixdeskmesslevel=0
@@ -1031,8 +1029,8 @@ function treatDA(){
             -e 's?SIXTRACKDAEXE?'$SIXTRACKDAEXE'?g' \
             -e 's?SIXJOBDIR?'$Rundir'?g' \
             -e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
-            -e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' $sixdeskhome/utilities/${lsfjobtype}.lsf > $sixdeskjobs_logs/$Runnam.lsf
-	chmod 755 $sixdeskjobs_logs/$Runnam.lsf
+            -e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' $sixdeskhome/utilities/${lsfjobtype}.job > $sixdeskjobs_logs/$Runnam.job
+	chmod 755 $sixdeskjobs_logs/$Runnam.job
     else
 	# actually submit
 	sixdeskRunnam=$Runnam
@@ -1206,7 +1204,7 @@ if ${lcheck} ; then
 	if [ $sussix -eq 1 ] ; then
 	    inspectPrerequisites ${sixdeskjobs_logs} -s sussix.tmp.1 sussix.tmp.2 sussix.tmp.3
 	fi
-	inspectPrerequisites ${sixdeskjobs_logs} -s ${lsfjobtype}.lsf ${lsfjobtype}0.lsf
+	inspectPrerequisites ${sixdeskjobs_logs} -s ${lsfjobtype}.job ${lsfjobtype}0.job
     elif [ $da -eq 1 ] ; then
 	inspectPrerequisites ${sixdeskjobs_logs} -s dalie.data dalie.input dalie reson.data readda
     fi
