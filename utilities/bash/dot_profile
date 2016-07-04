@@ -60,7 +60,13 @@ sixdeskmktmp()
 sixdeskmktmpdir()
 {
 # Now does a mkdir -p in case the specified directory does not exist
-# e.g. /tmp/mcintosh
+  # e.g. /tmp/mcintosh
+  if [ $# -ge 1 ] ; then
+    sixdesktmpdirname=$1
+  fi
+  if [ $# -eq 2 ] ; then
+    sixdesktmpdirarg=$2
+  fi
   if test "$sixdesktmpdirarg" = ""
   then
     sixdesktmpdirarg="$PWD"
@@ -683,6 +689,7 @@ sixdeskDefineUserTree(){
     export sixdeskstudy=$sixdeskhomeStudies/$LHCDescrip
 }
 sixDeskDefineMADXTree(){
+    local __SCRIPTDIR=$1
     # The following version of mad-X is used by the mad6t jobs.
     # All now call a madx executable so -X is no longer required.
     export MADX_PATH="/afs/cern.ch/user/m/mad/bin"
@@ -694,7 +701,7 @@ sixDeskDefineMADXTree(){
     export MADX="madx"
     export maskFilesPath=$sixdeskhome/mask
     export controlFilesPath=$sixdeskhome/control_files
-    export lsfFilesPath=$sixdeskhome/utilities
+    export lsfFilesPath=$__SCRIPTDIR/templates/lsf
 }
 sixdeskDefinePointTree(){
     # $1: $LHCDesName

@@ -19,19 +19,21 @@ function how_to_use() {
 EOF
 }
 
-function submit(){
-    # sanity checks
+function preliminaryChecks(){
+    # some sanity checks
+    lerr=false
+    
     if [ ! -s $maskFilesPath/$LHCDescrip.mask ] ; then
 	# error: mask file not present
 	sixdeskmess="$LHCDescrip.mask is required in sixjobs/mask !!! "
 	sixdeskmess
-	sixdeskexit 3
+	lerr=true
     fi
     if [ ! -d "$sixtrack_input" ] ; then
 	# error: $sixtrack_input directory does not exist
 	sixdeskmess="The $sixtrack_input directory does not exist!!!"
 	sixdeskmess
-	sixdeskexit 3
+	lerr=true
     fi
     if test "$beam" = "" -o "$beam" = "b1" -o "$beam" = "B1" ; then
 	appendbeam=''
@@ -41,9 +43,14 @@ function submit(){
 	# error: unrecognised beam option
 	sixdeskmess="Unrecognised beam option $beam : must be null, b1, B1, b2 or B2!!!"
 	sixdeskmess
-	sixdeskexit 6
+	lerr=true
     fi
+    if ${lerr} ; then
+	sixdeskexit 3
+    fi
+}
 
+function submit(){
     # useful echo
     # - madx version and path
     sixdeskmess="Using madx Version $MADX in $MADX_PATH"
@@ -57,40 +64,35 @@ function submit(){
 	sixdeskmess
     fi
 
-    # lock study and sixtrack_input before doing any action
-    sixdesklock $sixdeskstudy
-    sixdesklock $sixtrack_input
-    
-    # Make sure we set the optional value for the proton mass
-    # and get temporary copies of the fort.3.mother1/2.
-    sed -e 's?%pmass?'$pmass'?g' \
-	-e 's?%emit_beam?'$emit_beam'?g' \
-	$controlFilesPath/fort.3.mother1_${runtype} > $sixtrack_input/fort.3.mother1.tmp
-    
+    # copy templates...
+    cp $controlFilesPath/fort.3.mother1_${runtype} $sixtrack_input/fort.3.mother1.tmp
     cp $controlFilesPath/fort.3.mother2_${runtype}${appendbeam} $sixtrack_input/fort.3.mother2.tmp
+
+    # ...and make sure we set the optional value for the proton mass
+    sed -i -e 's?%pmass?'$pmass'?g' \
+	   -e 's?%emit_beam?'$emit_beam'?g' \
+	   $sixtrack_input/fort.3.mother1.tmp
+    
     # Clear flags for checking
     for tmpFile in CORR_TEST ERRORS WARNINGS ; do
 	rm -f $sixtrack_input/$tmpFile
     done
 
-    sixdesktmpdirname=mad
-    sixdesktmpdirarg=$sixtrack_input
-    sixdeskmktmpdir
-    junktmp=$sixdesktmpdir
-    export junktmp
+    sixdeskmktmpdir mad $sixtrack_input
+    export junktmp=$sixdesktmpdir
     sixdeskmess="Using junktmp: $junktmp"
     sixdeskmess 1
     
     cd $junktmp
-    mad6tjob=$lsfFilesPath/mad6t1.lsf
     filejob=$LHCDescrip
     cp $maskFilesPath/$filejob.mask .
 
     # Loop over seeds
+    mad6tjob=$lsfFilesPath/mad6t1.lsf
     for (( iMad=$istamad ; iMad<=$iendmad ; iMad++ )) ; do
 	
 	# clean away any existing results for this seed
-	echo " Case : " $iMad
+	echo " MadX seed: $iMad"
 	for f in 2 8 16 34 ; do
 	    rm -rf $sixtrack_input/fort.$f"_"$iMad.gz
 	done
@@ -111,14 +113,11 @@ function submit(){
 	chmod 755 mad6t_"$iMad".lsf
 	
 	if ${linter} ; then
-	    sixdesktmpdirname=batch
-	    sixdesktmpdirarg=
-	    sixdeskmktmpdir
-	    batch=$sixdesktmpdir
-	    cd $batch
+	    sixdeskmktmpdir batch ""
+	    cd $sixdesktmpdir
 	    ../mad6t_"$iMad".lsf | tee $junktmp/"${LHCDescrip}_mad6t_$iMad".log 2>&1
 	    cd ../
-	    rm -rf $batch
+	    rm -rf $sixdesktmpdir
 	else
 	    bsub -q $madlsfq -o $junktmp/"${LHCDescrip}_mad6t_$iMad".log -J ${workspace}_${LHCDescrip}_mad6t_$iMad mad6t_"$iMad".lsf
 	fi
@@ -127,10 +126,6 @@ function submit(){
 
     # End loop over seeds
     cd $sixdeskhome
-    
-    # clean locks
-    sixdeskunlock $sixtrack_input
-    sixdeskunlock $sixdeskstudy
 }
 
 function check(){
@@ -138,13 +133,14 @@ function check(){
     sixdeskmess
 
     sixdeskmesslevel=0
+    lerr=false
     
     # check jobs still running
     nJobs=`bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t | wc -l`
     if [ ${nJobs} -gt 0 ] ; then
 	bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t
 	echo "There appear to be some mad6t jobs still not finished"
-	sixdeskexit 1
+	lerr=true
     fi
     
     # check errors/warnings
@@ -157,7 +153,7 @@ function check(){
 	sixdeskmess
 	echo "ERRORS"
 	cat $sixtrack_input/ERRORS
-	sixdeskexit 999
+	lerr=true
     elif [ -s $sixtrack_input/WARNINGS ] ; then
 	sixdeskmess="There appear to be some MADX result warnings!"
 	sixdeskmess
@@ -169,7 +165,7 @@ function check(){
 	sixdeskmess
 	echo "WARNINGS"
 	cat $sixtrack_input/WARNINGS
-	sixdeskexit 998
+	lerr=true
     fi
 
     # check that the expected number of files have been generated
@@ -178,18 +174,14 @@ function check(){
     if [ "$fort_34" != "" ] ; then
 	iForts="${iForts} 34"
     fi
-    lerr=false
     for iFort in ${iForts} ; do
 	nFort=`ls -1 $sixtrack_input/fort.2_[$istamad-$iendmad].gz | wc -l`
 	if [ ${nFort} -ne ${njobs} ] ; then
 	    sixdeskmess="Discrepancy!!! Expected $njobs - found $nFort fort.${iFort}s in $sixtrack_input"
 	    sixdeskmess
-	    lerr=True
+	    lerr=true
 	fi
     done
-    if ${lerr} ; then
-	sixdeskexit 2
-    fi
 
     # check mother files
     if test ! -s $sixtrack_input/fort.3.mother1 \
@@ -197,7 +189,7 @@ function check(){
     then
 	sixdeskmess="Could not find fort.3.mother1/2 in $sixtrack_input"
 	sixdeskmess
-	sixdeskexit 3
+	lerr=true
     else
 	sixdeskmess="all mother files are there"
 	sixdeskmess
@@ -219,23 +211,27 @@ function check(){
 	    done
 	done
 	if [ $sixdeskmiss -eq 0 ] ; then
-	    echo "CORR_TEST MC_error files copied" > "$sixtrack_input/CORR_TEST"
+	    echo "CORR_TEST MC_error files copied" > $sixtrack_input/CORR_TEST
 	    sixdeskmess="CORR_TEST MC_error files copied"
 	    sixdeskmess
 	else
 	    sixdeskmess="$sixdeskmiss MC_error files could not be found!!!"
 	    sixdeskmess
-	    sixdeskexit 5
+	    lerr=true
 	fi
     fi
 
-    # final remarks
-    sixdeskmess="All the mad6t jobs appear to have completed successfully using madx -X Version $MADX in $MADX_PATH"
-    sixdeskmess
-    sixdeskmess="Please check the sixtrack_input directory as the mad6t runs may have failed and just produced empty files!!!"
-    sixdeskmess
-    sixdeskmess="All jobs/logs/output are in sixtrack_input/mad.run_mad6t directories"
-    sixdeskmess
+    if ${lerr} ; then
+	sixdeskexit 1
+    else
+	# final remarks
+	sixdeskmess="All the mad6t jobs appear to have completed successfully using madx -X Version $MADX in $MADX_PATH"
+	sixdeskmess
+	sixdeskmess="Please check the sixtrack_input directory as the mad6t runs may have failed and just produced empty files!!!"
+	sixdeskmess
+	sixdeskmess="All jobs/logs/output are in sixtrack_input/mad.run_mad6t directories"
+	sixdeskmess
+    fi
 }
 
 # ==============================================================================
@@ -307,7 +303,7 @@ fi
 # in case, additional optional args $1/$2 are for dot_env
 source ${SCRIPTDIR}/bash/dot_env
 # build paths
-sixDeskDefineMADXTree
+sixDeskDefineMADXTree ${SCRIPTDIR}
 # sixdeskmess level
 sixdeskmesslevel=0
 
@@ -319,7 +315,19 @@ if test "$BNL" != "" ; then
 fi
 
 if ${lsub} ; then
+    # - some checks
+    preliminaryChecks
+
+    # - lock study and sixtrack_input before doing any action
+    sixdesklock $sixdeskstudy
+    sixdesklock $sixtrack_input
+    
     submit
+
+    # - clean locks
+    sixdeskunlock $sixtrack_input
+    sixdeskunlock $sixdeskstudy
+    
 else
     check
 fi
