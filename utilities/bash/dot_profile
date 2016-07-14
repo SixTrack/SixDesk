@@ -2,17 +2,20 @@
 # A set of Subroutines called by Macros for the SixDesk environment
 sixdeskmess()
 {
+  local __sixdeskmesslevel
   if [ $# -eq 1 ] ; then
-      sixdeskmesslevel=$1
+      __sixdeskmesslevel=$1
+  else
+      __sixdeskmesslevel=$sixdeskmesslevel
   fi
-  if test "$sixdeskmesslevel" -le "$sixdesklevel"
+  if test "$__sixdeskmesslevel" -le "$sixdesklevel"
   then
     sixdeskday="`date +%a`"
     sixdeskdate="`date +%d/%m/%y`"
     sixdesktime="`date +%T`"
     sixdeskname="`basename $0`                "
     sixdeskname=`echo $sixdeskname | cut -b 1-15`
-    if test "$sixdeskecho" != "" -o "$sixdeskmesslevel" -eq 0
+    if test "$sixdeskecho" != "" -o "$__sixdeskmesslevel" -eq 0
     then
       echo "$sixdeskday $sixdeskdate $sixdesktime ""$sixdeskname"" $sixdeskmess" 
     fi
@@ -714,7 +717,6 @@ sixdeskDefinePointTree(){
     # $8: $kk
     # $9: tree to $LHCDesName
 
-    Runnam=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
     if [ -z $6 ] ; then
 	runnamename1=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
 	runnamename2=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%.'$8
@@ -722,6 +724,7 @@ sixdeskDefinePointTree(){
 	runnamename1=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%'$7
 	runnamename2=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%.'$8
     fi
+    Runnam=$runnamename1
 
     # return Rundir
     runnamename=$runnamename1
@@ -735,6 +738,16 @@ sixdeskDefinePointTree(){
     actualDirName=$rundirname
     actualDirNameFullPath="$9/$actualDirName"
 }
+sixdeskDefineWorkUnitName(){
+    # $1: workspace name (ie $workspace)
+    # $2: name of job (ie $Runnam)
+    # $3: task ID (ie $sixdesktaskid)
+    sixdeskTaskName=`echo $1"_"$2 | sed -e's?%?__?g'`
+    workunitName=$sixdeskTaskName"_1_sixvf_"$3
+}
+sixdeskGetTaskIDfromWorkUnitName(){
+    sixdesktaskid=`echo "$1" | awk 'BEGIN{FS="_";}{print ($NF)}'`
+}
 sixdeskAngleStep(){
     AngleStep=`gawk -v "angle=$1" -v "kk=$2" 'END{print (angle/(kk+1))}' /dev/null`
 }
@@ -745,22 +758,22 @@ sixdeskkang(){
     kang=`gawk -v "kk=$1" -v "kmax=$2" 'END{print (kk/(kmax+1))}' /dev/null`
 }
 sixdeskRatio(){
-    ratio=`gawk -v "kang=$1" 'BEGIN{hpi=1.5707963267948966}END{tan=sin(hpi*kang)/cos(hpi*kang); if (tan<0) {tan=-tan}; if (tan<1.0E-15) {tan=0.0}; ratio=exp(2*log(tan));print ratio}' /dev/null`
+    ratio=`gawk -v "kang=$1" 'BEGIN{hpi=1.5707963267948966}END{tan=sin(hpi*kang)/cos(hpi*kang); if (tan<0) {tan=-tan}; if (tan<1.0E-15) {tan=0.0}; ratio=tan**2; print ratio}' /dev/null`
 }
 sixdeskax0(){
     local __ratio=$6
     local __square=$8
     if [ $__square -eq 0 ] ; then
-	ax0t=`gawk -v "factor=$1" -v "beta_x=$2" -v "beta_x2=$3" -v "ratio=$__ratio" -v "kang=$7" 'BEGIN{hpi=1.5707963267948966}END{ax0=factor*(sqrt(beta_x)+sqrt(beta_x2*ratio))*cos(hpi*kang);print ax0}' /dev/null`
+	ax0t=`gawk -v "factor=$1" -v "beta_x=$2" -v "beta_x2=$3" -v "ratio=$__ratio" -v "kang=$7" 'BEGIN{hpi=1.5707963267948966}END{print(factor*(sqrt(beta_x)+sqrt(beta_x2*ratio))*cos(hpi*kang))}' /dev/null`
     else
 	if [ $__ratio -le "$one" ] ;then
-	    ax0t=`gawk -v "factor=$1" -v "beta_x=$2" -v "beta_x2=$3" -v "ratio=$__ratio" 'END{ax0=factor*(sqrt(beta_x)+sqrt(beta_x2*ratio));print ax0}' /dev/null`
+	    ax0t=`gawk -v "factor=$1" -v "beta_x=$2" -v "beta_x2=$3" -v "ratio=$__ratio" 'END{print(factor*(sqrt(beta_x)+sqrt(beta_x2*ratio)))}' /dev/null`
 	else
-	    ax0t=`gawk -v "factor=$1" -v "beta_y=$4" -v "beta_y2=$5" -v "ratio=$__ratio" -v "kang=$7" 'END{ax0=factor*(sqrt(beta_y2/ratio)+sqrt(beta_y))*cos(hpi*kang)/sin(hpi*kang);print ax0}' /dev/null`
+	    ax0t=`gawk -v "factor=$1" -v "beta_y=$4" -v "beta_y2=$5" -v "ratio=$__ratio" -v "kang=$7" 'END{print(factor*(sqrt(beta_y2/ratio)+sqrt(beta_y))*cos(hpi*kang)/sin(hpi*kang))}' /dev/null`
 	fi
     fi
-    ax0=`gawk -v "ax0t=${ax0t}" -v "ns1=$9"  'END{ax0=ax0t*ns1;print ax0}' /dev/null`
-    ax1=`gawk -v "ax0t=${ax0t}" -v "ns2=$10" 'END{ax1=ax0t*ns2;print ax1}' /dev/null`
+    ax0=`gawk -v "ax0t=${ax0t}" -v "ns=$9"  'END{ax0=ax0t*ns;print ax0}' /dev/null`
+    ax1=`gawk -v "ax0t=${ax0t}" -v "ne=$10" 'END{ax1=ax0t*ne;print ax1}' /dev/null`
 }
 sixdeskCreateUserTree(){
     if [ ! -d $sixdeskhomeStudies ] ; then
@@ -807,7 +820,6 @@ sixdeskSetPlatForm(){
 }
 sixDeskSetBOINCVars(){
     # The SixTrack executable is now ????.
-    export sixdeskpts=boinc:users
     export boincdir=/afs/cern.ch/user/b/boinc/scratch0
     export sixdeskboincdirname=$workspace"_"$LHCDescrip
     # and use boinctest (for Igor and new BOINC release)
@@ -818,7 +830,7 @@ sixDeskSetBOINCVars(){
     fi
     export sixdeskboincdir
     export sixdeskparts=`expr $sixdeskpairs \* 2`
-    if [ $short -eq 1 ] -o [ $da -eq 1 ] ; then
+    if [ $short -eq 1 -o $da -eq 1 ] ; then
 	sixdeskturns=$turnss
     elif [ $long -eq 1 ] ; then
 	sixdeskturns=$turnsl
@@ -832,7 +844,58 @@ sixDeskSetBOINCVars(){
     #sixdeskfpopse=`expr $sixdeskfpopse / 3`
     sixdeskfpopse=`expr $sixdeskfpopse / 2`
     #sixdeskfpopse=`expr $sixdeskfpopse \* 3`
-    export sixdeskfpopse=$sixdeskfpopse"000000"
+    sixdeskfpopse=$sixdeskfpopse"000000"
+
+    # --------------------------------------------------------------------------
+    # from uploadWorkunit
+
+    # An upper bound on the amount of memory required to process the workunit. 
+    # The workunit will only be sent to clients with at least this much
+    # available RAM. If exceeded the workunit will be aborted.
+    # Measured in bytes.
+    export memBound=100000000
+    
+    # An upper bound on the amount of disk space required to process the
+    # workunit. The workunit will only be sent to clients with at least this
+    # much available disk space. If exceeded the workunit will be aborted.
+    # Measured in bytes.
+    # diskBound=200,000,000  ~200MB
+    export diskBound=200000000
+    
+    # An upper bound on the time (in seconds) between sending a result to a
+    # client and receiving a reply. If the client doesn't respond within this
+    # interval, the server 'gives up' on the result and generates a new result,
+    # to be assigned to another client. Don't set this too low. 
+    # 20 times the "normal" execution time will probably be a good value.
+    # about 30 days
+    export delayBound=2400000
+    
+    # The number of redundant calculations. Set to two or more to achieve
+    # redudancy.
+    export redundancy=2
+    
+    # The number of copies of the workunit to issue to clients. Must be at
+    # least the number of redundant calculations or higher if a loss of results
+    # is expected or if the result should to be obtained fast.
+    export copies=2
+    
+    # The number of errors from clients before the workunit is declared to have
+    # an error.
+    export errors=5
+    
+    # The total number of clients to issue the workunit to before it is declared
+    # to have an error.
+    export numIssues=5
+
+    # The total number of returned results without a concensus is found before
+    # the workunit is declared to have an error.
+    export resultsWithoutConcensus=3
+
+    # Getting the fpops estimate and multiplying it with 10 to get the bound.
+    # Multiply by 4 for the moment but watch for complaints!
+    # Try 6 for pentium 4
+    export fpopsEstimate=`expr $sixdeskfpopse \* 6`
+    export fpopsBound=`expr $fpopsEstimate \* 1000`
 }
 sixdeskSetCPSSVars(){
     # sixdeskprog/uploadProgram Variables
@@ -865,4 +928,10 @@ sixdeskSetOtherVars(){
     export sixdeskcr=1 
     export LHCDesName=$LHCDescrip
     export LHCDesHome=$LHCDescrip
+}
+sixdeskGetFileName(){
+    local __fileName
+    __fileName=$(basename "$1")
+    __fileName="${__fileName%.*}"
+    eval "$2=$__fileName"
 }

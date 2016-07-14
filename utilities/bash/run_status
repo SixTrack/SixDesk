@@ -325,6 +325,8 @@ then
           Rundir=$rundirname
 #MACRO myrundir
 
+	  echo $Runnam $Rundir
+
           where=$sixdesktrack/$Rundir
           missing=0
 #         echo "Processing $Runnam $taskid"

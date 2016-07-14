@@ -175,9 +175,9 @@ function check(){
 	iForts="${iForts} 34"
     fi
     for iFort in ${iForts} ; do
-	nFort=`ls -1 $sixtrack_input/fort.2_[$istamad-$iendmad].gz | wc -l`
+	nFort=`ls -1 $sixtrack_input/fort.${iFort}_[$istamad-$iendmad].gz 2> /dev/null | wc -l`
 	if [ ${nFort} -ne ${njobs} ] ; then
-	    sixdeskmess="Discrepancy!!! Expected $njobs - found $nFort fort.${iFort}s in $sixtrack_input"
+	    sixdeskmess="Discrepancy!!! Found ${nFort} fort.${iFort}_??.gz in $sixtrack_input (expected $njobs)"
 	    sixdeskmess
 	    lerr=true
 	fi
@@ -229,7 +229,7 @@ function check(){
 	sixdeskmess
 	sixdeskmess="Please check the sixtrack_input directory as the mad6t runs may have failed and just produced empty files!!!"
 	sixdeskmess
-	sixdeskmess="All jobs/logs/output are in sixtrack_input/mad.run_mad6t directories"
+	sixdeskmess="All jobs/logs/output are in sixtrack_input/mad.mad6t.sh* directories"
 	sixdeskmess
     fi
 }

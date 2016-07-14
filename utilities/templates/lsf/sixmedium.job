@@ -1,26 +1,21 @@
 #!/bin/bash
-#BSUB -J SIXJOBNAME   	# job name
+#BSUB -J SIXJOBNAME    # job name
 
-junktmp=SIXJUNKTMP
-export junktmp
 TRACKDIR=SIXTRACKDIR
-export TRACKDIR
 BINPATH=SIXDESKHOME/bin
-export BINPATH
 pwd		# where am I?
-touch $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_STARTED
-rm    $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_STARTED
+rm -f $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_STARTED
 touch $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_COMPLETED
 # copy compressed fortran files from the designated"job"  directory to our work dir
 # pick up inputfiles
 cp $TRACKDIR/SIXJOBDIR/fort.*.gz .
 gunzip fort.*.gz
-%susscp $junktmp/sussix.inp.1 .
-%susscp $junktmp/sussix.inp.2 .
-%susscp $junktmp/sussix.inp.3 .
-#get  sixtrack image
+# sussix stuff
+%susscp $TRACKDIR/SIXJOBDIR/sussix.inp.[1-3].gz .
+%sussgunzip sussix.inp.[1-3].gz
 %susscp $BINPATH/sussix .
 %susscp $BINPATH/repair .
+#get  sixtrack image
 cp SIXTRACKEXE sixtrack
 ls -al 
 ./sixtrack > fort.6 
