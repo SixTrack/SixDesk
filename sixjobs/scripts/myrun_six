@@ -8,7 +8,7 @@ then
   mymess 1 "The directory $dir16 does not exist!!!" 
   myexit 1
 fi
-./check_mad6t
+./check_mad6t $1 $2
 if test $? -ne 0
 then
   mymess 1 "sixtrack_input appears incomplete!!!"
