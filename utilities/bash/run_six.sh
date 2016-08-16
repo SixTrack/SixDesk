@@ -1535,7 +1535,7 @@ fi
 # preparation to main loop
 if ${lgenerate} ; then
     # - check that all the necessary MadX input is ready
-    ${SCRIPTDIR}/bash/mad6t.sh -c $newLHCDesName
+    ${SCRIPTDIR}/bash/mad6t.sh -c -d $newLHCDesName
     let __lerr+=$?
     # - these dirs should already exist...
     for tmpDir in $sixdesktrack $sixdeskjobs $sixdeskjobs_logs $sixdesktrackStudy ; do

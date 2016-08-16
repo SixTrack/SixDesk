@@ -1,3 +1,7 @@
+Release 4th April, 2016
+Minimise use of setacl, rationalise creation of
+$sixdeskboincdir, fix call to check_mad6t from run_six.
+
 Release 3rd March, 2016
 Using GIT on scratch3.
 bnl_results NO lock on $sixdeskwork.

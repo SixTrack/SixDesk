@@ -171,7 +171,7 @@ do
     rm -rf $sixtrack_input/fort.$f"_"$i.gz
   done
   sed -e 's?%NPART?'$bunch_charge'?g' \
-      -e 's?%EMIT_BEAM'$emit_beam'?g' \
+      -e 's?%EMIT_BEAM'$emit_beam'*1e-6?g' \
       -e 's?%SEEDSYS?'$i'?g' \
       -e 's?%SEEDRAN?'$i'?g' $filejob.mask > $filejob."$i"
 

@@ -226,6 +226,9 @@ then
           # and set up the LSF job type and queue
   export lsfq=$longlsfq
   export lsfjobtype=sixtracking
+
+  #reduce angle steps at small angles, achieving a constant density painting of the phase space
+  export reduce_angs_with_aplitude=0
 fi  
 
 #da parameters 

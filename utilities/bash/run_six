@@ -37,7 +37,7 @@ then
 #MACRO myexit
 
 fi
-${SCRIPTDIR}/bash/mad6t.sh -c $newLHCDescrip
+${SCRIPTDIR}/bash/mad6t.sh -c -d $newLHCDescrip
 if test $? -ne 0
 then
 
@@ -1173,6 +1173,17 @@ do
 
         k=$kinil
         AngleStep=`gawk 'END{a=90/('$kmaxl'+1);print a}' /dev/null`
+
+        scaled_kstep=$kstep
+        if [ "$reduce_angs_with_aplitude" -eq 1 ] ;then
+          if [ "$ampstart" -gt 0.3 ] ;then
+            ang_scaling_factor=`gawk 'END{a='$ampfinish'/'$ampstart';print a}' /dev/null`
+          else
+            ang_scaling_factor=`gawk 'END{a='$ampfinish'/0.3;print a}' /dev/null`
+          fi
+          scaled_kstep=`gawk 'END{a='$kstep'*'$ang_scaling_factor';print a}' /dev/null`
+        fi
+
         while test "$k" -le "$kendl"
         do
           Angle=`gawk 'END{a='$AngleStep'*'$k';print a}' /dev/null`
@@ -1186,7 +1197,6 @@ do
           sixdeskrundir
           Rundir=$rundirname
 #MACRO myrundir
- 
           #
           if [ -d "$tree"/"$Rundir" ] ;then
             if [ -s "$tree"/"$Rundir"/fort.10.gz ] ;then
@@ -1432,7 +1442,7 @@ do
             fi
           fi
           # End of if NOT a Rundir already
-          k=`expr $k + $kstep`
+          k=`gawk 'END{a='$k'+'$scaled_kstep'; print a}' /dev/null`
         done
         # end of loop over angles
         ampstart=`expr $ampstart + $ampincl`
