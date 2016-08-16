@@ -7,7 +7,7 @@ function how_to_use() {
    to manage the submission of sixtrack jobs
 
    actions (mandatory, one of the following):
-   -p      prepare simulation files 
+   -g      generate simulation files 
            NB: this includes also preliminary SixTrakc jobs for computing
                chromas and beta functions
    -s      actually submit
@@ -28,6 +28,8 @@ function how_to_use() {
            in case of submission, submit those directories without a fort.10.gz
               or zero-length fort.10.gz
            NB: this option is NOT active in case of -c only!
+   -d      study name (when running many jobs in parallel)
+   -p      platform name (when running many jobs in parallel)
 
 EOF
 }
@@ -427,9 +429,12 @@ function __inspectPrerequisite(){
     
     test $__test ${__entry}
     if [ $? -ne 0 ] ; then
-	sixdeskmess="${__entry} not there!"
+	sixdeskmess="${__entry} NOT there!"
 	sixdeskmess
 	let __lerr+=1
+    else
+	sixdeskmess="${__entry} READY!"
+	sixdeskmess
     fi
     return $__lerr
 }
@@ -441,11 +446,11 @@ function inspectPrerequisites(){
     local __entries=$@
     local __lerr=0
     if [ $# -eq 0 ] ; then
-	__inspectPrerequisite $__test ${__path}
+	__inspectPrerequisite ${__test} ${__path}
 	let __lerr+=$?
     else
 	for tmpEntry in ${__entries} ; do
-	    __inspectPrerequisite $__test ${__path}/${tmpEntry}
+	    __inspectPrerequisite ${__test} ${__path}/${tmpEntry}
 	    let __lerr+=$?
 	done
     fi
@@ -702,6 +707,7 @@ function parseBetaValues(){
 function submitCreateRundir(){
     local __RunDirFullPath=$1
     local __actualDirNameFullPath=$2
+    echo ""
     sixdeskmess="Taking care of running dir $__RunDirFullPath (and linking to $__actualDirNameFullPath)"
     sixdeskmess
     [ ! -d $__RunDirFullPath ] || rm -rf $__RunDirFullPath
@@ -786,6 +792,12 @@ function checkDirReadyForSubmission(){
 	let __lerr+=$?
 	inspectPrerequisites $RundirFullPath -s fort.2.gz fort.3.gz fort.8.gz fort.16.gz
 	let __lerr+=$?
+	ls -ltrh $RundirFullPath/fort.2.gz
+	test -s $RundirFullPath/fort.2.gz
+	echo $?
+	ls -ltrh $RundirFullPath/fort.3.gz
+	test -s $RundirFullPath/fort.3.gz
+	echo $?
     elif [ "$sixdeskplatform" == "boinc" ] ; then
 	# - there should be only 1 .desc/.zip files
 	fileNames=""
@@ -964,7 +976,7 @@ function treatShort(){
     # trigger for submission
     local __lSubmit=false
 
-    if ${lprepare} ; then
+    if ${lgenerate} ; then
 	if [ $sussix -eq 1 ] ; then
 	    # and now we get fractional tunes to plug in qx/qy
             qx=`gawk 'END{qx='$fhtune'-int('$fhtune');print qx}' /dev/null`
@@ -1018,7 +1030,7 @@ function treatShort(){
         sixdeskmess 1
 
 	# ----------------------------------------------------------------------
-	if ${lprepare} ; then
+	if ${lgenerate} ; then
 	# ----------------------------------------------------------------------
 	    if ${lselected} ; then
 		checkDirReadyForSubmission
@@ -1166,7 +1178,7 @@ function treatLong(){
 	    sixdeskmess="Point in scan $Runnam $Rundir, k=$kk"
 	    
 	    # ------------------------------------------------------------------
-	    if ${lprepare} ; then
+	    if ${lgenerate} ; then
 	    # ------------------------------------------------------------------
 		if ${lselected} ; then
 		    checkDirReadyForSubmission
@@ -1265,7 +1277,7 @@ function treatDA(){
     # get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
     sixdeskDefinePointTree $LHCDesName $iMad "d" $sixdesktunes $Ampl "0" $Angle $kk $sixdesktrack
 
-    if ${lprepare} ; then
+    if ${lgenerate} ; then
 	# does rundir exist?
 	submitCreateRundir $RundirFullPath $actualDirNameFullPath
 
@@ -1324,19 +1336,21 @@ fi
 # ------------------------------------------------------------------------------
 
 # actions and options
-lprepare=false
+lgenerate=false
 lcheck=false
 lsubmit=false
 lstatus=false
 lkinit=false
 lselected=false
+currPlatform=""
+currStudy=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hpscakS" opt ; do
+while getopts  ":hgscakSd:p:" opt ; do
     case $opt in
 	a)
 	    # do everything
-	    lprepare=true
+	    lgenerate=true
 	    lcheck=true
 	    lsubmit=true
 	    # run kinit beforehand
@@ -1354,9 +1368,9 @@ while getopts  ":hpscakS" opt ; do
 	    how_to_use
 	    exit 1
 	    ;;
-	p)
-	    # prepare simulation files
-	    lprepare=true
+	g)
+	    # generate simulation files
+	    lgenerate=true
 	    # check
 	    lcheck=true
 	    ;;
@@ -1369,6 +1383,14 @@ while getopts  ":hpscakS" opt ; do
 	S)
 	    # selected points of scan only
 	    lselected=true
+	    ;;
+	d)
+	    # the user is requesting a specific study
+	    currStudy="${OPTARG}"
+	    ;;
+	p)
+	    # the user is requesting a specific platform
+	    currPlatform="${OPTARG}"
 	    ;;
 	t)
 	    # status
@@ -1388,14 +1410,22 @@ while getopts  ":hpscakS" opt ; do
 done
 shift "$(($OPTIND - 1))"
 # user's request
-if ! ${lprepare} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} ; then
+# - actions
+if ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} ; then
     how_to_use
     echo "No action specified!!! aborting..."
     exit
-elif ${lprepare} && ${lsubmit} && ${lstatus} ; then
+elif ${lgenerate} && ${lsubmit} && ${lstatus} ; then
     how_to_use
     echo "Please choose only one action!!! aborting..."
     exit
+fi
+# - options
+if [ -n "${currStudy}" ] ; then
+    echo "User required a specific study: ${currStudy}"
+fi
+if [ -n "${currPlatform}" ] ; then
+    echo "User required a specific platform: ${currPlatform}"
 fi
 
 # ------------------------------------------------------------------------------
@@ -1403,7 +1433,7 @@ fi
 # ------------------------------------------------------------------------------
 
 # - load environment
-source ${SCRIPTDIR}/bash/dot_env
+source ${SCRIPTDIR}/bash/dot_env ${currStudy} ${currPlatform}
 # - settings for sixdeskmessages
 sixdeskmessleveldef=0
 sixdeskmesslevel=$sixdeskmessleveldef
@@ -1417,7 +1447,7 @@ fi
 
 # - action-dependet stuff
 echo ""
-if ${lprepare} ; then
+if ${lgenerate} ; then
     #
     sixdeskmess="Preparing sixtrack input files for study $LHCDescrip"
     sixdeskmess
@@ -1503,7 +1533,7 @@ elif [ $short -eq 1 ] || [ $da -eq 1 ] ; then
 fi
 
 # preparation to main loop
-if ${lprepare} ; then
+if ${lgenerate} ; then
     # - check that all the necessary MadX input is ready
     ${SCRIPTDIR}/bash/mad6t.sh -c $newLHCDesName
     let __lerr+=$?
@@ -1650,7 +1680,7 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	ideltax=1000000
 	ideltay=1000000
     fi
-    if ${lprepare} ; then
+    if ${lgenerate} ; then
 	iForts="2 8 16"
 	if [ "$fort_34" != "" ] ; then
 	    iForts="${iForts} 34"
@@ -1672,7 +1702,7 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	sixdeskinttunes
 	# - beta values?
 	if [ $short -eq 1 ] || [ $long -eq 1 ] ; then
-	    if ${lprepare} ; then
+	    if ${lgenerate} ; then
 		[ -d $RundirFullPath ] || mkdir -p $RundirFullPath
 		cd $sixdeskjobs_logs
 		if [ $chrom -eq 0 ] ; then
@@ -1732,7 +1762,7 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	itunexx=`expr $itunexx + $ideltax`
 	ituneyy=`expr $ituneyy + $ideltay`
     done
-    if ${lprepare} ; then
+    if ${lgenerate} ; then
 	iForts="2 8 16"
 	if [ "$fort_34" != "" ] ; then
 	    iForts="${iForts} 34"

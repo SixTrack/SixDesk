@@ -15,6 +15,8 @@ function how_to_use() {
    -i      madx is run interactively (ie on the node you are locally
               connected to, no submission to lsf at all)
            option available only for submission to lsf
+   -d      study name (when running many jobs in parallel)
+   -p      platform name (when running many jobs in parallel)
 
 EOF
 }
@@ -175,11 +177,19 @@ function check(){
 	iForts="${iForts} 34"
     fi
     for iFort in ${iForts} ; do
-	nFort=`ls -1 $sixtrack_input/fort.${iFort}_[$istamad-$iendmad].gz 2> /dev/null | wc -l`
+	nFort=0
+	sixdeskmess="Checking fort.${iFort}_??.gz..."
+	sixdeskmess
+	for (( iMad=${istamad}; iMad<=${iendmad}; iMad++ )) ; do
+	    let nFort+=`ls -1 $sixtrack_input/fort.${iFort}_${iMad}.gz 2> /dev/null | wc -l`
+	done
 	if [ ${nFort} -ne ${njobs} ] ; then
 	    sixdeskmess="Discrepancy!!! Found ${nFort} fort.${iFort}_??.gz in $sixtrack_input (expected $njobs)"
 	    sixdeskmess
 	    lerr=true
+	else
+	    sixdeskmess="...found ${nFort} fort.${iFort}_??.gz in $sixtrack_input (as expected)"
+	    sixdeskmess
 	fi
     done
 
@@ -253,9 +263,11 @@ fi
 linter=false
 lsub=false
 lcheck=false
+currPlatform=""
+currStudy=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hisc" opt ; do
+while getopts  ":hiscd:p:" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -273,6 +285,14 @@ while getopts  ":hisc" opt ; do
 	    # required submission
 	    lsub=true
 	    ;;
+	d)
+	    # the user is requesting a specific study
+	    currStudy="${OPTARG}"
+	    ;;
+	p)
+	    # the user is requesting a specific platform
+	    currPlatform="${OPTARG}"
+	    ;;
 	:)
 	    how_to_use
 	    echo "Option -$OPTARG requires an argument."
@@ -286,7 +306,8 @@ while getopts  ":hisc" opt ; do
     esac
 done
 shift "$(($OPTIND - 1))"
-# user's request
+# user's requests:
+# - actions
 if ! ${lcheck} && ! ${lsub} ; then
     how_to_use
     echo "No action specified!!! aborting..."
@@ -299,9 +320,16 @@ elif ${lcheck} && ${linter} ; then
     echo "Interactive mode valid only for running. Switching it off!!!"
     linter=false
 fi
+# - options
+if [ -n "${currStudy}" ] ; then
+    echo "User required a specific study: ${currStudy}"
+fi
+if [ -n "${currPlatform}" ] ; then
+    echo "User required a specific platform: ${currPlatform}"
+fi
 
-# in case, additional optional args $1/$2 are for dot_env
-source ${SCRIPTDIR}/bash/dot_env
+# set environment
+source ${SCRIPTDIR}/bash/dot_env ${currStudy} ${currPlatform}
 # build paths
 sixDeskDefineMADXTree ${SCRIPTDIR}
 # sixdeskmess level
