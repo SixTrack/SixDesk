@@ -467,12 +467,14 @@ subsequent scripts.
 \begin{description}
 \item [tunex \& tuney] The required horizontal and vertical tunes.
 These may be different for collision and injection as shown later.
-\item [emit] The normalised LHC emittance, used for normalizations.
+\item [emit] The normalised LHC emittance, used for the computation of the
+  beam $\sigma$.
 \item [emit\_beam] The normalised LHC beam emittance for substitution into 
-  the mask (replaces the keyword \%EMIT\_BEAM) and into the mother file 
-  (replaces the keyword \%emit\_beam).
+  the mask (replaces the keyword \texttt{\%EMIT\_BEAM}) and into the mother file 
+  (replaces the keyword \texttt{\%emit\_beam}).
 \item [xing] Half crossing angle in $\mu$rad for substitution into the mask
-  (replaces the keyword \%XING) and into the mother file (replaces the keyword \%xing).
+  (replaces the keyword \texttt{\%XING}) and into the mother file (replaces 
+  the keyword \texttt{\%xing}).
 \item [e0] Energy of reference particle depending on runtype
 \item [dpini \& dpmax]
   At injection the initial relative momentum deviation is set to
