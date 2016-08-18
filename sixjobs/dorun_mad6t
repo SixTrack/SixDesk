@@ -133,8 +133,10 @@ else
 #MACRO myexit
 
 fi
+xing_rad=$(echo $xing*.000001 | bc)
 sed -e 's?%pmass?'$pmass'?g' \
     -e 's?%emit_beam?'$emit_beam'?g' \
+    -e 's?%xing?'$xing_rad'?g' \
     $sixdeskhome/control_files/fort.3.mother1_${runtype} > $sixtrack_input/fort.3.mother1.tmp
 
 cp $sixdeskhome/control_files/fort.3.mother2_${runtype}${appendbeam} $sixtrack_input/fort.3.mother2.tmp
@@ -173,6 +175,7 @@ do
   done
   sed -e 's?%NPART?'$bunch_charge'?g' \
       -e 's?%EMIT_BEAM?'$emit_beam'*1e-6?g' \
+      -e 's?%XING?'$xing'?g' \
       -e 's?%SEEDSYS?'$i'?g' \
       -e 's?%SEEDRAN?'$i'?g' $filejob.mask > $filejob."$i"
 
