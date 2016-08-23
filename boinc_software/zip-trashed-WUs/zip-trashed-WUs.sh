@@ -2,6 +2,7 @@
 
 # A.Mereghetti, 2016-08-18
 # script for zipping WUs according to study name
+iNLT=200
 
 echo ""
 echo " starting zipping at `date` ..."
@@ -20,12 +21,28 @@ studyNames=`echo "${studyNameStats}" | awk '{print ($2)}'`
 studyNames=( ${studyNames} )
 for studyName in ${studyNames[@]} ; do
     WUnames=`echo "${WUs2bZipped}" | grep ${studyName}`
-    WUnames=( ${WUnames} )
-    for WUname in ${WUnames[@]} ; do
-	zip ${studyName}.zip ${WUname}
-	rm ${WUname}
+    # zip/rm WUs in bunches
+    nWUnames=`echo "${WUnames}" | wc -l`
+    iiMax=`echo "${iNLT} ${nWUnames}" | awk '{print (int($2/$1*1.0))}'`
+    nResiduals=`echo "${iNLT} ${nWUnames} ${iiMax}" | awk '{print ($2-$3*$1)}'`
+    for (( ii=1; ii<=${iiMax} ; ii++ )) ; do
+	let nHead=$ii*$iNLT
+	tmpWUnames=`echo "${WUnames}" | head -n ${nHead} | tail -n ${iNLT}`
+	zip ${studyName}.zip ${tmpWUnames}
+	rm ${tmpWUnames}
     done
-    # all in one go
+    if [ ${nResiduals} -gt 0 ] ; then
+	tmpWUnames=`echo "${WUnames}" | tail -n ${nResiduals}`
+	zip ${studyName}.zip ${tmpWUnames}
+	rm ${tmpWUnames}
+    fi
+    # zip/rm one WUs at time
+    # WUnames=( ${WUnames} )
+    # for WUname in ${WUnames[@]} ; do
+    # 	zip ${studyName}.zip ${WUname}
+    # 	rm ${WUname}
+    # done
+    # zip/rm all WUs in one go
     # zip ${studyName}.zip ${WUnames}
     # rm ${WUnames}
 done
