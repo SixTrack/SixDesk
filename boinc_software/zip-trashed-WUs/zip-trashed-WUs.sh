@@ -5,8 +5,7 @@
 iNLT=200
 
 echo ""
-echo " starting zipping at `date` ..."
-STARTTIME=$(date +%s)
+echo " starting `basename $0` at `date` ..."
 
 # get new WUs (grep -v is redundant, but it is kept for security)
 WUs2bZipped=`find -mmin +5 -name "*__*" | grep -v '.zip'`
@@ -19,6 +18,7 @@ echo "${studyNameStats}"
 # actually zip
 studyNames=`echo "${studyNameStats}" | awk '{print ($2)}'`
 studyNames=( ${studyNames} )
+STARTTIME=$(date +%s)
 for studyName in ${studyNames[@]} ; do
     WUnames=`echo "${WUs2bZipped}" | grep ${studyName}`
     # zip/rm WUs in bunches
@@ -46,8 +46,8 @@ for studyName in ${studyNames[@]} ; do
     # zip ${studyName}.zip ${WUnames}
     # rm ${WUnames}
 done
+ENDTIME=$(date +%s)
 
 # done
-ENDTIME=$(date +%s)
 TIMEDELTA=$(($ENDTIME - $STARTTIME))
 echo " ...done by `date` - it took ${TIMEDELTA} seconds to zip `echo "${WUs2bZipped=}" | wc -l` WUs."
