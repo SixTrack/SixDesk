@@ -820,13 +820,13 @@ sixdeskSetPlatForm(){
 }
 sixDeskSetBOINCVars(){
     # The SixTrack executable is now ????.
-    export boincdir=/afs/cern.ch/user/b/boinc/scratch0
+    export boincdir=/afs/cern.ch/work/b/boinc
     export sixdeskboincdirname=$workspace"_"$LHCDescrip
-    # and use boinctest (for Igor and new BOINC release)
-    export sixdeskboinctest="false"
     sixdeskboincdir=$boincdir/boinc/$sixdeskboincdirname
-    if [ "$sixdeskboinctest" == "true" ] ; then
-	sixdeskboincdir=$boincdir/boinctest/$sixdeskboincdirname
+    if [ -z ${sixdeskboinctest+x} ] ; then
+	if [ "$sixdeskboinctest" == "true" ] ; then
+	    sixdeskboincdir=$boincdir/boinctest/$sixdeskboincdirname
+	fi
     fi
     export sixdeskboincdir
     export sixdeskparts=`expr $sixdeskpairs \* 2`

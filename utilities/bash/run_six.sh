@@ -396,7 +396,8 @@ function preProcessBoinc(){
 	fi
     fi	
     
-    # acl rights, so that all the daughter dirs/files inherit the same acl rights
+    # acl rights, to modify default settings (inherited by work.boinc volume),
+    #   so that all the daughter dirs/files inherit the same acl rights
     fs setacl -dir $sixdeskboincdir -acl $LOGNAME rlidwka -acl boinc:users rl
     if [ $? -gt 0 ] ; then
 	sixdeskmess="error while setting acl rights for dir $sixdeskboincdir !!!"
@@ -433,7 +434,7 @@ function __inspectPrerequisite(){
 	sixdeskmess
 	let __lerr+=1
     else
-	sixdeskmess="${__entry} READY!"
+	sixdeskmess="${__entry} EXISTs!"
 	sixdeskmess
     fi
     return $__lerr
@@ -741,8 +742,9 @@ function submitCreateFinalInputs(){
 	[ ! -e $RundirFullPath/fort.2 ] || rm -f $RundirFullPath/fort.2
 	ln -s $sixtrack_input/fort.2_$iMad $RundirFullPath/fort.2
 	
-	# fort.3 already there
-	
+	# fort.3
+	ln -s $sixdeskjobs_logs/fort.3 $RundirFullPath/fort.3
+		
 	# fort.8 and fort.16
 	for iFort in 8 16 ; do
 	    [ ! -e $RundirFullPath/fort.${iFort} ] || rm -f $RundirFullPath/fort.${iFort}
@@ -928,7 +930,6 @@ function dot_boinc(){
 
     # the job has just started
     touch $RundirFullPath/JOB_NOT_YET_COMPLETED
-    rm $RundirFullPath/${descFileNames}.desc
 
     # keep track of the $Runnam-taskid couple
     updateTaskIdsCases $sixdeskjobs/tasks $sixdeskjobs/incomplete_tasks $sixdesktaskid
@@ -963,9 +964,9 @@ function updateTaskIdsCases(){
 	sixdeskmess="Job $Runnam submitted with LSF JobId/taskid $__taskid"
 	sixdeskmess 1
     fi
-    echo "$Runnam" "$__taskids" >> $sixdeskwork/taskids
-    echo "$Runnam" "$__taskid" >> $__outFile1
-    echo "$Runnam" "$__taskid" >> $__outFile2
+    echo "$Runnam $__taskids " >> $sixdeskwork/taskids
+    echo "$Runnam $__taskid " >> $__outFile1
+    echo "$Runnam $__taskid " >> $__outFile2
     
 }
 
@@ -1535,7 +1536,11 @@ fi
 # preparation to main loop
 if ${lgenerate} ; then
     # - check that all the necessary MadX input is ready
-    ${SCRIPTDIR}/bash/mad6t.sh -c -d $newLHCDesName
+    if [ -n "${currStudy}" ] ; then
+	${SCRIPTDIR}/bash/mad6t.sh -c -d $newLHCDesName
+    else
+	${SCRIPTDIR}/bash/mad6t.sh -c
+    fi
     let __lerr+=$?
     # - these dirs should already exist...
     for tmpDir in $sixdesktrack $sixdeskjobs $sixdeskjobs_logs $sixdesktrackStudy ; do
@@ -1686,7 +1691,7 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	    iForts="${iForts} 34"
 	fi
 	for iFort in ${iForts} ; do
-	    gunzip $sixtrack_input/fort.${iFort}_$iMad.gz
+	    gunzip -c $sixtrack_input/fort.${iFort}_$iMad.gz > $sixtrack_input/fort.${iFort}_$iMad
 	done
     fi	    
     while test $itunexx -le $itunex1 -o $ituneyy -le $ituney1 ; do
@@ -1768,7 +1773,7 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	    iForts="${iForts} 34"
 	fi
 	for iFort in ${iForts} ; do
-	    gzip $sixtrack_input/fort.${iFort}_$iMad
+	    rm $sixtrack_input/fort.${iFort}_$iMad
 	done
     fi	    
 done
