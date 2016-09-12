@@ -3,6 +3,7 @@
 # A.Mereghetti, 2016-08-18
 # script for zipping WUs according to study name
 iNLT=200
+nDays=30
 
 echo ""
 echo " starting `basename $0` at `date` ..."
@@ -50,4 +51,9 @@ ENDTIME=$(date +%s)
 
 # done
 TIMEDELTA=$(($ENDTIME - $STARTTIME))
-echo " ...done by `date` - it took ${TIMEDELTA} seconds to zip `echo "${WUs2bZipped=}" | wc -l` WUs."
+echo " ...zipping done by `date` - it took ${TIMEDELTA} seconds to zip `echo "${WUs2bZipped=}" | wc -l` WUs."
+
+# removal of old .zip files
+echo " removing .zip files older than ${nDays} days..."
+find . -mtime +${nDays} -name "*.zip" -print -exec rm {} \;
+echo " ...removal of old .zip files done by `date`."
