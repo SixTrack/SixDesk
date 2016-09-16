@@ -745,6 +745,12 @@ sixdeskDefineWorkUnitName(){
     sixdeskTaskName=`echo $1"_"$2 | sed -e's?%?__?g'`
     workunitName=$sixdeskTaskName"_1_sixvf_"$3
 }
+sixdeskDefineMegaZipName(){
+    local __workSpaceName=$1
+    local __studyName=$2
+    local __megaZipName="${LOGNAME}_${__workSpaceName}_${__studyName}_`date "+%Y-%m-%d_%H-%M-%S"`.zip"
+    eval  "$3=${__megaZipName}"
+}
 sixdeskGetTaskIDfromWorkUnitName(){
     sixdesktaskid=`echo "$1" | awk 'BEGIN{FS="_";}{print ($NF)}'`
 }
@@ -896,6 +902,10 @@ sixDeskSetBOINCVars(){
     # Try 6 for pentium 4
     export fpopsEstimate=`expr $sixdeskfpopse \* 6`
     export fpopsBound=`expr $fpopsEstimate \* 1000`
+    
+    # --------------------------------------------------------------------------
+    # for megaZip
+    export megaZipPath=$boincdir/boinc/upload
 }
 sixdeskSetCPSSVars(){
     # sixdeskprog/uploadProgram Variables

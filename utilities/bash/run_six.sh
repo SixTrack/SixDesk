@@ -15,7 +15,7 @@ function how_to_use() {
            for submission
            NB: this is done by default after preparation or before submission,
                but this action can be triggered on its own
-   -t      report the current status of simulations
+   -t      report the current status of simulations (not yet available)
    -k      run a kinit before doing any action
 
    By default, all actions are performed no matter if jobs are 
@@ -28,6 +28,10 @@ function how_to_use() {
            in case of submission, submit those directories without a fort.10.gz
               or zero-length fort.10.gz
            NB: this option is NOT active in case of -c only!
+   -C      clean .zip/.desc after submission in boinc
+   -M      MegaZip: in case of boinc, WUs all zipped in one file.
+             (.zip/.desc files of each WU will be put in a big .zip)
+           file, to be the
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
 
@@ -418,9 +422,15 @@ function preProcessBoinc(){
     echo "0" > $sixdeskhome/sixdeskTaskIds/$LHCDescrip/sixdeskTaskId
     let __lerr+=$?
 
-    # variables
-    sixDeskSetBOINCVars
-
+    # megaZip
+    if ${lmegazip} ; then
+	# generate name of megaZip file
+	sixdeskDefineMegaZipName "$workspace" "$LHCDescrip" megaZipName
+	# ...and keep it until submission takes place
+	echo "${megaZipName}" > ${sixdeskjobs_logs}/megaZipName.txt
+	sixdeskmess="Requested submission to boinc through megaZip option - filename: ${megaZipName}"
+	sixdeskmess
+    fi
 }
 
 function __inspectPrerequisite(){
@@ -768,6 +778,17 @@ $numIssues
 $resultsWithoutConcensus
 EOF
 
+	# - update MegaZip file:
+	if ${lmegazip} ; then
+	    # -j option, to store only the files, and not the source paths
+	    zip -j ${megaZipName} $RundirFullPath/$workunitName.desc $RundirFullPath/$workunitName.zip >/dev/null 2>&1
+	    if [ $? -ne 0 ] ; then
+		sixdeskmess="Failing to zip .desc/.zip files!!!"
+		sixdeskmess
+		cleanExit 22
+	    fi
+	fi
+	
 	# clean
 	for iFort in 2 3 8 16 ; do
 	    rm -f $RundirFullPath/fort.$iFort
@@ -802,7 +823,7 @@ function checkDirReadyForSubmission(){
 		    sixdeskmess
 		    let __lerr+=1
 		else
-		    sixdeskGetFileName "${descFileNames}" tmpName
+		    sixdeskGetFileName "${tmpFileNames}" tmpName
 		    fileNames="${fileNames} ${tmpName}"
 		fi
 	    fi
@@ -815,6 +836,18 @@ function checkDirReadyForSubmission(){
 	    let __lerr+=$?
 	else
 	    workunitName="${fileNames[0]}"
+	    # - MegaZip: check that the .desc and .zip are in MegaZip file
+	    #   (zipinfo, to check just infos about zipped files)
+	    if ${lmegazip} ; then
+		for extension in .desc .zip ; do
+		    zipinfo -1 ${megaZipName} "${workunitName}${extension}" >/dev/null 2>&1
+		    if [ $? -ne 0 ] ; then
+			sixdeskmess="${workunitName}${extension} not in ${megaZipName}"
+			sixdeskmess
+			let __lerr+=1
+		    fi
+		done
+	    fi
 	fi
     fi
     if [ $sussix -eq 1 ] ; then
@@ -898,25 +931,35 @@ function dot_boinc(){
     descFileNames=`ls -1 $RundirFullPath/*.desc 2> /dev/null`
     sixdeskGetFileName "${descFileNames}" workunitname
     sixdeskGetTaskIDfromWorkUnitName $workunitname
-    gotit=false
-    for (( mytries=1 ; mytries<=10; mytries++ )) ; do
-	cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work
-	if [ $? -ne 0 ] ; then
-            sixdeskmess="Failing to upload .desc/.zip files - trial $mytries!!!"
-            sixdeskmess
-	else
-            gotit=true
-	    break
+    if ! ${lmegazip} ; then
+	gotit=false
+	for (( mytries=1 ; mytries<=10; mytries++ )) ; do
+	    cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work
+	    if [ $? -ne 0 ] ; then
+		sixdeskmess="Failing to upload .desc/.zip files - trial $mytries!!!"
+		sixdeskmess
+	    else
+		gotit=true
+		break
+	    fi
+	done 
+	if ! ${gotit} ; then
+	    sixdeskmess="failed to submit boinc job 10 times!!!"
+	    sixdeskmess
+	    cleanExit 22
 	fi
-    done 
-    if ! ${gotit} ; then
-	sixdeskmess="failed to submit boinc job 10 times!!!"
+    fi
+
+    # remove .zip/.desc after successful submission
+    if ${lcleanzip} ; then
+	sixdeskmess="Removing .desc/.zip files in $RundirFullPath"
 	sixdeskmess
-	cleanExit 22
+	rm $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip
     fi
 
     # the job has just started
     touch $RundirFullPath/JOB_NOT_YET_COMPLETED
+    rm $RundirFullPath/JOB_NOT_YET_STARTED
 
     # keep track of the $Runnam-taskid couple
     updateTaskIdsCases $sixdeskjobs/tasks $sixdeskjobs/incomplete_tasks $sixdesktaskid
@@ -1363,11 +1406,13 @@ lsubmit=false
 lstatus=false
 lkinit=false
 lselected=false
+lcleanzip=false
+lmegazip=false
 currPlatform=""
 currStudy=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgscakSd:p:" opt ; do
+while getopts  ":hgsctakSCMd:p:" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1404,6 +1449,15 @@ while getopts  ":hgscakSd:p:" opt ; do
 	S)
 	    # selected points of scan only
 	    lselected=true
+	    ;;
+	C)
+	    # the user requests to delete .zip/.desc files
+	    #   after submission with boinc
+	    lcleanzip=true
+	    ;;
+	M)
+	    # submission to boinc through MegaZip
+	    lmegazip=true
 	    ;;
 	d)
 	    # the user is requesting a specific study
@@ -1516,6 +1570,10 @@ echo ""
 
 # - define user tree
 sixdeskDefineUserTree $basedir $scratchdir $workspace
+
+# - boinc variables
+sixDeskSetBOINCVars
+
 
 # - preliminary checks
 preliminaryChecks
@@ -1669,6 +1727,13 @@ if ${lcheck} ; then
 		fi
 	    fi
 	fi
+	# - MegaZip:
+	if ${lmegazip} ; then
+	    inspectPrerequisites ${sixdeskjobs_logs} -s megaZipName.txt
+	    if [ $? -gt 0 ] ; then
+		let __lerr+=1
+	    fi
+	fi
     fi
     if [ ${__lerr} -gt 0 ] ; then
         sixdeskmess="Preparation incomplete."
@@ -1695,6 +1760,11 @@ if ${lsubmit} ; then
 	touch $sixdeskjobs/tasks
 	touch $sixdeskjobs/incomplete_tasks
     fi
+fi
+# - MegaZip: get file name
+if [ "$sixdeskplatform" == "boinc" ] && ${lmegazip} ; then
+    # get name of zip as from initialisation
+    megaZipName=`cat ${sixdeskjobs_logs}/megaZipName.txt`
 fi
 
 # main loop
@@ -1801,6 +1871,34 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	done
     fi	    
 done
+
+# megaZip, in case of boinc: upload mega .zip file
+if ${lsubmit} && [ "$sixdeskplatform" == "boinc" ] && ${lmegazip} ; then
+    gotit=false
+    for (( mytries=1 ; mytries<=10; mytries++ )) ; do
+	cp ${megaZipName} ${megaZipPath}
+	if [ $? -ne 0 ] ; then
+	    sixdeskmess="Failing to MegaZip file ${megaZipName} to ${megaZipPath} - trial $mytries!!!"
+	    sixdeskmess
+	else
+	    gotit=true
+	    break
+	fi
+    done 
+    if ! ${gotit} ; then
+	sixdeskmess="failed to submit MegaZip file ${megaZipName} 10 times!!!"
+	sixdeskmess
+	cleanExit 22
+    fi
+    # remove MegaZip file after successful submission
+    if ${lcleanzip} ; then
+	sixdeskmess="Removing MegaZip file"
+	sixdeskmess
+	rm ${megaZipName}
+    fi
+    # clean
+    rm ${sixdeskjobs_logs}/megaZipName.txt
+fi
 
 # ------------------------------------------------------------------------------
 # go home, man
