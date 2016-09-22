@@ -79,12 +79,16 @@ do
 
     fi
     rm $tmp
-    mymess="Deleting task $taskid in $mytgid from the server"
+    sixdeskmesslevel=1
+    sixdeskmess="Deleting task $taskid in $mytgid from the server"
+    sixdeskmess
     perl ${SCRIPTDIR}/perl/deleteTask.pl $ntaskid $mytgid > $tmp 2>&1
     stat=$? 
     if test $stat -ne 0
     then
-      mymess="deleteTask failed!!! `cat $tmp`"
+      sixdeskmesslevel=1
+      sixdeskmess="deleteTask failed!!! `cat $tmp`"
+      sixdeskmess
     fi
     rm $tmp
   elif test $sixdeskplatform = "boinc"
