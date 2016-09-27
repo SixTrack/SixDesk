@@ -1497,10 +1497,14 @@ elif ${lgenerate} && ${lsubmit} && ${lstatus} ; then
 fi
 # - options
 if [ -n "${currStudy}" ] ; then
-    echo "User required a specific study: ${currStudy}"
+    echo ""
+    echo "--> User required a specific study: ${currStudy}"
+    echo ""
 fi
 if [ -n "${currPlatform}" ] ; then
-    echo "User required a specific platform: ${currPlatform}"
+    echo ""
+    echo "--> User required a specific platform: ${currPlatform}"
+    echo ""
 fi
 
 # ------------------------------------------------------------------------------
@@ -1615,7 +1619,7 @@ fi
 if ${lgenerate} ; then
     # - check that all the necessary MadX input is ready
     if [ -n "${currStudy}" ] ; then
-	${SCRIPTDIR}/bash/mad6t.sh -c -d $newLHCDesName
+	${SCRIPTDIR}/bash/mad6t.sh -c -d ${currStudy}
     else
 	${SCRIPTDIR}/bash/mad6t.sh -c
     fi

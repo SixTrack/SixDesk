@@ -322,10 +322,14 @@ elif ${lcheck} && ${linter} ; then
 fi
 # - options
 if [ -n "${currStudy}" ] ; then
+    echo ""
     echo "User required a specific study: ${currStudy}"
+    echo ""
 fi
 if [ -n "${currPlatform}" ] ; then
+    echo ""
     echo "User required a specific platform: ${currPlatform}"
+    echo ""
 fi
 
 # set environment
