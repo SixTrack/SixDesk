@@ -1070,12 +1070,14 @@ function treatShort(){
 	if ${lgenerate} ; then
 	# ----------------------------------------------------------------------
 	    if ${lselected} ; then
-		checkDirReadyForSubmission
-		__eCheckDirReadyForSubmission=$1
-		if [ $__eCheckDirReadyForSubmission -gt 0 ] ; then
-		    sixdeskmess="$RundirFullPath NOT ready for submission - regenerating the necessary input files!"
-		    sixdeskmess
-		    __lGenerate=true
+		checkDirAlreadyRun >/dev/null 2>&1
+		if [ $? -eq 0 ] ; then
+		    checkDirReadyForSubmission >/dev/null 2>&1
+		    if [ $? -gt 0 ] ; then
+			sixdeskmess="$RundirFullPath NOT ready for submission - regenerating the necessary input files!"
+			sixdeskmess
+			__lGenerate=true
+		    fi
 		fi
 	    else
 		__lGenerate=true
@@ -1141,20 +1143,20 @@ function treatShort(){
 	# ----------------------------------------------------------------------
 	if ${lcheck} ; then
         # ----------------------------------------------------------------------
-	    if ! ${lselected} || ${__lGenerate} ; then
-		checkDirReadyForSubmission
-		__eCheckDirReadyForSubmission=$?
-	    fi
-	    if ${lselected} ; then
+	    if ${lselected} && ! ${__lGenerate} ; then
 		checkDirAlreadyRun
 		__eCheckDirAlreadyRun=$?
+	    fi
+	    if ! ${lselected} || [ $__eCheckDirAlreadyRun -eq 0 ] ; then
+		checkDirReadyForSubmission
+		__eCheckDirReadyForSubmission=$?
 	    fi
 	    if [ $__eCheckDirReadyForSubmission -gt 0 ] ; then
 		sixdeskmess="$RundirFullPath NOT ready for submission!"
 		sixdeskmess
-	    elif ${lselected} && [ $__eCheckDirAlreadyRun -gt 0 ] ; then
-		# sensitive to jobs already run
-		sixdeskmess="job in $RundirFullPath already run!"
+	    elif [ $__eCheckDirAlreadyRun -gt 0 ] ; then
+		# sensitive to jobs already run/submitted
+		sixdeskmess="-> no need to submit: already submitted/finished!"
 		sixdeskmess
 	    else
 		__lSubmit=true
@@ -1237,12 +1239,14 @@ function treatLong(){
 	    if ${lgenerate} ; then
 	    # ------------------------------------------------------------------
 		if ${lselected} ; then
-		    checkDirReadyForSubmission
-		    __eCheckDirReadyForSubmission=$?
-		    if [ $__eCheckDirReadyForSubmission -gt 0 ] ; then
-			sixdeskmess="$RundirFullPath NOT ready for submission - regenerating the necessary input files!"
-			sixdeskmess
-			__lGenerate=true
+		    checkDirAlreadyRun >/dev/null 2>&1
+		    if [ $? -eq 0 ] ; then
+			checkDirReadyForSubmission >/dev/null 2>&1
+			if [ $? -gt 0 ] ; then
+			    sixdeskmess="$RundirFullPath NOT ready for submission - regenerating the necessary input files!"
+			    sixdeskmess
+			    __lGenerate=true
+			fi
 		    fi
 		else
 		    __lGenerate=true
@@ -1289,20 +1293,20 @@ function treatLong(){
 	    # ------------------------------------------------------------------
 	    if ${lcheck} ; then
 	    # ------------------------------------------------------------------
-		if ! ${lselected} || ${__lGenerate} ; then
-		    checkDirReadyForSubmission
-		    __eCheckDirReadyForSubmission=$?
-		fi
-		if ${lselected} ; then
+		if ${lselected} && ! ${__lGenerate} ; then
 		    checkDirAlreadyRun
 		    __eCheckDirAlreadyRun=$?
+		fi
+		if ! ${lselected} || [ $__eCheckDirAlreadyRun -eq 0 ] ; then
+		    checkDirReadyForSubmission
+		    __eCheckDirReadyForSubmission=$?
 		fi
 		if [ $__eCheckDirReadyForSubmission -gt 0 ] ; then
 		    sixdeskmess="$RundirFullPath NOT ready for submission!"
 		    sixdeskmess
-		elif ${lselected} && [ $__eCheckDirAlreadyRun -gt 0 ] ; then
+		elif [ $__eCheckDirAlreadyRun -gt 0 ] ; then
 		    # sensitive to jobs already run/submitted
-		    sixdeskmess="-> already run/submitted!"
+		    sixdeskmess="-> no need to submit: already submitted/finished!"
 		    sixdeskmess
 		else
 		    __lSubmit=true
