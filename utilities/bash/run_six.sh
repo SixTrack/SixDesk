@@ -23,8 +23,12 @@ function how_to_use() {
 
    options (optional)
    -S      selected points of scan only
-           in case of preparation of files, regenerate those directories
-              with an incomplete set of input files;
+           in case of preparation of files, regenerate only those directories
+              with an incomplete set of input files (unless a fort.10.gz of non-zero
+              length is there)
+           in case of check, check the correct input is generated only in those
+              directories that will be submitted, ie those without a fort.10.gz of
+              non-zero length
            in case of submission, submit those directories without a fort.10.gz
               or zero-length fort.10.gz
            NB: this option is NOT active in case of -c only!
