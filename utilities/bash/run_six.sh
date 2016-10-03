@@ -734,18 +734,16 @@ function submitCreateFinalInputs(){
     sixdeskmess="Taking care of SIXTRACK fort.2/fort.3/fort.8/fort.16 in $RundirFullPath"
     sixdeskmess
 
-    if [ "$sixdeskplatform" == "lsf" ] || [ "$sixdeskplatform" == "cpss" ] ; then
-
-	# fort.3
-	gzip -c $sixdeskjobs_logs/fort.3 > $RundirFullPath/fort.3.gz
+    # fort.3
+    gzip -c $sixdeskjobs_logs/fort.3 > $RundirFullPath/fort.3.gz
 	
-	# input from MADX: fort.2/.8/.16
-	for iFort in 2 8 16 ; do
-	    [ ! -e $RundirFullPath/fort.${iFort}.gz ] || rm -f $RundirFullPath/fort.${iFort}.gz
-	    ln -s $sixtrack_input/fort.${iFort}_$iMad.gz $RundirFullPath/fort.${iFort}.gz
-	done
+    # input from MADX: fort.2/.8/.16
+    for iFort in 2 8 16 ; do
+	[ ! -e $RundirFullPath/fort.${iFort}.gz ] || rm -f $RundirFullPath/fort.${iFort}.gz
+	ln -s $sixtrack_input/fort.${iFort}_$iMad.gz $RundirFullPath/fort.${iFort}.gz
+    done
 	
-    elif [ "$sixdeskplatform" == "boinc" ] ; then
+    if [ "$sixdeskplatform" == "boinc" ] ; then
 	
 	# fort.3
 	ln -s $sixdeskjobs_logs/fort.3 $RundirFullPath/fort.3
@@ -806,12 +804,11 @@ function checkDirReadyForSubmission(){
 
     inspectPrerequisites $RundirFullPath -d
     let __lerr+=$?
-    if [ "$sixdeskplatform" == "lsf" ] || [ "$sixdeskplatform" == "cpss" ] ; then
-	inspectPrerequisites $RundirFullPath -s $Runnam.job
-	let __lerr+=$?
-	inspectPrerequisites $RundirFullPath -s fort.2.gz fort.3.gz fort.8.gz fort.16.gz
-	let __lerr+=$?
-    elif [ "$sixdeskplatform" == "boinc" ] ; then
+    inspectPrerequisites $RundirFullPath -s fort.2.gz fort.3.gz fort.8.gz fort.16.gz
+    let __lerr+=$?
+    inspectPrerequisites $RundirFullPath -s $Runnam.job
+    let __lerr+=$?
+    if [ "$sixdeskplatform" == "boinc" ] ; then
 	# - there should be only 1 .desc/.zip files
 	fileNames=""
 	for extension in .desc .zip ; do
@@ -840,9 +837,12 @@ function checkDirReadyForSubmission(){
 	    let __lerr+=$?
 	else
 	    workunitName="${fileNames[0]}"
+	    sixdeskmess=".desc and .zip files present in $RundirFullPath!"
+	    sixdeskmess
 	    # - MegaZip: check that the .desc and .zip are in MegaZip file
 	    #   (zipinfo, to check just infos about zipped files)
 	    if ${lmegazip} ; then
+		local __llerr=$__lerr
 		for extension in .desc .zip ; do
 		    zipinfo -1 ${megaZipName} "${workunitName}${extension}" >/dev/null 2>&1
 		    if [ $? -ne 0 ] ; then
@@ -851,6 +851,10 @@ function checkDirReadyForSubmission(){
 			let __lerr+=1
 		    fi
 		done
+		if [ $__llerr -eq $__lerr ] ; then
+		    sixdeskmess="...and in ${megaZipName}!"
+		    sixdeskmess
+		fi
 	    fi
 	fi
     fi
