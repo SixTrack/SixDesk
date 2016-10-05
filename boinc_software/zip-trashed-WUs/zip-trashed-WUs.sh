@@ -4,6 +4,7 @@
 # script for zipping WUs according to study name
 iNLT=200
 nDays=30
+boincDownloadDir="/afs/cern.ch/work/b/boinc/boinc/download"
 
 echo ""
 echo " starting `basename $0` at `date` ..."
@@ -54,6 +55,19 @@ TIMEDELTA=$(($ENDTIME - $STARTTIME))
 echo " ...zipping done by `date` - it took ${TIMEDELTA} seconds to zip `echo "${WUs2bZipped=}" | wc -l` WUs."
 
 # removal of old .zip files
-echo " removing .zip files older than ${nDays} days..."
-find . -mtime +${nDays} -name "*.zip" -print -exec rm {} \;
-echo " ...removal of old .zip files done by `date`."
+echo " moving .zip files older than ${nDays} days to ${boincDownloadDir}..."
+fileNames=`find . -mtime +${nDays} -name "*.zip"`
+fileNames=( ${fileNames} )
+for fileName in ${fileNames[@]} ; do
+    origFileName=$(basename "$fileName")
+    actualFileName="${origFileName%.*}"
+    filename="${actualFileName}__`date "+%Y-%m-%d_%H-%M-%S"`.zip"
+    cp ${origFileName} ${filename}
+    zip ${boincDownloadDir}/${origFileName} ${filename}
+    if [ $? -eq 0 ] ; then
+	rm ${origFileName}
+    fi
+    rm ${filename}
+done
+
+echo " ...done by `date`."
