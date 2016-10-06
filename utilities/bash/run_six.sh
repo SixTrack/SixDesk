@@ -36,7 +36,8 @@ function how_to_use() {
            NB: this option is NOT active in case of -c only!
    -M      MegaZip: in case of boinc, WUs all zipped in one file.
              (.zip/.desc files of each WU will be put in a big .zip)
-           file, to be the
+           this option shall be used with both -g and -s actions, and in case
+             of explicitely requiring -c
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
 
@@ -422,10 +423,12 @@ function preProcessBoinc(){
     let __lerr+=$?
 
     # counter of workunits
-    [ -d $sixdeskhome/sixdeskTaskIds/$LHCDescrip ] || mkdir -p $sixdeskhome/sixdeskTaskIds/$LHCDescrip
-    let __lerr+=$?
-    echo "0" > $sixdeskhome/sixdeskTaskIds/$LHCDescrip/sixdeskTaskId
-    let __lerr+=$?
+    if [ ! -d $sixdeskhome/sixdeskTaskIds/$LHCDescrip ] ; then
+	mkdir -p $sixdeskhome/sixdeskTaskIds/$LHCDescrip
+	let __lerr+=$?
+	echo "0" > $sixdeskhome/sixdeskTaskIds/$LHCDescrip/sixdeskTaskId
+	let __lerr+=$?
+    fi
 
     # megaZip
     if ${lmegazip} ; then
@@ -1001,7 +1004,7 @@ function updateTaskIdsCases(){
 	__taskids=$__taskid
 	echo $Runnam >> $sixdeskwork/incomplete_cases
 	echo $Runnam >> $sixdeskwork/myincomplete_cases
-	sixdeskmess="Job $Runnam submitted with LSF JobId/taskid $__taskid"
+	sixdeskmess="Job $Runnam submitted with JobId/taskid $__taskid"
 	sixdeskmess 1
     fi
     echo "$Runnam $__taskids " >> $sixdeskwork/taskids
@@ -1289,14 +1292,12 @@ function treatLong(){
 		    submitCreateFinalInputs
 		    
 		    # submission file
-		    if [ "$sixdeskplatform" == "lsf" ] ; then
-			sed -e 's?SIXJOBNAME?'$Runnam'?g' \
-			    -e 's?SIXJOBDIR?'$Rundir'?g' \
-			    -e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
-			    -e 's?SIXTRACKEXE?'$SIXTRACKEXE'?g' \
-			    -e 's?SIXCASTOR?'$sixdeskcastor'?g' ${SCRIPTDIR}/templates/lsf/${lsfjobtype}.job > $RundirFullPath/$Runnam.job
-			chmod 755 $RundirFullPath/$Runnam.job
-		    fi
+		    sed -e 's?SIXJOBNAME?'$Runnam'?g' \
+			-e 's?SIXJOBDIR?'$Rundir'?g' \
+			-e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
+			-e 's?SIXTRACKEXE?'$SIXTRACKEXE'?g' \
+			-e 's?SIXCASTOR?'$sixdeskcastor'?g' ${SCRIPTDIR}/templates/lsf/${lsfjobtype}.job > $RundirFullPath/$Runnam.job
+		    chmod 755 $RundirFullPath/$Runnam.job
 		fi
 	    fi
 
