@@ -3,7 +3,7 @@
 # A.Mereghetti, 2016-08-18
 # script for zipping WUs according to study name
 iNLT=200
-nDays=30
+nDays=1
 boincDownloadDir="/afs/cern.ch/work/b/boinc/boinc/download"
 
 echo ""
@@ -52,7 +52,7 @@ ENDTIME=$(date +%s)
 
 # done
 TIMEDELTA=$(($ENDTIME - $STARTTIME))
-echo " ...zipping done by `date` - it took ${TIMEDELTA} seconds to zip `echo "${WUs2bZipped=}" | wc -l` WUs."
+echo " ...zipping done by `date` - it took ${TIMEDELTA} seconds to zip `echo "${WUs2bZipped}" | wc -l` WUs."
 
 # removal of old .zip files
 echo " moving .zip files older than ${nDays} days to ${boincDownloadDir}..."
