@@ -945,3 +945,49 @@ sixdeskGetFileName(){
     __fileName="${__fileName%.*}"
     eval "$2=$__fileName"
 }
+sixdeskCleanExit(){
+    local __exitLevel=0
+    if [ $# -eq 1 ] ; then
+	__exitLevel=$1
+    fi
+    for tmpDir in ${lockingDirs[@]} ; do
+	sixdesklockdir=$tmpDir
+	sixdeskunlock
+    done
+    sixdeskexit $__exitLevel
+}
+function __inspectPrerequisite(){
+    local __test=$1
+    local __entry=$2
+    local __lerr=0
+    
+    test $__test ${__entry}
+    if [ $? -ne 0 ] ; then
+	sixdeskmess="${__entry} NOT there!"
+	sixdeskmess
+	let __lerr+=1
+    else
+	sixdeskmess="${__entry} EXISTs!"
+	sixdeskmess
+    fi
+    return $__lerr
+}
+
+function sixdeskInspectPrerequisites(){
+    local __path=$1
+    local __test=$2
+    shift 2
+    local __entries=$@
+    local __lerr=0
+    if [ $# -eq 0 ] ; then
+	__inspectPrerequisite ${__test} ${__path}
+	let __lerr+=$?
+    else
+	for tmpEntry in ${__entries} ; do
+	    __inspectPrerequisite ${__test} ${__path}/${tmpEntry}
+	    let __lerr+=$?
+	done
+    fi
+    return $__lerr
+}
+

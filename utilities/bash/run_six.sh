@@ -8,7 +8,7 @@ function how_to_use() {
 
    actions (mandatory, one of the following):
    -g      generate simulation files 
-           NB: this includes also preliminary SixTrakc jobs for computing
+           NB: this includes also preliminary SixTrack jobs for computing
                chromas and beta functions
    -s      actually submit
    -c      check that all the input files have been created and job is ready
@@ -18,7 +18,8 @@ function how_to_use() {
    -C      clean .zip/.desc after submission in boinc
            NB: this is done by default in case of submission to boinc
    -t      report the current status of simulations (not yet available)
-   -k      run a kinit before doing any action
+   -k      renew the kerberos/AFS credentials before doing any action;
+               renewal is performed via a 'kinit -R' command
 
    By default, all actions are performed no matter if jobs are 
       partially prepared/run.
@@ -34,10 +35,14 @@ function how_to_use() {
            in case of submission, submit those directories without a fort.10.gz
               or zero-length fort.10.gz
            NB: this option is NOT active in case of -c only!
+   -f      fix compromised directory structure
+           similar to -S, but  it completely re-generates folders which are not
+              ready for submission, no matter if already run or not;
+           this option is active only in case of generation;
    -M      MegaZip: in case of boinc, WUs all zipped in one file.
-             (.zip/.desc files of each WU will be put in a big .zip)
+              (.zip/.desc files of each WU will be put in a big .zip)
            this option shall be used with both -g and -s actions, and in case
-             of explicitely requiring -c
+              of explicitely requiring -c
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
 
@@ -441,41 +446,6 @@ function preProcessBoinc(){
     fi
 }
 
-function __inspectPrerequisite(){
-    local __test=$1
-    local __entry=$2
-    local __lerr=0
-    
-    test $__test ${__entry}
-    if [ $? -ne 0 ] ; then
-	sixdeskmess="${__entry} NOT there!"
-	sixdeskmess
-	let __lerr+=1
-    else
-	sixdeskmess="${__entry} EXISTs!"
-	sixdeskmess
-    fi
-    return $__lerr
-}
-
-function inspectPrerequisites(){
-    local __path=$1
-    local __test=$2
-    shift 2
-    local __entries=$@
-    local __lerr=0
-    if [ $# -eq 0 ] ; then
-	__inspectPrerequisite ${__test} ${__path}
-	let __lerr+=$?
-    else
-	for tmpEntry in ${__entries} ; do
-	    __inspectPrerequisite ${__test} ${__path}/${tmpEntry}
-	    let __lerr+=$?
-	done
-    fi
-    return $__lerr
-}
-
 function submitChromaJobs(){
 
     local __destination=$1
@@ -558,7 +528,7 @@ function submitChromaJobs(){
         sixdeskmess
         sixdeskmess="Check the file first_oneturn which contains the SixTrack fort.6 output."
         sixdeskmess
-	cleanExit 77
+	sixdeskCleanExit 77
     fi
     mv fort.10 fort.10_first_oneturn
 
@@ -575,7 +545,7 @@ function submitChromaJobs(){
         sixdeskmess
         sixdeskmess="Check the file second_oneturn which contains the SixTrack fort.6 output."
         sixdeskmess
-	cleanExit 78
+	sixdeskCleanExit 78
     fi
     mv fort.10 fort.10_second_oneturn
 
@@ -649,7 +619,7 @@ function submitBetaJob(){
         sixdeskmess
         sixdeskmess="Check the file lin which contains the SixTrack fort.6 output."
         sixdeskmess
-	cleanExit 99
+	sixdeskCleanExit 99
     fi
     mv lin lin_old
     cp fort.10 fort.10_old
@@ -683,7 +653,7 @@ function parseBetaValues(){
         sixdeskmess="betavalues has $nBetas words!!! Should be 14!"
         sixdeskmess
         rm -f $__betaWhere/betavalues
-	cleanExit 98
+	sixdeskCleanExit 98
     fi
 
     # check that the beta values are not NULL and notify user
@@ -701,7 +671,7 @@ function parseBetaValues(){
         sixdeskmess
         sixdeskmess="Check the file lin_old which contains the SixTrack fort.6 output."
         sixdeskmess
-	cleanExit 98
+	sixdeskCleanExit 98
     fi
     sixdeskmess="Finally all betavalues:"
     sixdeskmess
@@ -791,7 +761,7 @@ EOF
 	    if [ $? -ne 0 ] ; then
 		sixdeskmess="Failing to zip .desc/.zip files!!!"
 		sixdeskmess
-		cleanExit 22
+		sixdeskCleanExit 22
 	    fi
 	fi
 	
@@ -806,11 +776,11 @@ EOF
 function checkDirReadyForSubmission(){
     local __lerr=0
 
-    inspectPrerequisites $RundirFullPath -d
+    sixdeskInspectPrerequisites $RundirFullPath -d
     let __lerr+=$?
-    inspectPrerequisites $RundirFullPath -s fort.2.gz fort.3.gz fort.8.gz fort.16.gz
+    sixdeskInspectPrerequisites $RundirFullPath -s fort.2.gz fort.3.gz fort.8.gz fort.16.gz
     let __lerr+=$?
-    inspectPrerequisites $RundirFullPath -s $Runnam.job
+    sixdeskInspectPrerequisites $RundirFullPath -s $Runnam.job
     let __lerr+=$?
     if [ "$sixdeskplatform" == "boinc" ] ; then
 	# - there should be only 1 .desc/.zip files
@@ -863,7 +833,7 @@ function checkDirReadyForSubmission(){
 	fi
     fi
     if [ $sussix -eq 1 ] ; then
-	inspectPrerequisites $RundirFullPath -s sussix.inp.1.gz sussix.inp.2.gz sussix.inp.3.gz
+	sixdeskInspectPrerequisites $RundirFullPath -s sussix.inp.1.gz sussix.inp.2.gz sussix.inp.3.gz
 	let __lerr+=$?
     fi
 
@@ -908,14 +878,14 @@ function dot_bsub(){
 	if [ "$__taskno" == "" ] ; then
 	    sixdeskmess="bsub did NOT return a taskno !!!"
 	    sixdeskmess
-	    cleanExit 21
+	    sixdeskCleanExit 21
 	fi
 	local __taskid=lsf$__taskno
     else
 	rm -f $RundirFullPath/JOB_NOT_YET_STARTED 
 	sixdeskmess="bsub of $RundirFullPath/$Runnam.job to Queue ${lsfq} failed !!!"
 	sixdeskmess
-	cleanExit 10
+	sixdeskCleanExit 10
     fi
 
     # keep track of the $Runnam-taskid couple
@@ -958,7 +928,7 @@ function dot_boinc(){
 	if ! ${gotit} ; then
 	    sixdeskmess="failed to submit boinc job 10 times!!!"
 	    sixdeskmess
-	    cleanExit 22
+	    sixdeskCleanExit 22
 	fi
     fi
 
@@ -1036,11 +1006,11 @@ function treatShort(){
     if ${lcheck} ; then
 	if [ $sussix -eq 1 ] ; then
 	    #
-	    inspectPrerequisites $sixdeskjobs_logs -e sussix.inp.1.gz sussix.inp.2.gz sussix.inp.3.gz
+	    sixdeskInspectPrerequisites $sixdeskjobs_logs -e sussix.inp.1.gz sussix.inp.2.gz sussix.inp.3.gz
 	    if [ $? -gt 0 ] ; then
 		sixdeskmess="Error in creating sussix input files"
 		sixdeskmess
-		cleanExit 47
+		sixdeskCleanExit 47
 	    fi
 	fi
     fi
@@ -1083,8 +1053,10 @@ function treatShort(){
 	if ${lgenerate} ; then
 	# ----------------------------------------------------------------------
 	    if ${lselected} ; then
-		checkDirAlreadyRun >/dev/null 2>&1
-		if [ $? -eq 0 ] ; then
+		if ${lalreadyrun} ; then
+		    checkDirAlreadyRun >/dev/null 2>&1
+		fi
+		if ! ${lalreadyrun} || [[ ${lalreadyrun} && $? -eq 0 ]] ; then
 		    checkDirReadyForSubmission >/dev/null 2>&1
 		    if [ $? -gt 0 ] ; then
 			sixdeskmess="$RundirFullPath NOT ready for submission - regenerating the necessary input files!"
@@ -1252,8 +1224,10 @@ function treatLong(){
 	    if ${lgenerate} ; then
 	    # ------------------------------------------------------------------
 		if ${lselected} ; then
-		    checkDirAlreadyRun >/dev/null 2>&1
-		    if [ $? -eq 0 ] ; then
+		    if ${lalreadyrun} ; then
+			checkDirAlreadyRun >/dev/null 2>&1
+		    fi
+		    if ! ${lalreadyrun} || [[ ${lalreadyrun} && $? -eq 0 ]] ; then
 			checkDirReadyForSubmission >/dev/null 2>&1
 			if [ $? -gt 0 ] ; then
 			    sixdeskmess="$RundirFullPath NOT ready for submission - regenerating the necessary input files!"
@@ -1393,18 +1367,6 @@ function treatDA(){
 
 }
 
-function cleanExit(){
-    local __exitLevel=0
-    if [ $# -eq 1 ] ; then
-	__exitLevel=$1
-    fi
-    for tmpDir in ${lockingDirs[@]} ; do
-	sixdesklockdir=$tmpDir
-	sixdeskunlock
-    done
-    sixdeskexit $__exitLevel
-}
-
 # ==============================================================================
 # main
 # ==============================================================================
@@ -1427,13 +1389,14 @@ lsubmit=false
 lstatus=false
 lkinit=false
 lselected=false
+lalreadyrun=false
 lcleanzip=false
 lmegazip=false
 currPlatform=""
 currStudy=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgsctakSCMd:p:" opt ; do
+while getopts  ":hgsctakfSCMd:p:" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1473,6 +1436,12 @@ while getopts  ":hgsctakSCMd:p:" opt ; do
 	S)
 	    # selected points of scan only
 	    lselected=true
+	    lalreadyrun=true
+	    ;;
+	f)
+	    # fix directories
+	    lselected=true
+	    lalreadyrun=false
 	    ;;
 	C)
 	    # the user requests to delete .zip/.desc files
@@ -1543,9 +1512,13 @@ sixdeskmesslevel=$sixdeskmessleveldef
 
 # - kinit, to renew kerberos ticket
 if ${lkinit} ; then
-    sixdeskmess=" --> kinit beforehand:"
+    sixdeskmess=" --> kinit -R beforehand:"
     sixdeskmess
-    kinit
+    kinit -R
+    if [ $? -gt 0 ] ; then
+	echo "--. kinit -R failed - AFX/Kerberos credentials expired!!! aborting..."
+	exit
+    fi
 fi
 
 # - action-dependet stuff
@@ -1660,7 +1633,7 @@ if ${lgenerate} ; then
     # - these dirs should already exist...
     for tmpDir in $sixdesktrack $sixdeskjobs $sixdeskjobs_logs $sixdesktrackStudy ; do
 	[ -d $tmpDir ] || mkdir -p $tmpDir
-	inspectPrerequisites $tmpDir -d
+	sixdeskInspectPrerequisites $tmpDir -d
 	let __lerr+=$?
     done
     # - save emittance and gamma
@@ -1705,40 +1678,40 @@ if ${lgenerate} ; then
     if [ $__lerr -gt 0 ] ; then
         sixdeskmess="Preparatory step failed."
         sixdeskmess
-	cleanExit $__lerr
+	sixdeskCleanExit $__lerr
     fi
 fi
 if ${lcheck} ; then
     # - general_input
-    inspectPrerequisites $sixdesktrackStudy -s general_input
+    sixdeskInspectPrerequisites $sixdesktrackStudy -s general_input
     let __lerr+=$?
     # - preProcessFort3
-    inspectPrerequisites ${sixdeskjobs_logs} -s fort0.3.mask forts.3.mask fortl.3.mask fortda.3.mask
+    sixdeskInspectPrerequisites ${sixdeskjobs_logs} -s fort0.3.mask forts.3.mask fortl.3.mask fortda.3.mask
     let __lerr+=$?
     if [ $short -eq 1 ] ; then
 	if [ $sussix -eq 1 ] ; then
-	    inspectPrerequisites ${sixdeskjobs_logs} -s sussix.tmp.1 sussix.tmp.2 sussix.tmp.3
+	    sixdeskInspectPrerequisites ${sixdeskjobs_logs} -s sussix.tmp.1 sussix.tmp.2 sussix.tmp.3
 	    let __lerr+=$?
 	    echo $__lerr
 	fi
-	inspectPrerequisites ${sixdeskjobs_logs} -s ${lsfjobtype}.job ${lsfjobtype}0.job
+	sixdeskInspectPrerequisites ${sixdeskjobs_logs} -s ${lsfjobtype}.job ${lsfjobtype}0.job
 	let __lerr+=$?
     elif [ $da -eq 1 ] ; then
-	inspectPrerequisites ${sixdeskjobs_logs} -s dalie.data dalie.input dalie reson.data readda
+	sixdeskInspectPrerequisites ${sixdeskjobs_logs} -s dalie.data dalie.input dalie reson.data readda
 	let __lerr+=$?
     fi
     if [ "$sixdeskplatform" == "boinc" ] ; then
 	# - existence of dirs
-	inspectPrerequisites $sixdeskboincdir -d
+	sixdeskInspectPrerequisites $sixdeskboincdir -d
 	if [ $? -gt 0 ] ; then
 	    let __lerr+=1
 	else
 	    for tmpDir in $sixdeskboincdir/work $sixdeskboincdir/results ; do
-		inspectPrerequisites $tmpDir -d
+		sixdeskInspectPrerequisites $tmpDir -d
 		let __lerr+=$?
 	    done
 	    # - check of ownership
-	    inspectPrerequisites $sixdeskboincdir -s owner
+	    sixdeskInspectPrerequisites $sixdeskboincdir -s owner
 	    if [ $? -gt 0 ] ; then
 		let __lerr+=1
 	    else
@@ -1766,7 +1739,7 @@ if ${lcheck} ; then
 	fi
 	# - MegaZip:
 	if ${lmegazip} ; then
-	    inspectPrerequisites ${sixdeskjobs_logs} -s megaZipName.txt
+	    sixdeskInspectPrerequisites ${sixdeskjobs_logs} -s megaZipName.txt
 	    if [ $? -gt 0 ] ; then
 		let __lerr+=1
 	    fi
@@ -1775,7 +1748,7 @@ if ${lcheck} ; then
     if [ ${__lerr} -gt 0 ] ; then
         sixdeskmess="Preparation incomplete."
         sixdeskmess
-	cleanExit ${__lerr}
+	sixdeskCleanExit ${__lerr}
     fi
 fi
 # - echo emittance and dimsus
@@ -1855,18 +1828,18 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	    fi
 	    if ${lcheck} ; then
 		# checks
-		inspectPrerequisites $RundirFullPath -d
+		sixdeskInspectPrerequisites $RundirFullPath -d
 		let __lerr+=$?
 		if [ $chrom -eq 0 ] ; then
-		    inspectPrerequisites $RundirFullPath -s mychrom
+		    sixdeskInspectPrerequisites $RundirFullPath -s mychrom
 		    let __lerr+=$?
 		fi
-		inspectPrerequisites $RundirFullPath -s betavalues
+		sixdeskInspectPrerequisites $RundirFullPath -s betavalues
 		let __lerr+=$?
 		if [ ${__lerr} -gt 0 ] ; then
 		    sixdeskmess="Failure in preparation."
 		    sixdeskmess
-		    cleanExit ${__lerr}
+		    sixdeskCleanExit ${__lerr}
 		fi
 	    fi
 	    parseBetaValues $RundirFullPath
@@ -1927,7 +1900,7 @@ if ${lmegazip} ; then
 	if ! ${gotit} ; then
 	    sixdeskmess="failed to submit MegaZip file ${megaZipName} 10 times!!!"
 	    sixdeskmess
-	    cleanExit 22
+	    sixdeskCleanExit 22
 	fi
     fi
     # - clean megaZip
@@ -1949,4 +1922,4 @@ sixdeskmess="Completed normally"
 sixdeskmess
 
 # bye bye
-cleanExit 0
+sixdeskCleanExit 0
