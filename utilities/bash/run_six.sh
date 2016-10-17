@@ -1607,8 +1607,7 @@ __lerr=0
 # - lock dirs
 for tmpDir in ${lockingDirs[@]} ; do
     [ -d $tmpDir ] || mkdir -p $tmpDir
-    sixdesklockdir=$tmpDir
-    sixdesklock
+    sixdesklock $tmpDir
 done
 
 # - actual trap

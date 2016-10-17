@@ -350,16 +350,27 @@ if ${lsub} ; then
     # - some checks
     preliminaryChecks
 
-    # - lock study and sixtrack_input before doing any action
-    sixdesklock $sixdeskstudy
-    sixdesklock $sixtrack_input
+    # - define locking dirs
+    lockingDirs=( "$sixdeskstudy" "$sixtrack_input" )
+
+    # - lock dirs before doing any action
+    for tmpDir in ${lockingDirs[@]} ; do
+	sixdesklock $tmpDir
+    done
     
+    # - define trap
+    trap sixdeskCleanExit EXIT
+
     submit
 
     # - clean locks
-    sixdeskunlock $sixtrack_input
-    sixdeskunlock $sixdeskstudy
+    for tmpDir in ${lockingDirs[@]} ; do
+	sixdeskunlock $tmpDir
+    done
     
+    # - redefine trap
+    trap exit EXIT
+
 else
     check
 fi
