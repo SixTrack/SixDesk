@@ -1509,6 +1509,8 @@ source ${SCRIPTDIR}/bash/dot_env ${currStudy} ${currPlatform}
 # - settings for sixdeskmessages
 sixdeskmessleveldef=0
 sixdeskmesslevel=$sixdeskmessleveldef
+# - temporary trap
+trap sixdeskexit EXIT
 
 # - kinit, to renew kerberos ticket
 if ${lkinit} ; then
@@ -1516,12 +1518,13 @@ if ${lkinit} ; then
     sixdeskmess
     kinit -R
     if [ $? -gt 0 ] ; then
-	echo "--. kinit -R failed - AFX/Kerberos credentials expired!!! aborting..."
-	exit
+	sixdeskmess="--. kinit -R failed - AFX/Kerberos credentials expired!!! aborting..."
+	sixdeskmess
+	sixdeskexit
     fi
 fi
 
-# - action-dependet stuff
+# - action-dependent stuff
 echo ""
 if ${lgenerate} ; then
     #
@@ -1607,6 +1610,9 @@ for tmpDir in ${lockingDirs[@]} ; do
     sixdesklockdir=$tmpDir
     sixdesklock
 done
+
+# - actual trap
+trap sixdeskCleanExit EXIT
 
 # - tunes
 echo ""
@@ -1920,6 +1926,3 @@ fi
 echo ""
 sixdeskmess="Completed normally"
 sixdeskmess
-
-# bye bye
-sixdeskCleanExit 0
