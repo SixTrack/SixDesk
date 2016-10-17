@@ -265,6 +265,8 @@ lsub=false
 lcheck=false
 currPlatform=""
 currStudy=""
+optArgCurrStudy="-s"
+optArgCurrPlatForm=""
 
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":hiscd:p:" opt ; do
@@ -322,18 +324,16 @@ elif ${lcheck} && ${linter} ; then
 fi
 # - options
 if [ -n "${currStudy}" ] ; then
-    echo ""
-    echo "User required a specific study: ${currStudy}"
-    echo ""
+    optArgCurrStudy="-d ${currStudy}"
 fi
 if [ -n "${currPlatform}" ] ; then
-    echo ""
-    echo "User required a specific platform: ${currPlatform}"
-    echo ""
+    optArgCurrPlatForm="-p ${currPlatform}"
 fi
 
-# set environment
-source ${SCRIPTDIR}/bash/dot_env ${currStudy} ${currPlatform}
+# load environment
+# NB: workaround to get getopts working properly in sourced script
+OPTIND=1
+source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} -e
 # build paths
 sixDeskDefineMADXTree ${SCRIPTDIR}
 # sixdeskmess level

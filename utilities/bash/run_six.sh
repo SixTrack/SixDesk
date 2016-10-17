@@ -1394,6 +1394,8 @@ lcleanzip=false
 lmegazip=false
 currPlatform=""
 currStudy=""
+optArgCurrStudy="-s"
+optArgCurrPlatForm=""
 
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":hgsctakfSCMd:p:" opt ; do
@@ -1490,14 +1492,10 @@ elif ${lgenerate} && ${lsubmit} && ${lstatus} ; then
 fi
 # - options
 if [ -n "${currStudy}" ] ; then
-    echo ""
-    echo "--> User required a specific study: ${currStudy}"
-    echo ""
+    optArgCurrStudy="-d ${currStudy}"
 fi
 if [ -n "${currPlatform}" ] ; then
-    echo ""
-    echo "--> User required a specific platform: ${currPlatform}"
-    echo ""
+    optArgCurrPlatForm="-p ${currPlatform}"
 fi
 
 # ------------------------------------------------------------------------------
@@ -1505,7 +1503,9 @@ fi
 # ------------------------------------------------------------------------------
 
 # - load environment
-source ${SCRIPTDIR}/bash/dot_env ${currStudy} ${currPlatform}
+#   NB: workaround to get getopts working properly in sourced script
+OPTIND=1
+source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} -e
 # - settings for sixdeskmessages
 sixdeskmessleveldef=0
 sixdeskmesslevel=$sixdeskmessleveldef
@@ -1629,11 +1629,7 @@ fi
 # preparation to main loop
 if ${lgenerate} ; then
     # - check that all the necessary MadX input is ready
-    if [ -n "${currStudy}" ] ; then
-	${SCRIPTDIR}/bash/mad6t.sh -c -d ${currStudy}
-    else
-	${SCRIPTDIR}/bash/mad6t.sh -c
-    fi
+    ${SCRIPTDIR}/bash/mad6t.sh -c ${optArgCurrStudy}
     let __lerr+=$?
     # - these dirs should already exist...
     for tmpDir in $sixdesktrack $sixdeskjobs $sixdeskjobs_logs $sixdesktrackStudy ; do

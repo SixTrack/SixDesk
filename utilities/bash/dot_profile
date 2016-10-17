@@ -807,7 +807,13 @@ sixdeskSetExes(){
     export SIXTRACKDAEXE=$sixdeskpath/exes/SixTrack_crlibm_da_lf95v4200
 }
 sixdeskSetPlatForm(){
-    export sixdeskplatform=`echo "$platform" | tr '[A-Z]' '[a-z]'`
+    local __platform=$1
+    export sixdeskplatform=`echo "$__platform" | tr '[A-Z]' '[a-z]'`
+    if [ "$sixdeskplatform" != "boinc" ] && [ "$sixdeskplatform" != "cpss" ] && [ "$sixdeskplatform" != "lsf" ] ; then
+	sixdeskmess="unknown platform: ${sixdeskplatform}"
+	sixdeskmess
+	return 1
+    fi
     if [ "$BNL" != "" ] ; then
 	export sixdeskbnlin="fort.54"
 	export bnlfilenames="beambeam-output.dat beambeamlostID.dat SixTwiss.dat checkdist.dat"
@@ -818,11 +824,9 @@ sixdeskSetPlatForm(){
 	    export sixdeskbnlout=$bnlfortnames
 	elif [ "$sixdeskplatform" == "lsf" ] ; then
 	    export sixdeskbnlout=$bnlfilenames
-	else
-	    echo "UNKNOWN sixdeskplatform $sixdeskplatform"
-	    exit 1
 	fi
     fi
+    return 0
 }
 sixDeskSetBOINCVars(){
     # The SixTrack executable is now ????.
