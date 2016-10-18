@@ -3,7 +3,6 @@
 # A.Mereghetti, 2016-08-18
 # script for zipping WUs according to study name
 iNLT=200
-nDays=1
 boincDownloadDir="/afs/cern.ch/work/b/boinc/boinc/download"
 
 echo ""
@@ -17,11 +16,13 @@ studyNameStats=`echo "${WUs2bZipped}" | awk 'BEGIN{FS="__"}{print ($1)}' | sort 
 echo " ...studies involved:"
 echo "${studyNameStats}"
 
-# actually zip
+# actually zip and move to boincDownloadDir
 studyNames=`echo "${studyNameStats}" | awk '{print ($2)}'`
 studyNames=( ${studyNames} )
 STARTTIME=$(date +%s)
 for studyName in ${studyNames[@]} ; do
+    # fileName of .zip
+    zipFileName="${studyName}__`date "+%Y-%m-%d_%H-%M-%S"`.zip"
     WUnames=`echo "${WUs2bZipped}" | grep ${studyName}`
     # zip/rm WUs in bunches
     nWUnames=`echo "${WUnames}" | wc -l`
@@ -30,23 +31,29 @@ for studyName in ${studyNames[@]} ; do
     for (( ii=1; ii<=${iiMax} ; ii++ )) ; do
 	let nHead=$ii*$iNLT
 	tmpWUnames=`echo "${WUnames}" | head -n ${nHead} | tail -n ${iNLT}`
-	zip ${studyName}.zip ${tmpWUnames}
+	zip ${zipFileName} ${tmpWUnames}
 	rm ${tmpWUnames}
     done
     if [ ${nResiduals} -gt 0 ] ; then
 	tmpWUnames=`echo "${WUnames}" | tail -n ${nResiduals}`
-	zip ${studyName}.zip ${tmpWUnames}
+	zip ${zipFileName} ${tmpWUnames}
 	rm ${tmpWUnames}
     fi
     # zip/rm one WUs at time
     # WUnames=( ${WUnames} )
     # for WUname in ${WUnames[@]} ; do
-    # 	zip ${studyName}.zip ${WUname}
+    # 	zip ${zipFileName}.zip ${WUname}
     # 	rm ${WUname}
     # done
     # zip/rm all WUs in one go
-    # zip ${studyName}.zip ${WUnames}
+    # zip ${zipFileName}.zip ${WUnames}
     # rm ${WUnames}
+
+    # move to boincDownloadDir
+    cp ${zipFileName} ${boincDownloadDir}/${filename}
+    if [ $? -eq 0 ] ; then
+	rm ${zipFileName}
+    fi
 done
 ENDTIME=$(date +%s)
 
@@ -54,20 +61,15 @@ ENDTIME=$(date +%s)
 TIMEDELTA=$(($ENDTIME - $STARTTIME))
 echo " ...zipping done by `date` - it took ${TIMEDELTA} seconds to zip `echo "${WUs2bZipped}" | wc -l` WUs."
 
-# removal of old .zip files
-echo " moving .zip files older than ${nDays} days to ${boincDownloadDir}..."
-fileNames=`find . -mtime +${nDays} -name "*.zip"`
+# moving old .zip files
+echo " moving old .zip files to ${boincDownloadDir}..."
+fileNames=`find . -name "*.zip"`
 fileNames=( ${fileNames} )
 for fileName in ${fileNames[@]} ; do
-    origFileName=$(basename "$fileName")
-    actualFileName="${origFileName%.*}"
-    filename="${actualFileName}__`date "+%Y-%m-%d_%H-%M-%S"`.zip"
-    cp ${origFileName} ${filename}
-    zip ${boincDownloadDir}/${origFileName} ${filename}
+    cp ${fileName} ${boincDownloadDir}
     if [ $? -eq 0 ] ; then
-	rm ${origFileName}
+	rm ${fileName}
     fi
-    rm ${filename}
 done
 
 echo " ...done by `date`."
