@@ -4,6 +4,7 @@
 # changed I.Zacharov 2011-01-19
 # commented out #mv .problem
 # Updated 13.12.2013 Nils, changed AFS dir ref
+# Updated 06.10.2016 A.Mereghetti, added megaZip functionality
 set -e
 
 #Set Variables
@@ -19,7 +20,8 @@ lockdir=$boincdir/pid_$host
 lockfile=$lockdir/$(basename $0).lock
 
 application=sixtrack
-spooldir=/afs/cern.ch/work/b/boinc/boinc 
+spooldir=/afs/cern.ch/work/b/boinc/boinc
+spooldirUpload=$spooldir/upload
 
 # The relative path of the workunit template file from the config dir.
 WU_template=templates/sixtrack_4.01_wu_template_zip.xml 
@@ -101,7 +103,58 @@ getlock(){
 }
 
 
+run_spool_megazip(){ # max_jobs_to_submit
+
+    megaZip=1
+    
+    if [ -z "$1" -o "$1" = "0" ] ; then
+	local max_jobs=""
+    else
+	local max_jobs="$1"	
+	local complete=0
+    fi
+
+    find "$spooldirUpload" -mmin +5 -name "*.zip" | (
+	while read workBatch ; do
+	    if unzip -t $workBatch  >/dev/null 2>&1 ; then
+		warn "integrity problem with $workBatch - move it to ${workBatch}.err"
+		mv $workBatch ${workBatch}.err
+		continue
+	    fi
+	    origPath=`mktemp -d -p /tmp/`
+	    warn "$workBatch being processed in $origPath ..."
+	    cp $workBatch $origPath
+	    # remember that you must run in $boincdir
+	    unzip $workBatch -d $origPath >/dev/null 2>&1
+	    # check for unzipped .desc files
+	    find $origPath -maxdepth 1 -type f -name '*.desc' | (
+	        while read descfile ; do
+		    # process the desc files
+		    if submit_descfile "$descfile" ; then
+			logstudy "Submitted $WUname"
+			#stop after max_jobs (0=unlimited)
+			if [ -n "$max_jobs" ] ; then
+			    complete=$(( $complete + 1 ))
+			    if [ $complete -ge $max_jobs ] ; then
+				break 2
+			    fi
+			fi
+		    else
+			logstudy "Problem submitting $WUname"
+		    fi
+	        done
+	    )
+	    warn " ...going on with next MegaZip."
+	    rm -rf $origPath
+	    rm $workBatch
+	done
+    )
+}
+
 run_spool(){ # max_jobs_to_submit 
+
+    megaZip=0
+    
     if [ -z "$1" -o "$1" = "0" ] ; then
 	local max_jobs=""
     else
@@ -112,6 +165,7 @@ run_spool(){ # max_jobs_to_submit
     #find the work dirs 2 levels down
     find "$spooldir" -maxdepth 2 -type d -name "work" | (
 	while read workdir ; do
+	    origPath=$workdir
 	    #check for desc files in the work dirs
 	    find "$workdir" -maxdepth 1 -type f -name '*.desc' | (
 	        while read descfile ; do
@@ -134,21 +188,29 @@ run_spool(){ # max_jobs_to_submit
     )
 }
 
-submit_descfile(){ #$1=full path to .desc file
-	workdir="${1%/*}"
-	descfile="${1#$workdir/}"
-	WUname="${descfile%.desc}"
-	zipfile="${descfile%.desc}.zip"
-	studydir="${workdir%/work}"
-	studyname="${studydir#$spooldir/}"
+submit_descfile(){ 
+        # variables from outer function:
+        # - megaZip: flag for megaZip;
+        # - origPath: path of the .desc file ($workdir or /tmp/...);
+        # megaZip=0: $1: full path to .desc file
+        # megaZip=1: $1: name of .desc file
+        descfile=`basename $1`
+        WUname="${descfile%.desc}"
+        zipfile="${descfile%.desc}.zip"
+        studyname=`echo "${WUname}" | awk 'BEGIN{FS="__"}{print ($1)}'`
+        studydir=$spooldir/$studyname
+        workdir=$studydir/work
 
 	log "study $studyname - descfile $descfile"
 
 	clearWUvars
-	parse_descfile  <"$workdir/$descfile"
+	parse_descfile  < "$origPath/$descfile"
 	if [ "$WUname" != "$WUinputName" ] ; then
 	    error "Problem with $descfile - WUinputName is $WUinputName"
-	    mv "${workdir}/${descfile}" "${workdir}/${descfile}.problem"
+	    mv "${origPath}/${descfile}" "${workdir}/${descfile}.problem"
+	    if [ $megaZip = 1 ] ; then
+		mv -f "${origPath}/${zipfile}" "${workdir}/${zipfile}"
+	    fi
 	    warn "moved  ${descfile} to ${descfile}.problem"
 	    return 1
 	fi
@@ -173,9 +235,11 @@ submit_descfile(){ #$1=full path to .desc file
 	    else
 	        warn "Could not move input file $zipfile. Skipping"
 	    fi
-	 
-	    mv "${workdir}/${descfile}" "${workdir}/${descfile}.problem"
-	    warn "#moved  ${descfile} to ${descfile}.problem"
+	    mv "${origPath}/${descfile}" "${workdir}/${descfile}.problem"
+	    if [ $megaZip = 1 ] ; then
+		mv -f "${origPath}/${zipfile}" "${workdir}/${zipfile}"
+	    fi
+	    warn "moved  ${descfile} to ${descfile}.problem"
 	    warn " try later"
 	    return 1
 	fi
@@ -207,19 +271,27 @@ create_cmd="$boincdir/bin/create_work 		\
 	    log "removing $downloadpath"
 	    rm $downloadpath || error "Problem removing $downloadpath"
 	
-	    mv -f "${workdir}/${descfile}" "${workdir}/${descfile}.problem"
+	    mv -f "${origPath}/${descfile}" "${workdir}/${descfile}.problem"
+	    if [ $megaZip = 1 ] && [ $keepzip = 1 ] ; then
+		mv -f "${origPath}/${zipfile}" "${workdir}/${zipfile}"
+	    fi
 	    warn "moved  ${descfile} to ${descfile}.problem"
 	    return 1
 	fi
 
 	log "Workunit $WUname Submitted"
 	if [ $keepzip = 1 ] ; then
-	    mv -f "${workdir}/${descfile}" "${workdir}/${WUname}.done" 
+	    mv -f "${origPath}/${descfile}" "${workdir}/${WUname}.done" 
+	    if [ $megaZip = 1 ] ; then
+		cp -f "${origPath}/${zipfile}" "${workdir}/${zipfile}"
+	    fi
 	    log "moved  ${descfile} to ${WUname}.done"
 	else
-	    rm -f "${workdir}/${descfile}" 
+	    rm -f "${origPath}/${descfile}" 
 	    log "removed  ${descfile} as processed"
 	fi
+        # in case of megazip, zipfile will be deleted since the
+	#  tmp dir will be deleted
 
 	return 0
 }
@@ -245,13 +317,13 @@ prepareinputfile(){
     
     if [ -e $downloadpath ] ; then
 	warn "$downloadpath already exists"
-	mv "${workdir}/${descfile}" "${workdir}/${descfile}.problem"
+	mv "${origPath}/${descfile}" "${workdir}/${descfile}.problem"
 	warn "#moved  ${descfile} to ${descfile}.problem"
         if [ $keepzip = 0 ] ; then
-		rm -f $workdir/$zipfile;
-		log "removed $workdir/$zipfile";
+		rm -f ${origPath}/$zipfile;
+		log "removed ${origPath}/$zipfile";
 	fi
-	return 0
+	return 1
     fi
     
     if [ $keepzip = 1 ] ; then
@@ -262,12 +334,12 @@ prepareinputfile(){
 
     #Maybe sleep for a bit or maybe use IONICE to keep things going!
     $SLEEP # do this before $CMD so exit status is propogated properly
-    if output=$($IONICE $CMD $workdir/$zipfile $downloadpath 2>&1) ; then
+    if output=$($IONICE $CMD ${origPath}/$zipfile $downloadpath 2>&1) ; then
 	log "$CMD $zipfile $downloadpath"
 	return 0
     else
 	local retval=$?
-	error "$CMD $workdir/$zipfile $downloadpath"
+	error "$CMD ${origPath}/$zipfile $downloadpath"
 	echo "$output" | log
 	return $retval
     fi
@@ -353,5 +425,8 @@ getlock
 #Klog
 log run_spool $maxjobs
 run_spool $maxjobs
+
+log run_spool_megazip $maxjobs
+run_spool_megazip $maxjobs
 
 log FINISHING
