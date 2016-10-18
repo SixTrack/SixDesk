@@ -809,11 +809,12 @@ sixdeskSetExes(){
 sixdeskSetPlatForm(){
     local __platform=$1
     export sixdeskplatform=`echo "$__platform" | tr '[A-Z]' '[a-z]'`
-    if [ "$sixdeskplatform" != "boinc" ] && [ "$sixdeskplatform" != "cpss" ] && [ "$sixdeskplatform" != "lsf" ] ; then
+    if [ "$sixdeskplatform" != "boinc" ] && [ "$sixdeskplatform" != "cpss" ] && [ "$sixdeskplatform" != "lsf" ] && [ "$sixdeskplatform" != "htcondor" ]; then
 	sixdeskmess="unknown platform: ${sixdeskplatform}"
 	sixdeskmess
 	return 1
     fi
+    export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
     if [ "$BNL" != "" ] ; then
 	export sixdeskbnlin="fort.54"
 	export bnlfilenames="beambeam-output.dat beambeamlostID.dat SixTwiss.dat checkdist.dat"

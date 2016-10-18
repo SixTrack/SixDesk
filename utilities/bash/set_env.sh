@@ -260,9 +260,9 @@ fi
 
 # - overwrite platform
 if [ -n "${currPlatform}" ] ; then
-    export sixdeskplatform=$currPlatform
-    export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
+    platform=$currPlatform
 fi
+sixdeskSetPlatForm $platform
 
 # - useful output
 PTEXT="["$sixdeskplatform"]"

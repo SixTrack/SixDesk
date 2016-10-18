@@ -121,10 +121,16 @@ function submit(){
 	    cd ../
 	    rm -rf $sixdesktmpdir
 	else
-	    bsub -q $madlsfq -o $junktmp/"${LHCDescrip}_mad6t_$iMad".log -J ${workspace}_${LHCDescrip}_mad6t_$iMad mad6t_"$iMad".lsf
+	    if [ "$sixdeskplatform" == "lsf" ] ; then
+		bsub -q $madlsfq -o $junktmp/"${LHCDescrip}_mad6t_$iMad".log -J ${workspace}_${LHCDescrip}_mad6t_$iMad mad6t_"$iMad".lsf
+	    fi
 	fi
 	mad6tjob=$lsfFilesPath/mad6t.lsf
     done
+
+    if [ "$sixdeskplatform" == "htcondor" ] && ! ${linter} ; then
+	condor_submit ${SCRIPTDIR}/templates/htcondor/mad6t.sub
+    fi
 
     # End loop over seeds
     cd $sixdeskhome

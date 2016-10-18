@@ -1,0 +1,8 @@
+universe = vanilla
+executable = $(filename)
+output = $SUBSTR(filename,0, -4).out
+error = $SUBSTR(filename, 0, -4).err
+ShouldTransferFiles = YES
+WhenToTransferOutput = ON_EXIT_OR_EVICT
+SendCredential = True
+queue filename matching files mad6t_*.lsf
