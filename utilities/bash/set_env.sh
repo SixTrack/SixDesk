@@ -223,9 +223,6 @@ for tmpDir in ${lockingDirs[@]} ; do
     sixdesklock $tmpDir
 done
 
-# - actual trap
-trap sixdeskCleanExit EXIT
-
 # - source active sixdeskenv/sysenv
 source ${envFilesPath}/sixdeskenv
 source ${envFilesPath}/sysenv
@@ -282,3 +279,9 @@ if [ -e "$sixdeskstudy"/deleted ] ; then
 	sixdeskmess
     fi
 fi
+
+# - unlock dirs
+for tmpDir in ${lockingDirs[@]} ; do
+    sixdeskunlock $tmpDir
+done
+

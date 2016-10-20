@@ -16,26 +16,25 @@ function how_to_use() {
               connected to, no submission to lsf at all)
            option available only for submission to lsf
    -d      study name (when running many jobs in parallel)
-   -p      platform name (when running many jobs in parallel)
 
 EOF
 }
 
-function preliminaryChecks(){
+function preliminaryChecksM6T(){
     # some sanity checks
-    lerr=false
+    local __lerr=0
     
     if [ ! -s $maskFilesPath/$LHCDescrip.mask ] ; then
 	# error: mask file not present
 	sixdeskmess="$LHCDescrip.mask is required in sixjobs/mask !!! "
 	sixdeskmess
-	lerr=true
+	let __lerr+=1
     fi
     if [ ! -d "$sixtrack_input" ] ; then
 	# error: $sixtrack_input directory does not exist
 	sixdeskmess="The $sixtrack_input directory does not exist!!!"
 	sixdeskmess
-	lerr=true
+	let __lerr+=1
     fi
     if test "$beam" = "" -o "$beam" = "b1" -o "$beam" = "B1" ; then
 	appendbeam=''
@@ -45,11 +44,13 @@ function preliminaryChecks(){
 	# error: unrecognised beam option
 	sixdeskmess="Unrecognised beam option $beam : must be null, b1, B1, b2 or B2!!!"
 	sixdeskmess
-	lerr=true
+	let __lerr+=1
     fi
-    if ${lerr} ; then
-	sixdeskexit 3
+    if [ ${__lerr} -gt 0 ] ; then
+	exit ${__lerr}
     fi
+    
+    return $__lerr
 }
 
 function submit(){
@@ -141,14 +142,14 @@ function check(){
     sixdeskmess
 
     sixdeskmesslevel=0
-    lerr=false
+    local __lerr=0
     
     # check jobs still running
     nJobs=`bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t | wc -l`
     if [ ${nJobs} -gt 0 ] ; then
 	bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t
 	echo "There appear to be some mad6t jobs still not finished"
-	lerr=true
+	let __lerr+=1
     fi
     
     # check errors/warnings
@@ -161,7 +162,7 @@ function check(){
 	sixdeskmess
 	echo "ERRORS"
 	cat $sixtrack_input/ERRORS
-	lerr=true
+	let __lerr+=1
     elif [ -s $sixtrack_input/WARNINGS ] ; then
 	sixdeskmess="There appear to be some MADX result warnings!"
 	sixdeskmess
@@ -173,7 +174,7 @@ function check(){
 	sixdeskmess
 	echo "WARNINGS"
 	cat $sixtrack_input/WARNINGS
-	lerr=true
+	let __lerr+=1
     fi
 
     # check that the expected number of files have been generated
@@ -192,7 +193,7 @@ function check(){
 	if [ ${nFort} -ne ${njobs} ] ; then
 	    sixdeskmess="Discrepancy!!! Found ${nFort} fort.${iFort}_??.gz in $sixtrack_input (expected $njobs)"
 	    sixdeskmess
-	    lerr=true
+	    let __lerr+=1
 	else
 	    sixdeskmess="...found ${nFort} fort.${iFort}_??.gz in $sixtrack_input (as expected)"
 	    sixdeskmess
@@ -205,7 +206,7 @@ function check(){
     then
 	sixdeskmess="Could not find fort.3.mother1/2 in $sixtrack_input"
 	sixdeskmess
-	lerr=true
+	let __lerr+=1
     else
 	sixdeskmess="all mother files are there"
 	sixdeskmess
@@ -233,12 +234,12 @@ function check(){
 	else
 	    sixdeskmess="$sixdeskmiss MC_error files could not be found!!!"
 	    sixdeskmess
-	    lerr=true
+	    let __lerr+=1
 	fi
     fi
 
-    if ${lerr} ; then
-	sixdeskexit 1
+    if [ ${__lerr} -gt 0 ] ; then
+	exit ${__lerr}
     else
 	# final remarks
 	sixdeskmess="All the mad6t jobs appear to have completed successfully using madx -X Version $MADX in $MADX_PATH"
@@ -248,6 +249,7 @@ function check(){
 	sixdeskmess="All jobs/logs/output are in sixtrack_input/mad.mad6t.sh* directories"
 	sixdeskmess
     fi
+    return $__lerr
 }
 
 # ==============================================================================
@@ -269,13 +271,11 @@ fi
 linter=false
 lsub=false
 lcheck=false
-currPlatform=""
 currStudy=""
 optArgCurrStudy="-s"
-optArgCurrPlatForm=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hiscd:p:" opt ; do
+while getopts  ":hiscd:" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -297,10 +297,6 @@ while getopts  ":hiscd:p:" opt ; do
 	    # the user is requesting a specific study
 	    currStudy="${OPTARG}"
 	    ;;
-	p)
-	    # the user is requesting a specific platform
-	    currPlatform="${OPTARG}"
-	    ;;
 	:)
 	    how_to_use
 	    echo "Option -$OPTARG requires an argument."
@@ -319,11 +315,11 @@ shift "$(($OPTIND - 1))"
 if ! ${lcheck} && ! ${lsub} ; then
     how_to_use
     echo "No action specified!!! aborting..."
-    exit
+    exit 1
 elif ${lcheck} && ${lsub} ; then
     how_to_use
     echo "Please choose only one action!!! aborting..."
-    exit
+    exit 1
 elif ${lcheck} && ${linter} ; then
     echo "Interactive mode valid only for running. Switching it off!!!"
     linter=false
@@ -332,18 +328,18 @@ fi
 if [ -n "${currStudy}" ] ; then
     optArgCurrStudy="-d ${currStudy}"
 fi
-if [ -n "${currPlatform}" ] ; then
-    optArgCurrPlatForm="-p ${currPlatform}"
-fi
 
 # load environment
 # NB: workaround to get getopts working properly in sourced script
 OPTIND=1
-source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} -e
+source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} -e
 # build paths
 sixDeskDefineMADXTree ${SCRIPTDIR}
 # sixdeskmess level
 sixdeskmesslevel=0
+
+# define trap
+trap "sixdeskexit 1" EXIT
 
 # don't use this script in case of BNL
 if test "$BNL" != "" ; then
@@ -354,7 +350,7 @@ fi
 
 if ${lsub} ; then
     # - some checks
-    preliminaryChecks
+    preliminaryChecksM6T
 
     # - define locking dirs
     lockingDirs=( "$sixdeskstudy" "$sixtrack_input" )
@@ -365,20 +361,17 @@ if ${lsub} ; then
     done
     
     # - define trap
-    trap sixdeskCleanExit EXIT
+    trap "sixdeskCleanExit 1" EXIT
 
     submit
 
-    # - clean locks
-    for tmpDir in ${lockingDirs[@]} ; do
-	sixdeskunlock $tmpDir
-    done
-    
     # - redefine trap
-    trap exit EXIT
+    trap "sixdeskCleanExit 0" EXIT
 
 else
     check
+    # - redefine trap
+    trap "sixdeskexit 0" EXIT
 fi
 
 # echo that everything went fine
@@ -386,5 +379,4 @@ sixdeskmess="Appears to have completed normally"
 sixdeskmess
 
 # bye bye
-sixdeskexit 0
-
+exit 0
