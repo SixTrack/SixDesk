@@ -118,6 +118,9 @@ export kstep=1
 export emit=3.75
 export emit_beam=$emit
 
+#Crossing angle for substitution in mask and mother file
+export xing=185
+
 # e0 gamma
 if test $runtype = "inj"
 then
