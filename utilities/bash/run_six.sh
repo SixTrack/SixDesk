@@ -715,7 +715,7 @@ function submitCreateFinalFort3Short(){
 	# returns ratio
 	sixdeskRatio $kang
 	# returns ax0 and ax1
-	sixdeskax0 $factor $beta_x $beta_x2 $beta_y $beta_y2 $ratio $__kk $square $ns1s $ns2s
+	sixdeskax0 $factor $beta_x $beta_x2 $beta_y $beta_y2 $ratio $kang $square $ns1s $ns2s
 	sed -e 's/%nss/'$nss'/g' \
 	    -e 's/%turnss/'$turnss'/g' \
 	    -e 's/%ax0s/'$ax0'/g' \
@@ -731,12 +731,11 @@ function submitCreateFinalFort3Short(){
 }
 
 function submitCreateFinalFort3Long(){
-    local __kk=$1
-    
+
     # returns ratio
     sixdeskRatio $kang
     # returns ax0 and ax1
-    sixdeskax0 $factor $beta_x $beta_x2 $beta_y $beta_y2 $ratio $__kk $square $fampstart $fampend
+    sixdeskax0 $factor $beta_x $beta_x2 $beta_y $beta_y2 $ratio $kang $square $fampstart $fampend
     #
     sed -e 's/%turnsl/'$turnsl'/g' \
 	-e 's/%ax0l/'$ax0'/g' \
@@ -1280,9 +1279,12 @@ function treatLong(){
 
 	# get AngleStep
 	sixdeskAngleStep 90 $kmaxl
+	# get scaled_kstep
+	sixdeskScaledKstep $kstep "${reduce_angs_with_aplitude}" $ampstart $ampfinish
+	echo "--> $kstep "${reduce_angs_with_aplitude}" $ampstart $ampfinish --> $scaled_kstep"
 
 	# ======================================================================
-	for (( kk=$kinil; kk<=$kendl; kk+=$kstep )) ; do
+	for (( kk=$kinil; kk<=$kendl; kk+=$scaled_kstep )) ; do
 	# ======================================================================
 
 	    # separate output for current case from previous one
@@ -1304,6 +1306,7 @@ function treatLong(){
 	    # get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
 	    sixdeskDefinePointTree $LHCDesName $iMad "s" $sixdesktunes $Ampl $turnsle $Angle $kk $sixdesktrack
 	    sixdeskmess="Point in scan $Runnam $Rundir, k=$kk"
+	    sixdeskmess
 	    
 	    # ----------------------------------------------------------------------
 	    if ${lfix} ; then
@@ -1314,7 +1317,7 @@ function treatLong(){
 		# fix dir
 		fixDir $RundirFullPath $actualDirNameFullPath
 		# finalise generation of fort.3
-		submitCreateFinalFort3Long $kk
+		submitCreateFinalFort3Long
 		# fix input files
 		fixInputFiles $RundirFullPath
 	    
@@ -1345,7 +1348,7 @@ function treatLong(){
 	        	submitCreateRundir $RundirFullPath $actualDirNameFullPath
 			
 	        	# finalise generation of fort.3
-	        	submitCreateFinalFort3Long $kk
+	        	submitCreateFinalFort3Long
 			
 	        	# final preparation of all SIXTRACK files
 	        	# NB: for boinc, it returns workunitName
@@ -1437,7 +1440,7 @@ function treatDA(){
 	# fix dir
 	fixDir $RundirFullPath $actualDirNameFullPath
 	# finalise generation of fort.3
-	submitCreateFinalFort3Short
+	submitCreateFinalFort3DA
 	# fix input files
 	fixInputFiles $RundirFullPath
 	    
