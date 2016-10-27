@@ -760,6 +760,22 @@ sixdeskAngleStep(){
 sixdeskAngle(){
     Angle=`gawk -v "angleStep=$1" -v "kk=$2" 'END{print (angleStep*kk)}' /dev/null`
 }
+sixdeskScaledKstep(){
+    local __kstep=$1
+    local __reduce_angs_with_aplitude=$2
+    local __ampstart=$3
+    local __ampfinish=$4
+    local __factor=0.3
+    scaled_kstep=${__kstep}
+    if [ ${__reduce_angs_with_aplitude} -eq 1 ] ;then
+        if [ "${__ampstart}" -gt ${__factor} ] ;then
+            local __ang_scaling_factor=`gawk -v "ampfinish=${__ampfinish}" -v "ampstart=${__ampstart}" 'END{print (ampfinish/ampstart)}' /dev/null`
+        else
+            local __ang_scaling_factor=`gawk -v "ampfinish=${__ampfinish}" -v "factor=${__factor}" 'END{print(ampfinish/factor)}' /dev/null`
+        fi
+        scaled_kstep=`gawk -v "kstep=${__kstep}" -v "ang_scaling_factor=${__ang_scaling_factor}" 'END{print(kstep*ang_scaling_factor)}' /dev/null`
+    fi
+}
 sixdeskkang(){
     kang=`gawk -v "kk=$1" -v "kmax=$2" 'END{print (kk/(kmax+1))}' /dev/null`
 }
@@ -778,8 +794,8 @@ sixdeskax0(){
 	    ax0t=`gawk -v "factor=$1" -v "beta_y=$4" -v "beta_y2=$5" -v "ratio=$__ratio" -v "kang=$7" 'END{print(factor*(sqrt(beta_y2/ratio)+sqrt(beta_y))*cos(hpi*kang)/sin(hpi*kang))}' /dev/null`
 	fi
     fi
-    ax0=`gawk -v "ax0t=${ax0t}" -v "ns=$9"  'END{ax0=ax0t*ns;print ax0}' /dev/null`
-    ax1=`gawk -v "ax0t=${ax0t}" -v "ne=$10" 'END{ax1=ax0t*ne;print ax1}' /dev/null`
+    ax0=`gawk -v "ax0t=${ax0t}" -v "ns=$9"    'END{ax0=ax0t*ns;print ax0}' /dev/null`
+    ax1=`gawk -v "ax0t=${ax0t}" -v "ne=${10}" 'END{ax1=ax0t*ne;print ax1}' /dev/null`
 }
 sixdeskCreateUserTree(){
     if [ ! -d $sixdeskhomeStudies ] ; then
