@@ -110,6 +110,15 @@ int assimilate_handler( WORKUNIT& wu, vector<RESULT>& /*results*/, RESULT& canon
         log_messages.printf_multiline( MSG_DEBUG, canonical_result.xml_doc_out,"[%s] canonical result", wu.name);
         if (!(get_output_file_info(canonical_result, output_file))) {
            scope_messages.printf( "[%s] Output file path %s\n",wu.name, output_file.path.c_str());
+	   // AMereghetti, 2016-10-27
+	   // temporary patch against _1_sixvf_boinc1738 type of results
+	   char tmpsubstr[STR_SIZE];
+	   strncpy( tmpsubstr, wu.name, 14 );
+	   if (strcmp(tmpsubstr,"_1_sixvf_boinc") == 0){
+	     // ill wu.name
+	     scope_messages.printf( "ill wu.name: %s\n",wu.name);
+	     return 0;
+	   }
         }
     } 
     else {
