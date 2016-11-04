@@ -116,7 +116,8 @@ run_spool_megazip(){ # max_jobs_to_submit
 
     find "$spooldirUpload" -mmin +5 -name "*.zip" | (
 	while read workBatch ; do
-	    if unzip -t $workBatch  >/dev/null 2>&1 ; then
+	    unzip -t $workBatch  >/dev/null 2>&1
+	    if [ $? -ne 0 ] ; then
 		warn "integrity problem with $workBatch - move it to ${workBatch}.err"
 		mv $workBatch ${workBatch}.err
 		continue
