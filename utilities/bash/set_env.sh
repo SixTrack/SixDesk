@@ -230,16 +230,6 @@ source ${envFilesPath}/sysenv
 # - save sixdeskenv/sysenv
 if ${loverwrite} ; then
     if ${lset} ; then
-	if [ -d studies/${LHCDescrip} ] ; then
-	    # updating an existing study
-	    sixdeskmess="Updating sixdeskenv/sysenv for $LHCDescrip"
-	    sixdeskmess
-	else
-	    # new study
-	    sixdeskmess="Creating a NEW study $LHCDescrip"
-	    sixdeskmess
-	    mkdir studies/${LHCDescrip}
-	fi
         # We now call update_sixjobs in case there were changes
         #    and to create for example the logfile directories
 	source ${SCRIPTDIR}/bash/update_sixjobs
@@ -247,11 +237,21 @@ if ${loverwrite} ; then
 	source ${SCRIPTDIR}/bash/check_envs
 	cp ${envFilesPath}/sixdeskenv studies/${LHCDescrip}
 	cp ${envFilesPath}/sysenv studies/${LHCDescrip}
+	if [ -d studies/${LHCDescrip} ] ; then
+	    # updating an existing study
+	    sixdeskmess="Updated sixdeskenv/sysenv for $LHCDescrip"
+	    sixdeskmess
+	else
+	    # new study
+	    sixdeskmess="Created a NEW study $LHCDescrip"
+	    sixdeskmess
+	    mkdir studies/${LHCDescrip}
+	fi
     elif ${lload} ; then
-	sixdeskmess="Switching to study $LHCDescrip"
-	sixdeskmess
 	cp ${envFilesPath}/sixdeskenv .
 	cp ${envFilesPath}/sysenv .
+	sixdeskmess="Switched to study $LHCDescrip"
+	sixdeskmess
     fi
 fi
 

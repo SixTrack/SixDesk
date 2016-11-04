@@ -42,6 +42,9 @@ function how_to_use() {
               (.zip/.desc files of each WU will be put in a big .zip)
            this option shall be used with both -g and -s actions, and in case
               of explicitely requiring -c
+   -b      use math for backward-compatibility
+           for the moment, this sticks only to expressions affecting ratio of
+              emittances and amplitude scans in fort.3
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
 
@@ -440,6 +443,8 @@ function preProcessBoinc(){
 	sixdeskDefineMegaZipName "$workspace" "$LHCDescrip" megaZipName
 	# ...and keep it until submission takes place
 	echo "${megaZipName}" > ${sixdeskjobs_logs}/megaZipName.txt
+	# initialise list of .zip/.desc files to be zipped
+	[ ! -e ${sixdeskjobs_logs}/megaZipList.txt ] || rm ${sixdeskjobs_logs}/megaZipList.txt
 	sixdeskmess="Requested submission to boinc through megaZip option - filename: ${megaZipName}"
 	sixdeskmess
     fi
@@ -712,10 +717,10 @@ function submitCreateFinalFort3Short(){
 	    -e 's/%inttunex/'$inttunexx'/g' \
 	    -e 's/%inttuney/'$inttuneyy'/g' $sixdeskjobs_logs/fort0.3.mask > $sixdeskjobs_logs/fort.3
     else
-	# returns ratio
-	sixdeskRatio $kang
-	# returns ax0 and ax1
-	sixdeskax0 $factor $beta_x $beta_x2 $beta_y $beta_y2 $ratio $kang $square $ns1s $ns2s
+        # returns ratio
+	sixdeskRatio $kang $lbackcomp
+        # returns ax0 and ax1
+	sixdeskax0 $factor $beta_x $beta_x2 $beta_y $beta_y2 $ratio $kang $square $ns1s $ns2s $lbackcomp
 	sed -e 's/%nss/'$nss'/g' \
 	    -e 's/%turnss/'$turnss'/g' \
 	    -e 's/%ax0s/'$ax0'/g' \
@@ -733,9 +738,9 @@ function submitCreateFinalFort3Short(){
 function submitCreateFinalFort3Long(){
 
     # returns ratio
-    sixdeskRatio $kang
+    sixdeskRatio $kang $lbackcomp
     # returns ax0 and ax1
-    sixdeskax0 $factor $beta_x $beta_x2 $beta_y $beta_y2 $ratio $kang $square $fampstart $fampend
+    sixdeskax0 $factor $beta_x $beta_x2 $beta_y $beta_y2 $ratio $kang $square $ns1s $ns2s $lbackcomp
     #
     sed -e 's/%turnsl/'$turnsl'/g' \
 	-e 's/%ax0l/'$ax0'/g' \
@@ -793,6 +798,7 @@ function submitCreateFinalInputs(){
 	# - return sixdeskTaskName and workunitName
 	sixdeskDefineWorkUnitName $workspace $Runnam $sixdesktaskid
 	# - generate zip file
+	#   NB: -j option, to store only the files, and not the source paths
 	zip -j $RundirFullPath/$workunitName.zip $RundirFullPath/fort.2 $RundirFullPath/fort.3 $RundirFullPath/fort.8 $RundirFullPath/fort.16 >/dev/null 2>&1
 	# - generate the workunit description file
 	cat > $RundirFullPath/$workunitName.desc <<EOF
@@ -811,13 +817,8 @@ EOF
 
 	# - update MegaZip file:
 	if ${lmegazip} ; then
-	    # -j option, to store only the files, and not the source paths
-	    zip -j ${megaZipName} $RundirFullPath/$workunitName.desc $RundirFullPath/$workunitName.zip >/dev/null 2>&1
-	    if [ $? -ne 0 ] ; then
-		sixdeskmess="Failing to zip .desc/.zip files!!!"
-		sixdeskmess
-		exit
-	    fi
+	    echo "$RundirFullPath/$workunitName.desc" >> ${sixdeskjobs_logs}/megaZipList.txt
+	    echo "$RundirFullPath/$workunitName.zip" >> ${sixdeskjobs_logs}/megaZipList.txt
 	fi
 	
 	# clean
@@ -906,23 +907,6 @@ function checkDirReadyForSubmission(){
 	    workunitName="${fileNames[0]}"
 	    sixdeskmess=".desc and .zip files present in $RundirFullPath!"
 	    sixdeskmess
-	    # - MegaZip: check that the .desc and .zip are in MegaZip file
-	    #   (zipinfo, to check just infos about zipped files)
-	    if ${lmegazip} ; then
-		local __llerr=$__lerr
-		for extension in .desc .zip ; do
-		    zipinfo -1 ${megaZipName} "${workunitName}${extension}" >/dev/null 2>&1
-		    if [ $? -ne 0 ] ; then
-			sixdeskmess="${workunitName}${extension} not in ${megaZipName}"
-			sixdeskmess
-			let __lerr+=1
-		    fi
-		done
-		if [ $__llerr -eq $__lerr ] ; then
-		    sixdeskmess="...and in ${megaZipName}!"
-		    sixdeskmess
-		fi
-	    fi
 	fi
     fi
     if [ $sussix -eq 1 ] ; then
@@ -1017,14 +1001,49 @@ function dot_boinc(){
 	    sixdeskmess
 	    exit
 	fi
-    fi
 
-    # the job has just started
-    touch $RundirFullPath/JOB_NOT_YET_COMPLETED
-    rm $RundirFullPath/JOB_NOT_YET_STARTED
+        # the job has just started
+	touch $RundirFullPath/JOB_NOT_YET_COMPLETED
+	rm $RundirFullPath/JOB_NOT_YET_STARTED
+    fi
 
     # keep track of the $Runnam-taskid couple
     updateTaskIdsCases $sixdeskjobs/tasks $sixdeskjobs/incomplete_tasks $sixdesktaskid
+}
+
+function dot_megaZip(){
+
+    local __megaZipFileName=$1
+    local __megaZipFileList=$2
+    local __lerr=0
+
+    sixdeskmess="generating megaZip file ${__megaZipFileName}"
+    sixdeskmess
+
+    local __iNLT=5000
+    local __nLines=`wc -l ${__megaZipFileList} | awk '{print ($1)}'`
+    local __iiMax=`echo "${__iNLT} ${__nLines}" | awk '{print (int($2/$1+0.001))}'`
+    local __nResiduals=`echo "${__iNLT} ${__nLines} ${__iiMax}" | awk '{print (int($2-$3*$1+0.001))}'`
+    for (( ii=1; ii<=${__iiMax} ; ii++ )) ; do
+	let nHead=$ii*${__iNLT}
+	local __tmpLines=`head -n ${nHead} ${__megaZipFileList} | tail -n ${__iNLT}`
+	# NB: -j option, to store only the files, and not the source paths
+	zip -j ${__megaZipFileName} ${__tmpLines}
+	let __lerr+=$?
+    done
+    if [ ${__nResiduals} -gt 0 ] ; then
+	local __tmpLines=`tail -n ${__nResiduals} ${__megaZipFileList}`
+	# NB: -j option, to store only the files, and not the source paths
+	zip -j ${__megaZipFileName} ${__tmpLines}
+	let __lerr+=$?
+    fi
+
+    if [ ${__lerr} -ne 0 ] ; then
+	sixdeskmess="problems in creating ${megaZipName}"
+	sixdeskmess
+	exit
+    fi
+
 }
 
 function dot_clean(){
@@ -1034,10 +1053,13 @@ function dot_clean(){
 }
     
 function dot_cleanZips(){
-    if [ ! -e $RundirFullPath/JOB_NOT_YET_STARTED ] ; then
-	sixdeskmess="Removing .desc/.zip files in $RundirFullPath"
+    local __tmpPath=$1
+    local __zipFileName=$2
+    local __descFileName=$3
+    if [ ! -e ${__tmpPath}/JOB_NOT_YET_STARTED ] ; then
+	sixdeskmess="Removing .desc/.zip files in ${__tmpPath}"
 	sixdeskmess
-	rm $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip
+	rm ${__tmpPath}/${__zipFileName} ${__tmpPath}/${__descFileName}
     fi
 }
 
@@ -1103,7 +1125,7 @@ function treatShort(){
     fi
 
     # get AngleStep
-    sixdeskAngleStep 90 $kmax
+    sixdeskAngleStep 90 $kmax $lbackcomp
 
     # ==========================================================================
     for (( kk=$kini; kk<=$kend; kk+=$kstep )) ; do
@@ -1123,7 +1145,7 @@ function treatShort(){
 
 	# get Angle and kang
 	sixdeskAngle $AngleStep $kk
-	sixdeskkang $kk $kmax
+	sixdeskkang $kk $kmax $lbackcomp
 
 	# get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
 	# ...and notify user
@@ -1278,10 +1300,9 @@ function treatLong(){
         sixdeskmess
 
 	# get AngleStep
-	sixdeskAngleStep 90 $kmaxl
+	sixdeskAngleStep 90 $kmaxl $lbackcomp
 	# get scaled_kstep
 	sixdeskScaledKstep $kstep "${reduce_angs_with_aplitude}" $ampstart $ampfinish
-	echo "--> $kstep "${reduce_angs_with_aplitude}" $ampstart $ampfinish --> $scaled_kstep"
 
 	# ======================================================================
 	for (( kk=$kinil; kk<=$kendl; kk+=$scaled_kstep )) ; do
@@ -1301,7 +1322,7 @@ function treatLong(){
 
 	    # get Angle and kang
 	    sixdeskAngle $AngleStep $kk
-	    sixdeskkang $kk $kmaxl
+	    sixdeskkang $kk $kmaxl $lbackcomp
 
 	    # get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
 	    sixdeskDefinePointTree $LHCDesName $iMad "s" $sixdesktunes $Ampl $turnsle $Angle $kk $sixdesktrack
@@ -1399,7 +1420,7 @@ function treatLong(){
 	        	    dot_bsub
 	        	elif [ "$sixdeskplatform" == "cpss" ] ; then
 	        	    dot_task
-	        	    elif [ "$sixdeskplatform" == "boinc" ] ; then
+	        	elif [ "$sixdeskplatform" == "boinc" ] ; then
 	        	    dot_boinc
 	        	fi
 	            else
@@ -1411,7 +1432,9 @@ function treatLong(){
 	        # ------------------------------------------------------------------
 	        if ${lcleanzip} ; then
 	        # ------------------------------------------------------------------
-	            dot_cleanZips
+		    if ! ${lmegazip} ; then
+			dot_cleanZips $RundirFullPath $workunitname.zip $workunitname.desc
+		    fi
 	        fi
 
 	    # ----------------------------------------------------------------------
@@ -1501,13 +1524,14 @@ lfix=false
 lcleanzip=false
 lselected=false
 lmegazip=false
+lbackcomp=false
 currPlatform=""
 currStudy=""
 optArgCurrStudy="-s"
 optArgCurrPlatForm=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgsctakfSCMd:p:" opt ; do
+while getopts  ":hgsctakfbSCMd:p:" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1560,6 +1584,10 @@ while getopts  ":hgsctakfSCMd:p:" opt ; do
 	M)
 	    # submission to boinc through MegaZip
 	    lmegazip=true
+	    ;;
+	b)
+	    # use math for backward compatibility
+	    lbackcomp=true
 	    ;;
 	d)
 	    # the user is requesting a specific study
@@ -1621,9 +1649,13 @@ if ${lkinit} ; then
     sixdeskmess
     kinit -R
     if [ $? -gt 0 ] ; then
-	sixdeskmess="--> kinit -R failed - AFX/Kerberos credentials expired!!! aborting..."
+	sixdeskmess="--> kinit -R failed - AFS/Kerberos credentials expired!!! aborting..."
 	sixdeskmess
 	exit
+    else
+	sixdeskmess=" --> klist output:"
+	sixdeskmess
+	klist
     fi
 fi
 
@@ -1695,6 +1727,11 @@ fi
 #   . clean up of zip files only in case of boinc:
 if ${lcleanzip} && [ "$sixdeskplatform" != "boinc" ] ; then
     lcleanzip=false
+fi
+#   . use math for backward compatibility
+if ${lbackcomp} ; then
+    sixdeskmess=" --> using math for backward compatibility, as requested by user!"
+    sixdeskmess
 fi
 
 # - define user tree
@@ -1798,7 +1835,7 @@ if ${lgenerate} || ${lfix} ; then
     if [ $__lerr -gt 0 ] ; then
         sixdeskmess="Preparatory step failed."
         sixdeskmess
-	sixdeskCleanExit $__lerr
+	exit $__lerr
     fi
 fi
 if ${lcheck} ; then
@@ -1868,7 +1905,7 @@ if ${lcheck} ; then
     if [ ${__lerr} -gt 0 ] ; then
         sixdeskmess="Preparation incomplete."
         sixdeskmess
-	sixdeskCleanExit ${__lerr}
+	exit ${__lerr}
     fi
 fi
 # - echo emittance and dimsus
@@ -1899,6 +1936,11 @@ fi
 
 # main loop
 for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
+    echo ""
+    echo ""
+    echo ""
+    sixdeskmess="MADX seed $iMad"
+    sixdeskmess
     itunexx=$itunex
     ituneyy=$ituney
     if test $ideltax -eq 0 -a $ideltay -eq 0 ; then
@@ -1921,7 +1963,6 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	#   ...notify user
 	echo ""
 	echo ""
-	echo ""
 	sixdeskmess="Tunescan $sixdesktunes"
 	sixdeskmess
 	# - get simul path (storage of beta values), stored in $Rundir...
@@ -1931,20 +1972,22 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	# - beta values?
 	if [ $short -eq 1 ] || [ $long -eq 1 ] ; then
 	    if ${lgenerate} || ${lfix} ; then
-		[ -d $RundirFullPath ] || mkdir -p $RundirFullPath
-		cd $sixdeskjobs_logs
-		if [ $chrom -eq 0 ] ; then
-		    sixdeskmess="Running two one turn jobs to compute chromaticity"
+		if ${lselected} || [ ! -s ${RundirFullPath}/betavalues ] ; then
+		    [ -d $RundirFullPath ] || mkdir -p $RundirFullPath
+		    cd $sixdeskjobs_logs
+		    if [ $chrom -eq 0 ] ; then
+			sixdeskmess="Running two one turn jobs to compute chromaticity"
+			sixdeskmess
+			submitChromaJobs $RundirFullPath
+		    else
+			sixdeskmess="Using Chromaticity specified as $chromx $chromy"
+			sixdeskmess
+		    fi
+		    sixdeskmess="Running `basename $SIXTRACKEXE` (one turn) to get beta values"
 		    sixdeskmess
-		    submitChromaJobs $RundirFullPath
-		else
-		    sixdeskmess="Using Chromaticity specified as $chromx $chromy"
-		    sixdeskmess
+		    submitBetaJob $RundirFullPath
+		    cd $sixdeskhome
 		fi
-		sixdeskmess="Running `basename $SIXTRACKEXE` (one turn) to get beta values"
-		sixdeskmess
-		submitBetaJob $RundirFullPath
-		cd $sixdeskhome
 	    fi
 	    if ${lcheck} ; then
 		# checks
@@ -1959,7 +2002,7 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 		if [ ${__lerr} -gt 0 ] ; then
 		    sixdeskmess="Failure in preparation."
 		    sixdeskmess
-		    sixdeskCleanExit ${__lerr}
+		    exit ${__lerr}
 		fi
 	    fi
 	    parseBetaValues $RundirFullPath
@@ -2004,8 +2047,30 @@ done
 
 # megaZip, in case of boinc
 if ${lmegazip} ; then
-    # - upload mega .zip file
+    # - generate megaZip file
+    if ${lgenerate} || ${lfix} ; then
+	dot_megaZip ${megaZipName} ${sixdeskjobs_logs}/megaZipList.txt 
+    fi
+    # - check megaZip file
+    if ${lcheck} ; then
+	sixdeskmess="checking that the expected .desc/.zip files are in megaZip file ${__megaZipFileName} and not corrupted!"
+	sixdeskmess
+	tmpTrigger=0
+	while read tmpFileName ; do
+	    tmpTmpFileName=`basename ${tmpFileName}`
+	    zipinfo -1 ${megaZipName} "${tmpTmpFileName}" >/dev/null 2>&1
+	    if [ $? -ne 0 ] ; then
+		sixdeskmess="${tmpFileName} not in ${megaZipName}"
+		sixdeskmess
+		let __lerr+=1
+	    fi
+	done < ${sixdeskjobs_logs}/megaZipList.txt
+	[ $__lerr -eq 0 ] || exit
+    fi
+    # - upload megaZip file
     if ${lsubmit} ; then
+	sixdeskmess="submitting megaZip file ${__megaZipFileName}"
+	sixdeskmess
 	gotit=false
 	for (( mytries=1 ; mytries<=10; mytries++ )) ; do
 	    cp ${megaZipName} ${megaZipPath}
@@ -2020,15 +2085,30 @@ if ${lmegazip} ; then
 	if ! ${gotit} ; then
 	    sixdeskmess="failed to submit MegaZip file ${megaZipName} 10 times!!!"
 	    sixdeskmess
-	    sixdeskCleanExit 22
+	    exit 22
 	fi
+	tmpZipFiles=`cat ${sixdeskjobs_logs}/megaZipList.txt | grep 'zip$'`
+	tmpZipFiles=( ${tmpZipFiles} )
+	for tmpZipFile in ${tmpZipFiles[@]} ; do
+	    tmpPath=`dirname ${tmpZipFile}`
+	    touch $tmpPath/JOB_NOT_YET_COMPLETED
+	    rm $tmpPath/JOB_NOT_YET_STARTED
+	done
+	rm ${sixdeskjobs_logs}/megaZipName.txt
     fi
-    # - clean megaZip
+    # - clean megaZip and .zip/.desc
     if ${lcleanzip} ; then
-	sixdeskmess="Removing MegaZip file"
+	tmpZipFiles=`cat ${sixdeskjobs_logs}/megaZipList.txt | grep 'zip$'`
+	tmpZipFiles=( ${tmpZipFiles} )
+	for tmpZipFile in ${tmpZipFiles[@]} ; do
+	    tmpPath=`dirname ${tmpZipFile}`
+	    zipFileName=`basename ${tmpZipFile}`
+	    descFileName="${zipFileName%.zip}.desc"
+	    dot_cleanZips ${tmpPath} ${zipFileName} ${descFileName}
+	done
+	sixdeskmess="Removing MegaZip file ${megaZipName}"
 	sixdeskmess
 	rm ${megaZipName}
-	rm ${sixdeskjobs_logs}/megaZipName.txt
     fi
 fi
 
