@@ -805,7 +805,9 @@ do
           stat=$?
           if test $stat -ne 0
           then
-            mymess00 "`ls -l sixres.tar.gz`"
+            sixdeskmesslevel=1
+            sixdeskmess="`ls -l sixres.tar.gz`"
+            sixdeskmess
 
 #MACRO mymess 1 gunzip failed!!! `cat mess`
             sixdeskmesslevel=1

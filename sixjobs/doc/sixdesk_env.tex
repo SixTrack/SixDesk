@@ -215,7 +215,7 @@ be run on the same type of computer to avoid small numeric differences.
 Compatible versions of these programs for LSF and BOINC are specified
 in \texttt{sysenv}, the so-called "pro" versions. Any changes will be notified.
 
-In view of some problems uncovered with MAD-X result differences the run_mad6t
+In view of some problems uncovered with MAD-X result differences the run\_mad6t
 and {\tt check\_mad6t} scripts have been modified to make further checks on
 the results. See section \ref{sec:mad_6t} for details.
 
@@ -467,7 +467,14 @@ subsequent scripts.
 \begin{description}
 \item [tunex \& tuney] The required horizontal and vertical tunes.
 These may be different for collision and injection as shown later.
-\item [emit] The normalised LHC emittance.
+\item [emit] The normalised LHC emittance, used for the computation of the
+  beam $\sigma$.
+\item [emit\_beam] The normalised LHC beam emittance for substitution into 
+  the mask (replaces the keyword \texttt{\%EMIT\_BEAM}) and into the mother file 
+  (replaces the keyword \texttt{\%emit\_beam}).
+\item [xing] Half crossing angle in $\mu$rad for substitution into the mask
+  (replaces the keyword \texttt{\%XING}) and into the mother file (replaces 
+  the keyword \texttt{\%xing}).
 \item [e0] Energy of reference particle depending on runtype
 \item [dpini \& dpmax]
   At injection the initial relative momentum deviation is set to

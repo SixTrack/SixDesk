@@ -161,7 +161,9 @@ else
     sixdesktgid=`echo $sixdesktgid | sed -e's/[^0-9]//g'`
     if test "$sixdesktgid" = ""
     then
-      mymess" 0 createTaskGroup.pl has produced a NULL TaskGroupId!!! `cat $sixdeskstudy/TaskGroupId`"
+      sixdeskmesslevel=0
+      sixdeskmess="createTaskGroup.pl has produced a NULL TaskGroupId!!! `cat $sixdeskstudy/TaskGroupId`"
+      sixdeskmess
       rm -f $sixdeskstudy/TaskGroupId $sixdeskstudy/ProgramId
 
 #MACRO myexit 14
