@@ -2,6 +2,20 @@
 #
 # See if we have any results and download them
 # uses a lock on the Study
+
+function how_to_use() {
+    cat <<EOF
+
+   `basename $0` [option]
+   to retrieve boinc results
+
+   options (optional)
+   -B      break backward-compatibility
+           for the moment, this sticks only to job names
+
+EOF
+}
+
 # A new subroutine to update mydatabase......
 update_cases()
 {
@@ -94,10 +108,47 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-#
+lbackcomp=true
+
+# get options (heading ':' to disable the verbose error handling)
+while getopts  ":hB" opt ; do
+    case $opt in
+	h)
+	    how_to_use
+	    exit 1
+	    ;;
+	B)
+	    # use whatever breaks backward compatibility
+	    lbackcomp=false
+	    ;;
+	:)
+	    how_to_use
+	    echo "Option -$OPTARG requires an argument."
+	    exit 1
+	    ;;
+	\?)
+	    how_to_use
+	    echo "Invalid option: -$OPTARG"
+	    exit 1
+	    ;;
+    esac
+done
+shift "$(($OPTIND - 1))"
+
+# - load environment
+#   NB: workaround to get getopts working properly in sourced script
+OPTIND=1
+
 # Even if called with a Study ($1) and a Platform ($2)
 # we can now use dot_env
 source ${SCRIPTDIR}/bash/dot_env
+
+#   . break backward compatibility
+if ! ${lbackcomp} ; then
+    sixdeskmess=" --> flag for backward compatibility de-activated, as requested by user!"
+    sixdeskmess
+fi
+
 if test -s $sixdeskstudy/sixdesklock
 then
   if test ! -w $sixdeskstudy/sixdesklock
@@ -581,7 +632,7 @@ do
 
 #MACRO myrundir $Runnam Rundir
     runnamename=$Runnam
-    sixdeskrundir
+    sixdeskrundir ${lbackcomp}
     Rundir=$rundirname
 #MACRO myrundir
 

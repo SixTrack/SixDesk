@@ -75,7 +75,19 @@ function submit(){
     sed -i -e 's?%pmass?'$pmass'?g' \
 	   -e 's?%emit_beam?'$emit_beam'?g' \
 	   $sixtrack_input/fort.3.mother1.tmp
-    
+
+    # ...take care of crossing angle in bbLens, in case appropriate
+    xing_rad=0
+    if [ -n "${xing}" ] ; then 
+	# variable is defined
+	xing_rad=`echo "$xing" | awk '{print ($1*1E-06)}'`
+	sixdeskmess=" --> crossing defined: $xing ${xing_rad}"
+	sixdeskmess
+	sed -i -e 's?%xing?'$xing_rad'?g' \
+  	    -e 's?/ bb_ho5b1_0?bb_ho5b1_0?g' \
+	    -e 's?/ bb_ho1b1_0?bb_ho5b1_0?g' $sixtrack_input/fort.3.mother1.tmp
+    fi
+     
     # Clear flags for checking
     for tmpFile in CORR_TEST ERRORS WARNINGS ; do
 	rm -f $sixtrack_input/$tmpFile

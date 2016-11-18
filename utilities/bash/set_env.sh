@@ -10,7 +10,7 @@ function how_to_use() {
    -s              set up new study or update existing one
                    NB: the local sixdeskenv and sysenv will be parsed, used and
                        saved in studies/
-   -d <study_name> load existing study. In this case, the -d option is mandatory!
+   -d <study_name> load existing study.
                    NB: the sixdeskenv and sysenv in studies/<study_name> will
                        be parsed, used and saved in sixjobs
 
@@ -229,29 +229,39 @@ source ${envFilesPath}/sysenv
 
 # - save sixdeskenv/sysenv
 if ${loverwrite} ; then
+    __lnew=false
     if ${lset} ; then
-	if [ -d studies/${LHCDescrip} ] ; then
-	    # updating an existing study
-	    sixdeskmess="Updating sixdeskenv/sysenv for $LHCDescrip"
-	    sixdeskmess
-	else
-	    # new study
-	    sixdeskmess="Creating a NEW study $LHCDescrip"
-	    sixdeskmess
+	if ! [ -d studies/${LHCDescrip} ] ; then
+	    __lnew=true
 	    mkdir studies/${LHCDescrip}
 	fi
-        # We now call update_sixjobs in case there were changes
-        #    and to create for example the logfile directories
-	source ${SCRIPTDIR}/bash/update_sixjobs
+    fi
+    
+    # We now call update_sixjobs in case there were changes
+    #    and to create for example the logfile directories
+    source ${SCRIPTDIR}/bash/update_sixjobs
+    if ! ${__lnew} ; then
         # and now we can check 
 	source ${SCRIPTDIR}/bash/check_envs
+    fi
+	
+    if ${lset} ; then
 	cp ${envFilesPath}/sixdeskenv studies/${LHCDescrip}
 	cp ${envFilesPath}/sysenv studies/${LHCDescrip}
+	if ${__lnew} ; then
+	    # new study
+	    sixdeskmess="Created a NEW study $LHCDescrip"
+	    sixdeskmess
+	else
+	    # updating an existing study
+	    sixdeskmess="Updated sixdeskenv/sysenv for $LHCDescrip"
+	    sixdeskmess
+	fi
     elif ${lload} ; then
-	sixdeskmess="Switching to study $LHCDescrip"
-	sixdeskmess
 	cp ${envFilesPath}/sixdeskenv .
 	cp ${envFilesPath}/sysenv .
+	sixdeskmess="Switched to study $LHCDescrip"
+	sixdeskmess
     fi
 fi
 
@@ -268,7 +278,8 @@ BTEXT=""
 if [ "$BNL" != "" ] ; then
   BTEXT=" BNL"
 fi
-sixdeskmess="Using$BTEXT Study $STEXT Platform $PTEXT"
+NTEXT="["$sixdeskhostname"]"
+sixdeskmess="Using$BTEXT Study $STEXT Platform $PTEXT Hostname $NTEXT"
 sixdeskmess
 
 if [ -e "$sixdeskstudy"/deleted ] ; then

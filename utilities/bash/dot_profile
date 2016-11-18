@@ -647,8 +647,17 @@ sixdeskamps()
 }
 sixdeskrundir()
 {
+    if [ $# -eq 1 ] ; then
+	local __lbackcomp=$1
+    else
+	local __lbackcomp=true
+    fi
     if test "$BNL" = "" ; then
-	rundirname=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/\6/?'`
+	if ${__lbackcomp} ; then
+	    rundirname=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/e\6/?'`
+	else
+	    rundirname=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/\6/?'`
+	fi
 	rundirname=`echo $rundirname | sed -e's?/s/?/simul/?'`
 	rundirname=`echo $rundirname | sed -e's?/t/?/trans/?'`
 	rundirname=`echo $rundirname | sed -e's?/m/?/momen/?'`
@@ -724,7 +733,9 @@ sixdeskDefinePointTree(){
 	runnamename1=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%'$7
 	runnamename2=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%.'$8
     fi
-    Runnam=$runnamename1
+
+    # return Runnam
+    Runnam=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
 
     # return Rundir
     runnamename=$runnamename1
@@ -755,7 +766,14 @@ sixdeskGetTaskIDfromWorkUnitName(){
     sixdesktaskid=`echo "$1" | awk 'BEGIN{FS="_";}{print ($NF)}'`
 }
 sixdeskAngleStep(){
-    AngleStep=`gawk -v "angle=$1" -v "kk=$2" 'END{print (angle/(kk+1))}' /dev/null`
+    local __totAngle=$1
+    local __kmax=$2
+    local __lbackcomp=$3
+    if ${__lbackcomp} ; then
+	AngleStep=`gawk -v "totAngle=${__totAngle}" -v "kmax=${__kmax}" 'END{print (totAngle/(kmax+1))}' /dev/null`
+    else
+	AngleStep=`gawk -v "totAngle=${__totAngle}" -v "kmax=${__kmax}" 'END{printf ("%.16E",totAngle/(kmax+1))}' /dev/null`
+    fi
 }
 sixdeskAngle(){
     Angle=`gawk -v "angleStep=$1" -v "kk=$2" 'END{print (angleStep*kk)}' /dev/null`
@@ -777,21 +795,41 @@ sixdeskScaledKstep(){
     fi
 }
 sixdeskkang(){
-    kang=`gawk -v "kk=$1" -v "kmax=$2" 'END{print (kk/(kmax+1))}' /dev/null`
+    local __kk=$1
+    local __kmax=$2
+    local __lbackcomp=$3
+    if ${__lbackcomp} ; then
+	kang=`gawk -v "kk=${__kk}" -v "kmax=${__kmax}" 'END{print (kk/(kmax+1))}' /dev/null`
+    else
+	kang=`gawk -v "kk=${__kk}" -v "kmax=${__kmax}" 'END{printf ("%.16E",kk/(kmax+1))}' /dev/null`
+    fi
 }
 sixdeskRatio(){
-    ratio=`gawk -v "kang=$1" 'BEGIN{hpi=1.5707963267948966}END{tan=sin(hpi*kang)/cos(hpi*kang); if (tan<0) {tan=-tan}; if (tan<1.0E-15) {tan=0.0}; ratio=tan**2; print ratio}' /dev/null`
+    local __kang=$1
+    local __lbackcomp=$2
+    if ${__lbackcomp} ; then
+	local __hpi=1.570796
+    else
+	local __hpi=1.5707963267948966
+    fi
+    ratio=`gawk -v "kang=${__kang}" -v "hpi=${__hpi}" 'END{tan=sin(hpi*kang)/cos(hpi*kang); if (tan<0) {tan=-tan}; if (tan<1.0E-15) {tan=0.0}; ratio=tan**2; print ratio}' /dev/null`
 }
 sixdeskax0(){
     local __ratio=$6
     local __square=$8
+    local __lbackcomp=${11}
+    if ${__lbackcomp} ; then
+	local __hpi=1.5707963268
+    else
+	local __hpi=1.5707963267948966
+    fi
     if [ $__square -eq 0 ] ; then
-	ax0t=`gawk -v "factor=$1" -v "beta_x=$2" -v "beta_x2=$3" -v "ratio=$__ratio" -v "kang=$7" 'BEGIN{hpi=1.5707963267948966}END{print(factor*(sqrt(beta_x)+sqrt(beta_x2*ratio))*cos(hpi*kang))}' /dev/null`
+	ax0t=`gawk -v "factor=$1" -v "beta_x=$2" -v "beta_x2=$3" -v "ratio=$__ratio" -v "kang=$7" -v "hpi=${__hpi}" 'END{print(factor*(sqrt(beta_x)+sqrt(beta_x2*ratio))*cos(hpi*kang))}' /dev/null`
     else
 	if [ $__ratio -le "$one" ] ;then
 	    ax0t=`gawk -v "factor=$1" -v "beta_x=$2" -v "beta_x2=$3" -v "ratio=$__ratio" 'END{print(factor*(sqrt(beta_x)+sqrt(beta_x2*ratio)))}' /dev/null`
 	else
-	    ax0t=`gawk -v "factor=$1" -v "beta_y=$4" -v "beta_y2=$5" -v "ratio=$__ratio" -v "kang=$7" 'END{print(factor*(sqrt(beta_y2/ratio)+sqrt(beta_y))*cos(hpi*kang)/sin(hpi*kang))}' /dev/null`
+	    ax0t=`gawk -v "factor=$1" -v "beta_y=$4" -v "beta_y2=$5" -v "ratio=$__ratio" -v "kang=$7" -v "hpi=${__hpi}" 'END{print(factor*(sqrt(beta_y2/ratio)+sqrt(beta_y))*cos(hpi*kang)/sin(hpi*kang))}' /dev/null`
 	fi
     fi
     ax0=`gawk -v "ax0t=${ax0t}" -v "ns=$9"    'END{ax0=ax0t*ns;print ax0}' /dev/null`
