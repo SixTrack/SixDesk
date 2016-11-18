@@ -647,8 +647,17 @@ sixdeskamps()
 }
 sixdeskrundir()
 {
+    if [ $# -eq 1 ] ; then
+	local __lbackcomp=$1
+    else
+	local __lbackcomp=true
+    fi
     if test "$BNL" = "" ; then
-	rundirname=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/\6/?'`
+	if ${__lbackcomp} ; then
+	    rundirname=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/e\6/?'`
+	else
+	    rundirname=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/\6/?'`
+	fi
 	rundirname=`echo $rundirname | sed -e's?/s/?/simul/?'`
 	rundirname=`echo $rundirname | sed -e's?/t/?/trans/?'`
 	rundirname=`echo $rundirname | sed -e's?/m/?/momen/?'`
@@ -724,7 +733,9 @@ sixdeskDefinePointTree(){
 	runnamename1=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%'$7
 	runnamename2=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%.'$8
     fi
-    Runnam=$runnamename1
+
+    # return Runnam
+    Runnam=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
 
     # return Rundir
     runnamename=$runnamename1
