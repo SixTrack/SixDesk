@@ -1958,9 +1958,10 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	    gunzip -c $sixtrack_input/fort.${iFort}_$iMad.gz > $sixtrack_input/fort.${iFort}_$iMad
 	done
     fi	    
-    while test $itunexx -le $itunex1 -o $ituneyy -le $ituney1 ; do
-	# - get $sixdesktunes
-	sixdesklooptunes
+    while test $itunexx -le $itunex1 -a $ituneyy -le $ituney1 ; do
+        # returns tunexx/tuneyy, computed from itunexx/ituneyy,
+        #    using xlen/ylen
+	sixdeskPrepareTunes
 	#   ...notify user
 	echo ""
 	echo ""

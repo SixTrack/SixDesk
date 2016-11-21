@@ -389,170 +389,154 @@ sixdeskchecklock()
         sixdeskmess
     fi
 }
-sixdesktunes()
-{
-  # Takes tunex, tuney, tunex1, tuney1, deltax, deltay
-  # and produces
-  # itunex, ituney, itunex1, ituney1, ideltax, ideltay
-  if test "$tunex1" = "" -a "$tuney1" = ""
-  then
-    tunex1=$tunex
-    tuney1=$tuney
-    deltax=0.0
-    deltay=0.0
-  elif test "$tunex1" = ""
-  then
-    tunex1=$tunex
-    deltax=0.0
-  elif test "$tuney1" = ""
-  then
-    tuney1=$tuney
-    deltay=0.0
-  fi
-  # Now we have the new code to do integer arithmetic on the tunescans
-  itunexi=`echo "$tunex" | cut -d"." -f1`
-  itunexi=$itunexi"0000"
-  itunexi=`echo $itunexi | cut -c1-2`
-  itunexf=`echo "$tunex" | cut -d"." -f2`
-  itunexf=$itunexf"0000"
-  itunexf=`echo $itunexf | cut -c1-4`
-  itunex=$itunexi$itunexf
+sixdesktunes(){
+    # Takes tunex, tuney, tunex1, tuney1, deltax, deltay
+    # and produces
+    # itunex, ituney, itunex1, ituney1, ideltax, ideltay
+    # it produces also xlen and ylen (ie length of fractional part)
+    # reworked by A.Mereghetti, 2016-07-19
 
-  ituneyi=`echo "$tuney" | cut -d"." -f1`
-  ituneyi=$ituneyi"0000"
-  ituneyi=`echo $ituneyi | cut -c1-2`
-  ituneyf=`echo "$tuney" | cut -d"." -f2`
-  ituneyf=$ituneyf"0000"
-  ituneyf=`echo $ituneyf | cut -c1-4`
-  ituney=$ituneyi$ituneyf
-
-  itunex1i=`echo "$tunex1" | cut -d"." -f1`
-  itunex1i=$itunex1i"0000"
-  itunex1i=`echo $itunex1i | cut -c1-2`
-  itunex1f=`echo "$tunex1" | cut -d"." -f2`
-  itunex1f=$itunex1f"0000"
-  itunex1f=`echo $itunex1f | cut -c1-4`
-  itunex1=$itunex1i$itunex1f
-
-  ituney1i=`echo "$tuney1" | cut -d"." -f1`
-  ituney1i=$ituney1i"0000"
-  ituney1i=`echo $ituney1i | cut -c1-2`
-  ituney1f=`echo "$tuney1" | cut -d"." -f2`
-  ituney1f=$ituney1f"0000"
-  ituney1f=`echo $ituney1f | cut -c1-4`
-  ituney1=$ituney1i$ituney1f
-
-  ideltaxi=`echo "$deltax" | cut -d"." -f1`
-  ideltaxi=$ideltaxi"0000"
-  ideltaxi=`echo $ideltaxi | cut -c1-2`
-  ideltaxf=`echo "$deltax" | cut -d"." -f2`
-  ideltaxf=$ideltaxf"0000"
-  ideltaxf=`echo $ideltaxf | cut -c1-4`
-  ideltax=$ideltaxi$ideltaxf
-
-  ideltayi=`echo "$deltay" | cut -d"." -f1`
-  ideltayi=$ideltayi"0000"
-  ideltayi=`echo $ideltayi | cut -c1-2`
-  ideltayf=`echo "$deltay" | cut -d"." -f2`
-  ideltayf=$ideltayf"0000"
-  ideltayf=`echo $ideltayf | cut -c1-4`
-  ideltay=$ideltayi$ideltayf
-
-  if test "$itunex1" -lt "$itunex"
-  then
-
-#MACRO mymess 0 sixdesktunes: tunex1 $tunex1 .lt. tunex $tunex!!!
     sixdeskmesslevel=0
-    sixdeskmess="sixdesktunes: tunex1 $tunex1 .lt. tunex $tunex!!!"
-    sixdeskmess
-#MACRO mymess
-
-
-#MACRO myexit 12
     sixdeskexitparam=12
-    sixdeskexit
-#MACRO myexit
+    
+    if [ -z "$tunex1" ] ; then
+	tunex1=$tunex
+	deltax=0.0
+    fi
+    if [ -z "$tuney1" ] ; then
+	tuney1=$tuney
+	deltay=0.0
+    fi
+    if [ "$deltax" == "0.0" ] && [ "$deltay" == "0.0" ] ; then
+	deltax=$tunex
+	deltay=$tuney
+    fi
 
-  elif test "$itunex1" -ne "$itunex" -a "$ideltax" -eq 0
-  then
+    # x plane
+    # - sanity checks (ie absence of "." or "." being first/last char):
+    tunex=$(sixdeskAddDotFloat $tunex)
+    tunex1=$(sixdeskAddDotFloat $tunex1)
+    deltax=$(sixdeskAddDotFloat $deltax)
+    # - strip away useless "0" chars
+    tunex=$(sixdeskFixZerosFloat $tunex)
+    tunex1=$(sixdeskFixZerosFloat $tunex1)
+    deltax=$(sixdeskFixZerosFloat $deltax)
+    # - get fractional and integer parts of tunes
+    local __itunex=`echo "$tunex" | cut -d\. -f1`
+    local __ftunex=`echo "$tunex" | cut -d\. -f2`
+    local __itunex1=`echo "$tunex1" | cut -d\. -f1`
+    local __ftunex1=`echo "$tunex1" | cut -d\. -f2`
+    local __ideltax=`echo "$deltax" | cut -d\. -f1`
+    local __fdeltax=`echo "$deltax" | cut -d\. -f2`
+    # - get longest fractional part (meaningful!)
+    xlen=`printf "$__ftunex\n$__ftunex1\n$__fdeltax\n" | awk '{print (length($1))}' | sort -g | tail -n1`
+    # - get integer algebra
+    local __llen=`echo "$__ftunex $xlen" | awk '{print ($2-length($1))}'`
+    itunex="$__itunex$__ftunex"
+    if [ $__llen -gt 0 ] ; then
+	itunex="$itunex`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
+    local __llen=`echo "$__ftunex1 $xlen" | awk '{print ($2-length($1))}'`
+    itunex1="$__itunex1$__ftunex1"
+    if [ $__llen -gt 0 ] ; then
+	itunex1="$itunex1`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
+    local __llen=`echo "$__fdeltax $xlen" | awk '{print ($2-length($1))}'`
+    ideltax="$__ideltax$__fdeltax"
+    if [ $__llen -gt 0 ] ; then
+	ideltax="$ideltax`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
 
-#MACRO mymess 0 sixdesktunes: deltax .eq. 0 !!!
-    sixdeskmesslevel=0
-    sixdeskmess="sixdesktunes: deltax .eq. 0 !!!"
-    sixdeskmess
-#MACRO mymess
+    # y plane
+    # - sanity checks (ie absence of "." or "." being first/last char):
+    tuney=$(sixdeskAddDotFloat $tuney)
+    tuney1=$(sixdeskAddDotFloat $tuney1)
+    deltay=$(sixdeskAddDotFloat $deltay)
+    # - strip away useless "0" chars
+    tuney=$(sixdeskFixZerosFloat $tuney)
+    tuney1=$(sixdeskFixZerosFloat $tuney1)
+    deltay=$(sixdeskFixZerosFloat $deltay)
+    # - get fractional and integer parts of tunes
+    local __ituney=`echo "$tuney" | cut -d\. -f1`
+    local __ftuney=`echo "$tuney" | cut -d\. -f2`
+    local __ituney1=`echo "$tuney1" | cut -d\. -f1`
+    local __ftuney1=`echo "$tuney1" | cut -d\. -f2`
+    local __ideltay=`echo "$deltay" | cut -d\. -f1`
+    local __fdeltay=`echo "$deltay" | cut -d\. -f2`
+    # - get longest fractional part (meaningful!)
+    ylen=`printf "$__ftuney\n$__ftuney1\n$__fdeltay\n" | awk '{print (length($1))}' | sort -g | tail -n1`
+    # - get integer algebra
+    local __llen=`echo "$__ftuney $ylen" | awk '{print ($2-length($1))}'`
+    ituney="$__ituney$__ftuney"
+    if [ $__llen -gt 0 ] ; then
+	ituney="$ituney`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
+    local __llen=`echo "$__ftuney1 $ylen" | awk '{print ($2-length($1))}'`
+    ituney1="$__ituney1$__ftuney1"
+    if [ $__llen -gt 0 ] ; then
+	ituney1="$ituney1`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
+    local __llen=`echo "$__fdeltay $ylen" | awk '{print ($2-length($1))}'`
+    ideltay="$__ideltay$__fdeltay"
+    if [ $__llen -gt 0 ] ; then
+	ideltay="$ideltay`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
 
+    # some consistency checks
+    if [ $itunex1 -lt $itunex ] ; then
+	sixdeskmess="sixdesktunes: tunex1 $tunex1 .lt. tunex $tunex!!!"
+	sixdeskmess
+	sixdeskexit
+    elif [ $itunex1 -ne $itunex ] && [ $ideltax -eq 0 ] ; then
+	sixdeskmess="sixdesktunes: deltax .eq. 0 !!!"
+	sixdeskmess
+	sixdeskexit
+    fi
+    if [ $ituney1 -lt $ituney ] ; then
+	sixdeskmess="sixdesktunes: tuney1 $tuney1 .lt. tuney $tuney!!!"
+	sixdeskmess
+	sixdeskexit
+    elif [ $ituney1 -ne $ituney ] && [ $ideltay -eq 0 ] ; then
+	sixdeskmess="sixdesktunes: deltay .eq. 0 !!!"
+	sixdeskmess
+	sixdeskexit
+    fi
 
-#MACRO myexit 12
-    sixdeskexitparam=12
-    sixdeskexit
-#MACRO myexit
-
-  fi
-  if test "$ituney1" -lt "$ituney"
-  then
-
-#MACRO mymess 0 sixdesktunes: tuney1 $tuney1 .lt. tuney $tuney!!!
-    sixdeskmesslevel=0
-    sixdeskmess="sixdesktunes: tuney1 $tuney1 .lt. tuney $tuney!!!"
-    sixdeskmess
-#MACRO mymess
-
-
-#MACRO myexit 12
-    sixdeskexitparam=12
-    sixdeskexit
-#MACRO myexit
-
-  elif test "$ituney1" -ne "$ituney" -a "$ideltay" -eq 0
-  then
-
-#MACRO mymess 0 sixdesktunes: deltay .eq. 0 !!!
-    sixdeskmesslevel=0
-    sixdeskmess="sixdesktunes: deltay .eq. 0 !!!"
-    sixdeskmess
-#MACRO mymess
-
-
-#MACRO myexit 12
-    sixdeskexitparam=12
-    sixdeskexit
-#MACRO myexit
-
-  fi
-
-  # Finally get rid of any trailing zeros or one of two leading zeros
-  tunex=`echo "$itunex" | cut -c1-2`"."`echo "$itunex" | cut -c3-6`
-  tunex=`echo "$tunex" | sed -e's?0*$??'`
-  tunex=`echo "$tunex" | sed -e's?^0??'`
-  tuney=`echo "$ituney" | cut -c1-2`"."`echo "$ituney" | cut -c3-6`
-  tuney=`echo "$tuney" | sed -e's?0*$??'`
-  tuney=`echo "$tuney" | sed -e's?^0??'`
-  tunex1=`echo "$itunex1" | cut -c1-2`"."`echo "$itunex1" | cut -c3-6`
-  tunex1=`echo "$tunex1" | sed -e's?0*$??'`
-  tunex1=`echo "$tunex1" | sed -e's?^0??'`
-  tuney1=`echo "$ituney1" | cut -c1-2`"."`echo "$ituney1" | cut -c3-6`
-  tuney1=`echo "$tuney1" | sed -e's?0*$??'`
-  tuney1=`echo "$tuney1" | sed -e's?^0??'`
-  # and report
-  if test "$ideltax" -eq  0 -a "$ideltay" -eq 0
-  then
-
-#MACRO mymess 0 sixdesktunes: Tune ${tunex}_${tuney}
-    sixdeskmesslevel=0
-    sixdeskmess="sixdesktunes: Tune ${tunex}_${tuney}"
-    sixdeskmess
-#MACRO mymess
-
-  else
-
-#MACRO mymess 0 sixdesktunes: Tunescan (${tunex},${tuney}) to (${tunex1},${tuney1}) by (${deltax}, ${deltay})
-    sixdeskmesslevel=0
-    sixdeskmess="sixdesktunes: Tunescan (${tunex},${tuney}) to (${tunex1},${tuney1}) by (${deltax}, ${deltay})"
-    sixdeskmess
-#MACRO mymess
-
-  fi
+    # notify user
+    if [ $ideltax -eq $itunex ] && [ $ideltay -eq $ituney ] ; then
+	# only one point
+	sixdeskmess="sixdesktunes: Tune ${tunex}_${tuney}"
+	sixdeskmess
+    else
+	# full scan
+	sixdeskmess="sixdesktunes: Tunescan (${tunex},${tuney}) to (${tunex1},${tuney1}) by (${deltax}, ${deltay})"
+	sixdeskmess
+    fi
+}
+sixdeskPrepareTunes(){
+    # by A.Mereghetti, 2016-07-19
+    # converts itunexx/ituneyy into tunexx/tuneyy
+    tunexx=$(sixdeskAddDotFloat $tunexx)
+    tuneyy=$(sixdeskAddDotFloat $tuneyy)
+    tunexx=`echo "$itunexx" | awk -v "flen=$xlen" '{lstring=length($1); fpart=substr($1,lstring-flen+1,flen); ipart=substr($1,1,lstring-flen); print (ipart"."fpart)}'`
+    tuneyy=`echo "$ituneyy" | awk -v "flen=$ylen" '{lstring=length($1); fpart=substr($1,lstring-flen+1,flen); ipart=substr($1,1,lstring-flen); print (ipart"."fpart)}'`
+    tunexx=$(sixdeskFixZerosFloat $tunexx)
+    tuneyy=$(sixdeskFixZerosFloat $tuneyy)
+    sixdesktunes=$tunexx"_"$tuneyy
+}
+sixdeskAddDotFloat(){
+    # by A.Mereghetti, 2016-07-20
+    # add trailing "." in case it is not there
+    local __input="$1"
+    local __result=`echo "$__input" | awk '{lstring=length($1); dpos=index($1,"."); if (dpos==0) print ($1"."); else print ($1);}'`
+    echo "$__result"
+}
+sixdeskFixZerosFloat(){
+    # by A.Mereghetti, 2016-07-20
+    # remove useless trailing/heading "0", but leave one before/after "." in case this is first/last char
+    local __input="$1"
+    local __result=`echo "$__input" | sed -e's?0*$??' | sed -e's?^0??' | awk '{lstring=length($1); dpos=index($1,"."); if (dpos==1) print("0"$1); else print($1);}' | awk '{lstring=length($1); dpos=index($1,"."); if (dpos==lstring) print($1"0"); else print($1);}'`
+    echo "$__result"
 }
 sixdeskinttunes()
 {
@@ -572,15 +556,6 @@ sixdeskinttunes()
   else
     inttuneyy=`echo $tmp | sed -e's?\([0-9][0-9]*\.\).*?\1?'`
   fi
-}
-sixdesklooptunes(){
-    tunexx=`echo "$itunexx" | cut -c1-2`"."`echo "$itunexx" | cut -c3-6`
-    tunexx=`echo "$tunexx" | sed -e's/0*$//'`
-    tunexx=`echo "$tunexx" | sed -e's/^0//'`
-    tuneyy=`echo "$ituneyy" | cut -c1-2`"."`echo "$ituneyy" | cut -c3-6`
-    tuneyy=`echo "$tuneyy" | sed -e's/0*$//'`
-    tuneyy=`echo "$tuneyy" | sed -e's/^0//'`
-    sixdesktunes=$tunexx"_"$tuneyy
 }
 sixdeskamps()
 {
