@@ -704,13 +704,13 @@ sixDeskDefineMADXTree(){
     local __SCRIPTDIR=$1
     # The following version of mad-X is used by the mad6t jobs.
     # All now call a madx executable so -X is no longer required.
-    export MADX_PATH="/afs/cern.ch/user/m/mad/bin"
+#    export MADX_PATH="/afs/cern.ch/user/m/mad/bin"
     # Doesn't seem to work!
     #export MADX="madx_pro"
     # and the MUST? use for Massimo
     #export MADX="madx_dev"
     # and the new default
-    export MADX="madx"
+#    export MADX="madx"
     export maskFilesPath=$sixdeskhome/mask
     export controlFilesPath=$sixdeskhome/control_files
     export lsfFilesPath=$__SCRIPTDIR/templates/lsf
@@ -739,13 +739,13 @@ sixdeskDefinePointTree(){
 
     # return Rundir
     runnamename=$runnamename1
-    sixdeskrundir
+    sixdeskrundir false
     Rundir=$rundirname
     RundirFullPath="$9/$Rundir"
 
     # return actualDirName
     runnamename=$runnamename2
-    sixdeskrundir
+    sixdeskrundir false
     actualDirName=$rundirname
     actualDirNameFullPath="$9/$actualDirName"
 }
