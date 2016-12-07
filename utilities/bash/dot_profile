@@ -734,19 +734,23 @@ sixdeskDefinePointTree(){
     actualDirNameFullPath=""
 
     # temporary variables
-    iCountMax=10
+    iCountMax=2
     local __lerr=0
 
     # -- Runnam
     iCount=0
     while [ -z "${Runnam}" ] && [ $iCount -lt $iCountMax ] ; do
-	Runnam=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
-	let iCount+=1
 	if [ $iCount -gt 1 ] ; then
-	    sleep 1
+	    # for the moment, do not sleep and return an error
+	    break
+#	    sleep 1
 	fi
+	Runnam=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
+	sixdeskSanitizeString "${Runnam}" Runnam
+	let iCount+=1
     done
     if [ $iCount -eq $iCountMax ] ; then
+	sixdeskInterceptProblem
 	sixdeskmess="Failed to generate Runnam ${iCountMax} times! something wrong..."
 	sixdeskmess
 	let __lerr+=1
@@ -755,6 +759,11 @@ sixdeskDefinePointTree(){
     # -- Rundir
     iCount=0
     while ( [ -z "${Rundir}" ] || [ -z "${RundirFullPath}" ] ) && [ $iCount -lt $iCountMax ] ; do
+	if [ $iCount -gt 1 ] ; then
+	    # for the moment, do not sleep and return an error
+	    break
+#	    sleep 1
+	fi
 	if [ -z "$6" ] ; then
 	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
 	else
@@ -762,13 +771,13 @@ sixdeskDefinePointTree(){
 	fi
 	sixdeskrundir false
 	Rundir=$rundirname
+	sixdeskSanitizeString "${Rundir}" Rundir
 	RundirFullPath="$9/$Rundir"
+	sixdeskSanitizeString "${RundirFullPath}" RundirFullPath
 	let iCount+=1
-	if [ $iCount -gt 1 ] ; then
-	    sleep 1
-	fi
     done
     if [ $iCount -eq $iCountMax ] ; then
+	sixdeskInterceptProblem
 	sixdeskmess="Failed to generate Rundir and RundirFullPath ${iCountMax} times! something wrong..."
 	sixdeskmess
 	let __lerr+=1
@@ -777,6 +786,11 @@ sixdeskDefinePointTree(){
     # -- actualDirName
     iCount=0
     while ( [ -z "${actualDirName}" ] || [ -z "${actualDirNameFullPath}" ] ) && [ $iCount -lt $iCountMax ] ; do
+	if [ $iCount -gt 1 ] ; then
+	    # for the moment, do not sleep and return an error
+	    break
+#	    sleep 1
+	fi
 	if [ -z "$6" ] ; then
 	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%.'$8
 	else
@@ -784,13 +798,13 @@ sixdeskDefinePointTree(){
 	fi
 	sixdeskrundir false
 	actualDirName=$rundirname
+	sixdeskSanitizeString "${actualDirName}" actualDirName
 	actualDirNameFullPath="$9/$actualDirName"
+	sixdeskSanitizeString "${actualDirNameFullPath}" actualDirNameFullPath
 	let iCount+=1
-	if [ $iCount -gt 1 ] ; then
-	    sleep 1
-	fi
     done
     if [ $iCount -eq $iCountMax ] ; then
+	sixdeskInterceptProblem
 	sixdeskmess="Failed to generate actualDirName and actualDirNameFullPath ${iCountMax} times! something wrong..."
 	sixdeskmess
 	let __lerr+=1
@@ -1098,3 +1112,19 @@ function sixdeskInspectPrerequisites(){
     return $__lerr
 }
 
+function sixdeskSanitizeString(){
+    # A.Mereghetti, 2016-12-07
+    # for the moment, remove empty spaces, tab and newline chars
+    local __istring=$1
+    local __cleanArg=`echo "${__istring}" | sed -e 's/\ //g' -e 's/\t//g' -e 's/\n//g'`
+    eval "$2=${__cleanArg}"
+}
+
+function sixdeskInterceptProblem(){
+    adminEmails=( "amereghe@cern.ch" )
+    emailSubject='intercepting problem with SixDesk'
+    varLines=`compgen -v | while read line; do echo $line=${!line}; done`
+    for adminEmail in ${adminEmails[@]} ; do
+	echo "${varLines}" | mail -s "${emailSubject}" ${adminEmail}
+    done
+}
