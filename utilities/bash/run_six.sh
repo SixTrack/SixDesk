@@ -444,7 +444,7 @@ function preProcessBoinc(){
 	# ...and keep it until submission takes place
 	echo "${megaZipName}" > ${sixdeskjobs_logs}/megaZipName.txt
 	# initialise list of .zip/.desc files to be zipped
-	[ ! -e ${sixdeskjobs_logs}/megaZipList.txt ] || rm ${sixdeskjobs_logs}/megaZipList.txt
+	[ ! -e ${sixdeskjobs_logs}/megaZipList.txt ] || rm -f ${sixdeskjobs_logs}/megaZipList.txt
 	sixdeskmess="Requested submission to boinc through megaZip option - filename: ${megaZipName}"
 	sixdeskmess
     fi
@@ -698,6 +698,8 @@ function parseBetaValues(){
 }
 
 function submitCreateRundir(){
+    # this function is called after a sixdeskDefinePointTree, with the check
+    #    that RunDirFullPath and actualDirNameFullPath are non-zero length strings
     local __RunDirFullPath=$1
     local __actualDirNameFullPath=$2
     sixdeskmess="Taking care of running dir $__RunDirFullPath (and linking to $__actualDirNameFullPath)"
@@ -830,6 +832,8 @@ EOF
 }
 
 function fixDir(){
+    # this function is called after a sixdeskDefinePointTree, with the check
+    #    that RunDirFullPath and actualDirNameFullPath are non-zero length strings
     local __RunDirFullPath=$1
     local __actualDirNameFullPath=$2
     if [ ! -d $__RunDirFullPath ] ; then
@@ -1004,7 +1008,7 @@ function dot_boinc(){
 
         # the job has just started
 	touch $RundirFullPath/JOB_NOT_YET_COMPLETED
-	rm $RundirFullPath/JOB_NOT_YET_STARTED
+	rm -f $RundirFullPath/JOB_NOT_YET_STARTED
     fi
 
     # keep track of the $Runnam-taskid couple
@@ -1058,7 +1062,7 @@ function dot_cleanZips(){
     if [ ! -e ${__tmpPath}/JOB_NOT_YET_STARTED ] ; then
 	sixdeskmess="Removing .desc/.zip files in ${__tmpPath}"
 	sixdeskmess
-	rm ${__tmpPath}/${__zipFileName} ${__tmpPath}/${__descFileName}
+	rm -f ${__tmpPath}/${__zipFileName} ${__tmpPath}/${__descFileName}
     fi
 }
 
@@ -2054,7 +2058,7 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	fi
 	# required not only by boinc, but also by chroma/beta jobs
 	for iFort in ${iForts} ; do
-	    rm $sixtrack_input/fort.${iFort}_$iMad
+	    rm -f $sixtrack_input/fort.${iFort}_$iMad
 	done
     fi	    
 done
@@ -2182,9 +2186,9 @@ if ${lmegazip} ; then
 	for tmpZipFile in ${tmpZipFiles[@]} ; do
 	    tmpPath=`dirname ${tmpZipFile}`
 	    touch $tmpPath/JOB_NOT_YET_COMPLETED
-	    rm $tmpPath/JOB_NOT_YET_STARTED
+	    rm -f $tmpPath/JOB_NOT_YET_STARTED
 	done
-	rm ${sixdeskjobs_logs}/megaZipName.txt
+	rm -f ${sixdeskjobs_logs}/megaZipName.txt
     fi
     # - clean megaZip and .zip/.desc
     if ${lcleanzip} ; then
@@ -2198,7 +2202,7 @@ if ${lmegazip} ; then
 	done
 	sixdeskmess="Removing ${megaZipName}"
 	sixdeskmess
-	rm ${megaZipName}
+	rm -f ${megaZipName}
     fi
 fi
 

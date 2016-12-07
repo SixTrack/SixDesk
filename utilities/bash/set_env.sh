@@ -284,7 +284,7 @@ sixdeskmess
 
 if [ -e "$sixdeskstudy"/deleted ] ; then
     if ${loverwrite} ; then
-	rm "$sixdeskstudy"/deleted
+	rm -f "$sixdeskstudy"/deleted
     else
 	sixdeskmess="Warning! Study `basename $sixdeskstudy` has been deleted!!! Please restore it explicitely"
 	sixdeskmess
