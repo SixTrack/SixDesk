@@ -726,28 +726,76 @@ sixdeskDefinePointTree(){
     # $8: $kk
     # $9: tree to $LHCDesName
 
-    if [ -z $6 ] ; then
-	runnamename1=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
-	runnamename2=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%.'$8
-    else
-	runnamename1=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%'$7
-	runnamename2=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%.'$8
+    # returned variables
+    Runnam=""
+    Rundir=""
+    RundirFullPath=""
+    actualDirName=""
+    actualDirNameFullPath=""
+
+    # temporary variables
+    iCountMax=10
+    local __lerr=0
+
+    # -- Runnam
+    iCount=0
+    while [ -z "${Runnam}" ] && [ $iCount -lt $iCountMax ] ; do
+	Runnam=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
+	let iCount+=1
+	if [ $iCount -gt 1 ] ; then
+	    sleep 1
+	fi
+    done
+    if [ $iCount -eq $iCountMax ] ; then
+	sixdeskmess="Failed to generate Runnam ${iCountMax} times! something wrong..."
+	sixdeskmess
+	let __lerr+=1
     fi
 
-    # return Runnam
-    Runnam=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
+    # -- Rundir
+    iCount=0
+    while ( [ -z "${Rundir}" ] || [ -z "${RundirFullPath}" ] ) && [ $iCount -lt $iCountMax ] ; do
+	if [ -z "$6" ] ; then
+	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
+	else
+	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%'$7
+	fi
+	sixdeskrundir false
+	Rundir=$rundirname
+	RundirFullPath="$9/$Rundir"
+	let iCount+=1
+	if [ $iCount -gt 1 ] ; then
+	    sleep 1
+	fi
+    done
+    if [ $iCount -eq $iCountMax ] ; then
+	sixdeskmess="Failed to generate Rundir and RundirFullPath ${iCountMax} times! something wrong..."
+	sixdeskmess
+	let __lerr+=1
+    fi
 
-    # return Rundir
-    runnamename=$runnamename1
-    sixdeskrundir false
-    Rundir=$rundirname
-    RundirFullPath="$9/$Rundir"
-
-    # return actualDirName
-    runnamename=$runnamename2
-    sixdeskrundir false
-    actualDirName=$rundirname
-    actualDirNameFullPath="$9/$actualDirName"
+    # -- actualDirName
+    iCount=0
+    while ( [ -z "${actualDirName}" ] || [ -z "${actualDirNameFullPath}" ] ) && [ $iCount -lt $iCountMax ] ; do
+	if [ -z "$6" ] ; then
+	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%.'$8
+	else
+	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%.'$8
+	fi
+	sixdeskrundir false
+	actualDirName=$rundirname
+	actualDirNameFullPath="$9/$actualDirName"
+	let iCount+=1
+	if [ $iCount -gt 1 ] ; then
+	    sleep 1
+	fi
+    done
+    if [ $iCount -eq $iCountMax ] ; then
+	sixdeskmess="Failed to generate actualDirName and actualDirNameFullPath ${iCountMax} times! something wrong..."
+	sixdeskmess
+	let __lerr+=1
+    fi
+    return $__lerr
 }
 sixdeskDefineWorkUnitName(){
     # $1: workspace name (ie $workspace)

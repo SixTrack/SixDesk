@@ -658,7 +658,6 @@ function parseBetaValues(){
     if [ $nBetas -ne 14 ] ; then
         sixdeskmess="betavalues has $nBetas words!!! Should be 14!"
         sixdeskmess
-        rm -f $__betaWhere/betavalues
 	exit
     fi
 
@@ -670,7 +669,6 @@ function parseBetaValues(){
     if test "$beta_x" = "" -o "$beta_y" = "" -o "$beta_x2" = "" -o "beta_y2" = "" ; then
         # clean up for a retry by removing old betavalues
 	# anyway, this run was not ok...
-        rm -f $__betaWhere/betavalues
         sixdeskmess="One or more betavalues are NULL !!!"
         sixdeskmess
         sixdeskmess="Look in $sixdeskjobs_logs to see SixTrack input and output."
@@ -1045,7 +1043,7 @@ function dot_megaZip(){
 }
 
 function dot_clean(){
-    if [ -s $RundirFullPath/fort.10.gz ] && [ -s $RundirFullPath/JOB_NOT_YET_COMPLETED ]; then
+    if [ -s $RundirFullPath/fort.10.gz ] || [ -s $RundirFullPath/JOB_NOT_YET_COMPLETED ]; then
 	rm -f $RundirFullPath/fort.10.gz
 	rm -f $RundirFullPath/JOB_NOT_YET_COMPLETED
 	sed -i -e '/^'$Runnam'$/d' $sixdeskwork/completed_cases
@@ -1152,9 +1150,15 @@ function treatShort(){
 	# ...and notify user
         if [ $kk -eq 0 ] ; then
 	    sixdeskDefinePointTree $LHCDesName $iMad "m" $sixdesktunes "__" "0" $Angle $kk $sixdesktrack
+	    if [ $? -gt 0 ] ; then
+		exit
+	    fi
             sixdeskmess="Momen $Runnam $Rundir, k=$kk"
 	else
 	    sixdeskDefinePointTree $LHCDesName $iMad "t" $sixdesktunes $Ampl $turnsse $Angle $kk $sixdesktrack
+	    if [ $? -gt 0 ] ; then
+		exit
+	    fi
             sixdeskmess="Trans $Runnam $Rundir, k=$kk"
         fi
         sixdeskmess 1
@@ -1327,6 +1331,9 @@ function treatLong(){
 
 	    # get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
 	    sixdeskDefinePointTree $LHCDesName $iMad "s" $sixdesktunes $Ampl $turnsle $Angle $kk $sixdesktrack
+	    if [ $? -gt 0 ] ; then
+		exit
+	    fi
 	    sixdeskmess="Point in scan $Runnam $Rundir, k=$kk"
 	    sixdeskmess
 	    
@@ -1454,6 +1461,9 @@ function treatDA(){
     
     # get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
     sixdeskDefinePointTree $LHCDesName $iMad "d" $sixdesktunes $Ampl "0" $Angle $kk $sixdesktrack
+    if [ $? -gt 0 ] ; then
+	exit
+    fi
 
     # ----------------------------------------------------------------------
     if ${lfix} ; then
@@ -1968,6 +1978,9 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	sixdeskmess
 	# - get simul path (storage of beta values), stored in $Rundir (returns Runnam, Rundir, actualDirName)...
 	sixdeskDefinePointTree $LHCDesName $iMad "s" $sixdesktunes "" "" "" "" $sixdesktrack
+	if [ $? -gt 0 ] ; then
+	    exit
+	fi
 	# - int tunes
 	sixdeskinttunes
 	# - beta values?
