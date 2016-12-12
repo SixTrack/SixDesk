@@ -753,9 +753,9 @@ sixdeskDefinePointTree(){
 	let iCount+=1
     done
     if ! ${__lok} ; then
-	sixdeskInterceptProblem
 	sixdeskmess="Failed to generate Runnam ${iCountMax} times! something wrong..."
 	sixdeskmess
+	sixdeskInterceptProblem
 	let __lerr+=1
     fi
 
@@ -783,9 +783,9 @@ sixdeskDefinePointTree(){
 	let iCount+=1
     done
     if ! ${__lok} ; then
-	sixdeskInterceptProblem
 	sixdeskmess="Failed to generate Rundir and RundirFullPath ${iCountMax} times! something wrong..."
 	sixdeskmess
+	sixdeskInterceptProblem
 	let __lerr+=1
     fi
 
@@ -813,9 +813,9 @@ sixdeskDefinePointTree(){
 	fi
     done
     if ! ${__lok} ; then
-	sixdeskInterceptProblem
 	sixdeskmess="Failed to generate actualDirName and actualDirNameFullPath ${iCountMax} times! something wrong..."
 	sixdeskmess
+	sixdeskInterceptProblem
 	let __lerr+=1
     fi
     return $__lerr
