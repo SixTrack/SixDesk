@@ -58,6 +58,6 @@ then
   tar cvf SIXJOBNAME.tar *.gz
   export STAGE_HOST="castorpublic"
   export STAGE_SVCCLASS="default"
-  rfcp SIXJOBNAME.tar $CASTORDIR
+  xrdcp SIXJOBNAME.tar root://${STAGE_HOST}.cern.ch/$CASTORDIR
 fi
 rm -f $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_COMPLETED

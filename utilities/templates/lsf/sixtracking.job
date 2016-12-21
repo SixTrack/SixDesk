@@ -42,6 +42,6 @@ then
   nsrm -rf $CASTORDIR
   nsmkdir -p $CASTORDIR
   tar cvf SIXJOBNAME.tar fort.*.gz
-  rfcp SIXJOBNAME.tar $CASTORDIR
+  xrdcp SIXJOBNAME.tar root://${STAGE_HOST}.cern.ch/$CASTORDIR
 fi
 rm -f $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_COMPLETED
