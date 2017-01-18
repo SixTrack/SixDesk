@@ -734,37 +734,45 @@ sixdeskDefinePointTree(){
     actualDirNameFullPath=""
 
     # temporary variables
-    iCountMax=1
+    iCountMax=10
     local __lerr=0
 
     # -- Runnam
     iCount=0
     local __lok=false
+    local __lprobl=false
     while [ $iCount -lt $iCountMax ] ; do
 	if [ $iCount -gt 1 ] ; then
-	    sleep 1
+	    sleep 3
 	fi
 	Runnam=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
 	sixdeskSanitizeString "${Runnam}" Runnam
 	if [ -n "${Runnam}" ] ; then
 	    __lok=true
 	    break
+	else
+	    __lprobl=true
 	fi
 	let iCount+=1
     done
-    if ! ${__lok} ; then
-	sixdeskmess="Failed to generate Runnam ${iCountMax} times! something wrong..."
+    if ${__lprobl} ; then
+	if ${__lok} ; then
+	    sixdeskmess="Warn: failed to generate Runnam ${iCountMax} times, but managed to survive! input: $1 $2 $3 $4 $5 $6 $7 $8 $9 - going on..."
+	else
+	    sixdeskmess="Err: failed to generate Runnam too many times (i.e. ${iCountMax})! input: $1 $2 $3 $4 $5 $6 $7 $8 $9 - going to next WU..."
+	    let __lerr+=1
+	fi
 	sixdeskmess
 	sixdeskInterceptProblem
-	let __lerr+=1
     fi
 
     # -- Rundir
     iCount=0
     local __lok=false
+    local __lprobl=false
     while [ $iCount -lt $iCountMax ] ; do
 	if [ $iCount -gt 1 ] ; then
-	    sleep 1
+	    sleep 3
 	fi
 	if [ -z "$6" ] ; then
 	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
@@ -779,23 +787,30 @@ sixdeskDefinePointTree(){
 	if [ -n "${Rundir}" ] && [ -n "${RundirFullPath}" ] ; then
 	    __lok=true
 	    break
+	else
+	    __lprobl=true
 	fi
 	let iCount+=1
     done
-    if ! ${__lok} ; then
-	sixdeskmess="Failed to generate Rundir and RundirFullPath ${iCountMax} times! something wrong..."
+    if ${__lprobl} ; then
+	if ${__lok} ; then
+	    sixdeskmess="Warn: failed to generate Rundir and RundirFullPath ${iCountMax} times, but managed to survive! input: $1 $2 $3 $4 $5 $6 $7 $8 $9 - going on..."
+	else
+	    sixdeskmess="Err: failed to generate Rundir and RundirFullPath too many times (i.e. ${iCountMax})! input: $1 $2 $3 $4 $5 $6 $7 $8 $9 - going to next WU..."
+	    let __lerr+=1
+	fi
 	sixdeskmess
 	sixdeskInterceptProblem
-	let __lerr+=1
     fi
 
     # -- actualDirName
     iCount=0
     local __lok=false
+    local __lprobl=false
     while [ $iCount -lt $iCountMax ] ; do
 	let iCount+=1
 	if [ $iCount -gt 1 ] ; then
-	    sleep 1
+	    sleep 3
 	fi
 	if [ -z "$6" ] ; then
 	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%.'$8
@@ -810,13 +825,19 @@ sixdeskDefinePointTree(){
 	if [ -n "${actualDirName}" ] && [ -n "${actualDirNameFullPath}" ] ; then
 	    __lok=true
 	    break
+	else
+	    __lprobl=true
 	fi
     done
-    if ! ${__lok} ; then
-	sixdeskmess="Failed to generate actualDirName and actualDirNameFullPath ${iCountMax} times! something wrong..."
+    if ${__lprobl} ; then
+	if ${__lok} ; then
+	    sixdeskmess="Warn: failed to generate actualDirName and actualDirNameFullPath ${iCountMax} times, but managed to survive! input: $1 $2 $3 $4 $5 $6 $7 $8 $9 - going on... "
+	else
+	    sixdeskmess="Err: failed to generate actualDirName and actualDirNameFullPath too many times (i.e. ${iCountMax})! input: $1 $2 $3 $4 $5 $6 $7 $8 $9 - going to next WU..."
+	    let __lerr+=1
+	fi
 	sixdeskmess
 	sixdeskInterceptProblem
-	let __lerr+=1
     fi
     return $__lerr
 }
@@ -1130,10 +1151,25 @@ function sixdeskSanitizeString(){
 }
 
 function sixdeskInterceptProblem(){
-    adminEmails=( "amereghe@cern.ch" )
-    emailSubject='intercepting problem with SixDesk'
+    receiverNames=( "amereghe" )
+
+    # verify that LOGNAME is not in the default list of receivers (avoid double emails)
+    local __lfound=false
+    for receiverName in ${receiverNames[@]} ; do
+	if [ "${receiverName}" == "$LOGNAME" ] ; then
+	    __lfound=true
+	    break
+	fi
+    done
+    if ! ${__lfound} ; then
+	receiverNames="${receiverNames[@]} $LOGNAME"
+	receiverNames=( ${receiverNames} )
+    fi
+
+    # send emails
+    emailSubject="intercepting problem in SixDesk - sixdeskmess: ${sixdeskmess}"
     varLines=`compgen -v | while read line; do echo $line=${!line}; done`
-    for adminEmail in ${adminEmails[@]} ; do
-	echo "${varLines}" | mail -s "${emailSubject}" ${adminEmail}
+    for receiverName in ${receiverNames[@]} ; do
+	echo "${varLines}" | mail -s "${emailSubject}" ${receiverName}@cern.ch
     done
 }

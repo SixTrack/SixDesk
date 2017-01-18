@@ -1155,13 +1155,15 @@ function treatShort(){
         if [ $kk -eq 0 ] ; then
 	    sixdeskDefinePointTree $LHCDesName $iMad "m" $sixdesktunes "__" "0" $Angle $kk $sixdesktrack
 	    if [ $? -gt 0 ] ; then
-		exit
+		# go to next WU (sixdeskmess already printed out and email sent to user/admins)
+		continue
 	    fi
             sixdeskmess="Momen $Runnam $Rundir, k=$kk"
 	else
 	    sixdeskDefinePointTree $LHCDesName $iMad "t" $sixdesktunes $Ampl $turnsse $Angle $kk $sixdesktrack
 	    if [ $? -gt 0 ] ; then
-		exit
+		# go to next WU (sixdeskmess already printed out and email sent to user/admins)
+		continue
 	    fi
             sixdeskmess="Trans $Runnam $Rundir, k=$kk"
         fi
@@ -1336,7 +1338,8 @@ function treatLong(){
 	    # get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
 	    sixdeskDefinePointTree $LHCDesName $iMad "s" $sixdesktunes $Ampl $turnsle $Angle $kk $sixdesktrack
 	    if [ $? -gt 0 ] ; then
-		exit
+		# go to next WU (sixdeskmess already printed out and email sent to user/admins)
+		continue
 	    fi
 	    sixdeskmess="Point in scan $Runnam $Rundir, k=$kk"
 	    sixdeskmess
@@ -1466,7 +1469,8 @@ function treatDA(){
     # get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
     sixdeskDefinePointTree $LHCDesName $iMad "d" $sixdesktunes $Ampl "0" $Angle $kk $sixdesktrack
     if [ $? -gt 0 ] ; then
-	exit
+	# go to next WU (sixdeskmess already printed out and email sent to user/admins)
+	return
     fi
 
     # ----------------------------------------------------------------------
@@ -1983,7 +1987,8 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	# - get simul path (storage of beta values), stored in $Rundir (returns Runnam, Rundir, actualDirName)...
 	sixdeskDefinePointTree $LHCDesName $iMad "s" $sixdesktunes "" "" "" "" $sixdesktrack
 	if [ $? -gt 0 ] ; then
-	    exit
+	    # go to next tune values (sixdeskmess already printed out and email sent to user/admins)
+	    continue
 	fi
 	# - int tunes
 	sixdeskinttunes
