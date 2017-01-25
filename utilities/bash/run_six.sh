@@ -1606,6 +1606,9 @@ while getopts  ":hgsctakfBSCMd:p:" opt ; do
 	t)
 	    # status
 	    lstatus=true
+	    how_to_use
+	    echo " -t option not yet available!"
+	    exit 1
 	    ;;
 	:)
 	    how_to_use
