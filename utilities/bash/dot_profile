@@ -889,13 +889,15 @@ sixdeskScaledKstep(){
     local __ampfinish=$4
     local __factor=0.3
     scaled_kstep=${__kstep}
-    if [ ${__reduce_angs_with_aplitude} -eq 1 ] ;then
-        if [ "${__ampstart}" -gt ${__factor} ] ;then
-            local __ang_scaling_factor=`gawk -v "ampfinish=${__ampfinish}" -v "ampstart=${__ampstart}" 'END{print (ampfinish/ampstart)}' /dev/null`
-        else
-            local __ang_scaling_factor=`gawk -v "ampfinish=${__ampfinish}" -v "factor=${__factor}" 'END{print(ampfinish/factor)}' /dev/null`
-        fi
-        scaled_kstep=`gawk -v "kstep=${__kstep}" -v "ang_scaling_factor=${__ang_scaling_factor}" 'END{print(kstep*ang_scaling_factor)}' /dev/null`
+    if [ -n "${__reduce_angs_with_aplitude}" ] ; then
+	if [ ${__reduce_angs_with_aplitude} -eq 1 ] ;then
+            if [ "${__ampstart}" -gt ${__factor} ] ;then
+		local __ang_scaling_factor=`gawk -v "ampfinish=${__ampfinish}" -v "ampstart=${__ampstart}" 'END{print (ampfinish/ampstart)}' /dev/null`
+            else
+		local __ang_scaling_factor=`gawk -v "ampfinish=${__ampfinish}" -v "factor=${__factor}" 'END{print(ampfinish/factor)}' /dev/null`
+            fi
+            scaled_kstep=`gawk -v "kstep=${__kstep}" -v "ang_scaling_factor=${__ang_scaling_factor}" 'END{print(kstep*ang_scaling_factor)}' /dev/null`
+	fi
     fi
 }
 sixdeskkang(){
