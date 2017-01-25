@@ -12,31 +12,25 @@ function how_to_use() {
                chromas and beta functions
    -s      actually submit
    -c      check that all the input files have been created and job is ready
-           for submission
-           NB: this is done by default after preparation or before submission,
+               for submission on the required platform
+           NB: this is done by default after preparation and before submission,
                but this action can be triggered on its own
    -f      fix compromised directory structure
            similar to -g, but it fixes folders which miss any of the input files
-              (i.e. the fort.*.gz);
+              (i.e. the fort.*.gz) - BOINC .zip/.desc files are not re-generated;
    -C      clean .zip/.desc after submission in boinc
            NB: this is done by default in case of submission to boinc
    -t      report the current status of simulations (not yet available)
-   -k      renew the kerberos/AFS credentials before doing any action;
-               renewal is performed via a 'kinit -R' command
-
-   By default, all actions are performed no matter if jobs are 
-      partially prepared/run.
 
    options (optional)
    -S      selected points of scan only
            in case of preparation of files, regenerate only those directories
-              with an incomplete set of input files (unless a fort.10.gz of non-zero
-              length is there)
+              with an incomplete set of input files, unless a fort.10.gz of non-zero
+              length or the JOB_NOT_YET_COMPLETED file are there;
            in case of check, check the correct input is generated only in those
-              directories that will be submitted, ie those without a fort.10.gz of
-              non-zero length
-           in case of submission, submit those directories without a fort.10.gz
-              or zero-length fort.10.gz
+              directories that will be submitted (see previous point)
+           in case of submission, submit those directories requiring actual submission
+              (see previous point)
            NB: this option is NOT active in case of -c only!
    -M      MegaZip: in case of boinc, WUs all zipped in one file.
               (.zip/.desc files of each WU will be put in a big .zip)
@@ -1538,7 +1532,6 @@ lgenerate=false
 lcheck=false
 lsubmit=false
 lstatus=false
-lkinit=false
 lfix=false
 lcleanzip=false
 lselected=false
@@ -1558,16 +1551,10 @@ while getopts  ":hgsctakfBSCMd:p:" opt ; do
 	    lcheck=true
 	    lsubmit=true
 	    lcleanzip=true
-	    # run kinit beforehand
-	    lkinit=true
 	    ;;
 	c)
 	    # check only
 	    lcheck=true
-	    ;;
-	k)
-	    # run kinit beforehand
-	    lkinit=true
 	    ;;
 	h)
 	    how_to_use
@@ -1663,19 +1650,17 @@ sixdeskmesslevel=$sixdeskmessleveldef
 trap "sixdeskexit 1" EXIT
 
 # - kinit, to renew kerberos ticket
-if ${lkinit} ; then
-    sixdeskmess=" --> kinit -R beforehand:"
+sixdeskmess=" --> kinit -R beforehand:"
+sixdeskmess
+kinit -R
+if [ $? -gt 0 ] ; then
+    sixdeskmess="--> kinit -R failed - AFS/Kerberos credentials expired!!! aborting..."
     sixdeskmess
-    kinit -R
-    if [ $? -gt 0 ] ; then
-	sixdeskmess="--> kinit -R failed - AFS/Kerberos credentials expired!!! aborting..."
-	sixdeskmess
-	exit
-    else
-	sixdeskmess=" --> klist output:"
-	sixdeskmess
-	klist
-    fi
+    exit
+else
+    sixdeskmess=" --> klist output:"
+    sixdeskmess
+    klist
 fi
 
 # - action-dependent stuff
