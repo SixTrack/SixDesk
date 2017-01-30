@@ -109,7 +109,7 @@ function submit(){
 	# clean away any existing results for this seed
 	echo " MadX seed: $iMad"
 	for f in 2 8 16 34 ; do
-	    rm -rf $sixtrack_input/fort.$f"_"$iMad.gz
+	    rm -f $sixtrack_input/fort.$f"_"$iMad.gz
 	done
     
 	sed -e 's?%NPART?'$bunch_charge'?g' \
