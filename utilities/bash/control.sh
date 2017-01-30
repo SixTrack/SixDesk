@@ -5,8 +5,9 @@ function how_to_use() {
 
    `basename $0` [option]
    script for controlling sequential calls to sixdesk scripts.
-      STDERR and STDOUT are redirected to log files like:
-                                          <study_name>_<script_name>.log
+      STDERR and STDOUT are redirected to log files like (always
+      in append mode):
+                                          <study_name>.log
       in the workspace of the current study.
 
    actions [mandatory]
@@ -21,7 +22,6 @@ function how_to_use() {
               NB: the variable \${SCRIPTDIR}:
                      ${SCRIPTDIR}
                   is available to the user.
-              NBB: the user should also explicitely state the redirection of STDOUT/STDERR
    -B      -> backUp.sh <study_name> (not yet available!)
    for the time being, only one action at a time can be requested
 
@@ -38,6 +38,7 @@ function how_to_use() {
            N: a brand new kerberos token is generated (password requested!)
            R: the exising kerberos token is renewed (no password needed, but
               pay attention to max renewal date of token)
+   -L      do not gunzip/gzip log file before/after running command
 
    example:
    `basename $0` -k N -R -f ./checkList.txt \\
@@ -137,9 +138,10 @@ lbackup=false
 luser=false
 lkinit=false
 lkrenew=false
+lZipLog=true
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":MSRBU:hf:w:s:k:" opt ; do
+while getopts  ":MSRBLU:hf:w:s:k:" opt ; do
     case $opt in
 	M)
 	    lmad=true
@@ -164,6 +166,9 @@ while getopts  ":MSRBU:hf:w:s:k:" opt ; do
 		echo " empty user command!"
 		exit 1
 	    fi
+	    ;;
+	L)
+	    lZipLog=false
 	    ;;
 	k)
 	    # renew kerberos token
@@ -253,20 +258,28 @@ fi
 # ------------------------------------------------------------------------------
 for (( ii=0 ; ii<${#studies[@]} ; ii++ )) ; do
     cd ${workspaces[$ii]}
+    if ${lZipLog} ; then
+	if [ -e ${studies[$ii]}.log.gz ] ; then
+	    gunzip ${studies[$ii]}.log.gz
+	fi
+    fi
     if ${lmad} ; then
 	echo " producing fort.?? input files to study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-	${SCRIPTDIR}/bash/mad6t.sh -s -d ${studies[$ii]} > ${studies[$ii]}_mad6t.log 2>&1
+	${SCRIPTDIR}/bash/mad6t.sh -s -d ${studies[$ii]} 2>&1 | tee -a ${studies[$ii]}.log
     elif ${lrunsix} ; then
 	echo " submitting study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-	${SCRIPTDIR}/bash/run_six.sh -a -d ${studies[$ii]} > ${studies[$ii]}_run_six.log 2>&1
+	${SCRIPTDIR}/bash/run_six.sh -a -d ${studies[$ii]} 2>&1 | tee -a ${studies[$ii]}.log
     elif ${lrunres} ; then
 	echo " retrieving BOINC results of study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-	${SCRIPTDIR}/bash/run_results ${studies[$ii]} boinc > ${studies[$ii]}_run_results.log 2>&1
+	${SCRIPTDIR}/bash/run_results ${studies[$ii]} boinc 2>&1 | tee -a ${studies[$ii]}.log
     elif ${lbackup} ; then
 	echo " --> no back-up for the moment! skipping..."
     elif ${luser} ; then
 	echo " executing user-defined command on study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-	echo ${commandLine}
+	${commandLine} 2>&1 | tee -a ${studies[$ii]}.log
+    fi
+    if ${lZipLog} ; then
+	gzip ${studies[$ii]}.log
     fi
     echo " getting ready for new study..."
     cd - > /dev/null 2>&1
