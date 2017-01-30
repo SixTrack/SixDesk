@@ -1,6 +1,6 @@
 #!/bin/bash
 
-archiveDir="/afs/cern.ch/user/a/amereghe/Downloads/monitorBoincServer/archive"
+archiveDir="$PWD/archive"
 
 # time stamp
 year=`date +"%Y"`

@@ -4,10 +4,11 @@ sixtrackProjPath="/share/boinc/project/sixtrack"
 assimilatorLogFileName="log_boincai08/sixtrack_assimilator.log"
 lastMtimeFile='lastMtimeAssimilator.txt'
 logFilesPath="."
+monitorBoincServerDir=$PWD
 
 echo " starting `basename $0` at `date` ..."
 
-presTime=`ssh amereghe@boincai08.cern.ch "cd /afs/cern.ch/user/a/amereghe/Downloads/monitorBoincServer ; stat ${sixtrackProjPath}/${assimilatorLogFileName} | grep Modify"`
+presTime=`ssh amereghe@boincai08.cern.ch "cd ${monitorBoincServerDir} ; stat ${sixtrackProjPath}/${assimilatorLogFileName} | grep Modify"`
 # from boincai08 -> cd /afs/cern.ch/user/a/amereghe/Downloads/monitorBoincServer
 # from boincai08 -> presTime=`stat ${sixtrackProjPath}/${assimilatorLogFileName} | grep Modify`
 # parse presTime, removing the fractional part of seconds

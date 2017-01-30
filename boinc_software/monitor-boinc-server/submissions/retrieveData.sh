@@ -3,7 +3,7 @@
 boincServer=boincai08.cern.ch
 sixtrackProjPath=/share/boinc/project/sixtrack
 spoolDirPath=/afs/cern.ch/work/b/boinc/boinc
-where=/afs/cern.ch/user/a/amereghe/Downloads/monitorBoincServer/submissions
+where=$PWD
 lretrieve=true
 lgetOwners=true
 lclean=true
