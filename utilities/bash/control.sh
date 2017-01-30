@@ -9,6 +9,7 @@ function how_to_use() {
       in append mode):
                                           <study_name>.log
       in the workspace of the current study.
+      Gzipping of log files is performed by default.
 
    actions [mandatory]
    -M      -> mad6t.sh -s -d <study_name>
