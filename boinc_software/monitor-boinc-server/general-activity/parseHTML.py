@@ -181,8 +181,8 @@ def main():
         try:
             resp = urlopen(args.url)
         except URLError as e:
-            print 'An error occured fetching %s \n %s' % (url, e.reason)   
-            return 1
+            print 'An error occured fetching %s \n %s' % (args.url, e.reason)   
+            return 10
         try:
             soup = BeautifulSoup(resp.read())
         except:
@@ -194,7 +194,7 @@ def main():
             iFile = open( args.filN, 'r' )
         except:
             print 'No readable file %s' % (filN)
-            return 2
+            return 10
         try:
             soup = BeautifulSoup(open('server_status.php'), 'lxml')
         except:

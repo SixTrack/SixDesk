@@ -18,6 +18,7 @@ while [ $EXIT_STATUS -eq 10 ] ; do
     python parseHTML.py --url ${serverStatusReport} -d ${currDay} -t ${currTim}
     EXIT_STATUS=$?
     echo " `date` - exit status of parser: $EXIT_STATUS"
+    sleep 3
 done
 
 # plot
