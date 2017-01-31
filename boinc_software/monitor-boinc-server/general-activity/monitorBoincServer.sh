@@ -13,7 +13,12 @@ echo "new query at: ${rightNow}"
 
 # parse data
 echo " getting report from server and parsing data..."
-python parseHTML.py --url ${serverStatusReport} -d ${currDay} -t ${currTim}
+EXIT_STATUS=10
+while [ $EXIT_STATUS -eq 10 ] ; do
+    python parseHTML.py --url ${serverStatusReport} -d ${currDay} -t ${currTim}
+    EXIT_STATUS=$?
+    echo " `date` - exit status of parser: $EXIT_STATUS"
+done
 
 # plot
 echo " updating plots..."

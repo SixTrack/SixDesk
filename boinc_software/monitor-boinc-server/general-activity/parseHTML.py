@@ -183,7 +183,11 @@ def main():
         except URLError as e:
             print 'An error occured fetching %s \n %s' % (url, e.reason)   
             return 1
-        soup = BeautifulSoup(resp.read(), 'lxml')
+        try:
+            soup = BeautifulSoup(resp.read())
+        except:
+            print 'Error while using BeautifulSoup'
+            return 10
     elif args.filN:
         # parse file with HTML
         try:
@@ -191,7 +195,11 @@ def main():
         except:
             print 'No readable file %s' % (filN)
             return 2
-        soup = BeautifulSoup(open('server_status.php'), 'lxml')
+        try:
+            soup = BeautifulSoup(open('server_status.php'), 'lxml')
+        except:
+            print 'Error while using BeautifulSoup'
+            return 10
     else:
         print ' please specify either a URL or a local file to parse'
         return 3
@@ -233,6 +241,8 @@ def main():
         oFile=open(outAppStatus%(wantedApp,currDate),'a')
         oFile.write( '%s %s %s \n' % ( currDate, currTime, ' '.join(cleanIntegers(tabApps.retRowName( columnName='application', matchName=wantedApp, columnNames=appDesiredColumns ) ) ) ) )
     oFile.close()
+
+    return 0
 
 if __name__ == '__main__':
     status = main()
