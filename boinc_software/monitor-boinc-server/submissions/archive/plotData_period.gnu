@@ -5,7 +5,7 @@ reset
 # ------------------------------------------------------------------------------
 
 # files
-grepFiles='2017-01/*dat'
+grepFiles='2017-0[1-2]/*dat'
 iFileName='submitAll.dat'
 
 # last 24h
@@ -16,7 +16,7 @@ tMax=rightNow
 tStep=1*3600
 
 # time interval
-tMin='2017-01-27T00:00:00'
+tMin='2017-01-30T00:00:00'
 # AM -> tMax='2017-01-27T00:00:00'
 tStep=4*3600
 
@@ -29,7 +29,7 @@ system('awk -v "tMin='.tMin.'" -v tMax="'.tMax.'" '."'{if (tMin<$1 && $1<tMax) {
 # AM -> system('awk -v "tMin='.tMin.'" '."'{if (tMin<$1) {print ($0)}}' ".grepFiles.' > '.iFileName)
 
 # echo runners
-system( "awk '{print ($6)}' ".iFileName." | sort | uniq -c" )
+system( "awk '{print ($6,$4)}' ".iFileName." | sort -k 1 | awk '{tot+=$2; if (NR==1) {oldOwner=$1} else {if ($1!=oldOwner) {print (tot,oldOwner); tot=0; oldOwner=$1;}}}END{print (tot,oldOwner)}'" )
 
 # AM -> set logscale y
 # AM -> set grid xtics ytics mxtics mytics
