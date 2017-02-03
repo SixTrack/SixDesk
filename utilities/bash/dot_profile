@@ -629,19 +629,19 @@ sixdeskrundir()
     fi
     if test "$BNL" = "" ; then
 	if ${__lbackcomp} ; then
-	    rundirname=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/e\6/?'`
+	    rundirname1=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/e\6/?'`
 	else
-	    rundirname=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/\6/?'`
+	    rundirname1=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/\6/?'`
 	fi
-	rundirname=`echo $rundirname | sed -e's?/s/?/simul/?'`
-	rundirname=`echo $rundirname | sed -e's?/t/?/trans/?'`
-	rundirname=`echo $rundirname | sed -e's?/m/?/momen/?'`
-	rundirname=`echo $rundirname | sed -e's?/d/?/da/?'`
+	rundirname2=`echo $rundirname1 | sed -e's?/s/?/simul/?'`
+	rundirname3=`echo $rundirname2 | sed -e's?/t/?/trans/?'`
+	rundirname4=`echo $rundirname3 | sed -e's?/m/?/momen/?'`
+	rundirname5=`echo $rundirname4 | sed -e's?/d/?/da/?'`
     else
-	rundirname=`echo $runnamename | sed -e 's?%?\/?g'`
+	rundirname5=`echo $runnamename | sed -e 's?%?\/?g'`
     fi
     # remove trailing slashes
-    rundirname=`echo ${rundirname} | sed 's:/*$::'`
+    rundirname=`echo ${rundirname5} | sed 's:/*$::'`
 }
 sixdeskDefineUserTree(){
     # define the tree in the userspace
@@ -679,13 +679,13 @@ sixDeskDefineMADXTree(){
     local __SCRIPTDIR=$1
     # The following version of mad-X is used by the mad6t jobs.
     # All now call a madx executable so -X is no longer required.
-    export MADX_PATH="/afs/cern.ch/user/m/mad/bin"
+#    export MADX_PATH="/afs/cern.ch/user/m/mad/bin"
     # Doesn't seem to work!
     #export MADX="madx_pro"
     # and the MUST? use for Massimo
     #export MADX="madx_dev"
     # and the new default
-    export MADX="madx"
+#    export MADX="madx"
     export maskFilesPath=$sixdeskhome/mask
     export controlFilesPath=$sixdeskhome/control_files
     export lsfFilesPath=$__SCRIPTDIR/templates/lsf
@@ -701,28 +701,132 @@ sixdeskDefinePointTree(){
     # $8: $kk
     # $9: tree to $LHCDesName
 
-    if [ -z $6 ] ; then
-	runnamename1=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
-	runnamename2=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%.'$8
-    else
-	runnamename1=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%'$7
-	runnamename2=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%.'$8
+    # returned variables
+    Runnam=""
+    Rundir=""
+    RundirFullPath=""
+    actualDirName=""
+    actualDirNameFullPath=""
+
+    # temporary variables
+    iCountMax=10
+    local __lerr=0
+
+    # -- Runnam
+    iCount=0
+    local __lok=false
+    local __lprobl=false
+    while [ $iCount -lt $iCountMax ] ; do
+	if [ $iCount -gt 1 ] ; then
+	    sleep 3
+	fi
+	Runnam=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
+	sixdeskSanitizeString "${Runnam}" Runnam
+	if [ -n "${Runnam}" ] ; then
+	    __lok=true
+	    break
+	else
+	    __lprobl=true
+	    # get ready to report a problem
+	    sixdeskEchoEnvVars /tmp/envs_${iCount}.txt
+	fi
+	let iCount+=1
+    done
+    if ${__lprobl} ; then
+	if ${__lok} ; then
+	    sixdeskmess="Warn: failed to generate Runnam ${iCount} times, but managed to survive! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going on..."
+	    local __emailSubj='Warning'
+	else
+	    sixdeskmess="Err: failed to generate Runnam too many times (i.e. ${iCountMax})! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going to next WU..."
+	    local __emailSubj='Error'
+	    let __lerr+=1
+	fi
+	sixdeskmess
+	sixdeskSendNotifMail ${__emailSubj}
     fi
 
-    # return Runnam
-    Runnam=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
+    # -- Rundir
+    iCount=0
+    local __lok=false
+    local __lprobl=false
+    while [ $iCount -lt $iCountMax ] ; do
+	if [ $iCount -gt 1 ] ; then
+	    sleep 3
+	fi
+	if [ -z "$6" ] ; then
+	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
+	else
+	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%'$7
+	fi
+	sixdeskrundir false
+	Rundir=$rundirname
+	sixdeskSanitizeString "${Rundir}" Rundir
+	RundirFullPath="$9/$Rundir"
+	sixdeskSanitizeString "${RundirFullPath}" RundirFullPath
+	if [ -n "${Rundir}" ] && [ -n "${RundirFullPath}" ] ; then
+	    __lok=true
+	    break
+	else
+	    __lprobl=true
+	    # get ready to report a problem
+	    sixdeskEchoEnvVars /tmp/envs_${iCount}.txt
+	fi
+	let iCount+=1
+    done
+    if ${__lprobl} ; then
+	if ${__lok} ; then
+	    sixdeskmess="Warn: failed to generate Rundir and/or RundirFullPath ${iCount} times, but managed to survive! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going on..."
+	    local __emailSubj='Warning'
+	else
+	    sixdeskmess="Err: failed to generate Rundir and/or RundirFullPath too many times (i.e. ${iCountMax})! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going to next WU..."
+	    local __emailSubj='Error'
+	    let __lerr+=1
+	fi
+	sixdeskmess
+	sixdeskSendNotifMail ${__emailSubj}
+    fi
 
-    # return Rundir
-    runnamename=$runnamename1
-    sixdeskrundir
-    Rundir=$rundirname
-    RundirFullPath="$9/$Rundir"
-
-    # return actualDirName
-    runnamename=$runnamename2
-    sixdeskrundir
-    actualDirName=$rundirname
-    actualDirNameFullPath="$9/$actualDirName"
+    # -- actualDirName
+    iCount=0
+    local __lok=false
+    local __lprobl=false
+    while [ $iCount -lt $iCountMax ] ; do
+	if [ $iCount -gt 1 ] ; then
+	    sleep 3
+	fi
+	if [ -z "$6" ] ; then
+	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%.'$8
+	else
+	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%.'$8
+	fi
+	sixdeskrundir false
+	actualDirName=$rundirname
+	sixdeskSanitizeString "${actualDirName}" actualDirName
+	actualDirNameFullPath="$9/$actualDirName"
+	sixdeskSanitizeString "${actualDirNameFullPath}" actualDirNameFullPath
+	if [ -n "${actualDirName}" ] && [ -n "${actualDirNameFullPath}" ] ; then
+	    __lok=true
+	    break
+	else
+	    __lprobl=true
+	    # get ready to report a problem
+	    sixdeskEchoEnvVars /tmp/envs_${iCount}.txt
+	fi
+	let iCount+=1
+    done
+    if ${__lprobl} ; then
+	if ${__lok} ; then
+	    sixdeskmess="Warn: failed to generate actualDirName and/or actualDirNameFullPath ${iCount} times, but managed to survive! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going on... "
+	    local __emailSubj='Warning'
+	else
+	    sixdeskmess="Err: failed to generate actualDirName and/or actualDirNameFullPath too many times (i.e. ${iCountMax})! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going to next WU..."
+	    local __emailSubj='Error'
+	    let __lerr+=1
+	fi
+	sixdeskmess
+	sixdeskSendNotifMail ${__emailSubj}
+    fi
+    return $__lerr
 }
 sixdeskDefineWorkUnitName(){
     # $1: workspace name (ie $workspace)
@@ -760,13 +864,15 @@ sixdeskScaledKstep(){
     local __ampfinish=$4
     local __factor=0.3
     scaled_kstep=${__kstep}
-    if [ ${__reduce_angs_with_aplitude} -eq 1 ] ;then
-        if [ "${__ampstart}" -gt ${__factor} ] ;then
-            local __ang_scaling_factor=`gawk -v "ampfinish=${__ampfinish}" -v "ampstart=${__ampstart}" 'END{print (ampfinish/ampstart)}' /dev/null`
-        else
-            local __ang_scaling_factor=`gawk -v "ampfinish=${__ampfinish}" -v "factor=${__factor}" 'END{print(ampfinish/factor)}' /dev/null`
-        fi
-        scaled_kstep=`gawk -v "kstep=${__kstep}" -v "ang_scaling_factor=${__ang_scaling_factor}" 'END{print(kstep*ang_scaling_factor)}' /dev/null`
+    if [ -n "${__reduce_angs_with_aplitude}" ] ; then
+	if [ ${__reduce_angs_with_aplitude} -eq 1 ] ;then
+            if [ "${__ampstart}" -gt ${__factor} ] ;then
+		local __ang_scaling_factor=`gawk -v "ampfinish=${__ampfinish}" -v "ampstart=${__ampstart}" 'END{print (ampfinish/ampstart)}' /dev/null`
+            else
+		local __ang_scaling_factor=`gawk -v "ampfinish=${__ampfinish}" -v "factor=${__factor}" 'END{print(ampfinish/factor)}' /dev/null`
+            fi
+            scaled_kstep=`gawk -v "kstep=${__kstep}" -v "ang_scaling_factor=${__ang_scaling_factor}" 'END{print(kstep*ang_scaling_factor)}' /dev/null`
+	fi
     fi
 }
 sixdeskkang(){
@@ -1025,3 +1131,41 @@ function sixdeskInspectPrerequisites(){
     return $__lerr
 }
 
+function sixdeskSanitizeString(){
+    # A.Mereghetti, 2016-12-07
+    # for the moment, remove empty spaces, tab and newline chars
+    __cleanArg=`echo "$1" | sed -e 's/\ //g' -e 's/\t//g' -e 's/\n//g'`
+    eval "$2=${__cleanArg}"
+}
+
+function sixdeskSendNotifMail(){
+    local __emailSubj=$1
+    local __receiverNames="amereghe"
+    # do bother user only in case of a real error
+    if [ -n "${__emailSubj}" ] ; then
+	if [ `echo ${__emailSubj} | grep -e Error -e "ERROR" -e "error" | wc -l` -gt 0 ] ; then
+	    __receiverNames="${__receiverNames} $LOGNAME"
+	fi
+    fi
+
+    # send emails (attachments are generated by sixdeskEchoEnvVars)
+    local __attachments=`\ls -1 /tmp/envs*txt 2> /dev/null`
+    local __dirName=envs_${LOGNAME}_`date +"%F_%H-%M-%S"`
+    mkdir /tmp/${__dirName}
+    mv /tmp/envs*txt /tmp/${__dirName}
+    zip -j /tmp/${__dirName}.zip /tmp/${__dirName}/* > /dev/null 2>&1
+    emailSubject="intercepting problem in SixDesk: ${__emailSubj}"
+    local __recipients=`echo "${__receiverNames}" | awk '{for (ii=1;ii<=NF;ii++) {printf("%s@cern.ch ",$ii)}}'`
+    echo "${sixdeskmess}" | mail -a /tmp/${__dirName}.zip -s "${emailSubject}" ${__recipients}
+
+    # clean
+    rm -rf /tmp/${__dirName}*
+}
+
+function sixdeskEchoEnvVars(){
+    if [ -n "$1" ] ; then
+	compgen -v | while read line; do all=$line"[*]"; echo $line=${!all}; done > $1
+    else
+	compgen -v | while read line; do all=$line"[*]"; echo $line=${!all}; done
+    fi
+}
