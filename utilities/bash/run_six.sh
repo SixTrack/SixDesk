@@ -1940,6 +1940,42 @@ if ${lmegazip} ; then
     # get name of zip as from initialisation
     megaZipName=`cat ${sixdeskjobs_logs}/megaZipName.txt`
 fi
+# - prepare tune scans
+tunesXX=""
+tunesYY=""
+for (( itunexx=$itunex; itunexx<=$itunex1; itunexx+=$ideltax )) ; do
+    tunesXX="${tunesXX} $(sixdeskPrepareTune $itunexx $xlen)"
+done
+for (( ituneyy=$ituney; ituneyy<=$ituney1; ituneyy+=$ideltay )) ; do
+    tunesYY="${tunesYY} $(sixdeskPrepareTune $ituneyy $ylen)"
+done
+tunesXX=( ${tunesXX} )
+tunesYY=( ${tunesYY} )
+sixdeskmess="scanning the following tunes:"
+sixdeskmess
+sixdeskmess="Qx: ${tunesXX[@]}"
+sixdeskmess
+sixdeskmess="Qy: ${tunesYY[@]}"
+sixdeskmess
+if [ -n "${squaredTuneScan}" ] ; then
+    lSquaredTuneScan=true
+    let iTotal=${#tunesXX[@]}*${#tunesYY[@]}
+    sixdeskmess="over a squared domain (i.e. considering all combinations), for a total of ${iTotal} points for each MADX seed."
+    sixdeskmess
+else
+    lSquaredTuneScan=false
+    if [ ${#tunesXX[@]} -eq ${#tunesYY[@]} ] ;  then
+	iTotal=${#tunesXX[@]}
+	sixdeskmess="over a linear domain (i.e. as done so far), for a total of ${iTotal} points for each MADX seed."
+    elif [ ${#tunesXX[@]} -lt ${#tunesYY[@]} ] ;  then
+	iTotal=${#tunesXX[@]}
+	sixdeskmess="over a linear domain (i.e. as done so far), for a total of ${iTotal} points for each MADX seed (limited in H)."
+    else
+	iTotal=${#tunesYY[@]}
+	sixdeskmess="over a linear domain (i.e. as done so far), for a total of ${iTotal} points for each MADX seed (limited in V)."
+    fi
+    sixdeskmess
+fi
 
 # main loop
 for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
@@ -1948,12 +1984,6 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
     echo ""
     sixdeskmess="MADX seed $iMad"
     sixdeskmess
-    itunexx=$itunex
-    ituneyy=$ituney
-    if test $ideltax -eq 0 -a $ideltay -eq 0 ; then
-	ideltax=1000000
-	ideltay=1000000
-    fi
     if ${lgenerate} || ${lfix} ; then
 	iForts="2 8 16"
 	if [ "$fort_34" != "" ] ; then
@@ -1963,86 +1993,95 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	for iFort in ${iForts} ; do
 	    gunzip -c $sixtrack_input/fort.${iFort}_$iMad.gz > $sixtrack_input/fort.${iFort}_$iMad
 	done
-    fi	    
-    while test $itunexx -le $itunex1 -o $ituneyy -le $ituney1 ; do
-	# - get $sixdesktunes
-	sixdesklooptunes
-	#   ...notify user
-	echo ""
-	echo ""
-	sixdeskmess="Tunescan $sixdesktunes"
-	sixdeskmess
-	# - get simul path (storage of beta values), stored in $Rundir (returns Runnam, Rundir, actualDirName)...
-	sixdeskDefinePointTree $LHCDesName $iMad "s" $sixdesktunes "" "" "" "" $sixdesktrack
-	if [ $? -gt 0 ] ; then
-	    # go to next tune values (sixdeskmess already printed out and email sent to user/admins)
-	    continue
+    fi
+
+    for (( ii=0 ; ii<${#tunesYY[@]} ; ii++ )) ; do
+	if ${lSquaredTuneScan} ; then
+	    # squared scan: for a value of Qy, explore all values of Qx
+	    jmin=0
+	    jmax=${#tunesXX[@]}
+	else
+	    # linear scan: for a value of Qy, run only one value of Qx
+	    jmin=$ii
+	    let jmax=$jmin+1
 	fi
-	# - int tunes
-	sixdeskinttunes
-	# - beta values?
-	if [ $short -eq 1 ] || [ $long -eq 1 ] ; then
-	    if ${lgenerate} || ${lfix} ; then
-		if ${lselected} || [ ! -s ${RundirFullPath}/betavalues ] ; then
-		    [ -d $RundirFullPath ] || mkdir -p $RundirFullPath
-		    cd $sixdeskjobs_logs
-		    if [ $chrom -eq 0 ] ; then
-			sixdeskmess="Running two one turn jobs to compute chromaticity"
-			sixdeskmess
-			submitChromaJobs $RundirFullPath
-		    else
-			sixdeskmess="Using Chromaticity specified as $chromx $chromy"
-			sixdeskmess
-		    fi
-		    sixdeskmess="Running `basename $SIXTRACKEXE` (one turn) to get beta values"
-		    sixdeskmess
-		    submitBetaJob $RundirFullPath
-		    cd $sixdeskhome
-		fi
+	for (( jj=$jmin; jj<$jmax ; jj++ )) ; do
+	    tunexx=${tunesXX[$jj]}
+	    tuneyy=${tunesYY[$ii]}
+	    sixdesktunes=$tunexx"_"$tuneyy
+            #   ...notify user
+	    echo ""
+	    echo ""
+	    sixdeskmess="Tunescan $sixdesktunes"
+	    sixdeskmess
+  	    # - get simul path (storage of beta values), stored in $Rundir (returns Runnam, Rundir, actualDirName)...
+	    sixdeskDefinePointTree $LHCDesName $iMad "s" $sixdesktunes "" "" "" "" $sixdesktrack
+	    if [ $? -gt 0 ] ; then
+		# go to next tune values (sixdeskmess already printed out and email sent to user/admins)
+		continue
 	    fi
-	    if ${lcheck} ; then
-		# checks
-		sixdeskInspectPrerequisites $RundirFullPath -d
-		let __lerr+=$?
-		if [ $chrom -eq 0 ] ; then
-		    sixdeskInspectPrerequisites $RundirFullPath -s mychrom
-		    let __lerr+=$?
-		fi
-		sixdeskInspectPrerequisites $RundirFullPath -s betavalues
-		let __lerr+=$?
-		if [ ${__lerr} -gt 0 ] ; then
-		    sixdeskmess="Failure in preparation."
-		    sixdeskmess
-		    exit ${__lerr}
-		fi
+	    # - int tunes
+	    sixdeskinttunes
+	    # - beta values?
+	    if [ $short -eq 1 ] || [ $long -eq 1 ] ; then
+	        if ${lgenerate} || ${lfix} ; then
+	    	    if ${lselected} || [ ! -s ${RundirFullPath}/betavalues ] ; then
+	    		[ -d $RundirFullPath ] || mkdir -p $RundirFullPath
+	    		cd $sixdeskjobs_logs
+	    		if [ $chrom -eq 0 ] ; then
+	    		    sixdeskmess="Running two `basename $SIXTRACKEXE` (one turn) jobs to compute chromaticity"
+	    		    sixdeskmess
+	    		    submitChromaJobs $RundirFullPath
+	    		else
+	    		    sixdeskmess="Using Chromaticity specified as $chromx $chromy"
+	    		    sixdeskmess
+	    		fi
+	    		sixdeskmess="Running `basename $SIXTRACKEXE` (one turn) to get beta values"
+	    		sixdeskmess
+	    		submitBetaJob $RundirFullPath
+	    		cd $sixdeskhome
+	    	    fi
+	        fi
+	        if ${lcheck} ; then
+	    	    # checks
+	    	    sixdeskInspectPrerequisites $RundirFullPath -d
+	    	    let __lerr+=$?
+	    	    if [ $chrom -eq 0 ] ; then
+	    		sixdeskInspectPrerequisites $RundirFullPath -s mychrom
+	    		let __lerr+=$?
+	    	    fi
+	    	    sixdeskInspectPrerequisites $RundirFullPath -s betavalues
+	    	    let __lerr+=$?
+	    	    if [ ${__lerr} -gt 0 ] ; then
+	    		sixdeskmess="Failure in preparation."
+	    		sixdeskmess
+	    		exit ${__lerr}
+	    	    fi
+	        fi
+	        parseBetaValues $RundirFullPath
+	    fi	    
+	    
+	    # Resonance Calculation only
+	    N1=0
+	    if [ $N1 -gt 0 ] ; then
+	        N2=9
+	        Qx=63.28
+	        Qy=59.31
+	        nsr=10.
+	        Ax=`gawk 'END{Ax='$nsr'*sqrt('$emit'/'$gamma'*'$beta_x');print Ax}' /dev/null`
+	        Ay=`gawk 'END{Ay='$nsr'*sqrt('$emit'/'$gamma'*'$beta_y');print Ay}' /dev/null`
+	        echo "$Qx $Qy $Ax $Ay $N1 $N2" > $sixdeskjobs_logs/resonance
 	    fi
-	    parseBetaValues $RundirFullPath
-	fi
-	
-	# Resonance Calculation only
-	N1=0
-	if [ $N1 -gt 0 ] ; then
-	    N2=9
-	    Qx=63.28
-	    Qy=59.31
-	    nsr=10.
-	    Ax=`gawk 'END{Ax='$nsr'*sqrt('$emit'/'$gamma'*'$beta_x');print Ax}' /dev/null`
-	    Ay=`gawk 'END{Ay='$nsr'*sqrt('$emit'/'$gamma'*'$beta_y');print Ay}' /dev/null`
-	    echo "$Qx $Qy $Ax $Ay $N1 $N2" > $sixdeskjobs_logs/resonance
-	fi
-	
-	# actually submit according to type of job
-	if [ $short -eq 1 ] ; then
-	    treatShort
-	elif [ $long -eq 1 ] ; then
-	    treatLong
-	elif [ $da -eq 1 ] ; then
-	    treatDA
-	fi
-	
-	# get ready for new point in tune
-	itunexx=`expr $itunexx + $ideltax`
-	ituneyy=`expr $ituneyy + $ideltay`
+	    
+	    # actually submit according to type of job
+	    if [ $short -eq 1 ] ; then
+	        treatShort
+	    elif [ $long -eq 1 ] ; then
+	        treatLong
+	    elif [ $da -eq 1 ] ; then
+	        treatDA
+	    fi
+	done
     done
     if ${lgenerate} || ${lfix} ; then
 	iForts="2 8 16"
