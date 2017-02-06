@@ -446,6 +446,8 @@ sixdesktunes(){
     if [ $__llen -gt 0 ] ; then
 	ideltax="$ideltax`printf "0%.0s" $( seq 1 $__llen)`"
     fi
+    # remove leading 0s
+    ideltax=`echo $ideltax | sed 's/^[0]*//'`
 
     # y plane
     # - sanity checks (ie absence of "." or "." being first/last char):
@@ -481,6 +483,8 @@ sixdesktunes(){
     if [ $__llen -gt 0 ] ; then
 	ideltay="$ideltay`printf "0%.0s" $( seq 1 $__llen)`"
     fi
+    # remove leading 0s
+    ideltay=`echo $ideltay | sed 's/^[0]*//'`
 
     # some consistency checks
     if [ $itunex1 -lt $itunex ] ; then
@@ -516,13 +520,18 @@ sixdesktunes(){
 sixdeskPrepareTunes(){
     # by A.Mereghetti, 2016-07-19
     # converts itunexx/ituneyy into tunexx/tuneyy
-    tunexx=$(sixdeskAddDotFloat $tunexx)
-    tuneyy=$(sixdeskAddDotFloat $tuneyy)
-    tunexx=`echo "$itunexx" | awk -v "flen=$xlen" '{lstring=length($1); fpart=substr($1,lstring-flen+1,flen); ipart=substr($1,1,lstring-flen); print (ipart"."fpart)}'`
-    tuneyy=`echo "$ituneyy" | awk -v "flen=$ylen" '{lstring=length($1); fpart=substr($1,lstring-flen+1,flen); ipart=substr($1,1,lstring-flen); print (ipart"."fpart)}'`
-    tunexx=$(sixdeskFixZerosFloat $tunexx)
-    tuneyy=$(sixdeskFixZerosFloat $tuneyy)
+    tunexx=$(sixdeskPrepareTune $itunexx $xlen)
+    tuneyy=$(sixdeskPrepareTune $ituneyy $ylen)
     sixdesktunes=$tunexx"_"$tuneyy
+}
+sixdeskPrepareTune(){
+    # by A.Mereghetti, 2017-02-06
+    # converts itunezz into tunezz
+    local __itunezz=$1
+    local __flen=$2
+    __tunezz=`echo "$__itunezz" | awk -v "flen=$__flen" '{lstring=length($1); fpart=substr($1,lstring-flen+1,flen); ipart=substr($1,1,lstring-flen); print (ipart"."fpart)}'`
+    __tunezz=$(sixdeskFixZerosFloat $__tunezz)
+    echo "${__tunezz}"
 }
 sixdeskAddDotFloat(){
     # by A.Mereghetti, 2016-07-20

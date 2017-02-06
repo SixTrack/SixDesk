@@ -1943,35 +1943,37 @@ fi
 # - prepare tune scans
 tunesXX=""
 tunesYY=""
-itunexx=$itunex
-ituneyy=$ituney
-while test $itunexx -le $itunex1 -a $ituneyy -le $ituney1 ; do
-    # returns tunexx/tuneyy, computed from itunexx/ituneyy,
-    #    using xlen/ylen
-    sixdeskPrepareTunes
-    tunesXX="${tunesXX} ${tunexx}"
-    tunesYY="${tunesYY} ${tuneyy}"
-    # get ready for new point in tune scan
-    itunexx=`expr $itunexx + $ideltax`
-    ituneyy=`expr $ituneyy + $ideltay`
+for (( itunexx=$itunex; itunexx<=$itunex1; itunexx+=$ideltax )) ; do
+    tunesXX="${tunesXX} $(sixdeskPrepareTune $itunexx $xlen)"
+done
+for (( ituneyy=$ituney; ituneyy<=$ituney1; ituneyy+=$ideltay )) ; do
+    tunesYY="${tunesYY} $(sixdeskPrepareTune $ituneyy $ylen)"
 done
 tunesXX=( ${tunesXX} )
 tunesYY=( ${tunesYY} )
 sixdeskmess="scanning the following tunes:"
 sixdeskmess
-for (( ii=0 ; ii<${#tunesXX[@]} ; ii++ )) ; do
-    sixdeskmess="Qx: ${tunesXX[$ii]} - Qy: ${tunesYY[$ii]}"
-    sixdeskmess
-done
+sixdeskmess="Qx: ${tunesXX[@]}"
+sixdeskmess
+sixdeskmess="Qy: ${tunesYY[@]}"
+sixdeskmess
 if [ -n "${squaredTuneScan}" ] ; then
     lSquaredTuneScan=true
-    let iTotal=${#tunesXX[@]}*${#tunesXX[@]}
+    let iTotal=${#tunesXX[@]}*${#tunesYY[@]}
     sixdeskmess="over a squared domain (i.e. considering all combinations), for a total of ${iTotal} points for each MADX seed."
     sixdeskmess
 else
     lSquaredTuneScan=false
-    iTotal=${#tunesXX[@]}
-    sixdeskmess="over a linear domain (i.e. as done so far), for a total of ${iTotal} points for each MADX seed."
+    if [ ${#tunesXX[@]} -eq ${#tunesYY[@]} ] ;  then
+	iTotal=${#tunesXX[@]}
+	sixdeskmess="over a linear domain (i.e. as done so far), for a total of ${iTotal} points for each MADX seed."
+    elif [ ${#tunesXX[@]} -lt ${#tunesYY[@]} ] ;  then
+	iTotal=${#tunesXX[@]}
+	sixdeskmess="over a linear domain (i.e. as done so far), for a total of ${iTotal} points for each MADX seed (limited in H)."
+    else
+	iTotal=${#tunesYY[@]}
+	sixdeskmess="over a linear domain (i.e. as done so far), for a total of ${iTotal} points for each MADX seed (limited in V)."
+    fi
     sixdeskmess
 fi
 
@@ -2004,8 +2006,8 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	    let jmax=$jmin+1
 	fi
 	for (( jj=$jmin; jj<$jmax ; jj++ )) ; do
-	    tunexx=${tunesXX[$ii]}
-	    tuneyy=${tunesYY[$jj]}
+	    tunexx=${tunesXX[$jj]}
+	    tuneyy=${tunesYY[$ii]}
 	    sixdesktunes=$tunexx"_"$tuneyy
             #   ...notify user
 	    echo ""
