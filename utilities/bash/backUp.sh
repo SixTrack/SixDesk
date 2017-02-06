@@ -30,7 +30,7 @@ function setCommand(){
 	[ -n "${fullPathDest}" ] || fullPathDest=$localBaseDirDef/$destPath
 	fullDest=${fullPathDest}
     elif [ -n "${storageServiceDest}" ] ; then
-	[ -n "${fullPathDest}" ] || fullPathDest=$localBaseDirDef/$destPath
+	[ -n "${fullPathDest}" ] || fullPathDest=$privBaseDirDef/$destPath
 	fullDest=$LOGNAME@${storageServiceDest}:${fullPathDest}
 	lscp=true
     else
@@ -165,7 +165,7 @@ castorServeraName=castorpublic.cern.ch
 # LOCAL
 localBaseDirDef=$HOME
 # private machine
-localBaseDirDef=/home/$LOGNAME
+privBaseDirDef=/home/$LOGNAME
 
 # defaults
 currStudyDef=''
@@ -192,7 +192,10 @@ while getopts  ":hd:t:s:R" opt ; do
 	    if [ ${lPatGiven} -eq 0 ] ; then
 		destPath="${OPTARG}"
 	    elif [ ${lPatGiven} -eq 1 ] ; then
-		sourcePath="${OPTARG}"
+		# copying back up from one storage system to the other one
+		# -> invert assignment, for a more intuitive user interface
+		sourcePath="${destPath}"
+		destPath="${OPTARG}"
 	    fi
 	    let lPatGiven+=1
 	    ;;
@@ -214,7 +217,10 @@ while getopts  ":hd:t:s:R" opt ; do
 	    if [ ${lSerGiven} -eq 0 ] ; then
 		storageServiceDest="${OPTARG}"
 	    elif [ ${lSerGiven} -eq 1 ] ; then
-		storageServiceSource="${OPTARG}"
+		# copying back up from one storage system to the other one
+		# -> invert assignment, for a more intuitive user interface
+		storageServiceSource="${storageServiceDest}"
+		storageServiceDest="${OPTARG}"
 	    fi
 	    let lSerGiven+=1
 	    ;;
