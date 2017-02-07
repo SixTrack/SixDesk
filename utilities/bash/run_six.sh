@@ -2025,7 +2025,7 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	    # - beta values?
 	    if [ $short -eq 1 ] || [ $long -eq 1 ] ; then
 	        if ${lgenerate} || ${lfix} ; then
-	    	    if ${lselected} || [ ! -s ${RundirFullPath}/betavalues ] ; then
+	    	    if [ ! -s ${RundirFullPath}/betavalues ] ; then
 	    		[ -d $RundirFullPath ] || mkdir -p $RundirFullPath
 	    		cd $sixdeskjobs_logs
 	    		if [ $chrom -eq 0 ] ; then
