@@ -54,6 +54,8 @@ function preliminaryChecksM6T(){
 }
 
 function submit(){
+    local __delay=2
+
     # useful echo
     # - madx version and path
     sixdeskmess="Using madx Version $MADX in $MADX_PATH"
@@ -124,8 +126,10 @@ function submit(){
 	    -e 's?%MADX_PATH%?'$MADX_PATH'?g' \
 	    -e 's?%MADX%?'$MADX'?g' \
 	    -e 's?%SIXTRACK_INPUT%?'$sixtrack_input'?g' $mad6tjob > mad6t_"$iMad".lsf
-	sleep 2
 	chmod 755 mad6t_"$iMad".lsf
+        sixdeskmess="Sleeping ${__delay} seconds"
+        sixdeskmess
+	sleep ${__delay}
 	
 	if ${linter} ; then
 	    sixdeskmktmpdir batch ""

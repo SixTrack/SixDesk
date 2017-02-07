@@ -720,6 +720,7 @@ sixdeskDefinePointTree(){
     # temporary variables
     iCountMax=10
     local __lerr=0
+    local __delay=3
 
     # -- Runnam
     iCount=0
@@ -727,7 +728,9 @@ sixdeskDefinePointTree(){
     local __lprobl=false
     while [ $iCount -lt $iCountMax ] ; do
 	if [ $iCount -gt 1 ] ; then
-	    sleep 3
+            sixdeskmess="Sleeping ${__delay} seconds"
+            sixdeskmess
+	    sleep ${__delay}
 	fi
 	Runnam=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
 	sixdeskSanitizeString "${Runnam}" Runnam
@@ -760,7 +763,9 @@ sixdeskDefinePointTree(){
     local __lprobl=false
     while [ $iCount -lt $iCountMax ] ; do
 	if [ $iCount -gt 1 ] ; then
-	    sleep 3
+            sixdeskmess="Sleeping ${__delay} seconds"
+            sixdeskmess
+	    sleep ${__delay}
 	fi
 	if [ -z "$6" ] ; then
 	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
@@ -801,7 +806,9 @@ sixdeskDefinePointTree(){
     local __lprobl=false
     while [ $iCount -lt $iCountMax ] ; do
 	if [ $iCount -gt 1 ] ; then
-	    sleep 3
+            sixdeskmess="Sleeping ${__delay} seconds"
+            sixdeskmess
+	    sleep ${__delay}
 	fi
 	if [ -z "$6" ] ; then
 	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%.'$8
