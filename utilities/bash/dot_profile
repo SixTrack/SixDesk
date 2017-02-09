@@ -1113,34 +1113,40 @@ sixdeskCleanExit(){
     sixdeskexit $__exitLevel
 }
 function __inspectPrerequisite(){
-    local __test=$1
-    local __entry=$2
+    local __lverbose=$1
+    local __test=$2
+    local __entry=$3
     local __lerr=0
     
     test $__test ${__entry}
     if [ $? -ne 0 ] ; then
-	sixdeskmess="${__entry} NOT there!"
-	sixdeskmess
 	let __lerr+=1
+	if ${__lverbose} ; then
+	    sixdeskmess="${__entry} NOT there!"
+	    sixdeskmess
+	fi
     else
-	sixdeskmess="${__entry} EXISTs!"
-	sixdeskmess
+	if ${__lverbose} ; then
+	    sixdeskmess="${__entry} EXISTs!"
+	    sixdeskmess
+	fi
     fi
     return $__lerr
 }
 
 function sixdeskInspectPrerequisites(){
-    local __path=$1
-    local __test=$2
-    shift 2
+    local __lverbose=$1
+    local __path=$2
+    local __test=$3
+    shift 3
     local __entries=$@
     local __lerr=0
     if [ $# -eq 0 ] ; then
-	__inspectPrerequisite ${__test} ${__path}
+	__inspectPrerequisite ${__lverbose} ${__test} ${__path}
 	let __lerr+=$?
     else
 	for tmpEntry in ${__entries} ; do
-	    __inspectPrerequisite ${__test} ${__path}/${tmpEntry}
+	    __inspectPrerequisite ${__lverbose} ${__test} ${__path}/${tmpEntry}
 	    let __lerr+=$?
 	done
     fi

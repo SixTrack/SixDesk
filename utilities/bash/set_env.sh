@@ -18,6 +18,7 @@ function how_to_use() {
    -p      platform name (when running many jobs in parallel)
    -e      just parse the concerned sixdeskenv/sysenv files, without
                overwriting
+   -v      verbose (OFF by default)
 
 EOF
 }
@@ -35,7 +36,7 @@ function preliminaryChecks(){
     if ${lset} ; then
 	[ -d studies ] || mkdir studies
     elif ${lload} ; then
-	sixdeskInspectPrerequisites studies -d
+	sixdeskInspectPrerequisites ${lverbose} studies -d
     fi
     if [ $? -gt 0 ] ; then
 	sixdeskexit 2
@@ -43,7 +44,7 @@ function preliminaryChecks(){
 
     # - make sure that, in case of loading, we have the concerned directory in studies:
     if ${lload} ; then
-	sixdeskInspectPrerequisites studies/${currStudy} -d
+	sixdeskInspectPrerequisites ${lverbose} studies/${currStudy} -d
 	if [ $? -gt 0 ] ; then
 	    sixdeskmess="Study $currStudy not found in studies!!!"
 	    sixdeskmess
@@ -52,7 +53,7 @@ function preliminaryChecks(){
     fi
 
     # - make sure we have sixdeskenv/sysenv files
-    sixdeskInspectPrerequisites $envFilesPath -s sixdeskenv sysenv
+    sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s sixdeskenv sysenv
     if [ $? -gt 0 ] ; then
 	sixdeskexit 4
     fi
@@ -112,11 +113,12 @@ fi
 lset=false
 lload=false
 loverwrite=true
+lverbose=false
 currPlatform=""
 currStudy=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hsd:ep:" opt ; do
+while getopts  ":hsvd:ep:" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -138,6 +140,10 @@ while getopts  ":hsd:ep:" opt ; do
 	p)
 	    # the user is requesting a specific platform
 	    currPlatform="${OPTARG}"
+	    ;;
+	v)
+	    # verbose
+	    lverbose=true
 	    ;;
 	:)
 	    how_to_use

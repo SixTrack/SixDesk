@@ -20,7 +20,8 @@ function how_to_use() {
               (i.e. the fort.*.gz) - BOINC .zip/.desc files are not re-generated;
    -C      clean .zip/.desc after submission in boinc
            NB: this is done by default in case of submission to boinc
-   -t      report the current status of simulations (not yet available)
+   -t      report the current status of simulations
+           for the time being, it reports the number of input and output files
 
    options (optional)
    -S      selected points of scan only
@@ -39,6 +40,7 @@ function how_to_use() {
    -B      break backward-compatibility
            for the moment, this sticks only to expressions affecting ratio of
               emittances, amplitude scans and job names in fort.3
+   -v      verbose (OFF by default)
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
 
@@ -671,7 +673,7 @@ function parseBetaValues(){
         sixdeskmess
 	exit
     fi
-    sixdeskmess="Finally all betavalues:"
+    sixdeskmess="Betavalues:"
     sixdeskmess
     sixdeskmess="beta_x[2] $beta_x $beta_x2 - beta_y[2] $beta_y $beta_y2"
     sixdeskmess
@@ -864,15 +866,35 @@ function fixInputFiles(){
     done
 }
 
+function checkDirStatus(){
+    let nExpected+=1
+    sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -d
+    if [ $? -eq 0 ] ; then
+	let nFound[0]+=1
+	for (( iFound=1; iFound<${#foundNames[@]}; iFound++ )) ; do
+	    sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s ${foundNames[$iFound]}
+	    if [ $? -eq 0 ] ; then
+		let nFound[$iFound]+=1
+	    else
+		sixdeskmess="${foundNames[$iFound]} in ${RundirFullPath} is missing"
+		sixdeskmess
+	    fi
+	done
+    else
+	sixdeskmess="point ${RundirFullPath} is missing!"
+	sixdeskmess
+    fi
+}
+
 function checkDirReadyForSubmission(){
     local __lerr=0
     
-    sixdeskInspectPrerequisites $RundirFullPath -d
+    sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -d
     let __lerr+=$?
-    sixdeskInspectPrerequisites $RundirFullPath -s fort.2.gz fort.3.gz fort.8.gz fort.16.gz
+    sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s fort.2.gz fort.3.gz fort.8.gz fort.16.gz
     let __lerr+=$?
     if [ "$sixdeskplatform" == "lsf" ] ; then
-	sixdeskInspectPrerequisites $RundirFullPath -s $Runnam.job
+	sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s $Runnam.job
 	let __lerr+=$?
     elif [ "$sixdeskplatform" == "boinc" ] ; then
 	# - there should be only 1 .desc/.zip files
@@ -908,7 +930,7 @@ function checkDirReadyForSubmission(){
 	fi
     fi
     if [ $sussix -eq 1 ] ; then
-	sixdeskInspectPrerequisites $RundirFullPath -s sussix.inp.1.gz sussix.inp.2.gz sussix.inp.3.gz
+	sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s sussix.inp.1.gz sussix.inp.2.gz sussix.inp.3.gz
 	let __lerr+=$?
     fi
 
@@ -1112,7 +1134,7 @@ function treatShort(){
     if ${lcheck} ; then
 	if [ $sussix -eq 1 ] ; then
 	    #
-	    sixdeskInspectPrerequisites $sixdeskjobs_logs -e sussix.inp.1.gz sussix.inp.2.gz sussix.inp.3.gz
+	    sixdeskInspectPrerequisites ${lverbose} $sixdeskjobs_logs -e sussix.inp.1.gz sussix.inp.2.gz sussix.inp.3.gz
 	    if [ $? -gt 0 ] ; then
 		sixdeskmess="Error in creating sussix input files"
 		sixdeskmess
@@ -1175,6 +1197,12 @@ function treatShort(){
 	    submitCreateFinalFort3Short $kk
 	    # fix input files
 	    fixInputFiles $RundirFullPath
+	    
+	# ----------------------------------------------------------------------
+	elif ${lstatus} ; then
+        # ----------------------------------------------------------------------
+
+	    checkDirStatus
 	    
 	# ----------------------------------------------------------------------
 	else
@@ -1299,9 +1327,7 @@ function treatLong(){
         fampend=`echo $fampend | sed -e's/\.$//'`
         Ampl="${fampstart}_${fampend}"
 
-        sixdeskmess="Loop over amplitudes: $Ampl $ns1l $ns2l $nsincl"
-        sixdeskmess
-        sixdeskmess="$ampstart $ampfinish $ampincl $fampstart $fampend"
+        sixdeskmess="Considering amplitudes: $Ampl"
         sixdeskmess
 
 	# get AngleStep
@@ -1342,14 +1368,18 @@ function treatLong(){
 	    if ${lfix} ; then
             # ----------------------------------------------------------------------
 
-		sixdeskmess="Analysing and fixing dir $RundirFullPath"
-		sixdeskmess
 		# fix dir
 		fixDir $RundirFullPath $actualDirNameFullPath
 		# finalise generation of fort.3
 		submitCreateFinalFort3Long
 		# fix input files
 		fixInputFiles $RundirFullPath
+	    
+	    # ----------------------------------------------------------------------
+	    elif ${lstatus} ; then
+            # ----------------------------------------------------------------------
+
+		checkDirStatus
 	    
 	    # ----------------------------------------------------------------------
 	    else
@@ -1481,6 +1511,12 @@ function treatDA(){
 	fixInputFiles $RundirFullPath
 	    
     # ----------------------------------------------------------------------
+    elif ${lstatus} ; then
+    # ----------------------------------------------------------------------
+
+	checkDirStatus
+	    
+    # ----------------------------------------------------------------------
     else
     # ----------------------------------------------------------------------
         if ${lgenerate} ; then
@@ -1537,13 +1573,15 @@ lcleanzip=false
 lselected=false
 lmegazip=false
 lbackcomp=true
+lverbose=false
 currPlatform=""
 currStudy=""
 optArgCurrStudy="-s"
 optArgCurrPlatForm=""
+verbose=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgsctakfBSCMd:p:" opt ; do
+while getopts  ":hgsctakfvBSCMd:p:" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1606,9 +1644,10 @@ while getopts  ":hgsctakfBSCMd:p:" opt ; do
 	t)
 	    # status
 	    lstatus=true
-	    how_to_use
-	    echo " -t option not yet available!"
-	    exit 1
+	    ;;
+	v) 
+	    # verbose
+	    lverbose=true
 	    ;;
 	:)
 	    how_to_use
@@ -1637,6 +1676,9 @@ fi
 if [ -n "${currPlatform}" ] ; then
     optArgCurrPlatForm="-p ${currPlatform}"
 fi
+if ${lverbose} ; then
+    verbose="-v"
+fi
 
 # ------------------------------------------------------------------------------
 # preparatory steps
@@ -1645,7 +1687,7 @@ fi
 # - load environment
 #   NB: workaround to get getopts working properly in sourced script
 OPTIND=1
-source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} -e
+source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${verbose} -e
 # - settings for sixdeskmessages
 sixdeskmessleveldef=0
 sixdeskmesslevel=$sixdeskmessleveldef
@@ -1718,11 +1760,17 @@ if ${lsubmit} ; then
 fi
 if ${lstatus} ; then
     #
-    sixdeskmess="Checking running sixtrack simulations of study $LHCDescrip"
+    sixdeskmess="Checking status of study $LHCDescrip"
     sixdeskmess 2
     #
     lockingDirs=( "$sixdeskstudy" )
     #
+    # initialise some counters:
+    # - expected number of points in scan
+    nExpected=0
+    # - actually found:
+    nFound=( 0 0 0 0 0 0 )
+    foundNames=( 'dirs' 'fort.2.gz' 'fort.3.gz' 'fort.8.gz' 'fort.16.gz' 'fort.10.gz' )
 fi
 echo ""
 
@@ -1797,7 +1845,7 @@ if ${lgenerate} || ${lfix} ; then
     # - these dirs should already exist...
     for tmpDir in $sixdesktrack $sixdeskjobs $sixdeskjobs_logs $sixdesktrackStudy ; do
 	[ -d $tmpDir ] || mkdir -p $tmpDir
-	sixdeskInspectPrerequisites $tmpDir -d
+	sixdeskInspectPrerequisites true $tmpDir -d
 	let __lerr+=$?
     done
     # - save emittance and gamma
@@ -1847,35 +1895,35 @@ if ${lgenerate} || ${lfix} ; then
 fi
 if ${lcheck} ; then
     # - general_input
-    sixdeskInspectPrerequisites $sixdesktrackStudy -s general_input
+    sixdeskInspectPrerequisites true $sixdesktrackStudy -s general_input
     let __lerr+=$?
     # - preProcessFort3
-    sixdeskInspectPrerequisites ${sixdeskjobs_logs} -s fort0.3.mask forts.3.mask fortl.3.mask fortda.3.mask
+    sixdeskInspectPrerequisites true ${sixdeskjobs_logs} -s fort0.3.mask forts.3.mask fortl.3.mask fortda.3.mask
     let __lerr+=$?
     if [ $short -eq 1 ] ; then
 	if [ $sussix -eq 1 ] ; then
-	    sixdeskInspectPrerequisites ${sixdeskjobs_logs} -s sussix.tmp.1 sussix.tmp.2 sussix.tmp.3
+	    sixdeskInspectPrerequisites true ${sixdeskjobs_logs} -s sussix.tmp.1 sussix.tmp.2 sussix.tmp.3
 	    let __lerr+=$?
 	    echo $__lerr
 	fi
-	sixdeskInspectPrerequisites ${sixdeskjobs_logs} -s ${lsfjobtype}.job ${lsfjobtype}0.job
+	sixdeskInspectPrerequisites true ${sixdeskjobs_logs} -s ${lsfjobtype}.job ${lsfjobtype}0.job
 	let __lerr+=$?
     elif [ $da -eq 1 ] ; then
-	sixdeskInspectPrerequisites ${sixdeskjobs_logs} -s dalie.data dalie.input dalie reson.data readda
+	sixdeskInspectPrerequisites true ${sixdeskjobs_logs} -s dalie.data dalie.input dalie reson.data readda
 	let __lerr+=$?
     fi
     if [ "$sixdeskplatform" == "boinc" ] ; then
 	# - existence of dirs
-	sixdeskInspectPrerequisites $sixdeskboincdir -d
+	sixdeskInspectPrerequisites true $sixdeskboincdir -d
 	if [ $? -gt 0 ] ; then
 	    let __lerr+=1
 	else
 	    for tmpDir in $sixdeskboincdir/work $sixdeskboincdir/results ; do
-		sixdeskInspectPrerequisites $tmpDir -d
+		sixdeskInspectPrerequisites true $tmpDir -d
 		let __lerr+=$?
 	    done
 	    # - check of ownership
-	    sixdeskInspectPrerequisites $sixdeskboincdir -s owner
+	    sixdeskInspectPrerequisites true $sixdeskboincdir -s owner
 	    if [ $? -gt 0 ] ; then
 		let __lerr+=1
 	    else
@@ -1903,7 +1951,7 @@ if ${lcheck} ; then
 	fi
 	# - MegaZip:
 	if ${lmegazip} ; then
-	    sixdeskInspectPrerequisites ${sixdeskjobs_logs} -s megaZipName.txt
+	    sixdeskInspectPrerequisites true ${sixdeskjobs_logs} -s megaZipName.txt
 	    if [ $? -gt 0 ] ; then
 		let __lerr+=1
 	    fi
@@ -2044,13 +2092,13 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	        fi
 	        if ${lcheck} ; then
 	    	    # checks
-	    	    sixdeskInspectPrerequisites $RundirFullPath -d
+	    	    sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -d
 	    	    let __lerr+=$?
 	    	    if [ $chrom -eq 0 ] ; then
-	    		sixdeskInspectPrerequisites $RundirFullPath -s mychrom
+	    		sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s mychrom
 	    		let __lerr+=$?
 	    	    fi
-	    	    sixdeskInspectPrerequisites $RundirFullPath -s betavalues
+	    	    sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s betavalues
 	    	    let __lerr+=$?
 	    	    if [ ${__lerr} -gt 0 ] ; then
 	    		sixdeskmess="Failure in preparation."
@@ -2073,7 +2121,7 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	        echo "$Qx $Qy $Ax $Ay $N1 $N2" > $sixdeskjobs_logs/resonance
 	    fi
 	    
-	    # actually submit according to type of job
+	    # further actions depend on type of job
 	    if [ $short -eq 1 ] ; then
 	        treatShort
 	    elif [ $long -eq 1 ] ; then
@@ -2098,7 +2146,7 @@ done
 # megaZip, in case of boinc
 if ${lmegazip} ; then
     
-    sixdeskInspectPrerequisites ${sixdeskjobs_logs} -s megaZipList.txt
+    sixdeskInspectPrerequisites ${lverbose} ${sixdeskjobs_logs} -s megaZipList.txt
     let __lerr+=$?
     if [ $__lerr -ne 0 ] ; then
 	sixdeskmess="${sixdeskjobs_logs}/megaZipList.txt not generated!"
@@ -2128,7 +2176,7 @@ if ${lmegazip} ; then
 	    # - check megaZip file
 	    if ${lcheck} ; then
 		# . check existence of megaZip file
-		sixdeskInspectPrerequisites . -s ${megaZipName}
+		sixdeskInspectPrerequisites ${lverbose} . -s ${megaZipName}
 		let __llerr+=$?
 		if [ $__llerr -ne 0 ] ; then
 		    sixdeskmess="./${megaZipName} not generated!"
@@ -2185,7 +2233,7 @@ if ${lmegazip} ; then
     fi
 
     # . check existence of megaZip file
-    sixdeskInspectPrerequisites . -s ${megaZipName}
+    sixdeskInspectPrerequisites ${lverbose} . -s ${megaZipName}
     let __lerr+=$?
     if [ $__lerr -ne 0 ] ; then
 	sixdeskmess="./${megaZipName} not generated!"
@@ -2236,6 +2284,25 @@ if ${lmegazip} ; then
 	sixdeskmess
 	rm -f ${megaZipName}
     fi
+fi
+
+# summary of status
+if ${lstatus} ; then
+    echo ""
+    echo ""
+    sixdeskmess="Summary of status of study $LHCDescrip:"
+    sixdeskmess
+    sixdeskmess="- number of EXPECTED points in scan (dirs): ${nExpected};"
+    sixdeskmess
+    for (( iFound=0; iFound<${#foundNames[@]}; iFound++ )) ; do
+	if [ ${nFound[$iFound]} == ${nExpected} ] ; then
+	    expectation="AS EXPECTED!"
+	else
+	    expectation="NOT as expected: MIMATCH!"
+	fi
+	sixdeskmess="- number of ${foundNames[$iFound]} FOUND: ${nFound[$iFound]} - ${expectation}"
+	sixdeskmess
+    done
 fi
 
 # ------------------------------------------------------------------------------
