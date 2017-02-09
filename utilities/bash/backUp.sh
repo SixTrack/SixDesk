@@ -11,12 +11,43 @@ EOF
 
 function preliminaryChecks(){
     local __lerr=0
+    if [ -n "${fileName}" ] ; then
+	if ! [ -s ${fileName} ] ; then
+	    how_to_use
+	    echo " file ${fileName} (-f option) does not exist or is empty"
+	    let __lerr+=1
+	fi
+    elif [ -n "${currStudy}" ] ; then
+	source ${SCRIPTDIR}/bash/set_env.sh -d ${currStudy} -e
+	sixdeskDefineUserTree $basedir $scratchdir $workspace
+    else
+	how_to_use
+	echo " please specify a study (-d option) or a file (-f option)"
+	let __lerr+=1
+    fi
     return ${__lerr}
 }
 
 function setCommand(){
     lxrdcp=false
     lscp=false
+    # file name:
+    if [ -z "${fileName}" ] ; then
+	# automatic naming convention:
+	fileName=${currStudy}.zip
+    fi
+    # swap source and destination
+    if ${lreverse} ; then
+	local __tmpPath=${sourcePath}
+	sourcePath=${destPath}
+	destPath=${__tmpPath}
+	local __tmpFull=${fullPathSource}
+	fullPathSource=${fullPathDest}
+	fullPathDest=${__tmpFull}
+	local __tmpStorageService=${storageServiceSource}
+	storageServiceSource=${storageServiceDest}
+	storageServiceDest=${__tmpStorageService}
+    fi
     # destination
     if [ "${storageServiceDest}" == "EOS" ] ; then
 	[ -n "${fullPathDest}" ] || fullPathDest=$eosBaseDirDef/$destPath
@@ -47,22 +78,18 @@ function setCommand(){
 	fullSource=root://${castorServeraName}${fullPathSource}
 	lxrdcp=true
     elif [ "${storageServiceSource}" == "LOCAL" ] ; then
-	[ -n "${fullPathSource}" ] || fullPathSource=$localBaseDirDef/$destPath
+	[ -n "${fullPathSource}" ] || fullPathSource=$localBaseDirDef/$sourcePath
 	fullSource=${fullPathSource}
     elif [ -n "${storageServiceSource}" ] ; then
 	[ -n "${fullPathSource}" ] || fullPathSource=$localBaseDirDef/$sourcePath
-	fullSource=$LOGNAME@${storageServiceDest}:${fullPathSource}
+	fullSource=$LOGNAME@${storageServiceSource}:${fullPathSource}
 	lscp=true
     else
 	[ -n "${fullPathSource}" ] || fullPathSource=$sourcePath
 	fullSource=${fullPathSource}
     fi
-    if ${lreverse} ; then
-	local __tmpFull=${fullSource}
-	fullSource=${fullDest}
-	fullDest=${__tmpFull}
-    fi
-    fullSource="${fullSource}/${currStudy}"
+    # add filename to full path of source
+    fullSource="${fullSource}/${fileName}"
     # protocol
     if ${lxrdcp} && ${lscp} ; then
 	how_to_use
@@ -74,6 +101,63 @@ function setCommand(){
 	comProt="scp -p"
     else
 	comProt="cp -p"
+    fi
+}
+
+function prepareDest(){
+    # prepare destination:
+    # - check that destination folder exists
+    # - remove destination file, to avoid copy of backup is rejected by xrdcp
+    #   (and useless error messages)
+    if [ "${storageServiceDest}" == "EOS" ] ; then
+	echo "eos ls -l ${fullPathDest} > /dev/null 2>&1"
+	if [ $? -ne 0 ] ; then
+	    echo "eos mkdir -p ${fullPathDest}"
+	fi
+	echo "eos ls -l ${fullPathDest}/${fileName} > /dev/null 2>&1"
+	if [ $? -eq 0 ] ; then
+	    echo "eos rm ${fullPathDest}/${fileName}"
+	fi
+    elif [ "${storageServiceDest}" == "CASTOR" ] ; then
+	echo "nsls -l ${fullPathDest} > /dev/null 2>&1"
+	if [ $? -ne 0 ] ; then
+	    echo "nsmkdir -p ${fullPathDest}"
+	fi
+	echo "nsls -l ${fullPathDest}/${fileName} > /dev/null 2>&1"
+	if [ $? -eq 0 ] ; then
+	    echo "nsrm ${fullPathDest}/${fileName}"
+	fi
+    elif [ "${storageServiceDest}" == "LOCAL" ] ; then
+	if [ "${destPath}" != "." ] ; then
+	    echo "ls -l ${fullPathDest} > /dev/null 2>&1"
+	    if [ $? -ne 0 ] ; then
+		echo "mkdir -p ${fullPathDest}"
+	    fi
+	fi
+	echo "ls -l ${fullPathDest}/${fileName} > /dev/null 2>&1"
+	if [ $? -eq 0 ] ; then
+	    echo "rm -f ${fullPathDest}/${fileName}"
+	fi
+    elif [ -n "${storageServiceDest}" ] ; then
+	echo "ssh $LOGNAME@${storageServiceDest} \"ls -l ${fullPathDest}\" > /dev/null 2>&1"
+	if [ $? -ne 0 ] ; then
+	    echo "ssh $LOGNAME@${storageServiceDest} \"mkdir -p ${fullPathDest}\""
+	fi
+	echo "ssh $LOGNAME@${storageServiceDest} \"ls -l ${fullPathDest}/${fileName}\" > /dev/null 2>&1"
+	if [ $? -eq 0 ] ; then
+	    echo "ssh $LOGNAME@${storageServiceDest} \"rm -f ${fullPathDest}/${fileName}\""
+	fi
+    else
+	if [ "${destPath}" != "." ] ; then
+	    echo "ls -l ${fullPathDest} > /dev/null 2>&1"
+	    if [ $? -ne 0 ] ; then
+		echo "mkdir -p ${fullPathDest}"
+	    fi
+	fi
+	echo "ls -l ${fullPathDest}/${fileName} > /dev/null 2>&1"
+	if [ $? -eq 0 ] ; then
+	    echo "rm -f ${fullPathDest}/${fileName}"
+	fi
     fi
 }
 
@@ -89,6 +173,10 @@ function template(){
 
     echo ""
     echo "CASTOR"
+    rm test.txt
+    echo "cacco" >> test.txt
+    echo "cacco" >> test.txt
+    echo "cacco" >> test.txt
     #    https://cern.service-now.com/service-portal/article.do?n=KB0001103
     # quick:
     # - nsmkdir /castor/cern.ch/user/l/laman/castor_tutorial
@@ -104,16 +192,29 @@ function template(){
     nsls -l $castorBaseDir
     nsrm -r $backUpDir
     nsls -l $castorBaseDir
+    nsls -l $backUpDir/test.txt
+    echo $?
     nsmkdir -p $backUpDir
     nsls -l $castorBaseDir
     nsls -l $backUpDir
+    echo "copy 1:"
+    xrdcp test.txt root://castorpublic.cern.ch/$backUpDir
+    nsls -l $backUpDir
+    echo "copy 2:"
     xrdcp test.txt root://castorpublic.cern.ch/$backUpDir
     nsls -l $backUpDir
     rm test.txt
+    touch test.txt
     xrdcp root://castorpublic.cern.ch/$backUpDir/test.txt .
+    echo "test.txt:"
+    cat test.txt
     
     echo ""
     echo "EOS"
+    rm test.txt
+    echo "cacco" >> test.txt
+    echo "cacco" >> test.txt
+    echo "cacco" >> test.txt
     #   https://cern.service-now.com/service-portal/article.do?n=KB0001998
     # quick:
     # - eos mkdir /eos/<experiment>/user/l/laman/eos_tutorial
@@ -126,19 +227,31 @@ function template(){
     backUpDir=$eosBaseDir/test
     eos ls -l $eosBaseDir
     eos rm -r $backUpDir
+    eos ls -l $backUpDir/test.txt
+    echo $?
     eos ls -l $eosBaseDir
     eos mkdir -p $backUpDir
     eos ls -l $eosBaseDir
     eos ls -l $backUpDir
+    echo "copy 1:"
+    xrdcp test.txt root://eosuser.cern.ch/$backUpDir
+    eos ls -l $backUpDir
+    echo "copy 2:"
     xrdcp test.txt root://eosuser.cern.ch/$backUpDir
     eos ls -l $backUpDir
     rm test.txt
+    touch test.txt
     xrdcp root://eosuser.cern.ch/$backUpDir/test.txt .
+    echo "test.txt:"
+    cat test.txt
 }
 
 # ==============================================================================
 # main
 # ==============================================================================
+
+# AM -> template
+# AM -> exit
 
 # ------------------------------------------------------------------------------
 # preliminary to any action
@@ -181,11 +294,12 @@ destPath=$destPathDef
 storageServiceDest=$storageServiceDestDef
 storageServiceSource=$storageServiceSourceDef
 lreverse=false
+lzip=false
 
 # get options (heading ':' to disable the verbose error handling)
 lSerGiven=0
 lPatGiven=0
-while getopts  ":hd:t:s:R" opt ; do
+while getopts  ":hd:t:s:f:Rz" opt ; do
     case $opt in
 	t)
 	    # paths
@@ -202,6 +316,12 @@ while getopts  ":hd:t:s:R" opt ; do
 	d)
 	    # the user is requesting a specific study
 	    currStudy="${OPTARG}"
+	    # automatically zip
+	    lzip=true
+	    ;;
+	f)
+	    # the user is requesting a specific file
+	    fileName="${OPTARG}"
 	    ;;
 	s)
 	    # the user is requesting a specific storage service
@@ -223,6 +343,10 @@ while getopts  ":hd:t:s:R" opt ; do
 		storageServiceDest="${OPTARG}"
 	    fi
 	    let lSerGiven+=1
+	    ;;
+	z)
+	    # skip zipping
+	    lzip=false
 	    ;;
 	R)
 	    # reverse selection
@@ -246,9 +370,125 @@ while getopts  ":hd:t:s:R" opt ; do
 done
 shift "$(($OPTIND - 1))"
 
-preliminaryChecks
+# workaround to get getopts working properly in sourced script
+OPTIND=1
 
+preliminaryChecks
+exitStatus=$?
+if [ $exitStatus -ne 0 ] ; then
+    exit ${exitStatus}
+fi
+
+# ------------------------------------------------------------------------------
+# preparatory steps
+# ------------------------------------------------------------------------------
+
+if [ -z "${currStudy}" ] ; then
+    export sixdeskhostname=`hostname`
+    export sixdeskname=`basename $0`
+    export sixdeskroot=`basename $PWD`
+    export sixdeskwhere=`dirname $PWD`
+    # Set up some temporary values until we execute sixdeskenv/sysenv
+    # Don't issue lock/unlock debug text (use 2 for that)
+    export sixdesklogdir=""
+    export sixdesklevel=1
+    export sixdeskhome="."
+    export sixdeskecho="yes!"
+    if [ ! -s ${SCRIPTDIR}/bash/dot_profile ] ; then
+	echo "dot_profile is missing!!!"
+	exit 1
+    fi
+    # - load environment
+    source ${SCRIPTDIR}/bash/dot_profile
+    # - settings for sixdeskmessages
+    sixdeskmessleveldef=0
+    sixdeskmesslevel=$sixdeskmessleveldef
+fi
+
+# - temporary trap
+trap "sixdeskexit 1" EXIT
+
+# - locking dirs
+if ${lzip} ; then
+    lockingDirs=( . ${sixdeskstudy} ${sixtrack_input} ${sixdesktrackStudy} ${sixdeskwork} )
+else
+    lockingDirs=( . )
+fi
+
+# - lock dirs
+for tmpDir in ${lockingDirs[@]} ; do
+    [ -d $tmpDir ] || mkdir -p $tmpDir
+    sixdesklock $tmpDir
+done
+
+# - actual trap
+trap "sixdeskCleanExit 1" EXIT
+
+# ------------------------------------------------------------------------------
+# actual operations
+# ------------------------------------------------------------------------------
+
+echo ""
+
+# set the backing up command
 setCommand
 
+# prepare destination
+prepareDest
+
+# zip files: backing up an existing study
+if ${lzip} && [ "${sourcePath}" == "." ] ; then
+    sixdeskmess="zipping files in study dir ${sixdeskstudy}"
+    sixdeskmess
+    echo "zip -r --symlinks ${fileName} ${sixdeskstudy}"
+    sixdeskmess="zipping files in sixtrack_input dir ${sixtrack_input}"
+    sixdeskmess
+    echo "zip -r --symlinks ${fileName} ${sixtrack_input}"
+    sixdeskmess="zipping files in track dir ${sixdesktrackStudy}"
+    sixdeskmess
+    echo "zip -r --symlinks ${fileName} ${sixdesktrackStudy}"
+    sixdeskmess="zipping files in work dir ${sixdeskwork}"
+    sixdeskmess
+    echo "zip -r --symlinks ${fileName} ${sixdeskwork}"
+    if [ -s "${currStudy}.db" ] ; then
+	sixdeskmess="zipping sixdb file ${currStudy}.db"
+	sixdeskmess
+	echo "zip ${fileName} ${currStudy}.db"
+    fi
+fi
+
+# copy the backup file
 echo "${comProt} ${fullSource} ${fullDest}"
 
+# zip files: extracting an existing backup to a study
+if ${lzip} && [ "${destPath}" == "." ] ; then
+    sixdeskmess="unzipping files in study dir ${sixdeskstudy}"
+    sixdeskmess
+    echo "unzip ${fileName} ${sixdeskstudy}"
+    sixdeskmess="unzipping files in sixtrack_input dir ${sixtrack_input}"
+    sixdeskmess
+    echo "unzip ${fileName} ${sixtrack_input}"
+    sixdeskmess="unzipping files in track dir ${sixdesktrackStudy}"
+    sixdeskmess
+    echo "unzip ${fileName} ${sixdesktrackStudy}"
+    sixdeskmess="unzipping files in work dir ${sixdeskwork}"
+    sixdeskmess
+    echo "unzip ${fileName} ${sixdeskwork}"
+    if [ -s "${currStudy}.db" ] ; then
+	sixdeskmess="unzipping sixdb file ${currStudy}.db"
+	sixdeskmess
+	echo "unzip ${fileName} ${currStudy}.db"
+    fi
+fi
+
+# ------------------------------------------------------------------------------
+# end
+# ------------------------------------------------------------------------------
+
+# redefine trap
+trap "sixdeskCleanExit 0" EXIT
+
+# echo that everything went fine
+echo ""
+sixdeskmess="Completed normally"
+sixdeskmess
