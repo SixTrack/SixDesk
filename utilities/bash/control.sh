@@ -16,10 +16,9 @@ function how_to_use() {
    -S      -> run_six.sh -a -d <study_name>
    -R      -> run_results <study_name> BOINC
    -U      -> user-defined operation
-              in this case, it is user's reposnibility to provide the command line between
+              in this case, it is user's responsibility to provide the command line between
                  SINGLE QUOTEs, with the correct name of the script with its fullpath, e.g.:
-              `basename $0` -f ./checkList.txt -U '/full/path/to/script.sh -<flag> \\
-                                    \${studies[\$ii]} > \${studies[\$ii]}.log 2>&1'
+              `basename $0` -f ./checkList.txt -U '/full/path/to/script.sh -<flag>'
               NB: the variable \${SCRIPTDIR}:
                      ${SCRIPTDIR}
                   is available to the user.
@@ -33,16 +32,25 @@ function how_to_use() {
    -w      fullpath to workspace where the study of interest is located
              (including sixjobs dir)
    -s      study of interest. A -s option is required for every study of
-             interest. The study must be in the last workspace specified.
+             interest (limitation from bash getops). The study must be in
+             the last workspace specified.
            The special name ALL indicates all studies in a workspace
    -k      triggers a kinit before doing anything:
            N: a brand new kerberos token is generated (password requested!)
            R: the exising kerberos token is renewed (no password needed, but
               pay attention to max renewal date of token)
    -L      do not gunzip/gzip log file before/after running command
+   -P      split operations on a given number of CPUs (parallel operations).
+           If the special key 'ALL' is given, a call to `basename $0` will be
+              performed for each study.
+           Please, do not exagereate with this option, as parallel operations may
+              dramatically overload your storage volume, with counter-productive
+              effects.
+
+   All the calls are logged in ${commandsLog}
 
    example:
-   `basename $0` -k N -R -f ./checkList.txt \\
+   `basename $0` -k N -R -f ./checkList.txt -P 4 \\
                  -w /afs/cern.ch/user/g/goofy/w1/sixjobs -s study01 -s study02 -s study03
              
    In case the option -f is used, the file looks like:
@@ -140,18 +148,29 @@ luser=false
 lkinit=false
 lkrenew=false
 lZipLog=true
+lParallel=false
+nCPUs=1
+delayTime=60 # [s]
+
+commandsLog="$HOME/.`basename $0`.log"
+allARGs="$0"
+calledMe="$0 $*"
+commandLine=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":MSRBLU:hf:w:s:k:" opt ; do
+while getopts  ":MSRBLU:hf:w:s:k:P:" opt ; do
     case $opt in
 	M)
 	    lmad=true
+	    allARGs="${allARGs} -M"
 	    ;;
 	S)
 	    lrunsix=true
+	    allARGs="${allARGs} -S"
 	    ;;
 	R)
 	    lrunres=true
+	    allARGs="${allARGs} -R"
 	    ;;
 	B)
 	    lbackup=true
@@ -170,12 +189,14 @@ while getopts  ":MSRBLU:hf:w:s:k:" opt ; do
 	    ;;
 	L)
 	    lZipLog=false
+	    allARGs="${allARGs} -L"
 	    ;;
 	k)
 	    # renew kerberos token
 	    lkinit=true
 	    if [ "$OPTARG" == "R" ] ; then
 		lkrenew=true
+		allARGs="${allARGs} -k R"
 	    elif [ "$OPTARG" != "N" ] ; then
 		how_to_use
 		echo " Invalid argument $OPTARG to -$opt option"
@@ -196,6 +217,21 @@ while getopts  ":MSRBLU:hf:w:s:k:" opt ; do
 	    # new study
 	    tmpStudy="$OPTARG"
 	    getStudy
+	    ;;
+	P)
+	    # parallel operations
+	    lParallel=true
+	    if [ `echo ${OPTARG} | awk '{print (toupper($1))}'` == "ALL" ] ; then
+		# a CPU for each study to be treated
+		nCPUs="ALL"
+	    elif [ `echo ${OPTARG} | awk '$1 ~ /^[0-9]+$/' | wc -l` -ne 0 ] ; then
+		# distribute the studies over $OPTARG CPUs
+		nCPUs=${OPTARG}
+	    else
+		how_to_use
+		echo "Invalid argument $OPTARG to -$opt option"
+		exit 1
+	    fi
 	    ;;
 	h)
 	    how_to_use
@@ -257,34 +293,101 @@ fi
 # ------------------------------------------------------------------------------
 # actual script
 # ------------------------------------------------------------------------------
-for (( ii=0 ; ii<${#studies[@]} ; ii++ )) ; do
-    cd ${workspaces[$ii]}
-    if ${lZipLog} ; then
-	if [ -e ${studies[$ii]}.log.gz ] ; then
-	    gunzip ${studies[$ii]}.log.gz
+
+# echo command in log of commands
+echo "[`date +"%F %T"`] $PWD - ${calledMe}" >> ${commandsLog}
+
+if ${lParallel} ; then
+
+    # parallel jobs
+
+    if [ ${nCPUs} == "ALL" ] || [ ${#studies[@]} -lt ${nCPUs} ] ; then
+	nCPUs=${#studies[@]}
+    fi
+
+    # - tmp files, with lists of workspace/studies
+    tmpFiles=""
+    for (( ii=0; ii<${nCPUs} ; ii++ )) ; do
+	tmpFiles="${tmpFiles} $(mktemp /tmp/`basename $0`.XXXXXXXXX)"
+    done
+    tmpFiles=( ${tmpFiles} )
+    for tmpFile in ${tmpFiles[@]} ; do
+	rm -f ${tmpFile}
+    done
+
+    # - distribute studies over the files
+    nStudiesPerFile=`echo ${#studies[@]} ${nCPUs} | awk '{print (int($1/$2+0.00001))}'`
+    nExcess=`echo ${#studies[@]} ${nCPUs} | awk '{print (int($1%$2+0.00001))}'`
+    let nStudiesPerFileExcess=$nStudiesPerFile+1
+    nInFile=0
+    kk=0
+    for (( ii=0 ; ii<${#studies[@]} ; ii++ )) ; do
+	echo "${workspaces[$ii]} ${studies[$ii]}" >> ${tmpFiles[$kk]}
+	let nInFile+=1
+	if [ $kk -lt $nExcess ] ; then
+	    if [ $nInFile -eq $nStudiesPerFileExcess ] ; then
+		let kk+=1
+		nInFile=0
+	    fi
+	else
+	    if [ $nInFile -eq $nStudiesPerFile ] ; then
+		let kk+=1
+		nInFile=0
+	    fi
 	fi
-    fi
-    if ${lmad} ; then
-	echo " producing fort.?? input files to study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-	${SCRIPTDIR}/bash/mad6t.sh -s -d ${studies[$ii]} 2>&1 | tee -a ${studies[$ii]}.log
-    elif ${lrunsix} ; then
-	echo " submitting study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-	${SCRIPTDIR}/bash/run_six.sh -a -d ${studies[$ii]} 2>&1 | tee -a ${studies[$ii]}.log
-    elif ${lrunres} ; then
-	echo " retrieving BOINC results of study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-	${SCRIPTDIR}/bash/run_results ${studies[$ii]} boinc 2>&1 | tee -a ${studies[$ii]}.log
-    elif ${lbackup} ; then
-	echo " --> no back-up for the moment! skipping..."
-    elif ${luser} ; then
-	echo " executing user-defined command on study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-	${commandLine} 2>&1 | tee -a ${studies[$ii]}.log
-    fi
-    if ${lZipLog} ; then
-	gzip ${studies[$ii]}.log
-    fi
-    echo " getting ready for new study..."
-    cd - > /dev/null 2>&1
-done
+    done
+
+    # - execute parallel tasks
+    for tmpFile in ${tmpFiles[@]} ; do
+	if ${luser} ; then
+	    krenew -b -t -- $allARGs -U "${commandLine}" -f $tmpFile
+	else
+	    krenew -b -t -- $allARGs -f $tmpFile
+	fi
+    done
+
+    # - remove tmp files, after a while
+    echo "sleeping ${delayTime} seconds before removing tmp files"
+    sleep ${delayTime}
+    for tmpFile in ${tmpFiles[@]} ; do
+	rm -f ${tmpFile}
+    done
+
+else
+
+    # loop through studies one by one
+    for (( ii=0 ; ii<${#studies[@]} ; ii++ )) ; do
+	cd ${workspaces[$ii]}
+	if ${lZipLog} ; then
+   	    if [ -e ${studies[$ii]}.log.gz ] ; then
+   		gunzip ${studies[$ii]}.log.gz
+   	    fi
+	fi
+	if ${lmad} ; then
+   	    echo " producing fort.?? input files to study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
+   	    ${SCRIPTDIR}/bash/mad6t.sh -s -d ${studies[$ii]} 2>&1 | tee -a ${studies[$ii]}.log
+	elif ${lrunsix} ; then
+   	    echo " submitting study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
+   	    ${SCRIPTDIR}/bash/run_six.sh -a -d ${studies[$ii]} 2>&1 | tee -a ${studies[$ii]}.log
+	elif ${lrunres} ; then
+   	    echo " retrieving BOINC results of study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
+   	    ${SCRIPTDIR}/bash/run_results ${studies[$ii]} boinc 2>&1 | tee -a ${studies[$ii]}.log
+	elif ${lbackup} ; then
+   	    echo " --> no back-up for the moment! skipping..."
+	elif ${luser} ; then
+   	    echo " executing user-defined command ${commandLine} on study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
+   	    eval ${commandLine} -d ${studies[$ii]} 2>&1 | tee -a ${studies[$ii]}.log
+	fi
+	if ${lZipLog} ; then
+   	    gzip ${studies[$ii]}.log
+	fi
+	if [ ${#studies[@]} -gt 1 ] ; then
+	    echo " getting ready for new study..."
+	fi
+	cd - > /dev/null 2>&1
+    done
+    
+fi
 
 # done
 echo " ...done."
