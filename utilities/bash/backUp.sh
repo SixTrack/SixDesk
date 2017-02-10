@@ -4,28 +4,131 @@ function how_to_use() {
     cat <<EOF
 
    `basename $0` [action] [option]
-   to manage backing up of studies
+   to back a file/study up to a storage resource or to restore locally an existing
+      back-up from the storage.
+   by A.Mereghetti
+      
+   actions (mandatory, one of the following):
+   -d      name of the study to be backed up. Backing up produces a .zip file (named as
+             the study), containing all the files in the following directories:
+`for nickDir in ${nickDirs[@]}; do 
+echo "                                             ${nickDir}/"
+done`
+           Moreover, in case the SixDB file is found in the same sixjobs dir,
+             it is added to the archive. Similarly, the sixdeskTaskId file in
+            sixdeskTaskIds/<studyName> is added to the back-up.
+   -f      name of the file to be backed up:
+           - if no study is specified, the script assumes that the file already exists;
+           - if a study is specified, this option sets the name of the back-up file
+             (including extension);
+   -F      free dirs locked by a previous call.
+
+   options (optional)
+   -s      storage resource (default: ${storageServiceDestDef}). Those presently supported are:
+           . EOS (protocol: xrdcp);
+           . CASTOR (protocol: xrdcp);
+           . LOCAL (i.e. another location on the same machine, eg lxplus - protocol: cp)
+           . another machine (e.g. a private desktop pc - protocol: scp). In this case,
+             it is user's responsibility to enable passwordless ssh, and to specify
+             the fullname of the machine (including domain).
+           It is also possible to copy the back-up from one resourse to another one, but
+             for the time being this is limited to the use of a common communication
+             protocol. As a consequence, only the following combinations are allowed:
+             - EOS to CASTOR and vice-versa;
+             - LOCAL to another machine and vice-versa.
+           By default, the following relative basedirs are ued:
+           - ${sourcePathDef} relative to sixjobs/;
+           - ${destPathDef} in the storage resource, relative to user's \$HOME;
+           When selecting LOCAL as storage resource, in case the local machine is lxplus,
+               the basedir of the back-ups is:
+               ${localBaseDirAFS}
+           Otherwise. it is"
+               $HOME
+           The relative path on the storage resource can be changed by the user appending ':'
+             to the resource specification. If '/' is the first character, then the path is
+             intended to be absolute.
+   -v      verbose (OFF by default)
+   -C      do not remove local .zip files  (default: remove);
+   -z      do not zip study files before/after backing up (default: always zip study files);
+   -R      reverse selection. This is necessary for restoring locally an existing back-up.
+
+   The default behaviour is to zip a study and back it up to ${storageServiceDestDef};
+     local zip files are removed after successfully creating/restoring the back-up.
+   In case of a single file, no zipping is performed.
+
+   examples:
+
+   `basename $0` -d fcc_tracking
+           back the study fcc_tracking up to ${storageServiceDestDef}. The back-up file
+             fcc_tracking.zip is automatically generated and it will be located in:
+             ${baseDirDef}/${destPathDef}
+
+   `basename $0` -d fcc_tracking -s pcbe16072.cern.ch:/media/DATA/back_ups -C -z -v
+           back the study fcc_tracking up to pcbe16072.cern.ch. The file will be locate in
+             /media/DATA/back_ups/fcc_tracking.zip
+           The account of $LOGNAME will be used for accessing the machine. Do not remove
+             zip files after backing up (-C option). Do not create the back-up .zip file
+             (-z option); hence, the .zip file must be already there. Activate verbose
+             mode (-v option).
+
+   `basename $0` -d fcc_tracking -s CASTOR:back_me_up/new -R
+           restore locally (-R) the back-up of the fcc_tracking study. The back-up
+             is on CASTOR, in the specific location:
+             ${castorBaseDir}/back_me_up/new/fcc_traking.zip
+
+   `basename $0` -d fcc_tracking -s CASTOR:sixdeskBackUps/2016 -s EOS:backUps/2017
+           copy the back-up of the study fcc_tracking from CASTOR:
+             ${castorBaseDir}/sixdeskBackUps/2016/fcc_tracking.zip
+           to EOS:
+             ${eosBaseDir}/backUps/2017/fcc_tracking.zip
+
 
 EOF
 }
 
 function preliminaryChecks(){
     local __lerr=0
-    if [ -n "${fileName}" ] ; then
-	if ! [ -s ${fileName} ] ; then
-	    how_to_use
-	    echo " file ${fileName} (-f option) does not exist or is empty"
-	    let __lerr+=1
-	fi
-    elif [ -n "${currStudy}" ] ; then
-	source ${SCRIPTDIR}/bash/set_env.sh -d ${currStudy} -e
-	sixdeskDefineUserTree $basedir $scratchdir $workspace
-    else
+    if ! ${lFree} && ! ${lStudyGiven} && ! ${lFileGiven} ; then
 	how_to_use
-	echo " please specify a study (-d option) or a file (-f option)"
+	echo " please specify an action, i.e. backing up a study (-d option) or a file (-f option) or remove existing locks"
 	let __lerr+=1
+    elif ${lStudyGiven} ; then
+	source ${SCRIPTDIR}/bash/set_env.sh -d ${currStudy} ${verbose} -e
+	sixdeskDefineUserTree $basedir $scratchdir $workspace
     fi
     return ${__lerr}
+}
+
+function echoOptions(){
+    echo ""
+    if ${lFree} ; then
+	sixdeskmess="freeing locks from a previous run!"
+	sixdeskmess
+    else
+	sixdeskmess="back up:"
+	sixdeskmess
+	sixdeskmess="- source:      ${fullSource}"
+	sixdeskmess
+	sixdeskmess="- destination: ${fullDest}"
+	sixdeskmess
+	sixdeskmess="- protocol:    ${comProt}"
+	sixdeskmess
+	if ${lverbose} ; then
+	    sixdeskmess="--> verbose option active!"
+	    sixdeskmess
+	fi
+	if ${lStudyGiven} ; then
+	    if ! ${lzip} ; then
+		sixdeskmess="--> do not zip before creating (unzip after restoring) back-up file!"
+		sixdeskmess
+	    fi
+	    if ! ${lclean} ; then
+		sixdeskmess="--> .zip files won't be removed locally!"
+		sixdeskmess
+	    fi
+	fi
+    fi    
+    echo ""
 }
 
 function setCommand(){
@@ -36,32 +139,59 @@ function setCommand(){
 	# automatic naming convention:
 	fileName=${currStudy}.zip
     fi
-    # swap source and destination
-    if ${lreverse} ; then
+    if [ ${lSerGiven} -eq 2 ] ; then
+	# copying back-up from one storage system to the other one
+	# -> change default source path
+	if [ "$sourcePath" == "." ] ; then
+	    sourcePath=$destPathDef
+	fi
+	# -> invert assignment of storage service and paths, for a more intuitive user interface
+	local __tmpStorageService=${storageServiceSource}
+	storageServiceSource=${storageServiceDest}
+	storageServiceDest=${__tmpStorageService}
 	local __tmpPath=${sourcePath}
 	sourcePath=${destPath}
 	destPath=${__tmpPath}
-	local __tmpFull=${fullPathSource}
-	fullPathSource=${fullPathDest}
-	fullPathDest=${__tmpFull}
+    fi
+    # swap source and destination
+    if ${lreverse} ; then
+	# reverse selection
+	local __tmpPath=${sourcePath}
+	sourcePath=${destPath}
+	destPath=${__tmpPath}
 	local __tmpStorageService=${storageServiceSource}
 	storageServiceSource=${storageServiceDest}
 	storageServiceDest=${__tmpStorageService}
     fi
+    # fullpaths:
+    if [ `echo "$destPath" | cut -c1` == "/" ] ; then
+	fullPathDest=$destPath
+    fi
+    if [ `echo "$sourcePath" | cut -c1` == "/" ] ; then
+	fullPathSource=$sourcePath
+    fi
     # destination
     if [ "${storageServiceDest}" == "EOS" ] ; then
-	[ -n "${fullPathDest}" ] || fullPathDest=$eosBaseDirDef/$destPath
-	fullDest=root://${eosServeraName}${fullPathDest}
+	[ -n "${fullPathDest}" ] || fullPathDest=$eosBaseDir/$destPath
+	fullDest=root://${eosServerName}/${fullPathDest}
 	lxrdcp=true
     elif [ "${storageServiceDest}" == "CASTOR" ] ; then
-	[ -n "${fullPathDest}" ] || fullPathDest=$castorBaseDirDef/$destPath
-	fullDest=root://${castorServeraName}${fullPathDest}
+	[ -n "${fullPathDest}" ] || fullPathDest=$castorBaseDir/$destPath
+	fullDest=root://${castorServerName}/${fullPathDest}
 	lxrdcp=true
     elif [ "${storageServiceDest}" == "LOCAL" ] ; then
-	[ -n "${fullPathDest}" ] || fullPathDest=$localBaseDirDef/$destPath
+	if [ `uname -n | cut -c1-6` == "lxplus" ] ; then
+	    localBaseDir=$localBaseDirAFS
+	else
+	    localBaseDir=$localBaseDirHome
+	fi
+	[ -n "${fullPathDest}" ] || fullPathDest=$localBaseDir/$destPath
 	fullDest=${fullPathDest}
     elif [ -n "${storageServiceDest}" ] ; then
-	[ -n "${fullPathDest}" ] || fullPathDest=$privBaseDirDef/$destPath
+	if [ `echo "${storageServiceDest}" | cut -c1-6` == "lxplus" ] ; then
+	    privBaseDir=$localBaseDirAFS
+	fi
+	[ -n "${fullPathDest}" ] || fullPathDest=$privBaseDir/$destPath
 	fullDest=$LOGNAME@${storageServiceDest}:${fullPathDest}
 	lscp=true
     else
@@ -70,18 +200,26 @@ function setCommand(){
     fi
     # source
     if [ "${storageServiceSource}" == "EOS" ] ; then
-	[ -n "${fullPathSource}" ] || fullPathSource=$eosBaseDirDef/$sourcePath
-	fullSource=root://${eosServeraName}${fullPathSource}
+	[ -n "${fullPathSource}" ] || fullPathSource=$eosBaseDir/$sourcePath
+	fullSource=root://${eosServerName}/${fullPathSource}
 	lxrdcp=true
     elif [ "${storageServiceSource}" == "CASTOR" ] ; then
-	[ -n "${fullPathSource}" ] || fullPathSource=$castorBaseDirDef/$sourcePath
-	fullSource=root://${castorServeraName}${fullPathSource}
+	[ -n "${fullPathSource}" ] || fullPathSource=$castorBaseDir/$sourcePath
+	fullSource=root://${castorServerName}/${fullPathSource}
 	lxrdcp=true
     elif [ "${storageServiceSource}" == "LOCAL" ] ; then
-	[ -n "${fullPathSource}" ] || fullPathSource=$localBaseDirDef/$sourcePath
+	if [ `uname -n | cut -c1-6` == "lxplus" ] ; then
+	    localBaseDir=$localBaseDirAFS
+	else
+	    localBaseDir=$localBaseDirHome
+	fi
+	[ -n "${fullPathSource}" ] || fullPathSource=$localBaseDir/$sourcePath
 	fullSource=${fullPathSource}
     elif [ -n "${storageServiceSource}" ] ; then
-	[ -n "${fullPathSource}" ] || fullPathSource=$localBaseDirDef/$sourcePath
+	if [ `echo "${storageServiceSource}" | cut -c1-6` == "lxplus" ] ; then
+	    privBaseDir=$localBaseDirAFS
+	fi
+	[ -n "${fullPathSource}" ] || fullPathSource=$privBaseDir/$sourcePath
 	fullSource=$LOGNAME@${storageServiceSource}:${fullPathSource}
 	lscp=true
     else
@@ -104,154 +242,111 @@ function setCommand(){
     fi
 }
 
+function checkSourceFile(){
+    # for each storage service, check that the back-up file exists
+    local __lerr=0
+    if [ "${storageServiceSource}" == "EOS" ] ; then
+	eos ls -l ${fullPathSource}/${fileName} > /dev/null 2>&1
+	__lerr=$?
+    elif [ "${storageServiceSource}" == "CASTOR" ] ; then
+	nsls -l ${fullPathSource}/${fileName} > /dev/null 2>&1
+	__lerr=$?
+    elif [ "${storageServiceSource}" == "LOCAL" ] ; then
+	ls -l ${fullPathSource}/${fileName} > /dev/null 2>&1
+	__lerr=$?
+    elif [ -n "${storageServiceSource}" ] ; then
+	ssh $LOGNAME@${storageServiceSource} "ls -l ${fullPathSource}/${fileName}" > /dev/null 2>&1
+	__lerr=$?
+    else
+	ls -l ${fullPathSource}/${fileName} > /dev/null 2>&1
+	__lerr=$?
+    fi
+    return $__lerr
+}
+
 function prepareDest(){
-    # prepare destination:
+    # for each storage service:
     # - check that destination folder exists
     # - remove destination file, to avoid copy of backup is rejected by xrdcp
     #   (and useless error messages)
     if [ "${storageServiceDest}" == "EOS" ] ; then
-	echo "eos ls -l ${fullPathDest} > /dev/null 2>&1"
+	eos ls -l ${fullPathDest} > /dev/null 2>&1
 	if [ $? -ne 0 ] ; then
-	    echo "eos mkdir -p ${fullPathDest}"
+	    eos mkdir -p ${fullPathDest}
 	fi
-	echo "eos ls -l ${fullPathDest}/${fileName} > /dev/null 2>&1"
+	eos ls -l ${fullPathDest}/${fileName} > /dev/null 2>&1
 	if [ $? -eq 0 ] ; then
-	    echo "eos rm ${fullPathDest}/${fileName}"
+	    eos rm ${fullPathDest}/${fileName}
 	fi
     elif [ "${storageServiceDest}" == "CASTOR" ] ; then
-	echo "nsls -l ${fullPathDest} > /dev/null 2>&1"
+	nsls -l ${fullPathDest} > /dev/null 2>&1
 	if [ $? -ne 0 ] ; then
-	    echo "nsmkdir -p ${fullPathDest}"
+	    nsmkdir -p ${fullPathDest}
 	fi
-	echo "nsls -l ${fullPathDest}/${fileName} > /dev/null 2>&1"
+	nsls -l ${fullPathDest}/${fileName} > /dev/null 2>&1
 	if [ $? -eq 0 ] ; then
-	    echo "nsrm ${fullPathDest}/${fileName}"
+	    nsrm ${fullPathDest}/${fileName}
 	fi
     elif [ "${storageServiceDest}" == "LOCAL" ] ; then
 	if [ "${destPath}" != "." ] ; then
-	    echo "ls -l ${fullPathDest} > /dev/null 2>&1"
+	    ls -l ${fullPathDest} > /dev/null 2>&1
 	    if [ $? -ne 0 ] ; then
-		echo "mkdir -p ${fullPathDest}"
+		mkdir -p ${fullPathDest}
 	    fi
 	fi
-	echo "ls -l ${fullPathDest}/${fileName} > /dev/null 2>&1"
+	ls -l ${fullPathDest}/${fileName} > /dev/null 2>&1
 	if [ $? -eq 0 ] ; then
-	    echo "rm -f ${fullPathDest}/${fileName}"
+	    rm -f ${fullPathDest}/${fileName}
 	fi
     elif [ -n "${storageServiceDest}" ] ; then
-	echo "ssh $LOGNAME@${storageServiceDest} \"ls -l ${fullPathDest}\" > /dev/null 2>&1"
+	ssh $LOGNAME@${storageServiceDest} "ls -l ${fullPathDest}" > /dev/null 2>&1
 	if [ $? -ne 0 ] ; then
-	    echo "ssh $LOGNAME@${storageServiceDest} \"mkdir -p ${fullPathDest}\""
+	    ssh $LOGNAME@${storageServiceDest} "mkdir -p ${fullPathDest}"
 	fi
-	echo "ssh $LOGNAME@${storageServiceDest} \"ls -l ${fullPathDest}/${fileName}\" > /dev/null 2>&1"
+	ssh $LOGNAME@${storageServiceDest} "ls -l ${fullPathDest}/${fileName}" > /dev/null 2>&1
 	if [ $? -eq 0 ] ; then
-	    echo "ssh $LOGNAME@${storageServiceDest} \"rm -f ${fullPathDest}/${fileName}\""
+	    ssh $LOGNAME@${storageServiceDest} "rm -f ${fullPathDest}/${fileName}"
 	fi
     else
 	if [ "${destPath}" != "." ] ; then
-	    echo "ls -l ${fullPathDest} > /dev/null 2>&1"
+	    ls -l ${fullPathDest} > /dev/null 2>&1
 	    if [ $? -ne 0 ] ; then
-		echo "mkdir -p ${fullPathDest}"
+		mkdir -p ${fullPathDest}
 	    fi
 	fi
-	echo "ls -l ${fullPathDest}/${fileName} > /dev/null 2>&1"
+	ls -l ${fullPathDest}/${fileName} > /dev/null 2>&1
 	if [ $? -eq 0 ] ; then
-	    echo "rm -f ${fullPathDest}/${fileName}"
+	    rm -f ${fullPathDest}/${fileName}
 	fi
     fi
 }
 
-# preliminary:
-# - preliminary kinit
-# - SCRIPTDIR
-# - set_env
-# - check of variables: CASTOR_HOME
-# - lock dirs
+function backUpCleanExit(){
+    local __lerr=$1
 
-function template(){
-    initial=`echo $LOGNAME | cut -c 1`
+    # remove zip files
+    if $lclean ; then
+	sixdeskmess="cleaning zip files..."
+	sixdeskmess
+	cleanFiles="${fileName}"
+	if ${lzip} ; then
+	    cleanFiles="${cleanFiles} ${zipFiles}"
+	fi
+	for cleanFile in  ${cleanFiles}; do
+	    if ${lverbose} ; then
+		sixdeskmess="- file: ${cleanFile}"
+		sixdeskmess
+	    fi
+	    rm -f ${cleanFile}
+	done
+    fi
 
-    echo ""
-    echo "CASTOR"
-    rm test.txt
-    echo "cacco" >> test.txt
-    echo "cacco" >> test.txt
-    echo "cacco" >> test.txt
-    #    https://cern.service-now.com/service-portal/article.do?n=KB0001103
-    # quick:
-    # - nsmkdir /castor/cern.ch/user/l/laman/castor_tutorial
-    # - xrdcp test.txt root://castorpublic.cern.ch//castor/cern.ch/user/l/laman/castor_tutorial/castor.txt
-    # - xrdcp root://castorpublic.cern.ch//castor/cern.ch/user/l/laman/castor_tutorial/castor.txt myfile.txt
-    # - nsls -l /castor/cern.ch/user/l/laman/castor_tutorial
-    # - nsrm -rf $CASTORDIR
-    export STAGE_HOST="castorpublic"
-    export STAGE_SVCCLASS="default"
-    castorBaseDir=/castor/cern.ch/user/$initial/$LOGNAME
-    #
-    backUpDir=$castorBaseDir/test
-    nsls -l $castorBaseDir
-    nsrm -r $backUpDir
-    nsls -l $castorBaseDir
-    nsls -l $backUpDir/test.txt
-    echo $?
-    nsmkdir -p $backUpDir
-    nsls -l $castorBaseDir
-    nsls -l $backUpDir
-    echo "copy 1:"
-    xrdcp test.txt root://castorpublic.cern.ch/$backUpDir
-    nsls -l $backUpDir
-    echo "copy 2:"
-    xrdcp test.txt root://castorpublic.cern.ch/$backUpDir
-    nsls -l $backUpDir
-    rm test.txt
-    touch test.txt
-    xrdcp root://castorpublic.cern.ch/$backUpDir/test.txt .
-    echo "test.txt:"
-    cat test.txt
-    
-    echo ""
-    echo "EOS"
-    rm test.txt
-    echo "cacco" >> test.txt
-    echo "cacco" >> test.txt
-    echo "cacco" >> test.txt
-    #   https://cern.service-now.com/service-portal/article.do?n=KB0001998
-    # quick:
-    # - eos mkdir /eos/<experiment>/user/l/laman/eos_tutorial
-    # - xrdcp test.txt root://eos<experiment>.cern.ch//eos/<experiment>/user/l/laman/eos_tutorial/eos.txt
-    # - xrdcp root://eos<experiment>.cern.ch//eos/<experiment>/user/l/laman/eos_tutorial/eos.txt eos.txt
-    # - eos ls -l /eos/<experiment>/user/l/laman/eos_tutorial
-    export EOS_MGM_URL=root://eosuser.cern.ch
-    eosBaseDir=/eos/user/$initial/$LOGNAME
-    #
-    backUpDir=$eosBaseDir/test
-    eos ls -l $eosBaseDir
-    eos rm -r $backUpDir
-    eos ls -l $backUpDir/test.txt
-    echo $?
-    eos ls -l $eosBaseDir
-    eos mkdir -p $backUpDir
-    eos ls -l $eosBaseDir
-    eos ls -l $backUpDir
-    echo "copy 1:"
-    xrdcp test.txt root://eosuser.cern.ch/$backUpDir
-    eos ls -l $backUpDir
-    echo "copy 2:"
-    xrdcp test.txt root://eosuser.cern.ch/$backUpDir
-    eos ls -l $backUpDir
-    rm test.txt
-    touch test.txt
-    xrdcp root://eosuser.cern.ch/$backUpDir/test.txt .
-    echo "test.txt:"
-    cat test.txt
+    sixdeskCleanExit $__lerr
 }
 
 # ==============================================================================
 # main
 # ==============================================================================
-
-# AM -> template
-# AM -> exit
 
 # ------------------------------------------------------------------------------
 # preliminary to any action
@@ -268,17 +363,18 @@ initial=`echo $LOGNAME | cut -c 1`
 
 # EOS
 export EOS_MGM_URL=root://eosuser.cern.ch
-eosBaseDirDef=/eos/user/$initial/$LOGNAME
-eosServeraName=eosuser.cern.ch
+eosBaseDir=/eos/user/$initial/$LOGNAME
+eosServerName=eosuser.cern.ch
 # CASTOR
 export STAGE_HOST="castorpublic"
 export STAGE_SVCCLASS="default"
-castorBaseDirDef=/castor/cern.ch/user/$initial/$LOGNAME
-castorServeraName=castorpublic.cern.ch
+castorBaseDir=/castor/cern.ch/user/$initial/$LOGNAME
+castorServerName=castorpublic.cern.ch
 # LOCAL
-localBaseDirDef=$HOME
+localBaseDirAFS=/afs/cern.ch/work/$initial/$LOGNAME
+localBaseDirHome=$HOME
 # private machine
-privBaseDirDef=/home/$LOGNAME
+privBaseDir=/home/$LOGNAME
 
 # defaults
 currStudyDef=''
@@ -286,6 +382,7 @@ sourcePathDef='.'
 destPathDef='back_ups'
 storageServiceDestDef='EOS'
 storageServiceSourceDef=''
+baseDirDef=${eosBaseDir}
 
 # actions and options
 currStudy=$currStudyDef
@@ -295,52 +392,69 @@ storageServiceDest=$storageServiceDestDef
 storageServiceSource=$storageServiceSourceDef
 lreverse=false
 lzip=false
+lclean=true
+lverbose=false
+lFree=false
+lFileGiven=false
+lStudyGiven=false
+verbose=""
+
+# dirs to be zipped
+nickDirs=( "study" "sixtrack_input" "track" "work" "logs" )
 
 # get options (heading ':' to disable the verbose error handling)
 lSerGiven=0
 lPatGiven=0
-while getopts  ":hd:t:s:f:Rz" opt ; do
+while getopts  ":hvCd:s:f:FRz" opt ; do
     case $opt in
-	t)
-	    # paths
-	    if [ ${lPatGiven} -eq 0 ] ; then
-		destPath="${OPTARG}"
-	    elif [ ${lPatGiven} -eq 1 ] ; then
-		# copying back up from one storage system to the other one
-		# -> invert assignment, for a more intuitive user interface
-		sourcePath="${destPath}"
-		destPath="${OPTARG}"
-	    fi
-	    let lPatGiven+=1
-	    ;;
 	d)
 	    # the user is requesting a specific study
 	    currStudy="${OPTARG}"
+	    lStudyGiven=true
 	    # automatically zip
 	    lzip=true
 	    ;;
 	f)
 	    # the user is requesting a specific file
 	    fileName="${OPTARG}"
+	    lFileGiven=true
+	    # skip zipping
+	    lzip=false
+	    # do not clean, ie remove zip files
+	    lclean=false
+	    ;;
+	v)
+	    # verbose
+	    lverbose=true
+	    ;;
+	C)
+	    # do not clean, ie remove zip files
+	    lclean=false
 	    ;;
 	s)
 	    # the user is requesting a specific storage service
-	    if [ "${OPTARG}" != "EOS" ] && [ "${OPTARG}" != "CASTOR" ] && [ "${OPTARG}" != "LOCAL" ] ; then
+	    tmpString="${OPTARG}:"
+	    tmpService=`echo "${tmpString}" | cut -d: -f1`
+	    tmpPath=`echo "${tmpString}" | cut -d: -f2`
+	    if [ "${tmpService}" != "EOS" ] && [ "${tmpService}" != "CASTOR" ] && [ "${tmpService}" != "LOCAL" ] ; then
 		# it might be a machine: try to ping
-		ping -c1 ${OPTARG} >/dev/null 2>&1
+		ping -c1 ${tmpService} >/dev/null 2>&1
 		if [ $? -ne 0 ] ; then
 		    how_to_use
-		    echo "Invalid storage service or ${OPTARG} not available"
+		    echo "Invalid storage service or ${tmpService} not available"
 		    exit 1
 		fi
 	    fi
 	    if [ ${lSerGiven} -eq 0 ] ; then
-		storageServiceDest="${OPTARG}"
+		storageServiceDest="${tmpService}"
+		if [ -n "${tmpPath}" ] ; then
+		    destPath="${tmpPath}"
+		fi
 	    elif [ ${lSerGiven} -eq 1 ] ; then
-		# copying back up from one storage system to the other one
-		# -> invert assignment, for a more intuitive user interface
-		storageServiceSource="${storageServiceDest}"
-		storageServiceDest="${OPTARG}"
+		storageServiceSource="${tmpService}"
+		if [ -n "${tmpPath}" ] ; then
+		    sourcePath="${tmpPath}"
+		fi
 	    fi
 	    let lSerGiven+=1
 	    ;;
@@ -351,6 +465,10 @@ while getopts  ":hd:t:s:f:Rz" opt ; do
 	R)
 	    # reverse selection
 	    lreverse=true
+	    ;;
+	F)
+	    # free locks
+	    lFree=true
 	    ;;
 	h)
 	    how_to_use
@@ -372,6 +490,10 @@ shift "$(($OPTIND - 1))"
 
 # workaround to get getopts working properly in sourced script
 OPTIND=1
+
+if ${lverbose} ; then
+    verbose="-v"
+fi
 
 preliminaryChecks
 exitStatus=$?
@@ -405,24 +527,37 @@ if [ -z "${currStudy}" ] ; then
     sixdeskmesslevel=$sixdeskmessleveldef
 fi
 
+# set the backing up command
+setCommand
+
+# echo options
+echoOptions
+
+# - dirs to be zipped
+zipDirs=( ${sixdeskstudy} ${sixtrack_input} ${sixdesktrackStudy} ${sixdeskwork} ${sixdesklogdir} )
+
+# - locking dirs
+lockingDirs=( . )
+if ${lzip} ; then
+    lockingDirs+=( "${zipDirs[@]}" )
+fi
+
+# - free locked dirs (user request)
+if ${lFree} ; then
+    sixdeskCleanExit 0
+fi
+
 # - temporary trap
 trap "sixdeskexit 1" EXIT
 
-# - locking dirs
-if ${lzip} ; then
-    lockingDirs=( . ${sixdeskstudy} ${sixtrack_input} ${sixdesktrackStudy} ${sixdeskwork} )
-else
-    lockingDirs=( . )
-fi
-
-# - lock dirs
+# lock dirs
 for tmpDir in ${lockingDirs[@]} ; do
     [ -d $tmpDir ] || mkdir -p $tmpDir
     sixdesklock $tmpDir
 done
 
 # - actual trap
-trap "sixdeskCleanExit 1" EXIT
+trap "backUpCleanExit 1" EXIT
 
 # ------------------------------------------------------------------------------
 # actual operations
@@ -430,54 +565,173 @@ trap "sixdeskCleanExit 1" EXIT
 
 echo ""
 
-# set the backing up command
-setCommand
+currDir=$PWD
+
+# ---------------------------------------
+# zip files: backing up an existing study
+# ---------------------------------------
+
+if ${lzip} && [ "${sourcePath}" == "." ] ; then
+    lerr=0
+    zipFiles=""
+    for (( ii=0; ii<${#zipDirs[@]} ; ii++ )) ; do
+	tmpZipFileName=${currStudy}_${nickDirs[$ii]}.zip
+	echo ""
+	sixdeskmess="zipping files in ${nickDirs[$ii]} dir ${zipDirs[$ii]} in ${tmpZipFileName}"
+	sixdeskmess
+	cd ${zipDirs[$ii]}
+	if ${lverbose} ; then
+	    zip -r --symlinks -b /tmp ${currDir}/${tmpZipFileName} .
+	    let lerr+=$?
+	else
+	    zip -r --symlinks -b /tmp ${currDir}/${tmpZipFileName} . > /dev/null 2>&1
+	    let lerr+=$?
+	fi
+	cd - > /dev/null 2>&1
+	sixdeskmess="zipping ${tmpZipFileName} in ${fileName}"
+	sixdeskmess
+	if ${lverbose} ; then
+	    zip -b /tmp ${fileName} ${tmpZipFileName}
+	    let lerr+=$?
+	else
+	    zip -b /tmp ${fileName} ${tmpZipFileName} > /dev/null 2>&1
+	    let lerr+=$?
+	fi
+	zipFiles="${zipFiles} ${tmpZipFileName}"
+    done
+    if [ -s "${sixdeskTaskIds/$LHCDescrip/sixdeskTaskId}" ] ; then
+	# sixdesktaskid
+	echo ""
+	sixdeskmess="zipping sixdeskTaskId file"
+	sixdeskmess
+	if ${lverbose} ; then
+	    zip -b /tmp ${fileName} sixdeskTaskIds/$LHCDescrip/sixdeskTaskId
+	    let lerr+=$?
+	else
+	    zip -b /tmp ${fileName} sixdeskTaskIds/$LHCDescrip/sixdeskTaskId > /dev/null 2>&1
+	    let lerr+=$?
+	fi
+    fi
+    if [ -s "${currStudy}.db" ] ; then
+	# sixdeskDB
+	echo ""
+	sixdeskmess="zipping sixdb file ${currStudy}.db"
+	sixdeskmess
+	if ${lverbose} ; then
+	    zip -b /tmp ${fileName} ${currStudy}.db
+	    let lerr+=$?
+	else
+	    zip -b /tmp ${fileName} ${currStudy}.db > /dev/null 2>&1
+	    let lerr+=$?
+	fi
+    fi
+    if [ $lerr -ne 0 ] ; then
+	echo ""
+	sixdeskmess="errors while zipping!"
+	sixdeskmess
+	exit $lerr
+    fi
+fi
+
+# --------------------
+# copy the backup file
+# --------------------
+
+# check source file
+checkSourceFile
+lerr=$?
+if [ $lerr -ne 0 ] ; then
+    sixdeskmess="source file on ${storageServiceSource}:"
+    sixdeskmess
+    sixdeskmess="  ${fullPathSource}/${fileName}"
+    sixdeskmess
+    sixdeskmess="does not exists!"
+    sixdeskmess
+    exit $lerr
+fi
 
 # prepare destination
 prepareDest
 
-# zip files: backing up an existing study
-if ${lzip} && [ "${sourcePath}" == "." ] ; then
-    sixdeskmess="zipping files in study dir ${sixdeskstudy}"
+echo ""
+sixdeskmess="copying back-up file..."
+sixdeskmess
+${comProt} ${fullSource} ${fullDest}
+lerr=$?
+if [ $lerr -ne 0 ] ; then
+    echo ""
+    sixdeskmess="errors while copying backup file!"
     sixdeskmess
-    echo "zip -r --symlinks ${fileName} ${sixdeskstudy}"
-    sixdeskmess="zipping files in sixtrack_input dir ${sixtrack_input}"
-    sixdeskmess
-    echo "zip -r --symlinks ${fileName} ${sixtrack_input}"
-    sixdeskmess="zipping files in track dir ${sixdesktrackStudy}"
-    sixdeskmess
-    echo "zip -r --symlinks ${fileName} ${sixdesktrackStudy}"
-    sixdeskmess="zipping files in work dir ${sixdeskwork}"
-    sixdeskmess
-    echo "zip -r --symlinks ${fileName} ${sixdeskwork}"
-    if [ -s "${currStudy}.db" ] ; then
-	sixdeskmess="zipping sixdb file ${currStudy}.db"
-	sixdeskmess
-	echo "zip ${fileName} ${currStudy}.db"
-    fi
+    exit $lerr
 fi
 
-# copy the backup file
-echo "${comProt} ${fullSource} ${fullDest}"
-
+# ---------------------------------------------------
 # zip files: extracting an existing backup to a study
+# ---------------------------------------------------
+
 if ${lzip} && [ "${destPath}" == "." ] ; then
-    sixdeskmess="unzipping files in study dir ${sixdeskstudy}"
-    sixdeskmess
-    echo "unzip ${fileName} ${sixdeskstudy}"
-    sixdeskmess="unzipping files in sixtrack_input dir ${sixtrack_input}"
-    sixdeskmess
-    echo "unzip ${fileName} ${sixtrack_input}"
-    sixdeskmess="unzipping files in track dir ${sixdesktrackStudy}"
-    sixdeskmess
-    echo "unzip ${fileName} ${sixdesktrackStudy}"
-    sixdeskmess="unzipping files in work dir ${sixdeskwork}"
-    sixdeskmess
-    echo "unzip ${fileName} ${sixdeskwork}"
-    if [ -s "${currStudy}.db" ] ; then
-	sixdeskmess="unzipping sixdb file ${currStudy}.db"
+    lerr=0
+    zipFiles=""
+    if ! [ -s ${fileName} ] ; then
+	echo ""
+	sixdeskmess="file ${fileName} does NOT exist!"
 	sixdeskmess
-	echo "unzip ${fileName} ${currStudy}.db"
+	exit 1
+    fi
+    archives=`zipinfo -1 ${fileName}`
+    if [ -z "${archives}" ] ; then
+	echo ""
+	sixdeskmess="${fileName} is an empty zip file!"
+	sixdeskmess
+	exit 1
+    fi
+    if ! ${lverbose} ; then
+	sixdeskmess="archive ${fileName} contains:"
+	sixdeskmess
+	unzip -l ${fileName}
+    fi
+    sixdeskmess="unzipping..."
+    sixdeskmess
+    if ${lverbose} ; then
+	unzip ${fileName}
+	let lerr+=$?
+    else
+	unzip ${fileName} > /dev/null 2>&1
+	let lerr+=$?
+    fi
+    for (( ii=0; ii<${#zipDirs[@]} ; ii++ )) ; do
+	echo ""
+	sixdeskmess="unzipping files in ${nickDirs[$ii]} dir ${zipDirs[$ii]}"
+	sixdeskmess
+	tmpZipFileName=`echo "${archives}" | grep ${currStudy}_${nickDirs[$ii]}_ | grep zip`
+	if [ -z "${tmpZipFileName}" ] ; then
+	    sixdeskmess="--> no backup in ${fileName}! skipping it..."
+	    sixdeskmess
+	    continue
+	fi
+	cd ${zipDirs[$ii]}
+	if ${lverbose} ; then
+	    unzip -o ${currDir}/${tmpZipFileName}
+	    let lerr+=$?
+	else
+	    unzip -o ${currDir}/${tmpZipFileName} > /dev/null 2>&1
+	    let lerr+=$?
+	fi
+	cd - > /dev/null 2>&1
+	zipFiles="${zipFiles} ${tmpZipFileName}"
+    done
+    tmpSixDbFileName=`echo "${archives}" | grep '\.db'`
+    if [ -n "${tmpSixDbFileName}" ] ; then
+	for tmpSixDB in ${tmpSixDbFileName} ; do
+	    sixdeskmess="sixdb file ${tmpSixDB} unzipped!"
+	    sixdeskmess
+	done
+    fi
+    if [ $lerr -ne 0 ] ; then
+	echo ""
+	sixdeskmess="errors while unzipping!"
+	sixdeskmess
+	exit $lerr
     fi
 fi
 
@@ -486,7 +740,7 @@ fi
 # ------------------------------------------------------------------------------
 
 # redefine trap
-trap "sixdeskCleanExit 0" EXIT
+trap "backUpCleanExit 0" EXIT
 
 # echo that everything went fine
 echo ""
