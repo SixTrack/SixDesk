@@ -22,7 +22,7 @@ function how_to_use() {
               NB: the variable \${SCRIPTDIR}:
                      ${SCRIPTDIR}
                   is available to the user.
-   -B      -> backUp.sh <study_name> (not yet available!)
+   -B      -> backUp.sh <study_name> (default settings are used)
    for the time being, only one action at a time can be requested
 
    options
@@ -174,9 +174,7 @@ while getopts  ":MSRBLU:hf:w:s:k:P:" opt ; do
 	    ;;
 	B)
 	    lbackup=true
-	    how_to_use
-	    echo " -B option not yet available!"
-	    exit 1
+	    allARGs="${allARGs} -B"
 	    ;;
 	U)
 	    luser=true
@@ -300,10 +298,21 @@ echo "[`date +"%F %T"`] $PWD - ${calledMe}" >> ${commandsLog}
 if ${lParallel} ; then
 
     # parallel jobs
-
+    echo " --> requesting parallel jobs!"
+    requestedCommand="$allARGs"
+    if ${luser} ; then
+	requestedCommand="${requestedCommand} -U \"${commandLine}\""
+    fi
+    echo "     command: ${requestedCommand}"
+    nCPUsOld=${nCPUs}
     if [ ${nCPUs} == "ALL" ] || [ ${#studies[@]} -lt ${nCPUs} ] ; then
 	nCPUs=${#studies[@]}
     fi
+    nCPUsString="nCPUs: ${nCPUs}"
+    if [ "${nCPUsOld}" != "${nCPUs}" ] ; then
+	nCPUsString="${nCPUsString} - original request by user: ${nCPUsOld}"
+    fi
+    echo " --> ${nCPUsString};"
 
     # - tmp files, with lists of workspace/studies
     tmpFiles=""
@@ -373,7 +382,8 @@ else
    	    echo " retrieving BOINC results of study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
    	    ${SCRIPTDIR}/bash/run_results ${studies[$ii]} boinc 2>&1 | tee -a ${studies[$ii]}.log
 	elif ${lbackup} ; then
-   	    echo " --> no back-up for the moment! skipping..."
+   	    echo " backing up study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
+   	    ${SCRIPTDIR}/bash/backUp.sh -d ${studies[$ii]} | tee -a ${studies[$ii]}.log
 	elif ${luser} ; then
    	    echo " executing user-defined command ${commandLine} on study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
    	    eval ${commandLine} -d ${studies[$ii]} 2>&1 | tee -a ${studies[$ii]}.log
