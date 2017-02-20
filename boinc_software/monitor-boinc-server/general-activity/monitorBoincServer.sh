@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# by A.Mereghetti
+
 serverStatusReport=http://lhcathomeclassic.cern.ch/sixtrack/server_status.php
 
 # time stamp
