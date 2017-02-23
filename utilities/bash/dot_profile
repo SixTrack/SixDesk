@@ -959,11 +959,17 @@ sixdeskSetExes(){
 }
 sixdeskSetPlatForm(){
     local __platform=$1
-    export sixdeskplatform=`echo "$__platform" | tr '[A-Z]' '[a-z]'`
-    if [ "$sixdeskplatform" != "boinc" ] && [ "$sixdeskplatform" != "cpss" ] && [ "$sixdeskplatform" != "lsf" ] && [ "$sixdeskplatform" != "htcondor" ]; then
-	sixdeskmess="unknown platform: ${sixdeskplatform}"
-	sixdeskmess
-	return 1
+    if [ -n "${__platform}" ] ; then
+	# platform as requested by user (no matter if in sixdeskenv or via terminal line option)
+	export sixdeskplatform=`echo "$__platform" | tr '[A-Z]' '[a-z]'`
+	if [ "$sixdeskplatform" != "boinc" ] && [ "$sixdeskplatform" != "cpss" ] && [ "$sixdeskplatform" != "lsf" ] && [ "$sixdeskplatform" != "htcondor" ]; then
+	    sixdeskmess="unknown platform: ${sixdeskplatform}"
+	    sixdeskmess
+	    return 1
+	fi
+    else
+	# set default platform
+	export sixdeskplatform="htcondor"
     fi
     export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
     if [ "$BNL" != "" ] ; then
