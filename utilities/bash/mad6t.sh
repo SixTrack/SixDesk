@@ -54,6 +54,8 @@ function preliminaryChecksM6T(){
 }
 
 function submit(){
+    local __delay=2
+
     # useful echo
     # - madx version and path
     sixdeskmess="Using madx Version $MADX in $MADX_PATH"
@@ -109,7 +111,7 @@ function submit(){
 	# clean away any existing results for this seed
 	echo " MadX seed: $iMad"
 	for f in 2 8 16 34 ; do
-	    rm -rf $sixtrack_input/fort.$f"_"$iMad.gz
+	    rm -f $sixtrack_input/fort.$f"_"$iMad.gz
 	done
     
 	sed -e 's?%NPART?'$bunch_charge'?g' \
@@ -124,8 +126,10 @@ function submit(){
 	    -e 's?%MADX_PATH%?'$MADX_PATH'?g' \
 	    -e 's?%MADX%?'$MADX'?g' \
 	    -e 's?%SIXTRACK_INPUT%?'$sixtrack_input'?g' $mad6tjob > mad6t_"$iMad".lsf
-	sleep 2
 	chmod 755 mad6t_"$iMad".lsf
+        sixdeskmess="Sleeping ${__delay} seconds"
+        sixdeskmess
+	sleep ${__delay}
 	
 	if ${linter} ; then
 	    sixdeskmktmpdir batch ""

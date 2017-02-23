@@ -1,11 +1,7 @@
 #!/bin/bash
 #BSUB -J SIXJOBNAME    # job name
 
-STAGE_HOST=stageslap
-export STAGE_HOST
 TRACKDIR=SIXTRACKDIR
-CASTOR=SIXCASTOR
-CASTORDIR=$CASTOR_HOME/direct_track/SIXJOBDIR
 pwd		# where am I?
 rm -f $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_STARTED
 touch $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_COMPLETED
@@ -33,15 +29,5 @@ if [ -f fma_sixtrack ]; then
 # coordinates
 #  gzip *_DUMP_*
 #  cp *_DUMP_*.gz $TRACKDIR/SIXJOBDIR/
-fi
-if test "$CASTOR" = "true"
-then
-  export RFIO_USE_CASTOR_V2="YES"
-  export STAGE_HOST="castorpublic"
-  export STAGE_SVCCLASS="default"
-  nsrm -rf $CASTORDIR
-  nsmkdir -p $CASTORDIR
-  tar cvf SIXJOBNAME.tar fort.*.gz
-  rfcp SIXJOBNAME.tar $CASTORDIR
 fi
 rm -f $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_COMPLETED

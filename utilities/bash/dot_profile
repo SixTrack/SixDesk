@@ -389,170 +389,163 @@ sixdeskchecklock()
         sixdeskmess
     fi
 }
-sixdesktunes()
-{
-  # Takes tunex, tuney, tunex1, tuney1, deltax, deltay
-  # and produces
-  # itunex, ituney, itunex1, ituney1, ideltax, ideltay
-  if test "$tunex1" = "" -a "$tuney1" = ""
-  then
-    tunex1=$tunex
-    tuney1=$tuney
-    deltax=0.0
-    deltay=0.0
-  elif test "$tunex1" = ""
-  then
-    tunex1=$tunex
-    deltax=0.0
-  elif test "$tuney1" = ""
-  then
-    tuney1=$tuney
-    deltay=0.0
-  fi
-  # Now we have the new code to do integer arithmetic on the tunescans
-  itunexi=`echo "$tunex" | cut -d"." -f1`
-  itunexi=$itunexi"0000"
-  itunexi=`echo $itunexi | cut -c1-2`
-  itunexf=`echo "$tunex" | cut -d"." -f2`
-  itunexf=$itunexf"0000"
-  itunexf=`echo $itunexf | cut -c1-4`
-  itunex=$itunexi$itunexf
+sixdesktunes(){
+    # Takes tunex, tuney, tunex1, tuney1, deltax, deltay
+    # and produces
+    # itunex, ituney, itunex1, ituney1, ideltax, ideltay
+    # it produces also xlen and ylen (ie length of fractional part)
+    # reworked by A.Mereghetti, 2016-07-19
 
-  ituneyi=`echo "$tuney" | cut -d"." -f1`
-  ituneyi=$ituneyi"0000"
-  ituneyi=`echo $ituneyi | cut -c1-2`
-  ituneyf=`echo "$tuney" | cut -d"." -f2`
-  ituneyf=$ituneyf"0000"
-  ituneyf=`echo $ituneyf | cut -c1-4`
-  ituney=$ituneyi$ituneyf
-
-  itunex1i=`echo "$tunex1" | cut -d"." -f1`
-  itunex1i=$itunex1i"0000"
-  itunex1i=`echo $itunex1i | cut -c1-2`
-  itunex1f=`echo "$tunex1" | cut -d"." -f2`
-  itunex1f=$itunex1f"0000"
-  itunex1f=`echo $itunex1f | cut -c1-4`
-  itunex1=$itunex1i$itunex1f
-
-  ituney1i=`echo "$tuney1" | cut -d"." -f1`
-  ituney1i=$ituney1i"0000"
-  ituney1i=`echo $ituney1i | cut -c1-2`
-  ituney1f=`echo "$tuney1" | cut -d"." -f2`
-  ituney1f=$ituney1f"0000"
-  ituney1f=`echo $ituney1f | cut -c1-4`
-  ituney1=$ituney1i$ituney1f
-
-  ideltaxi=`echo "$deltax" | cut -d"." -f1`
-  ideltaxi=$ideltaxi"0000"
-  ideltaxi=`echo $ideltaxi | cut -c1-2`
-  ideltaxf=`echo "$deltax" | cut -d"." -f2`
-  ideltaxf=$ideltaxf"0000"
-  ideltaxf=`echo $ideltaxf | cut -c1-4`
-  ideltax=$ideltaxi$ideltaxf
-
-  ideltayi=`echo "$deltay" | cut -d"." -f1`
-  ideltayi=$ideltayi"0000"
-  ideltayi=`echo $ideltayi | cut -c1-2`
-  ideltayf=`echo "$deltay" | cut -d"." -f2`
-  ideltayf=$ideltayf"0000"
-  ideltayf=`echo $ideltayf | cut -c1-4`
-  ideltay=$ideltayi$ideltayf
-
-  if test "$itunex1" -lt "$itunex"
-  then
-
-#MACRO mymess 0 sixdesktunes: tunex1 $tunex1 .lt. tunex $tunex!!!
     sixdeskmesslevel=0
-    sixdeskmess="sixdesktunes: tunex1 $tunex1 .lt. tunex $tunex!!!"
-    sixdeskmess
-#MACRO mymess
-
-
-#MACRO myexit 12
     sixdeskexitparam=12
-    sixdeskexit
-#MACRO myexit
+    
+    if [ -z "$tunex1" ] ; then
+	tunex1=$tunex
+	deltax=0.0
+    fi
+    if [ -z "$tuney1" ] ; then
+	tuney1=$tuney
+	deltay=0.0
+    fi
+    if [ "$deltax" == "0.0" ] && [ "$deltay" == "0.0" ] ; then
+	deltax=$tunex
+	deltay=$tuney
+    fi
 
-  elif test "$itunex1" -ne "$itunex" -a "$ideltax" -eq 0
-  then
+    # x plane
+    # - sanity checks (ie absence of "." or "." being first/last char):
+    tunex=$(sixdeskAddDotFloat $tunex)
+    tunex1=$(sixdeskAddDotFloat $tunex1)
+    deltax=$(sixdeskAddDotFloat $deltax)
+    # - strip away useless "0" chars
+    tunex=$(sixdeskFixZerosFloat $tunex)
+    tunex1=$(sixdeskFixZerosFloat $tunex1)
+    deltax=$(sixdeskFixZerosFloat $deltax)
+    # - get fractional and integer parts of tunes
+    local __itunex=`echo "$tunex" | cut -d\. -f1`
+    local __ftunex=`echo "$tunex" | cut -d\. -f2`
+    local __itunex1=`echo "$tunex1" | cut -d\. -f1`
+    local __ftunex1=`echo "$tunex1" | cut -d\. -f2`
+    local __ideltax=`echo "$deltax" | cut -d\. -f1`
+    local __fdeltax=`echo "$deltax" | cut -d\. -f2`
+    # - get longest fractional part (meaningful!)
+    xlen=`printf "$__ftunex\n$__ftunex1\n$__fdeltax\n" | awk '{print (length($1))}' | sort -g | tail -n1`
+    # - get integer algebra
+    local __llen=`echo "$__ftunex $xlen" | awk '{print ($2-length($1))}'`
+    itunex="$__itunex$__ftunex"
+    if [ $__llen -gt 0 ] ; then
+	itunex="$itunex`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
+    local __llen=`echo "$__ftunex1 $xlen" | awk '{print ($2-length($1))}'`
+    itunex1="$__itunex1$__ftunex1"
+    if [ $__llen -gt 0 ] ; then
+	itunex1="$itunex1`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
+    local __llen=`echo "$__fdeltax $xlen" | awk '{print ($2-length($1))}'`
+    ideltax="$__ideltax$__fdeltax"
+    if [ $__llen -gt 0 ] ; then
+	ideltax="$ideltax`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
+    # remove leading 0s
+    ideltax=`echo $ideltax | sed 's/^[0]*//'`
 
-#MACRO mymess 0 sixdesktunes: deltax .eq. 0 !!!
-    sixdeskmesslevel=0
-    sixdeskmess="sixdesktunes: deltax .eq. 0 !!!"
-    sixdeskmess
-#MACRO mymess
+    # y plane
+    # - sanity checks (ie absence of "." or "." being first/last char):
+    tuney=$(sixdeskAddDotFloat $tuney)
+    tuney1=$(sixdeskAddDotFloat $tuney1)
+    deltay=$(sixdeskAddDotFloat $deltay)
+    # - strip away useless "0" chars
+    tuney=$(sixdeskFixZerosFloat $tuney)
+    tuney1=$(sixdeskFixZerosFloat $tuney1)
+    deltay=$(sixdeskFixZerosFloat $deltay)
+    # - get fractional and integer parts of tunes
+    local __ituney=`echo "$tuney" | cut -d\. -f1`
+    local __ftuney=`echo "$tuney" | cut -d\. -f2`
+    local __ituney1=`echo "$tuney1" | cut -d\. -f1`
+    local __ftuney1=`echo "$tuney1" | cut -d\. -f2`
+    local __ideltay=`echo "$deltay" | cut -d\. -f1`
+    local __fdeltay=`echo "$deltay" | cut -d\. -f2`
+    # - get longest fractional part (meaningful!)
+    ylen=`printf "$__ftuney\n$__ftuney1\n$__fdeltay\n" | awk '{print (length($1))}' | sort -g | tail -n1`
+    # - get integer algebra
+    local __llen=`echo "$__ftuney $ylen" | awk '{print ($2-length($1))}'`
+    ituney="$__ituney$__ftuney"
+    if [ $__llen -gt 0 ] ; then
+	ituney="$ituney`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
+    local __llen=`echo "$__ftuney1 $ylen" | awk '{print ($2-length($1))}'`
+    ituney1="$__ituney1$__ftuney1"
+    if [ $__llen -gt 0 ] ; then
+	ituney1="$ituney1`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
+    local __llen=`echo "$__fdeltay $ylen" | awk '{print ($2-length($1))}'`
+    ideltay="$__ideltay$__fdeltay"
+    if [ $__llen -gt 0 ] ; then
+	ideltay="$ideltay`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
+    # remove leading 0s
+    ideltay=`echo $ideltay | sed 's/^[0]*//'`
 
+    # some consistency checks
+    if [ $itunex1 -lt $itunex ] ; then
+	sixdeskmess="sixdesktunes: tunex1 $tunex1 .lt. tunex $tunex!!!"
+	sixdeskmess
+	sixdeskexit
+    elif [ $itunex1 -ne $itunex ] && [ $ideltax -eq 0 ] ; then
+	sixdeskmess="sixdesktunes: deltax .eq. 0 !!!"
+	sixdeskmess
+	sixdeskexit
+    fi
+    if [ $ituney1 -lt $ituney ] ; then
+	sixdeskmess="sixdesktunes: tuney1 $tuney1 .lt. tuney $tuney!!!"
+	sixdeskmess
+	sixdeskexit
+    elif [ $ituney1 -ne $ituney ] && [ $ideltay -eq 0 ] ; then
+	sixdeskmess="sixdesktunes: deltay .eq. 0 !!!"
+	sixdeskmess
+	sixdeskexit
+    fi
 
-#MACRO myexit 12
-    sixdeskexitparam=12
-    sixdeskexit
-#MACRO myexit
-
-  fi
-  if test "$ituney1" -lt "$ituney"
-  then
-
-#MACRO mymess 0 sixdesktunes: tuney1 $tuney1 .lt. tuney $tuney!!!
-    sixdeskmesslevel=0
-    sixdeskmess="sixdesktunes: tuney1 $tuney1 .lt. tuney $tuney!!!"
-    sixdeskmess
-#MACRO mymess
-
-
-#MACRO myexit 12
-    sixdeskexitparam=12
-    sixdeskexit
-#MACRO myexit
-
-  elif test "$ituney1" -ne "$ituney" -a "$ideltay" -eq 0
-  then
-
-#MACRO mymess 0 sixdesktunes: deltay .eq. 0 !!!
-    sixdeskmesslevel=0
-    sixdeskmess="sixdesktunes: deltay .eq. 0 !!!"
-    sixdeskmess
-#MACRO mymess
-
-
-#MACRO myexit 12
-    sixdeskexitparam=12
-    sixdeskexit
-#MACRO myexit
-
-  fi
-
-  # Finally get rid of any trailing zeros or one of two leading zeros
-  tunex=`echo "$itunex" | cut -c1-2`"."`echo "$itunex" | cut -c3-6`
-  tunex=`echo "$tunex" | sed -e's?0*$??'`
-  tunex=`echo "$tunex" | sed -e's?^0??'`
-  tuney=`echo "$ituney" | cut -c1-2`"."`echo "$ituney" | cut -c3-6`
-  tuney=`echo "$tuney" | sed -e's?0*$??'`
-  tuney=`echo "$tuney" | sed -e's?^0??'`
-  tunex1=`echo "$itunex1" | cut -c1-2`"."`echo "$itunex1" | cut -c3-6`
-  tunex1=`echo "$tunex1" | sed -e's?0*$??'`
-  tunex1=`echo "$tunex1" | sed -e's?^0??'`
-  tuney1=`echo "$ituney1" | cut -c1-2`"."`echo "$ituney1" | cut -c3-6`
-  tuney1=`echo "$tuney1" | sed -e's?0*$??'`
-  tuney1=`echo "$tuney1" | sed -e's?^0??'`
-  # and report
-  if test "$ideltax" -eq  0 -a "$ideltay" -eq 0
-  then
-
-#MACRO mymess 0 sixdesktunes: Tune ${tunex}_${tuney}
-    sixdeskmesslevel=0
-    sixdeskmess="sixdesktunes: Tune ${tunex}_${tuney}"
-    sixdeskmess
-#MACRO mymess
-
-  else
-
-#MACRO mymess 0 sixdesktunes: Tunescan (${tunex},${tuney}) to (${tunex1},${tuney1}) by (${deltax}, ${deltay})
-    sixdeskmesslevel=0
-    sixdeskmess="sixdesktunes: Tunescan (${tunex},${tuney}) to (${tunex1},${tuney1}) by (${deltax}, ${deltay})"
-    sixdeskmess
-#MACRO mymess
-
-  fi
+    # notify user
+    if [ $ideltax -eq $itunex ] && [ $ideltay -eq $ituney ] ; then
+	# only one point
+	sixdeskmess="sixdesktunes: Tune ${tunex}_${tuney}"
+	sixdeskmess
+    else
+	# full scan
+	sixdeskmess="sixdesktunes: Tunescan (${tunex},${tuney}) to (${tunex1},${tuney1}) by (${deltax}, ${deltay})"
+	sixdeskmess
+    fi
+}
+sixdeskPrepareTunes(){
+    # by A.Mereghetti, 2016-07-19
+    # converts itunexx/ituneyy into tunexx/tuneyy
+    tunexx=$(sixdeskPrepareTune $itunexx $xlen)
+    tuneyy=$(sixdeskPrepareTune $ituneyy $ylen)
+    sixdesktunes=$tunexx"_"$tuneyy
+}
+sixdeskPrepareTune(){
+    # by A.Mereghetti, 2017-02-06
+    # converts itunezz into tunezz
+    local __itunezz=$1
+    local __flen=$2
+    __tunezz=`echo "$__itunezz" | awk -v "flen=$__flen" '{lstring=length($1); fpart=substr($1,lstring-flen+1,flen); ipart=substr($1,1,lstring-flen); print (ipart"."fpart)}'`
+    __tunezz=$(sixdeskFixZerosFloat $__tunezz)
+    echo "${__tunezz}"
+}
+sixdeskAddDotFloat(){
+    # by A.Mereghetti, 2016-07-20
+    # add trailing "." in case it is not there
+    local __input="$1"
+    local __result=`echo "$__input" | awk '{lstring=length($1); dpos=index($1,"."); if (dpos==0) print ($1"."); else print ($1);}'`
+    echo "$__result"
+}
+sixdeskFixZerosFloat(){
+    # by A.Mereghetti, 2016-07-20
+    # remove useless trailing/heading "0", but leave one before/after "." in case this is first/last char
+    local __input="$1"
+    local __result=`echo "$__input" | sed -e's?0*$??' | sed -e's?^0??' | awk '{lstring=length($1); dpos=index($1,"."); if (dpos==1) print("0"$1); else print($1);}' | awk '{lstring=length($1); dpos=index($1,"."); if (dpos==lstring) print($1"0"); else print($1);}'`
+    echo "$__result"
 }
 sixdeskinttunes()
 {
@@ -572,15 +565,6 @@ sixdeskinttunes()
   else
     inttuneyy=`echo $tmp | sed -e's?\([0-9][0-9]*\.\).*?\1?'`
   fi
-}
-sixdesklooptunes(){
-    tunexx=`echo "$itunexx" | cut -c1-2`"."`echo "$itunexx" | cut -c3-6`
-    tunexx=`echo "$tunexx" | sed -e's/0*$//'`
-    tunexx=`echo "$tunexx" | sed -e's/^0//'`
-    tuneyy=`echo "$ituneyy" | cut -c1-2`"."`echo "$ituneyy" | cut -c3-6`
-    tuneyy=`echo "$tuneyy" | sed -e's/0*$//'`
-    tuneyy=`echo "$tuneyy" | sed -e's/^0//'`
-    sixdesktunes=$tunexx"_"$tuneyy
 }
 sixdeskamps()
 {
@@ -654,19 +638,19 @@ sixdeskrundir()
     fi
     if test "$BNL" = "" ; then
 	if ${__lbackcomp} ; then
-	    rundirname=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/e\6/?'`
+	    rundirname1=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/e\6/?'`
 	else
-	    rundirname=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/\6/?'`
+	    rundirname1=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/\6/?'`
 	fi
-	rundirname=`echo $rundirname | sed -e's?/s/?/simul/?'`
-	rundirname=`echo $rundirname | sed -e's?/t/?/trans/?'`
-	rundirname=`echo $rundirname | sed -e's?/m/?/momen/?'`
-	rundirname=`echo $rundirname | sed -e's?/d/?/da/?'`
+	rundirname2=`echo $rundirname1 | sed -e's?/s/?/simul/?'`
+	rundirname3=`echo $rundirname2 | sed -e's?/t/?/trans/?'`
+	rundirname4=`echo $rundirname3 | sed -e's?/m/?/momen/?'`
+	rundirname5=`echo $rundirname4 | sed -e's?/d/?/da/?'`
     else
-	rundirname=`echo $runnamename | sed -e 's?%?\/?g'`
+	rundirname5=`echo $runnamename | sed -e 's?%?\/?g'`
     fi
     # remove trailing slashes
-    rundirname=`echo ${rundirname} | sed 's:/*$::'`
+    rundirname=`echo ${rundirname5} | sed 's:/*$::'`
 }
 sixdeskDefineUserTree(){
     # define the tree in the userspace
@@ -704,13 +688,13 @@ sixDeskDefineMADXTree(){
     local __SCRIPTDIR=$1
     # The following version of mad-X is used by the mad6t jobs.
     # All now call a madx executable so -X is no longer required.
-    export MADX_PATH="/afs/cern.ch/user/m/mad/bin"
+#    export MADX_PATH="/afs/cern.ch/user/m/mad/bin"
     # Doesn't seem to work!
     #export MADX="madx_pro"
     # and the MUST? use for Massimo
     #export MADX="madx_dev"
     # and the new default
-    export MADX="madx"
+#    export MADX="madx"
     export maskFilesPath=$sixdeskhome/mask
     export controlFilesPath=$sixdeskhome/control_files
     export lsfFilesPath=$__SCRIPTDIR/templates/lsf
@@ -726,28 +710,139 @@ sixdeskDefinePointTree(){
     # $8: $kk
     # $9: tree to $LHCDesName
 
-    if [ -z $6 ] ; then
-	runnamename1=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
-	runnamename2=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%.'$8
-    else
-	runnamename1=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%'$7
-	runnamename2=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%.'$8
+    # returned variables
+    Runnam=""
+    Rundir=""
+    RundirFullPath=""
+    actualDirName=""
+    actualDirNameFullPath=""
+
+    # temporary variables
+    iCountMax=10
+    local __lerr=0
+    local __delay=3
+
+    # -- Runnam
+    iCount=0
+    local __lok=false
+    local __lprobl=false
+    while [ $iCount -lt $iCountMax ] ; do
+	if [ $iCount -gt 1 ] ; then
+            sixdeskmess="Sleeping ${__delay} seconds"
+            sixdeskmess
+	    sleep ${__delay}
+	fi
+	Runnam=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
+	sixdeskSanitizeString "${Runnam}" Runnam
+	if [ -n "${Runnam}" ] ; then
+	    __lok=true
+	    break
+	else
+	    __lprobl=true
+	    # get ready to report a problem
+	    sixdeskEchoEnvVars /tmp/envs_${iCount}.txt
+	fi
+	let iCount+=1
+    done
+    if ${__lprobl} ; then
+	if ${__lok} ; then
+	    sixdeskmess="Warn: failed to generate Runnam ${iCount} times, but managed to survive! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going on..."
+	    local __emailSubj='Warning'
+	else
+	    sixdeskmess="Err: failed to generate Runnam too many times (i.e. ${iCountMax})! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going to next WU..."
+	    local __emailSubj='Error'
+	    let __lerr+=1
+	fi
+	sixdeskmess
+	sixdeskSendNotifMail ${__emailSubj}
     fi
 
-    # return Runnam
-    Runnam=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
+    # -- Rundir
+    iCount=0
+    local __lok=false
+    local __lprobl=false
+    while [ $iCount -lt $iCountMax ] ; do
+	if [ $iCount -gt 1 ] ; then
+            sixdeskmess="Sleeping ${__delay} seconds"
+            sixdeskmess
+	    sleep ${__delay}
+	fi
+	if [ -z "$6" ] ; then
+	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
+	else
+	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%'$7
+	fi
+	sixdeskrundir false
+	Rundir=$rundirname
+	sixdeskSanitizeString "${Rundir}" Rundir
+	RundirFullPath="$9/$Rundir"
+	sixdeskSanitizeString "${RundirFullPath}" RundirFullPath
+	if [ -n "${Rundir}" ] && [ -n "${RundirFullPath}" ] ; then
+	    __lok=true
+	    break
+	else
+	    __lprobl=true
+	    # get ready to report a problem
+	    sixdeskEchoEnvVars /tmp/envs_${iCount}.txt
+	fi
+	let iCount+=1
+    done
+    if ${__lprobl} ; then
+	if ${__lok} ; then
+	    sixdeskmess="Warn: failed to generate Rundir and/or RundirFullPath ${iCount} times, but managed to survive! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going on..."
+	    local __emailSubj='Warning'
+	else
+	    sixdeskmess="Err: failed to generate Rundir and/or RundirFullPath too many times (i.e. ${iCountMax})! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going to next WU..."
+	    local __emailSubj='Error'
+	    let __lerr+=1
+	fi
+	sixdeskmess
+	sixdeskSendNotifMail ${__emailSubj}
+    fi
 
-    # return Rundir
-    runnamename=$runnamename1
-    sixdeskrundir
-    Rundir=$rundirname
-    RundirFullPath="$9/$Rundir"
-
-    # return actualDirName
-    runnamename=$runnamename2
-    sixdeskrundir
-    actualDirName=$rundirname
-    actualDirNameFullPath="$9/$actualDirName"
+    # -- actualDirName
+    iCount=0
+    local __lok=false
+    local __lprobl=false
+    while [ $iCount -lt $iCountMax ] ; do
+	if [ $iCount -gt 1 ] ; then
+            sixdeskmess="Sleeping ${__delay} seconds"
+            sixdeskmess
+	    sleep ${__delay}
+	fi
+	if [ -z "$6" ] ; then
+	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%.'$8
+	else
+	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%.'$8
+	fi
+	sixdeskrundir false
+	actualDirName=$rundirname
+	sixdeskSanitizeString "${actualDirName}" actualDirName
+	actualDirNameFullPath="$9/$actualDirName"
+	sixdeskSanitizeString "${actualDirNameFullPath}" actualDirNameFullPath
+	if [ -n "${actualDirName}" ] && [ -n "${actualDirNameFullPath}" ] ; then
+	    __lok=true
+	    break
+	else
+	    __lprobl=true
+	    # get ready to report a problem
+	    sixdeskEchoEnvVars /tmp/envs_${iCount}.txt
+	fi
+	let iCount+=1
+    done
+    if ${__lprobl} ; then
+	if ${__lok} ; then
+	    sixdeskmess="Warn: failed to generate actualDirName and/or actualDirNameFullPath ${iCount} times, but managed to survive! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going on... "
+	    local __emailSubj='Warning'
+	else
+	    sixdeskmess="Err: failed to generate actualDirName and/or actualDirNameFullPath too many times (i.e. ${iCountMax})! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going to next WU..."
+	    local __emailSubj='Error'
+	    let __lerr+=1
+	fi
+	sixdeskmess
+	sixdeskSendNotifMail ${__emailSubj}
+    fi
+    return $__lerr
 }
 sixdeskDefineWorkUnitName(){
     # $1: workspace name (ie $workspace)
@@ -785,13 +880,15 @@ sixdeskScaledKstep(){
     local __ampfinish=$4
     local __factor=0.3
     scaled_kstep=${__kstep}
-    if [ ${__reduce_angs_with_aplitude} -eq 1 ] ;then
-        if [ "${__ampstart}" -gt ${__factor} ] ;then
-            local __ang_scaling_factor=`gawk -v "ampfinish=${__ampfinish}" -v "ampstart=${__ampstart}" 'END{print (ampfinish/ampstart)}' /dev/null`
-        else
-            local __ang_scaling_factor=`gawk -v "ampfinish=${__ampfinish}" -v "factor=${__factor}" 'END{print(ampfinish/factor)}' /dev/null`
-        fi
-        scaled_kstep=`gawk -v "kstep=${__kstep}" -v "ang_scaling_factor=${__ang_scaling_factor}" 'END{print(kstep*ang_scaling_factor)}' /dev/null`
+    if [ -n "${__reduce_angs_with_aplitude}" ] ; then
+	if [ ${__reduce_angs_with_aplitude} -eq 1 ] ;then
+            if [ "${__ampstart}" -gt ${__factor} ] ;then
+		local __ang_scaling_factor=`gawk -v "ampfinish=${__ampfinish}" -v "ampstart=${__ampstart}" 'END{print (ampfinish/ampstart)}' /dev/null`
+            else
+		local __ang_scaling_factor=`gawk -v "ampfinish=${__ampfinish}" -v "factor=${__factor}" 'END{print(ampfinish/factor)}' /dev/null`
+            fi
+            scaled_kstep=`gawk -v "kstep=${__kstep}" -v "ang_scaling_factor=${__ang_scaling_factor}" 'END{print(kstep*ang_scaling_factor)}' /dev/null`
+	fi
     fi
 }
 sixdeskkang(){
@@ -1016,37 +1113,81 @@ sixdeskCleanExit(){
     sixdeskexit $__exitLevel
 }
 function __inspectPrerequisite(){
-    local __test=$1
-    local __entry=$2
+    local __lverbose=$1
+    local __test=$2
+    local __entry=$3
     local __lerr=0
     
     test $__test ${__entry}
     if [ $? -ne 0 ] ; then
-	sixdeskmess="${__entry} NOT there!"
-	sixdeskmess
 	let __lerr+=1
+	if ${__lverbose} ; then
+	    sixdeskmess="${__entry} NOT there!"
+	    sixdeskmess
+	fi
     else
-	sixdeskmess="${__entry} EXISTs!"
-	sixdeskmess
+	if ${__lverbose} ; then
+	    sixdeskmess="${__entry} EXISTs!"
+	    sixdeskmess
+	fi
     fi
     return $__lerr
 }
 
 function sixdeskInspectPrerequisites(){
-    local __path=$1
-    local __test=$2
-    shift 2
+    local __lverbose=$1
+    local __path=$2
+    local __test=$3
+    shift 3
     local __entries=$@
     local __lerr=0
     if [ $# -eq 0 ] ; then
-	__inspectPrerequisite ${__test} ${__path}
+	__inspectPrerequisite ${__lverbose} ${__test} ${__path}
 	let __lerr+=$?
     else
 	for tmpEntry in ${__entries} ; do
-	    __inspectPrerequisite ${__test} ${__path}/${tmpEntry}
+	    __inspectPrerequisite ${__lverbose} ${__test} ${__path}/${tmpEntry}
 	    let __lerr+=$?
 	done
     fi
     return $__lerr
 }
 
+function sixdeskSanitizeString(){
+    # A.Mereghetti, 2016-12-07
+    # for the moment, remove empty spaces, tab and newline chars
+    __cleanArg=`echo "$1" | sed -e 's/\ //g' -e 's/\t//g' -e 's/\n//g'`
+    eval "$2=${__cleanArg}"
+}
+
+function sixdeskSendNotifMail(){
+    local __emailSubj=$1
+    local __receiverNames="amereghe"
+    # do bother user only in case of a real error
+    if [ -n "${__emailSubj}" ] ; then
+	if [ `echo ${__emailSubj} | grep -e Error -e "ERROR" -e "error" | wc -l` -gt 0 ] ; then
+	    __receiverNames="${__receiverNames} $LOGNAME"
+	fi
+    fi
+
+    # send emails (attachments are generated by sixdeskEchoEnvVars)
+    local __attachments=`\ls -1 /tmp/envs*txt 2> /dev/null`
+    local __dirName=envs_${LOGNAME}_`date +"%F_%H-%M-%S"`
+    mkdir /tmp/${__dirName}
+    mv /tmp/envs*txt /tmp/${__dirName}
+    zip -j /tmp/${__dirName}.zip /tmp/${__dirName}/* > /dev/null 2>&1
+    emailSubject="intercepting problem in SixDesk: ${__emailSubj}"
+    local __recipients=`echo "${__receiverNames}" | awk '{for (ii=1;ii<=NF;ii++) {printf("%s@cern.ch ",$ii)}}'`
+    echo "${sixdeskmess}" | mail -a /tmp/${__dirName}.zip -s "${emailSubject}" ${__recipients}
+
+    # clean
+    rm -rf /tmp/${__dirName}*
+}
+
+function sixdeskEchoEnvVars(){
+    if [ -n "$1" ] ; then
+	compgen -v | while read line; do all=$line"[*]"; echo $line=${!all}; done > $1
+    else
+	compgen -v | while read line; do all=$line"[*]"; echo $line=${!all}; done
+    fi
+}

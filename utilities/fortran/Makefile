@@ -18,7 +18,7 @@ FFLAGS=-Wa,--32 -static -m32 -L/usr/lib/ -lc -L/usr/lib/gcc/x86_64-redhat-linux/
 
 default: all
 
-all: clean verify1059.exe verify10.exe
+all: clean verify10.exe
 
 clean:
 	rm -f *.o *~ *.exe
