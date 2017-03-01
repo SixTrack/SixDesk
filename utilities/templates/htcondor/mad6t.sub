@@ -1,7 +1,8 @@
 universe = vanilla
 executable = $(filename)
-output = $SUBSTR(filename,0, -4).out
-error = $SUBSTR(filename, 0, -4).err
+output = $Fn(filename).out
+error = $Fn(filename).err
+log = $Fn(filename).log
 ShouldTransferFiles = YES
 WhenToTransferOutput = ON_EXIT_OR_EVICT
 SendCredential = True
