@@ -40,9 +40,20 @@ function how_to_use() {
            R: the exising kerberos token is renewed (no password needed, but
               pay attention to max renewal date of token)
    -L      do not gunzip/gzip log file before/after running command
-   -P      split operations on a given number of CPUs (parallel operations).
-           If the special key 'ALL' is given, a call to `basename $0` will be
-              performed for each study.
+   -P      split operations on a given number of CPUs (parallel operations). Alternative
+              to specifying the number of CPUs, special keys are available:
+              - ALL: a call to `basename $0` will be performed for each study;
+                     if the number of studies exceeds the number of available cores,
+                     parallelisation will be limited to all available cores.
+                     In case the script fails to retrieve this piece of info,
+                     parallelisation will be limited to ${nCPUsDef};
+              - LXPLUS (not yet available): all studies will be treated separately, 
+                     each by a node reached via ssh;
+              - LSF (not yet available): an LSF job for each study will be created
+                     and submitted;
+              - HTCONDOR (not yet available): an HTCONDOR job for each study will be created
+                     and submitted;
+              A part from 'ALL', all other options are limited to ${nParalMax}.
            Please, do not exagereate with this option, as parallel operations may
               dramatically overload your storage volume, with counter-productive
               effects.
@@ -151,6 +162,8 @@ lZipLog=true
 lParallel=false
 nCPUs=1
 delayTime=60 # [s]
+nCPUsDef=4
+nParalMax=10
 
 commandsLog="$HOME/.`basename $0`.log"
 allARGs="$0"
@@ -221,6 +234,9 @@ while getopts  ":MSRBLU:hf:w:s:k:P:" opt ; do
 	    lParallel=true
 	    if [ `echo ${OPTARG} | awk '{print (toupper($1))}'` == "ALL" ] ; then
 		# a CPU for each study to be treated
+		nCPUs="ALL"
+	    elif [ `echo ${OPTARG} | awk '{print (toupper($1))}'` == "LXPLUS" ] || `echo ${OPTARG} | awk '{print (toupper($1))}'` == "LSF" ] || `echo ${OPTARG} | awk '{print (toupper($1))}'` == "HTCONDOR" ] ; then
+		echo "option not yet available! switching to ALL"
 		nCPUs="ALL"
 	    elif [ `echo ${OPTARG} | awk '$1 ~ /^[0-9]+$/' | wc -l` -ne 0 ] ; then
 		# distribute the studies over $OPTARG CPUs
@@ -305,8 +321,21 @@ if ${lParallel} ; then
     fi
     echo "     command: ${requestedCommand}"
     nCPUsOld=${nCPUs}
-    if [ ${nCPUs} == "ALL" ] || [ ${#studies[@]} -lt ${nCPUs} ] ; then
+    if [ ${nCPUs} == "ALL" ] ; then
 	nCPUs=${#studies[@]}
+    fi
+    # a sanity checks
+    if [ ${#studies[@]} -lt ${nCPUs} ] ; then
+	nCPUs=${#studies[@]}
+    fi
+    nCPUsSys=`grep -c ^processor /proc/cpuinfo`
+    if [ -z "${nCPUsSys}" ] ; then
+        # unable to retrieve number of CPUs on current machine
+        # setting nCPUs to default value
+	nCPUsSys=${nCPUsDef}
+    fi
+    if [ ${nCPUsSys} -lt ${nCPUs} ]  ; then
+	nCPUs=${nCPUsSys}
     fi
     nCPUsString="nCPUs: ${nCPUs}"
     if [ "${nCPUsOld}" != "${nCPUs}" ] ; then

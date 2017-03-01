@@ -278,14 +278,15 @@ fi
 sixdeskSetPlatForm $platform
 
 # - useful output
-PTEXT="["$sixdeskplatform"]"
-STEXT="["$LHCDescrip"]"
-BTEXT=""
+PTEXT="[${sixdeskplatform}]"
+STEXT="[${LHCDescrip}]"
+WTEXT="[${workspace}]"
+BTEXT="no BNL flag"
 if [ "$BNL" != "" ] ; then
-  BTEXT=" BNL"
+  BTEXT="BNL flag active"
 fi
 NTEXT="["$sixdeskhostname"]"
-sixdeskmess="Using$BTEXT Study $STEXT Platform $PTEXT Hostname $NTEXT"
+sixdeskmess="Using: Study $STEXT - Worskspace $WTEXT - Platform $PTEXT - Hostname $NTEXT - $BTEXT"
 sixdeskmess
 
 if [ -e "$sixdeskstudy"/deleted ] ; then
