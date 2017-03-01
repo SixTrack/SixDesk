@@ -506,10 +506,10 @@ function submitChromaJobs(){
 
     # --------------------------------------------------------------------------
     # prepare the other input files
-    ln -sf ${sixtrack_input}/fort.16_$iMad fort.16
-    ln -sf ${sixtrack_input}/fort.2_$iMad fort.2
-    if [ -e ${sixtrack_input}/fort.8_$iMad ] ; then
-        ln -sf ${sixtrack_input}/fort.8_$iMad fort.8
+    ln -sf ${sixtrack_input}/fort.16
+    ln -sf ${sixtrack_input}/fort.2
+    if [ -e ${sixtrack_input}/fort.8 ] ; then
+        ln -sf ${sixtrack_input}/fort.8
     else
         touch fort.8
     fi
@@ -602,10 +602,10 @@ function submitBetaJob(){
     
     # --------------------------------------------------------------------------
     # prepare the other input files
-    ln -sf ${sixtrack_input}/fort.16_$iMad fort.16
-    ln -sf ${sixtrack_input}/fort.2_$iMad fort.2
-    if [ -e ${sixtrack_input}/fort.8_$iMad ] ; then
-        ln -sf ${sixtrack_input}/fort.8_$iMad fort.8
+    ln -sf ${sixtrack_input}/fort.16
+    ln -sf ${sixtrack_input}/fort.2
+    if [ -e ${sixtrack_input}/fort.8 ] ; then
+        ln -sf ${sixtrack_input}/fort.8
     else
         touch fort.8
     fi
@@ -777,15 +777,6 @@ function submitCreateFinalInputs(){
 	
     if [ "$sixdeskplatform" == "boinc" ] ; then
 	
-	# fort.3
-	ln -s $sixdeskjobs_logs/fort.3 $RundirFullPath/fort.3
-		
-	# input from MADX: fort.2/.8/.16
-	for iFort in 2 8 16 ; do
-	    [ ! -e $RundirFullPath/fort.${iFort} ] || rm -f $RundirFullPath/fort.${iFort}
-	    ln -s $sixtrack_input/fort.${iFort}_$iMad $RundirFullPath/fort.${iFort}
-	done
-
 	# generate zip/description file
 	# - generate new taskid
 	sixdeskTaskId=`awk '{print ($1+1)}' $sixdeskhome/sixdeskTaskIds/$LHCDescrip/sixdeskTaskId`
@@ -796,8 +787,30 @@ function submitCreateFinalInputs(){
 	# - return sixdeskTaskName and workunitName
 	sixdeskDefineWorkUnitName $workspace $Runnam $sixdesktaskid
 	# - generate zip file
-	#   NB: -j option, to store only the files, and not the source paths
-	zip -j $RundirFullPath/$workunitName.zip $RundirFullPath/fort.2 $RundirFullPath/fort.3 $RundirFullPath/fort.8 $RundirFullPath/fort.16 >/dev/null 2>&1
+	local __gotit=false
+	for (( mytries=1 ; mytries<=10; mytries++ )) ; do
+	    #   NB: -j option, to store only the files, and not the source paths
+	    zip -j $RundirFullPath/$workunitName.zip $sixdeskjobs_logs/fort.3 $sixtrack_input/fort.2 $sixtrack_input/fort.8 $sixtrack_input/fort.16 > $RundirFullPath/zip.log 2>&1
+ 	    # check zipping
+	    local __zip_exit_status=$?
+	    grep warning $RundirFullPath/zip.log >/dev/null 2>&1
+	    local __zip_warnings=$?
+	    if [ ${__zip_exit_status} -ne 0 ] || [ ${__zip_warnings} -eq 0 ] ; then
+		sixdeskmess="Failing to generate .zip file for WU ${workunitName} - trial ${mytries}!!!"
+		sixdeskmess
+	    else
+		__gotit=true
+		rm -f $RundirFullPath/zip.log
+		break
+	    fi
+	done
+	if ! ${__gotit} ; then
+	    sixdeskmess="failed to generate .zip file for WU ${workunitName} ${mytries} times!!!"
+	    sixdeskmess
+	    # leave the last log file in place, for post-mortem analysis
+	    exit ${mytries}
+	fi
+
 	# - generate the workunit description file
 	cat > $RundirFullPath/$workunitName.desc <<EOF
 $workunitName
@@ -818,11 +831,6 @@ EOF
 	    echo "$RundirFullPath/$workunitName.desc" >> ${sixdeskjobs_logs}/megaZipList.txt
 	    echo "$RundirFullPath/$workunitName.zip" >> ${sixdeskjobs_logs}/megaZipList.txt
 	fi
-	
-	# clean
-	for iFort in 2 3 8 16 ; do
-	    rm -f $RundirFullPath/fort.$iFort
-	done
 
     fi
 }
@@ -2039,7 +2047,7 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	fi
 	# required not only by boinc, but also by chroma/beta jobs
 	for iFort in ${iForts} ; do
-	    gunzip -c $sixtrack_input/fort.${iFort}_$iMad.gz > $sixtrack_input/fort.${iFort}_$iMad
+	    gunzip -c $sixtrack_input/fort.${iFort}_$iMad.gz > $sixtrack_input/fort.${iFort}
 	done
     fi
 
@@ -2138,7 +2146,7 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	fi
 	# required not only by boinc, but also by chroma/beta jobs
 	for iFort in ${iForts} ; do
-	    rm -f $sixtrack_input/fort.${iFort}_$iMad
+	    rm -f $sixtrack_input/fort.${iFort}
 	done
     fi	    
 done
