@@ -957,34 +957,44 @@ function checkDirAlreadyRun(){
 
 function dot_bsub(){
 
+    # temporary variables
+    local __iCountMax=10
+    local __lerr=0
+    local __delay=3
+    local __taskno=""
+
     touch $RundirFullPath/JOB_NOT_YET_STARTED
     
     # clean, in case
     dot_clean
     
     # actually submit
-    bsub -q $lsfq $sixdeskM -o $RundirFullPath/$Runnam.log < $RundirFullPath/$Runnam.job > tmp 2>&1
+    multipleTrials "bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job > tmp 2>&1 ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]" ${__iCountMax} ${__delay}
+    let __lerr+=$?
 
     # verify that submission was successfull
-    if  [ $? -eq 0 ] ; then
-	local __taskno=`tail -1 tmp | sed -e's/Job <\([0-9]*\)> is submitted to queue.*/\1/'`
-	if [ "$__taskno" == "" ] ; then
-	    sixdeskmess="bsub did NOT return a taskno !!!"
+    if  [ ${__lerr} -eq 0 ] ; then
+	multipleTrials "__taskno=`tail -1 tmp | sed -e's/Job <\([0-9]*\)> is submitted to queue.*/\1/'`" "[ \"\$__taskno\" != \"\" ]"  ${__iCountMax} ${__delay}
+	let __lerr+=$?
+	if [ $__lerr -eq 0 ] ; then
+	    local __taskid=lsf$__taskno
+	else
+	    sixdeskmess="bsub did NOT return a taskno for ${__iCountMax} times !!! - going to next WU!"
 	    sixdeskmess
-	    exit
 	fi
-	local __taskid=lsf$__taskno
     else
 	rm -f $RundirFullPath/JOB_NOT_YET_STARTED 
-	sixdeskmess="bsub of $RundirFullPath/$Runnam.job to Queue ${lsfq} failed !!!"
+	sixdeskmess="bsub of $RundirFullPath/$Runnam.job to Queue ${lsfq} failed for ${__iCountMax} times !!! - going to next WU!"
 	sixdeskmess
-	exit
     fi
 
-    # keep track of the $Runnam-taskid couple
-    updateTaskIdsCases $sixdeskjobs/jobs $sixdeskjobs/incomplete_jobs $__taskid
-    rm -f tmp
-    
+    if [ ${__lerr} -eq 0 ] ; then
+        # keep track of the $Runnam-taskid couple
+	updateTaskIdsCases $sixdeskjobs/jobs $sixdeskjobs/incomplete_jobs $__taskid
+	rm -f tmp
+    fi
+
+    return $__lerr
 }
 
 function dot_task(){
@@ -1008,11 +1018,11 @@ function dot_boinc(){
     sixdeskGetTaskIDfromWorkUnitName $workunitname
     if ! ${lmegazip} ; then
 
-	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work ; local __exit_status=$?" "[ $__exit_status -eq 0 ]" ${__iCountMax} ${__delay}
+	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]" ${__iCountMax} ${__delay}
 	if [ $? -ne 0 ] ; then
 	    sixdeskmess="failed to submit boinc job ${__iCountMax} times!!!"
 	    sixdeskmess
-	    exit 10
+	    exit ${__iCountMax}
 	fi
 
         # the job has just started
@@ -2238,7 +2248,7 @@ if ${lmegazip} ; then
     if ${lsubmit} ; then
 	sixdeskmess="submitting megaZip file ${__megaZipFileName}"
 	sixdeskmess
-	multipleTrials "cp ${megaZipName} ${megaZipPath} ; local __exit_status=$?" "[ $__exit_status -eq 0 ]" 10 3
+	multipleTrials "cp ${megaZipName} ${megaZipPath} ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]" 10 3
 	if [ $? -ne 0 ] ; then
 	    sixdeskmess="failed to submit ${megaZipName} 10 times!!!"
 	    sixdeskmess
