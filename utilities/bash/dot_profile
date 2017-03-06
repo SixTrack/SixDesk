@@ -1103,7 +1103,6 @@ function multipleTrials(){
     local __iCountMax=$3
     local __delay=$4
     local __errMess=$5
-    echo "err mess: $__errMess"
 
     # initialise cycle
     local __iCount=1

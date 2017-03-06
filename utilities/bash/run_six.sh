@@ -994,6 +994,8 @@ function dot_task(){
 function dot_boinc(){
 
     local __taskid
+    local __iCountMax=10
+    local __delay=5
     
     touch $RundirFullPath/JOB_NOT_YET_STARTED
 
@@ -1005,21 +1007,12 @@ function dot_boinc(){
     sixdeskGetFileName "${descFileNames}" workunitname
     sixdeskGetTaskIDfromWorkUnitName $workunitname
     if ! ${lmegazip} ; then
-	gotit=false
-	for (( mytries=1 ; mytries<=10; mytries++ )) ; do
-	    cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work
-	    if [ $? -ne 0 ] ; then
-		sixdeskmess="Failing to upload .desc/.zip files - trial $mytries!!!"
-		sixdeskmess
-	    else
-		gotit=true
-		break
-	    fi
-	done 
-	if ! ${gotit} ; then
-	    sixdeskmess="failed to submit boinc job ${mytries} times!!!"
+
+	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work ; local __exit_status=$?" "[ $__exit_status -eq 0 ]" ${__iCountMax} ${__delay}
+	if [ $? -ne 0 ] ; then
+	    sixdeskmess="failed to submit boinc job ${__iCountMax} times!!!"
 	    sixdeskmess
-	    exit
+	    exit 10
 	fi
 
         # the job has just started
@@ -2245,21 +2238,11 @@ if ${lmegazip} ; then
     if ${lsubmit} ; then
 	sixdeskmess="submitting megaZip file ${__megaZipFileName}"
 	sixdeskmess
-	gotit=false
-	for (( mytries=1 ; mytries<=10; mytries++ )) ; do
-	    cp ${megaZipName} ${megaZipPath}
-	    if [ $? -ne 0 ] ; then
-		sixdeskmess="Failing to move ${megaZipName} to ${megaZipPath} - trial ${mytries}!!!"
-		sixdeskmess
-	    else
-		gotit=true
-		break
-	    fi
-	done 
-	if ! ${gotit} ; then
-	    sixdeskmess="failed to submit ${megaZipName} ${mytries} times!!!"
+	multipleTrials "cp ${megaZipName} ${megaZipPath} ; local __exit_status=$?" "[ $__exit_status -eq 0 ]" 10 3
+	if [ $? -ne 0 ] ; then
+	    sixdeskmess="failed to submit ${megaZipName} 10 times!!!"
 	    sixdeskmess
-	    exit ${mytries}
+	    exit 10
 	fi
 	tmpZipFiles=`cat ${sixdeskjobs_logs}/megaZipList.txt | grep 'zip$'`
 	tmpZipFiles=( ${tmpZipFiles} )
