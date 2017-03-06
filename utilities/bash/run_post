@@ -1,0 +1,344 @@
+#!/bin/bash
+#***************************************************************************
+#
+# Process final SixTrack output fort.10
+#
+#***************************************************************************
+#
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to scripts (normalised)
+if [ -z "${SCRIPTDIR}" ] ; then
+    SCRIPTDIR=`dirname $0`
+    SCRIPTDIR="`cd ${SCRIPTDIR};pwd`"
+    export SCRIPTDIR=`dirname ${SCRIPTDIR}`
+fi
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/bash/dot_env
+#
+
+###set -x 
+
+# Is rather slow with iplot and kvar=1 (can look at this later)
+# Now we can run multiple run_post on different studies in the same workspace.
+# using the study private plot/study directory
+PLOT=$sixdeskhome/plot
+PLOTHOME=$PLOT/$LHCDescrip
+mkdir -p $PLOTHOME
+mkdir -p $PLOTHOME/inc
+cd $PLOTHOME
+
+#MACRO mymess 0 Running on `hostname` using directory $plottmp
+sixdeskmesslevel=0
+sixdeskmess="Running on `hostname` using directory $plottmp"
+sixdeskmess
+#MACRO mymess
+
+# Locks study (as does join10)
+
+#MACRO mylock $sixdeskhome/plot
+###sixdesklockdir=$sixdeskhome/plot
+###sixdesklock
+#MACRO mylock
+
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+end=""
+#
+# iplot and kvar are inherited from sixdeskenv
+#
+# Amplitude range for plotting
+#
+
+#MACRO myamps
+sixdeskamps
+#MACRO myamps
+
+fns1l=`gawk 'END{fnn='$ampstart'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
+fns1l=`echo $fns1l | sed -e's/0*$//'`
+fns1l=`echo $fns1l | sed -e's/\.$//'`
+fns2l=`gawk 'END{fnn='$ampfinish'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
+fns2l=`echo $fns2l | sed -e's/0*$//'`
+fns2l=`echo $fns2l | sed -e's/\.$//'`
+a0=$fns1l
+a1=$fns2l
+#
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# End of Input
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#
+cremona=0
+myTaylorOrder=4
+blah=
+if [ $short -eq 1 ] ;then
+  if [ $cremona -eq 1 ] ;then
+    mode=cremona$myTaylorOrder
+  else
+    mode=trans
+  fi
+  mo=t
+  kini=1
+  jtest=0
+  Ampl="$ns1s"_"$ns2s"
+fi
+if [ $long -eq 1 ] ;then
+  if [ $cremona -eq 1 ] ;then
+    mode=cremona$myTaylorOrder
+    mo=c
+  else
+    mode=simul
+    mo=s
+  fi
+  Ampl=$fns1l"-"$fns2l
+  if [ -z "$Ampl" ] ;then
+
+#MACRO mymess 0 Define Ampl for longterm postprocessing ...!!!
+    sixdeskmesslevel=0
+    sixdeskmess="Define Ampl for longterm postprocessing ...!!!"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskstudy
+    sixdesklockdir=$sixdeskstudy
+    sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskhome/plot
+###    sixdesklockdir=$sixdeskhome/plot
+###    sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 1
+    sixdeskexitparam=1
+    sixdeskexit
+#MACRO myexit
+
+  fi
+  kini=$kinil
+  kend=$kendl
+  jtest=1
+fi
+if [ -s "$sixdesktrack/$LHCDesHome/general_input" ];then
+  elhc=`awk '{print $1}' $sixdesktrack/$LHCDesHome/general_input`
+  einj=`awk '{print $2}' $sixdesktrack/$LHCDesHome/general_input`
+elif [ -s "general_input" ];then
+  elhc=`awk '{print $1}' general_input`
+  einj=`awk '{print $2}' general_input`
+else
+
+#MACRO mymess 0 No general_input file: Run stopped!!!
+  sixdeskmesslevel=0
+  sixdeskmess="No general_input file: Run stopped!!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskstudy
+  sixdesklockdir=$sixdeskstudy
+  sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskhome/plot
+###  sixdesklockdir=$sixdeskhome/plot
+###  sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 2
+  sixdeskexitparam=2
+  sixdeskexit
+#MACRO myexit
+
+fi
+#
+# and first copy minmax.awk (forgotten)
+cp $sixdeskhome/plot/inc/minmax.awk inc
+# and also .sty just in case....seem not to be needed....
+cp $sixdeskhome/plot/inc/*.sty inc
+sed -e 's/%a0/'$a0'/g' \
+    -e 's/%a1/'$a1'/g' $sixdeskhome/plot/inc/distance.mask  > inc/distance.save
+sed -e 's/%a0/'$a0'/g' \
+    -e 's/%a1/'$a1'/g' $sixdeskhome/plot/inc/maxslope.mask  > inc/maxslope.save 
+sed -e 's/%a0/'$a0'/g' \
+    -e 's/%a1/'$a1'/g' $sixdeskhome/plot/inc/survival.mask  > inc/survival.save
+sed -e 's/%a0/'$a0'/g' \
+    -e 's/%a1/'$a1'/g' $sixdeskhome/plot/inc/smear.mask     > inc/smear.save
+sed -e 's/%a0/'$a0'/g' \
+    -e 's/%a1/'$a1'/g' $sixdeskhome/plot/inc/averem.mask    > inc/averem.save
+sed -e 's/%a0/'$a0'/g' \
+    -e 's/%a1/'$a1'/g' $sixdeskhome/plot/inc/kvar.mask      > inc/kvar.save
+#
+echo "$a0 $a0" > linear
+echo "$a1 $a1" >> linear
+cat $sixdeskhome/plot/inc/test1 > test.tex
+if [ "$short" -eq 1 ] 
+then cat $sixdeskhome/plot/inc/test2 >> test.tex 
+fi
+if [ "$long" -eq 1 ] 
+then cat $sixdeskhome/plot/inc/test3 >> test.tex 
+fi
+#
+if [ "$kvar" -eq 1 ] 
+then cat $sixdeskhome/plot/inc/test4 >> test.tex 
+fi
+cat $sixdeskhome/plot/inc/test5 >> test.tex 
+# and also get the "missing" .save from .mask
+cp $sixdeskhome/plot/inc/beamweb.mask inc/beamweb.save
+cp $sixdeskhome/plot/inc/detuning.mask inc/detuning.save
+cp $sixdeskhome/plot/inc/detuningh.mask inc/detuningh.save
+cp $sixdeskhome/plot/inc/detuningv.mask inc/detuningv.save
+cp $sixdeskhome/plot/inc/tunedp.mask inc/tunedp.save
+# and fix the tunes for Frank!
+xrangelo=`gawk 'END{xrangelo='$tunex'-.02;print xrangelo}' /dev/null`
+xrangehi=`gawk 'END{xrangehi='$tunex1'+.02;print xrangehi}' /dev/null`
+yrangelo=`gawk 'END{yrangelo='$tuney'-.02;print yrangelo}' /dev/null`
+yrangehi=`gawk 'END{yrangehi='$tuney1'+.02;print yrangehi}' /dev/null`
+#
+sed -e 's/%xrangelo/'$xrangelo'/g' \
+    -e 's/%xrangehi/'$xrangehi'/g' \
+    -e 's/%yrangelo/'$yrangelo'/g' \
+    -e 's/%yrangehi/'$yrangehi'/g' \
+$sixdeskhome/plot/inc/web.mask > inc/web.save
+# and hit the loop
+
+#MACRO mytunes
+sixdesktunes
+#MACRO mytunes
+
+rm -f fort.17
+rm -f fort.31
+itunexx=$itunex
+ituneyy=$ituney
+while test "$itunexx" -le "$itunex1" -a "$ituneyy" -le "$ituney1"
+do
+  # returns sixdesktunes and tunexx/tuneyy, computed from itunexx/ituneyy,
+   #    using xlen/ylen
+   sixdeskPrepareTunes
+   export $sixdesktunes
+   echo "Processing tunes $sixdesktunes"
+   j=$kini
+   while [ $j -le $kend ] ;do
+     if [ $jtest -eq 1 ] ;then
+       end=.$j
+     else
+       end=.$kini
+     fi
+     if [ "$cremona" -eq 1 ]
+       then rm -f DAres.${LHCDesName}c.${sixdesktunes}.${myTaylorOrder}$blah.$j
+       else rm -f DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j
+     fi
+     i=$ista
+     while [ $i -le $iend ] ;do
+
+#MACRO mymess 0 Qx $tunexx Qy $tuneyy angle $j seed $i
+       sixdeskmesslevel=0
+       sixdeskmess="Qx $tunexx Qy $tuneyy angle $j seed $i"
+       sixdeskmess
+#MACRO mymess
+ 
+       dir=$LHCDesHome/$i/$mode/$sixdesktunes/$Ampl/e$turnse/$end
+       Runnam=$LHCDesName${i}$mo$sixdesktunes$Ampl$turnse$end
+       dir1=$sixdesktrack/$dir
+       file=$dir1/fort.10.gz
+       if [ ! -s $file ] ;then
+
+#MACRO mymess 0 File: 
+         sixdeskmesslevel=0
+         sixdeskmess="File:  $file does not exist, case skipped"
+         sixdeskmess
+#MACRO mymess
+         echo "No_fort10" >> DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j
+       else
+         echo "file: " $dir " okay, analysis started"
+# debug
+#        echo "DOLLARDIR:  $dir "
+#        echo "DOLLARFILE:  $file "
+#        ls -l fort.30
+# debug
+         if [ -s "$file" -a "$long" -eq 1 ] ;then
+           gzip -cd $file > fort.10
+           echo "$elhc $einj backslashn $Runnam" | sed -e's/backslashn/\n/' | $sixdeskhome/bin/read10b
+# debug
+#          echo "FORT30?"
+#          ls -l fort.30
+           echo "$dir" >> fort.31
+           cat fort.30 >> fort.31
+# debug
+#        echo "FORT17: `ls -l fort.17`"
+           if [ "$cremona" -eq 1 ] ;then
+             cat fort.17 >> DAres.${LHCDesName}c.${sixdesktunes}.${myTaylorOrder}$blah.$j
+           else 
+             cat fort.17 >> DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j
+           fi
+           $sixdeskhome/plot/inc/plot_dyb $file $dir1 $iplot $short $long $kvar $sixdesktrack/$LHCDesHome
+### Moved the following code to plot_dyb BEFORE the rm
+###        if [ "$iplot" -gt 0 ] ;then
+#debug
+###          ls -l fort.30
+###          echo "DIR $dir"
+###          echo "FILE $file"
+#debug
+###          cp fort.30 $dir
+###          gzip -f $dir/fort.30
+###          cp $file ../$dir
+#debug
+###        fi
+         else
+# Presumably a "short" study
+           $sixdeskhome/plot/inc/plot_dyb $file $dir1 $iplot $short $long $kvar $sixdesktrack/$LHCDesHome
+         fi
+       fi
+       ((i=i+1))
+     done
+     ((j=j+$kstep))
+  done
+  rm -f fort.10 fort.17 fort.30 fort.31
+  itunexx=`expr $itunexx + $ideltax`
+  ituneyy=`expr $ituneyy + $ideltay`
+done
+### Moved rm to do it for each and every tune
+###rm -f fort.10 fort.17 fort.30 fort.31
+if test "$long" -eq 1
+then
+  mv DAres* $sixdeskhome
+fi
+cd $sixdeskhome
+###rm $PLOTHOME/linear
+###rm $PLOTHOME/test.tex
+rm -r $PLOTHOME/inc
+
+#MACRO mymess 0 Completed normally
+sixdeskmesslevel=0
+sixdeskmess="Completed normally"
+sixdeskmess
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskhome/plot
+###sixdesklockdir=$sixdeskhome/plot
+###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

@@ -1,3 +1,0 @@
-#!/bin/sh
-# Just executes exec_env
-./exec_env ./sixdeskenv ./sysenv

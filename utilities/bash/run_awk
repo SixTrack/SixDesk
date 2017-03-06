@@ -1,0 +1,98 @@
+#!/bin/bash
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to scripts (normalised)
+if [ -z "${SCRIPTDIR}" ] ; then
+    SCRIPTDIR=`dirname $0`
+    SCRIPTDIR="`cd ${SCRIPTDIR};pwd`"
+    export SCRIPTDIR=`dirname ${SCRIPTDIR}`
+fi
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/bash/dot_env
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+
+#MACRO mymess 0 Study $LHCDescrip
+sixdeskmesslevel=0
+sixdeskmess="Study $LHCDescrip"
+sixdeskmess
+#MACRO mymess
+
+
+#MACRO mytunes
+sixdesktunes
+#MACRO mytunes
+
+itunexx=$itunex
+ituneyy=$ituney
+while test "$itunexx" -le "$itunex1" -a "$ituneyy" -le "$ituney1"
+do
+  # returns sixdesktunes and tunexx/tuneyy, computed from itunexx/ituneyy,
+  # returns tunexx/tuneyy, computed from itunexx/ituneyy,
+  #    using xlen/ylen
+  sixdeskPrepareTunes
+  echo ""
+  echo ""
+  echo ""
+
+#MACRO mymess 0 Processing tunes $sixdesktunes
+  sixdeskmesslevel=0
+  sixdeskmess="Processing tunes $sixdesktunes"
+  sixdeskmess
+#MACRO mymess
+
+  rm -f DAres.${LHCDesName}.${sixdesktunes}.${turnse}.plot
+  touch DAres.${LHCDesName}.${sixdesktunes}.${turnse}.plot
+  j=$kinil
+
+#MACRO mymess 0 Processing angles $kinil to $kendl by $kstep
+  sixdeskmesslevel=0
+  sixdeskmess="Processing angles $kinil to $kendl by $kstep"
+  sixdeskmess
+#MACRO mymess
+
+  while test "$j" -le "$kendl"
+  do 
+
+#MACRO mymess 0 DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j
+    sixdeskmesslevel=0
+    sixdeskmess="DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
+    sixdeskmess
+#MACRO mymess
+
+    if test -s "DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
+    then
+      awk -f ${SCRIPTDIR}/awk/minav.awk "DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
+    else
+
+#MACRO mymess 0 Skipping Angle $j; DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j missing or empty
+      sixdeskmesslevel=0
+      sixdeskmess="Skipping Angle $j; DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j missing or empty"
+      sixdeskmess
+#MACRO mymess
+
+    fi
+    ((j=j+$kstep))
+  done
+  itunexx=`expr $itunexx + $ideltax`
+  ituneyy=`expr $ituneyy + $ideltay`
+done
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

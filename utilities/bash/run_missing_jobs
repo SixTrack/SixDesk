@@ -1,0 +1,136 @@
+#!/bin/bash
+#
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to scripts (normalised)
+if [ -z "${SCRIPTDIR}" ] ; then
+    SCRIPTDIR=`dirname $0`
+    SCRIPTDIR="`cd ${SCRIPTDIR};pwd`"
+    export SCRIPTDIR=`dirname ${SCRIPTDIR}`
+fi
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/bash/dot_env
+if test $sixdeskplatform != "lsf"
+then
+
+#MACRO mymess 0 run_missing_jobs can be used only with LSF !!!
+  sixdeskmesslevel=0
+  sixdeskmess="run_missing_jobs can be used only with LSF !!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 0
+  sixdeskexitparam=0
+  sixdeskexit
+#MACRO myexit
+
+fi
+if test ! -s "$sixdeskjobs/missing_jobs"
+then
+
+#MACRO mymess 0 The file $sixdeskjobs/missing_jobs is empty!!!
+  sixdeskmesslevel=0
+  sixdeskmess="The file $sixdeskjobs/missing_jobs is empty!!!"
+  sixdeskmess
+#MACRO mymess
+
+
+#MACRO myexit 0
+  sixdeskexitparam=0
+  sixdeskexit
+#MACRO myexit
+
+fi
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+
+#MACRO mylock $sixdeskjobs_logs
+###sixdesklockdir=$sixdeskjobs_logs
+###sixdesklock
+#MACRO mylock
+
+while read Runnam
+do
+  sixdeskRunnam=$Runnam
+
+#MACRO myrundir $sixdeskRunnam sixdeskRundir
+  runnamename=$sixdeskRunnam
+  sixdeskrundir
+  sixdeskRundir=$rundirname
+#MACRO myrundir
+
+  if test ! -d $sixdesktrack/$sixdeskRundir \
+      -o  ! -s $sixdesktrack/$sixdeskRundir/fort.2.gz \
+      -o  ! -s $sixdesktrack/$sixdeskRundir/fort.3.gz \
+      -o  ! -s $sixdesktrack/$sixdeskRundir/fort.8.gz \
+      -o  ! -s $sixdesktrack/$sixdeskRundir/fort.16.gz
+  then
+
+#MACRO mymess 0 Skipping $sixdeskRunnam sixdeskRundir because of missing files!!!
+    sixdeskmesslevel=0
+    sixdeskmess="Skipping $sixdeskRunnam sixdeskRundir because of missing files!!!"
+    sixdeskmess
+#MACRO mymess
+
+
+#MACRO mymess 0 Run check_missing_jobs for details
+    sixdeskmesslevel=0
+    sixdeskmess="Run check_missing_jobs for details"
+    sixdeskmess
+#MACRO mymess
+
+  else
+
+#MACRO mymktmp tmp 
+    sixdesktmpname=tmp
+    sixdesktmpdirarg=
+    sixdeskmktmp
+    tmp=$sixdesktmp
+#MACRO mymktmp
+
+
+#MACRO mylock $sixdeskjobs
+###  sixdesklockdir=$sixdeskjobs
+###  sixdesklock
+#MACRO mylock
+
+    sed -e '/^'$Runnam'$/d' $sixdeskjobs/incomplete_jobs > $tmp
+    mv $tmp $sixdeskjobs/incomplete_jobs
+
+#MACRO myunlock $sixdeskjobs
+###  sixdesklockdir=$sixdeskjobs
+###  sixdeskunlock
+#MACRO myunlock
+
+    cp $sixdesktrack/$sixdeskRundir/$sixdeskRunnam.lsf $sixdeskjobs_logs
+    sixdeskforce=2
+    source ${SCRIPTDIR}/bash/dot_bsub
+  fi
+done < $sixdeskjobs/missing_jobs
+rm -f $sixdeskjobs/missing_jobs
+
+#MACRO myunlock $sixdeskjobs_logs
+###sixdesklockdir=$sixdeskjobs_logs
+###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

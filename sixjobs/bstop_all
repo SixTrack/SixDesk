@@ -1,2 +1,0 @@
-#!/bin/sh
-bstop -a -u $LOGNAME
