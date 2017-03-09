@@ -171,7 +171,7 @@ function check(){
 	sixdeskmess
 	sixdeskmess="If these messages are annoying you and you have checked them carefully then"
 	sixdeskmess
-	sixdeskmess="just remove sixtrack_input/ERRORS or rm sixtrack_input/* and rerun `basname $0` -s!"
+	sixdeskmess="just remove sixtrack_input/ERRORS or rm sixtrack_input/* and rerun `basename $0` -s!"
 	sixdeskmess
 	echo "ERRORS"
 	cat $sixtrack_input/ERRORS
