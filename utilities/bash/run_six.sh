@@ -907,21 +907,17 @@ function checkDirReadyForSubmission(){
 	# - there should be only 1 .desc/.zip files
 	fileNames=""
 	for extension in .desc .zip ; do
-	    tmpFileNames=`ls -1 $RundirFullPath/*${extension} 2> /dev/null`
-	    if [ -z "${tmpFileNames}" ] ; then
+	    tmpFileName=`ls -1tr $RundirFullPath/*${extension} 2> /dev/null | tail -1`
+	    tmpPath="${tmpFileName%/*}"
+	    tmpFileName="${tmpFileName#$tmpPath/*}"
+	    tmpFileName="${tmpFileName%$extension}"
+	    if [ -z "${tmpFileName}" ] ; then
 		sixdeskmess="no ${extension} file in $RundirFullPath!!!"
 		sixdeskmess
 		let __lerr+=1
 	    else
-		nFiles=`echo "${tmpFileNames}" 2> /dev/null | wc -l`
-		if [ $nFiles -gt 1 ] ; then
-		    sixdeskmess="found ${nFiles} ${extension} files in $RundirFullPath (expected 1)!"
-		    sixdeskmess
-		    let __lerr+=1
-		else
-		    sixdeskGetFileName "${tmpFileNames}" tmpName
-		    fileNames="${fileNames} ${tmpName}"
-		fi
+		sixdeskGetFileName "${tmpFileName}" tmpName
+		fileNames="${fileNames} ${tmpName}"
 	    fi
 	done
 	fileNames=( ${fileNames} )
