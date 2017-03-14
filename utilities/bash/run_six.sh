@@ -969,19 +969,21 @@ function dot_bsub(){
     dot_clean
     
     # actually submit
-    multipleTrials "bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job > tmp 2>&1 ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]" ${__iCountMax} ${__delay}
+    multipleTrials "tmpLines=`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job 2>&1` ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]" ${__iCountMax} ${__delay}
     let __lerr+=$?
 
     # verify that submission was successfull
     if  [ ${__lerr} -eq 0 ] ; then
-	multipleTrials "__taskno=`tail -1 tmp | sed -e's/Job <\([0-9]*\)> is submitted to queue.*/\1/'`" "[ \"\$__taskno\" != \"\" ]"  ${__iCountMax} ${__delay}
-	let __lerr+=$?
-	if [ $__lerr -eq 0 ] ; then
-	    local __taskid=lsf$__taskno
+	# typical message returned by bsub:
+	#   Job <864248893> is submitted to queue <8nm>.
+	local __taskno=`echo "${tmpLines}" | grep submitted | cut -d\< -f2 | cut -d\> -f1`
+	if [ "${__taskno}" != "" ] ; then
+	    local __taskid="lsf${__taskno}"
+	    sixdeskmess="`echo "${tmpLines}" | grep submitted`"
 	else
 	    sixdeskmess="bsub did NOT return a taskno for ${__iCountMax} times !!! - going to next WU!"
-	    sixdeskmess
 	fi
+	sixdeskmess
     else
 	rm -f $RundirFullPath/JOB_NOT_YET_STARTED 
 	sixdeskmess="bsub of $RundirFullPath/$Runnam.job to Queue ${lsfq} failed for ${__iCountMax} times !!! - going to next WU!"
