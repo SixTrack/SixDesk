@@ -318,6 +318,7 @@ else
 fi
 
 # - fs listquota
+echo ""
 sixdeskmess=" --> fs listquota:"
 sixdeskmess
 tmpLines=`fs listquota`

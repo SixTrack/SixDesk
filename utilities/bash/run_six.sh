@@ -967,7 +967,7 @@ function dot_bsub(){
     dot_clean
     
     # actually submit
-    multipleTrials "tmpLines=`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job 2>&1` ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]"
+    multipleTrials "tmpLines=\"`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job 2>&1`\" ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]"
     let __lerr+=$?
 
     # verify that submission was successfull
@@ -1583,19 +1583,19 @@ function treatDA(){
 
 function printSummary(){
     if ${lfix} ; then
-	sixdeskmess="Successfully fixed ${NsuccessFix} dirs!"
+	sixdeskmess="${NsuccessFix} dirs fixed!"
 	sixdeskmess
     fi
     if ${lgenerate} ; then
-	sixdeskmess="Successfully generated ${NsuccessGen} dirs!"
+	sixdeskmess="${NsuccessGen} dirs generated!"
 	sixdeskmess
     fi
     if ${lcheck} ; then
-	sixdeskmess="Successfully checked ${NsuccessChk} dirs!"
+	sixdeskmess="${NsuccessChk} dirs checked!"
 	sixdeskmess
     fi
     if ${lsubmit} ; then
-	sixdeskmess="Successfully submitted ${NsuccessSub} jobs!"
+	sixdeskmess="${NsuccessSub} jobs submitted!"
 	sixdeskmess
     fi
     if ${lstatus} ; then

@@ -106,10 +106,17 @@ function submit(){
 
     # Loop over seeds
     mad6tjob=$lsfFilesPath/mad6t1.lsf
+    local __lfirst=true
+    local __lsecond=false
     for (( iMad=$istamad ; iMad<=$iendmad ; iMad++ )) ; do
 	
 	# clean away any existing results for this seed
 	echo " MadX seed: $iMad"
+	if ${__lsecond} ; then
+	    sixdeskmess="Sleeping ${__delay} seconds"
+	    sixdeskmess
+	    sleep ${__delay}
+	fi
 	for f in 2 8 16 34 ; do
 	    rm -f $sixtrack_input/fort.$f"_"$iMad.gz
 	done
@@ -128,12 +135,6 @@ function submit(){
 	    -e 's?%SIXTRACK_INPUT%?'$sixtrack_input'?g' $mad6tjob > mad6t_"$iMad".lsf
 	chmod 755 mad6t_"$iMad".lsf
 
-	if [ ${iMad} -eq 2 ]; then
-            sixdeskmess="Sleeping ${__delay} seconds"
-            sixdeskmess
-	    sleep ${__delay}
-	fi
-	
 	if ${linter} ; then
 	    sixdeskmktmpdir batch ""
 	    cd $sixdesktmpdir
@@ -144,6 +145,12 @@ function submit(){
 	    bsub -q $madlsfq -o $junktmp/"${LHCDescrip}_mad6t_$iMad".log -J ${workspace}_${LHCDescrip}_mad6t_$iMad mad6t_"$iMad".lsf
 	fi
 	mad6tjob=$lsfFilesPath/mad6t.lsf
+	if ${__lfirst} ; then
+	    __lfirst=false
+	    __lsecond=true
+	elif ${__lsecond} ; then
+	    __lsecond=false
+	fi
     done
 
     # End loop over seeds

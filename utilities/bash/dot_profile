@@ -1112,6 +1112,7 @@ function multipleTrials(){
     else
 	local __iCountMax=10
     fi
+    local __lsuccess=false
 
     # initialise cycle
     local __iCount=1
@@ -1159,7 +1160,7 @@ function multipleTrials(){
 	fi
 	sixdeskmess
 	sixdeskSendNotifMail ${__emailSubj}
-    else
+    elif ${__lsuccess}; then
 	sixdeskmess="success!"
 	sixdeskmess
     fi
