@@ -723,7 +723,7 @@ sixdeskDefinePointTree(){
     local __delay=3
 
     # -- Runnam
-    multipleTrials "Runnam=${1}%${2}%${3}%${4}%${5}%${6}%${7}; sixdeskSanitizeString \"\${Runnam}\" Runnam" "[ -n \"\${Runnam}\" ]" ${__iCountMax} ${__delay}
+    multipleTrials "Runnam=${1}%${2}%${3}%${4}%${5}%${6}%${7}; sixdeskSanitizeString \"\${Runnam}\" Runnam" "[ -n \"\${Runnam}\" ]"
     let __lerr+=$?
 
     # -- Rundir
@@ -732,9 +732,9 @@ sixdeskDefinePointTree(){
     else
 	runnamename="${1}%${2}%${3}%${4}%${5}%e${6}%${7}"
     fi
-    multipleTrials "sixdeskrundir false; Rundir=\${rundirname}; sixdeskSanitizeString \"\${Rundir}\" Rundir" "[ -n \"\${Rundir}\" ]" ${__iCountMax} ${__delay}
+    multipleTrials "sixdeskrundir false; Rundir=\${rundirname}; sixdeskSanitizeString \"\${Rundir}\" Rundir" "[ -n \"\${Rundir}\" ]"
     let __lerr+=$?
-    multipleTrials "RundirFullPath=$9/$Rundir ; sixdeskSanitizeString \"\${RundirFullPath}\" RundirFullPath" "[ -n \"\${RundirFullPath}\" ]" ${__iCountMax} ${__delay}
+    multipleTrials "RundirFullPath=$9/$Rundir ; sixdeskSanitizeString \"\${RundirFullPath}\" RundirFullPath" "[ -n \"\${RundirFullPath}\" ]"
     let __lerr+=$?
 
     # -- actualDirName
@@ -743,9 +743,9 @@ sixdeskDefinePointTree(){
     else
 	runnamename="${1}%${2}%${3}%${4}%${5}%e${6}%.${8}"
     fi
-    multipleTrials "sixdeskrundir false; actualDirName=\${rundirname}; sixdeskSanitizeString \"\${actualDirName}\" actualDirName" "[ -n \"\${actualDirName}\" ]" ${__iCountMax} ${__delay}
+    multipleTrials "sixdeskrundir false; actualDirName=\${rundirname}; sixdeskSanitizeString \"\${actualDirName}\" actualDirName" "[ -n \"\${actualDirName}\" ]"
     let __lerr+=$?
-    multipleTrials "actualDirNameFullPath=$9/$actualDirName ; sixdeskSanitizeString \"\${actualDirNameFullPath}\" actualDirNameFullPath" "[ -n \"\${actualDirNameFullPath}\" ]" ${__iCountMax} ${__delay}
+    multipleTrials "actualDirNameFullPath=$9/$actualDirName ; sixdeskSanitizeString \"\${actualDirNameFullPath}\" actualDirNameFullPath" "[ -n \"\${actualDirNameFullPath}\" ]"
     let __lerr+=$?
 
     return $__lerr
@@ -1100,9 +1100,19 @@ function sixdeskEchoEnvVars(){
 function multipleTrials(){
     local __command="$1"
     local __test="$2"
-    local __iCountMax=$3
-    local __delay=$4
-    local __errMess=$5
+    if [ $# -ge 3 ] ; then
+	local __errMess=$3
+    fi
+    if [ $# -ge 4 ] ; then
+	local __delay=$4
+    else
+	local __delay=3
+    fi
+    if [ $# -ge 5 ] ; then
+	local __iCountMax=$5
+    else
+	local __iCountMax=10
+    fi
 
     # initialise cycle
     local __iCount=1

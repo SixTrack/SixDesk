@@ -958,9 +958,7 @@ function checkDirAlreadyRun(){
 function dot_bsub(){
 
     # temporary variables
-    local __iCountMax=10
     local __lerr=0
-    local __delay=3
     local __taskno=""
 
     touch $RundirFullPath/JOB_NOT_YET_STARTED
@@ -969,7 +967,7 @@ function dot_bsub(){
     dot_clean
     
     # actually submit
-    multipleTrials "tmpLines=`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job 2>&1` ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]" ${__iCountMax} ${__delay}
+    multipleTrials "tmpLines=`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job 2>&1` ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]"
     let __lerr+=$?
 
     # verify that submission was successfull
@@ -986,7 +984,7 @@ function dot_bsub(){
 	sixdeskmess
     else
 	rm -f $RundirFullPath/JOB_NOT_YET_STARTED 
-	sixdeskmess="bsub of $RundirFullPath/$Runnam.job to Queue ${lsfq} failed for ${__iCountMax} times !!! - going to next WU!"
+	sixdeskmess="bsub of $RundirFullPath/$Runnam.job to Queue ${lsfq} failed !!! - going to next WU!"
 	sixdeskmess
     fi
 
@@ -1006,8 +1004,6 @@ function dot_task(){
 function dot_boinc(){
 
     local __taskid
-    local __iCountMax=10
-    local __delay=5
     
     touch $RundirFullPath/JOB_NOT_YET_STARTED
 
@@ -1020,9 +1016,9 @@ function dot_boinc(){
     sixdeskGetTaskIDfromWorkUnitName $workunitname
     if ! ${lmegazip} ; then
 
-	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]" ${__iCountMax} ${__delay}
+	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]"
 	if [ $? -ne 0 ] ; then
-	    sixdeskmess="failed to submit boinc job ${__iCountMax} times!!!"
+	    sixdeskmess="failed to submit boinc job!!!"
 	    sixdeskmess
 	    exit ${__iCountMax}
 	fi
@@ -2250,9 +2246,9 @@ if ${lmegazip} ; then
     if ${lsubmit} ; then
 	sixdeskmess="submitting megaZip file ${__megaZipFileName}"
 	sixdeskmess
-	multipleTrials "cp ${megaZipName} ${megaZipPath} ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]" 10 3
+	multipleTrials "cp ${megaZipName} ${megaZipPath} ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]"
 	if [ $? -ne 0 ] ; then
-	    sixdeskmess="failed to submit ${megaZipName} 10 times!!!"
+	    sixdeskmess="failed to submit ${megaZipName} !!!"
 	    sixdeskmess
 	    exit 10
 	fi
