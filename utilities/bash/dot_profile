@@ -637,20 +637,19 @@ sixdeskrundir()
 	local __lbackcomp=true
     fi
     if test "$BNL" = "" ; then
-	if ${__lbackcomp} ; then
-	    rundirname1=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/e\6/?'`
-	else
-	    rundirname1=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/\6/?'`
-	fi
-	rundirname2=`echo $rundirname1 | sed -e's?/s/?/simul/?'`
-	rundirname3=`echo $rundirname2 | sed -e's?/t/?/trans/?'`
-	rundirname4=`echo $rundirname3 | sed -e's?/m/?/momen/?'`
-	rundirname5=`echo $rundirname4 | sed -e's?/d/?/da/?'`
+	rundirname5=`echo "$runnamename" | awk -v "lbackcomp=${__lbackcomp}" '
+             BEGIN{FS="%"; OFS="/";}{
+                  if ( lbackcomp=="true" ) {$6="e"$6}
+                  if      ( $3=="s" ) {$3="simul"}
+                  else if ( $3=="t" ) {$3="trans"}
+                  else if ( $3=="m" ) {$3="momen"}
+                  else if ( $3=="d" ) {$3="da"}
+                  print}'`
     else
-	rundirname5=`echo $runnamename | sed -e 's?%?\/?g'`
+	rundirname5=`echo "$runnamename" | awk 'BEGIN{FS="%"; OFS="/";}{$3=$3; print}'`
     fi
     # remove trailing slashes
-    rundirname=`echo ${rundirname5} | sed 's:/*$::'`
+    rundirname=`echo "${rundirname5}" | sed 's:/*$::'`
 }
 sixdeskDefineUserTree(){
     # define the tree in the userspace
