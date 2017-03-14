@@ -1695,20 +1695,6 @@ sixdeskmesslevel=$sixdeskmessleveldef
 # - temporary trap
 trap "sixdeskexit 1" EXIT
 
-# - kinit, to renew kerberos ticket
-sixdeskmess=" --> kinit -R beforehand:"
-sixdeskmess
-multipleTrials "kinit -R ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]"
-if [ $? -gt 0 ] ; then
-    sixdeskmess="--> kinit -R failed - AFS/Kerberos credentials expired??? aborting..."
-    sixdeskmess
-    exit
-else
-    sixdeskmess=" --> klist output:"
-    sixdeskmess
-    klist
-fi
-
 # - action-dependent stuff
 echo ""
 if ${lfix} ; then
