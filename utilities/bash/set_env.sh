@@ -317,3 +317,15 @@ else
     klist
 fi
 
+# - fs listquota
+sixdeskmess=" --> fs listquota:"
+sixdeskmess
+tmpLines=`fs listquota`
+echo "${tmpLines}"
+#   check, and in case raise a warning
+fraction=`echo "${tmpLines}" | tail -1 | awk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
+if [ ${fraction} -gt 90 ] ; then
+    sixdeskmess="WARNING: your quota is above 90%!! pay attention to occupancy of the current study, in case of submission..."
+    sixdeskmess
+fi
+
