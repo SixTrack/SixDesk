@@ -1608,9 +1608,12 @@ function printSummary(){
     else
 	sixdeskmess="Premature end."
 	sixdeskmess
-	if [ $1 -eq 9 ] ; then
+	if [ $1 -eq 11 ] ; then
 	    sixdeskEchoEnvVars /tmp/envs_SIGSEGV.txt
 	    sixdeskSendNotifMail "FATAL - SIGSEGV"
+	elif [ $1 -eq 8 ] ; then
+	    sixdeskEchoEnvVars /tmp/envs_SIGFPE.txt
+	    sixdeskSendNotifMail "FATAL - SIGFPE"
 	fi
     fi
 }
@@ -1876,8 +1879,9 @@ for tmpDir in ${lockingDirs[@]} ; do
 done
 
 # - actual traps
-trap "printSummary 1 ; sixdeskCleanExit 1" EXIT
-trap "printSummary 9 ; sixdeskCleanExit 1" SIGSEGV
+trap "printSummary  1 ; sixdeskCleanExit 1" EXIT SIGINT SIGQUIT
+trap "printSummary 11 ; sixdeskCleanExit 1" SIGSEGV
+trap "printSummary  8 ; sixdeskCleanExit 1" SIGFPE
 
 # - tunes
 echo ""
@@ -2359,8 +2363,9 @@ fi
 # ------------------------------------------------------------------------------
 
 # redefine traps
-trap "printSummary 0 ; sixdeskCleanExit 0" EXIT
+trap "printSummary 0 ; sixdeskCleanExit 0" EXIT SIGINT SIGQUIT
 trap "" SIGSEGV
+trap "" SIGFPE
 
 # echo that everything went fine
 echo ""
