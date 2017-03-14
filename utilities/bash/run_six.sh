@@ -763,6 +763,8 @@ function submitCreateFinalFort3DA(){
 }
 
 function submitCreateFinalInputs(){
+    local __lerr=0
+
     sixdeskmess="Taking care of SIXTRACK fort.2/fort.3/fort.8/fort.16 in $RundirFullPath"
     sixdeskmess
 
@@ -795,11 +797,13 @@ function submitCreateFinalInputs(){
 	sixdeskmess
 	# - return sixdeskTaskName and workunitName
 	sixdeskDefineWorkUnitName $workspace $Runnam $sixdesktaskid
-	# - generate zip file
-	#   NB: -j option, to store only the files, and not the source paths
-	zip -j $RundirFullPath/$workunitName.zip $RundirFullPath/fort.2 $RundirFullPath/fort.3 $RundirFullPath/fort.8 $RundirFullPath/fort.16 >/dev/null 2>&1
-	# - generate the workunit description file
-	cat > $RundirFullPath/$workunitName.desc <<EOF
+	let __lerr+=$?
+	if [ $__lerr -eq 0 ] ; then
+   	    # - generate zip file
+	    #   NB: -j option, to store only the files, and not the source paths
+	    zip -j $RundirFullPath/$workunitName.zip $RundirFullPath/fort.2 $RundirFullPath/fort.3 $RundirFullPath/fort.8 $RundirFullPath/fort.16 >/dev/null 2>&1
+	    # - generate the workunit description file
+	    cat > $RundirFullPath/$workunitName.desc <<EOF
 $workunitName
 $fpopsEstimate 
 $fpopsBound
@@ -813,18 +817,21 @@ $numIssues
 $resultsWithoutConcensus
 EOF
 
-	# - update MegaZip file:
-	if ${lmegazip} ; then
-	    echo "$RundirFullPath/$workunitName.desc" >> ${sixdeskjobs_logs}/megaZipList.txt
-	    echo "$RundirFullPath/$workunitName.zip" >> ${sixdeskjobs_logs}/megaZipList.txt
+	    # - update MegaZip file:
+	    if ${lmegazip} ; then
+		echo "$RundirFullPath/$workunitName.desc" >> ${sixdeskjobs_logs}/megaZipList.txt
+		echo "$RundirFullPath/$workunitName.zip" >> ${sixdeskjobs_logs}/megaZipList.txt
+	    fi
 	fi
-	
+
 	# clean
 	for iFort in 2 3 8 16 ; do
 	    rm -f $RundirFullPath/fort.$iFort
 	done
 
     fi
+
+    return $__lerr
 }
 
 function fixDir(){
@@ -1245,6 +1252,11 @@ function treatShort(){
 	    	    # final preparation of all SIXTRACK files
 	    	    # NB: for boinc, it returns workunitName
 	    	    submitCreateFinalInputs
+		    if [ $? -ne 0 ] ; then
+			sixdeskmess="Carrying on with next WU"
+			sixdeskmess
+			continue
+		    fi
 	    	
 	    	    # sussix input files
 	    	    if [ $sussix -eq 1 ] ; then
@@ -1431,6 +1443,11 @@ function treatLong(){
 	        	# final preparation of all SIXTRACK files
 	        	# NB: for boinc, it returns workunitName
 	        	submitCreateFinalInputs
+			if [ $? -ne 0 ] ; then
+			    sixdeskmess="Carrying on with next WU"
+			    sixdeskmess
+			    continue
+			fi
 	        	
 	        	if [ "$sixdeskplatform" == "lsf" ] ; then
 	        	    # submission file
@@ -1557,6 +1574,11 @@ function treatDA(){
             # final preparation of all SIXTRACK files
             # NB: for boinc, it returns workunitName
             submitCreateFinalInputs
+	    if [ $? -ne 0 ] ; then
+		sixdeskmess="Carrying on with next WU"
+		sixdeskmess
+		return
+	    fi
             
             # submission file
             sed -e 's?SIXJOBNAME?'"$Runnam"'?g' \

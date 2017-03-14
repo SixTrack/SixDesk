@@ -717,9 +717,7 @@ sixdeskDefinePointTree(){
     actualDirNameFullPath=""
 
     # temporary variables
-    local __iCountMax=10
     local __lerr=0
-    local __delay=3
 
     # -- Runnam
     multipleTrials "Runnam=${1}%${2}%${3}%${4}%${5}%${6}%${7}; sixdeskSanitizeString \"\${Runnam}\" Runnam" "[ -n \"\${Runnam}\" ]"
@@ -753,8 +751,12 @@ sixdeskDefineWorkUnitName(){
     # $1: workspace name (ie $workspace)
     # $2: name of job (ie $Runnam)
     # $3: task ID (ie $sixdesktaskid)
-    sixdeskTaskName=`echo $1"_"$2 | sed -e's?%?__?g'`
-    workunitName=$sixdeskTaskName"_1_sixvf_"$3
+    local __lerr=0
+    multipleTrials "sixdeskTaskName=\"`echo \"${1}_${2}\" | awk 'BEGIN{FS=\"%\"; OFS=\"__\"}{\$3=\$3; print}'`\"" "[ -n \"\${sixdeskTaskName}\" ]"
+    let __lerr+=$?
+    multipleTrials "workunitName=\"${sixdeskTaskName}_1_sixvf_\${3}\"" "[ -n \"\${workunitName}\" ]"
+    let __lerr+=$?
+    return $__lerr
 }
 sixdeskDefineMegaZipName(){
     local __workSpaceName=$1
