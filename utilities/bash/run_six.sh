@@ -977,13 +977,13 @@ function dot_bsub(){
 	local __taskno=`echo "${tmpLines}" | grep submitted | cut -d\< -f2 | cut -d\> -f1`
 	if [ "${__taskno}" != "" ] ; then
 	    local __taskid="lsf${__taskno}"
-	    sixdeskmess="`echo "${tmpLines}" | grep submitted`"
+	    sixdeskmess="`echo \"${tmpLines}\" | grep submitted`"
 	else
-	    sixdeskmess="bsub did NOT return a taskno for ${__iCountMax} times !!! - going to next WU!"
+	    local __taskid="lsf_unknown"
+	    sixdeskmess="bsub did NOT return a taskno !!! - assigning a default one"
 	fi
 	sixdeskmess
     else
-	rm -f $RundirFullPath/JOB_NOT_YET_STARTED 
 	sixdeskmess="bsub of $RundirFullPath/$Runnam.job to Queue ${lsfq} failed !!! - going to next WU!"
 	sixdeskmess
     fi
@@ -991,7 +991,8 @@ function dot_bsub(){
     if [ ${__lerr} -eq 0 ] ; then
         # keep track of the $Runnam-taskid couple
 	updateTaskIdsCases $sixdeskjobs/jobs $sixdeskjobs/incomplete_jobs $__taskid
-	rm -f tmp
+    else
+	rm -f $RundirFullPath/JOB_NOT_YET_STARTED 
     fi
 
     return $__lerr
@@ -1003,6 +1004,7 @@ function dot_task(){
 
 function dot_boinc(){
 
+    local __lerr=0
     local __taskid
     
     touch $RundirFullPath/JOB_NOT_YET_STARTED
@@ -1015,21 +1017,24 @@ function dot_boinc(){
     sixdeskGetFileName "${descFileNames}" workunitname
     sixdeskGetTaskIDfromWorkUnitName $workunitname
     if ! ${lmegazip} ; then
-
 	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]"
-	if [ $? -ne 0 ] ; then
+	let __lerr+=$?
+	if [ ${__lerr} -ne 0 ] ; then
 	    sixdeskmess="failed to submit boinc job!!!"
 	    sixdeskmess
-	    exit ${__iCountMax}
 	fi
-
-        # the job has just started
-	touch $RundirFullPath/JOB_NOT_YET_COMPLETED
-	rm -f $RundirFullPath/JOB_NOT_YET_STARTED
     fi
 
-    # keep track of the $Runnam-taskid couple
-    updateTaskIdsCases $sixdeskjobs/tasks $sixdeskjobs/incomplete_tasks $sixdesktaskid
+    if [ ${__lerr} -eq 0 ] ; then
+        # the job has just started
+	touch $RundirFullPath/JOB_NOT_YET_COMPLETED
+        # keep track of the $Runnam-taskid couple
+	updateTaskIdsCases $sixdeskjobs/tasks $sixdeskjobs/incomplete_tasks $sixdesktaskid
+    fi
+
+    rm -f $RundirFullPath/JOB_NOT_YET_STARTED
+
+    return $__lerr
 }
 
 function dot_megaZip(){
@@ -1541,7 +1546,7 @@ function treatDA(){
         fi
         if ${lsubmit} ; then
             # actually submit
-            source ${SCRIPTDIR}/bash/dot_bsub $Runnam $Rundir
+            dot_bsub
         fi
 
     # ----------------------------------------------------------------------
