@@ -754,7 +754,7 @@ sixdeskDefineWorkUnitName(){
     local __lerr=0
     multipleTrials "sixdeskTaskName=\"`echo \"${1}_${2}\" | awk 'BEGIN{FS=\"%\"; OFS=\"__\"}{\$3=\$3; print}'`\"" "[ -n \"\${sixdeskTaskName}\" ]"
     let __lerr+=$?
-    multipleTrials "workunitName=\"${sixdeskTaskName}_1_sixvf_\${3}\"" "[ -n \"\${workunitName}\" ]"
+    multipleTrials "workunitName=\"${sixdeskTaskName}_1_sixvf_${3}\"" "[ -n \"\${workunitName}\" ]"
     let __lerr+=$?
     return $__lerr
 }
