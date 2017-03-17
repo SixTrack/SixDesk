@@ -977,9 +977,10 @@ function dot_bsub(){
     if  [ ${__lerr} -eq 0 ] ; then
 	# typical message returned by bsub:
 	#   Job <864248893> is submitted to queue <8nm>.
-	local __taskno=`echo "${tmpLines}" | grep submitted | cut -d\< -f2 | cut -d\> -f1`
-	if [ "${__taskno}" != "" ] ; then
-	    local __taskid="lsf${__taskno}"
+	multipleTrials "taskno=\"`echo \"${tmpLines}\" | grep submitted | cut -d\< -f2 | cut -d\> -f1`\"" "[ -n \"\${taskno}\" ]"
+	let __lerr+=$?
+	if [ ${__lerr} -eq 0 ] ; then
+	    local __taskid="lsf${taskno}"
 	    sixdeskmess="`echo \"${tmpLines}\" | grep submitted`"
 	else
 	    local __taskid="lsf_unknown"
