@@ -43,6 +43,7 @@ function how_to_use() {
    -v      verbose (OFF by default)
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
+   -q      quiet mode, only basic information will be echoed
 
 EOF
 }
@@ -698,8 +699,10 @@ function submitCreateRundir(){
     #    that RunDirFullPath and actualDirNameFullPath are non-zero length strings
     local __RunDirFullPath=$1
     local __actualDirNameFullPath=$2
-    sixdeskmess="Taking care of running dir $__RunDirFullPath (and linking to $__actualDirNameFullPath)"
-    sixdeskmess
+    if ! ${lquiet}; then
+	sixdeskmess="Taking care of running dir $__RunDirFullPath (and linking to $__actualDirNameFullPath)"
+	sixdeskmess
+    fi
     [ ! -d $__RunDirFullPath ] || rm -rf $__RunDirFullPath
     mkdir -p $__RunDirFullPath
     [ ! -e $__actualDirNameFullPath ] || rm -rf $__actualDirNameFullPath
@@ -763,8 +766,10 @@ function submitCreateFinalFort3DA(){
 }
 
 function submitCreateFinalInputs(){
-    sixdeskmess="Taking care of SIXTRACK fort.2/fort.3/fort.8/fort.16 in $RundirFullPath"
-    sixdeskmess
+    if ! ${lquiet}; then
+	sixdeskmess="Taking care of SIXTRACK fort.2/fort.3/fort.8/fort.16 in $RundirFullPath"
+	sixdeskmess
+    fi
 
     # fort.3
     gzip -c $sixdeskjobs_logs/fort.3 > $RundirFullPath/fort.3.gz
@@ -791,8 +796,10 @@ function submitCreateFinalInputs(){
 	sixdeskTaskId=`awk '{print ($1+1)}' $sixdeskhome/sixdeskTaskIds/$LHCDescrip/sixdeskTaskId`
 	echo $sixdeskTaskId > $sixdeskhome/sixdeskTaskIds/$LHCDescrip/sixdeskTaskId
 	sixdesktaskid=boinc$sixdeskTaskId
-	sixdeskmess="sixdesktaskid: $sixdesktaskid - $sixdeskTaskId"
-	sixdeskmess
+	if ! ${lquiet}; then
+	    sixdeskmess="sixdesktaskid: $sixdesktaskid - $sixdeskTaskId"
+	    sixdeskmess
+	fi
 	# - return sixdeskTaskName and workunitName
 	sixdeskDefineWorkUnitName $workspace $Runnam $sixdesktaskid
 	# - generate zip file
@@ -925,8 +932,10 @@ function checkDirReadyForSubmission(){
 	    let __lerr+=$?
 	else
 	    workunitName="${fileNames[0]}"
-	    sixdeskmess=".desc and .zip files present in $RundirFullPath!"
-	    sixdeskmess
+	    if ! ${lquiet}; then
+		sixdeskmess=".desc and .zip files present in $RundirFullPath!"
+		sixdeskmess
+	    fi
 	fi
     fi
     if [ $sussix -eq 1 ] ; then
@@ -1076,8 +1085,10 @@ function dot_cleanZips(){
     local __zipFileName=$2
     local __descFileName=$3
     if [ ! -e ${__tmpPath}/JOB_NOT_YET_STARTED ] ; then
-	sixdeskmess="Removing .desc/.zip files in ${__tmpPath}"
-	sixdeskmess
+	if ! ${lquiet}; then
+	    sixdeskmess="Removing .desc/.zip files in ${__tmpPath}"
+	    sixdeskmess
+	fi
 	rm -f ${__tmpPath}/${__zipFileName} ${__tmpPath}/${__descFileName}
     fi
 }
@@ -1151,7 +1162,9 @@ function treatShort(){
     # ==========================================================================
 
 	# separate output for current case from previous one
-	echo ""
+	if ! ${lquiet}; then
+	    echo ""
+	fi
 
 	# trigger for preparation
 	local __lGenerate=false
@@ -1216,8 +1229,10 @@ function treatShort(){
 	    	if [ $? -eq 0 ] ; then
 	    	    checkDirReadyForSubmission >/dev/null 2>&1
 	    	    if [ $? -gt 0 ] ; then
-	    		sixdeskmess="$RundirFullPath NOT ready for submission - regenerating the necessary input files!"
-	    		sixdeskmess
+			if ! ${lquiet}; then
+	    		    sixdeskmess="$RundirFullPath NOT ready for submission - regenerating the necessary input files!"
+	    		    sixdeskmess
+			fi
 	    		__lGenerate=true
 	    	    fi
 	    	fi
@@ -1279,9 +1294,11 @@ function treatShort(){
 	    	sixdeskmess="-> no need to submit: already submitted/finished!"
 	    	sixdeskmess
 	        else
-	    	__lSubmit=true
-	    	sixdeskmess="$RundirFullPath ready to submit!"
-	    	sixdeskmess
+	    	    __lSubmit=true
+		    if ! ${lquiet}; then    
+	    		sixdeskmess="$RundirFullPath ready to submit!"
+	    		sixdeskmess
+		    fi
 	        fi
 	    fi
 	    
@@ -1315,8 +1332,10 @@ function treatLong(){
     # ==========================================================================
 
 	# separate output for current case from previous one
-	echo ""
-	echo ""
+	if ! ${lquiet}; then    
+	    echo ""
+	    echo ""
+	fi
 	
         fampstart=`gawk 'END{fnn='$ampstart'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
         fampstart=`echo $fampstart | sed -e's/0*$//'`
@@ -1340,7 +1359,9 @@ function treatLong(){
 	# ======================================================================
 
 	    # separate output for current case from previous one
-	    echo ""
+	    if ! ${lquiet}; then
+		echo ""
+	    fi
 	    
 	    # trigger for preparation
 	    local __lGenerate=false
@@ -1446,8 +1467,10 @@ function treatLong(){
 	        	sixdeskmess
 	            else
 	        	__lSubmit=true
-	        	sixdeskmess="$RundirFullPath ready to submit!"
-	        	sixdeskmess
+			if ! ${lquiet}; then
+	        	    sixdeskmess="$RundirFullPath ready to submit!"
+	        	    sixdeskmess
+			fi
 	            fi
 	        fi
 	        
@@ -1580,8 +1603,10 @@ optArgCurrStudy="-s"
 optArgCurrPlatForm=""
 verbose=""
 
+lquiet=false
+
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgsctakfvBSCMd:p:" opt ; do
+while getopts  ":hgsctaqkfvBSCMd:p:" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1594,6 +1619,10 @@ while getopts  ":hgsctakfvBSCMd:p:" opt ; do
 	    # check only
 	    lcheck=true
 	    ;;
+	q)
+	    # quiet mode
+	    lquiet=true
+	    ;;	
 	h)
 	    how_to_use
 	    exit 1
@@ -1709,7 +1738,9 @@ else
 fi
 
 # - action-dependent stuff
-echo ""
+if ! ${lquiet}; then    
+    echo ""
+fi
 if ${lfix} ; then
     #
     sixdeskmess="Fixing sixtrack input files for study $LHCDescrip"
@@ -1772,8 +1803,9 @@ if ${lstatus} ; then
     nFound=( 0 0 0 0 0 0 )
     foundNames=( 'dirs' 'fort.2.gz' 'fort.3.gz' 'fort.8.gz' 'fort.16.gz' 'fort.10.gz' )
 fi
-echo ""
-
+if ! ${lquiet}; then    
+    echo ""
+fi
 # - option specific stuff
 #   . megaZip available only in case of boinc:
 if ${lmegazip} && [ "$sixdeskplatform" != "boinc" ] ; then
@@ -1821,7 +1853,9 @@ done
 trap "sixdeskCleanExit 1" EXIT
 
 # - tunes
-echo ""
+if ! ${lquiet}; then    
+    echo ""
+fi    
 sixdeskmess="Main loop, MadX seeds $ista to $iend"
 sixdeskmess
 sixdesktunes
@@ -2058,8 +2092,10 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	    tuneyy=${tunesYY[$ii]}
 	    sixdesktunes=$tunexx"_"$tuneyy
             #   ...notify user
-	    echo ""
-	    echo ""
+	    if ! ${lquiet}; then    
+		echo ""
+		echo ""
+	    fi
 	    sixdeskmess="Tunescan $sixdesktunes"
 	    sixdeskmess
   	    # - get simul path (storage of beta values), stored in $Rundir (returns Runnam, Rundir, actualDirName)...
@@ -2288,8 +2324,10 @@ fi
 
 # summary of status
 if ${lstatus} ; then
-    echo ""
-    echo ""
+    if ! ${lquiet}; then    
+	echo ""
+	echo ""
+    fi
     sixdeskmess="Summary of status of study $LHCDescrip:"
     sixdeskmess
     sixdeskmess="- number of EXPECTED points in scan (dirs): ${nExpected};"
