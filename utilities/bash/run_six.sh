@@ -766,10 +766,9 @@ function submitCreateFinalFort3DA(){
 }
 
 function submitCreateFinalInputs(){
-
     local __lerr=0
 
-if ! ${lquiet}; then
+    if ! ${lquiet}; then
 	sixdeskmess="Taking care of SIXTRACK fort.2/fort.3/fort.8/fort.16 in $RundirFullPath"
 	sixdeskmess
     fi
@@ -1240,14 +1239,15 @@ function treatShort(){
 	        if ${lselected} ; then
                     checkDirAlreadyRun >/dev/null 2>&1
 	    	        if [ $? -eq 0 ] ; then
-	    	        checkDirReadyForSubmission >/dev/null 2>&1
-	    	        if [ $? -gt 0 ] ; then
-			    if ! ${lquiet}; then
-	    		        sixdeskmess="$RundirFullPath NOT ready for submission - regenerating the necessary input files!"
-	    		        sixdeskmess
+	    	            checkDirReadyForSubmission >/dev/null 2>&1
+	    	            if [ $? -gt 0 ] ; then
+				if ! ${lquiet}; then
+	    		            sixdeskmess="$RundirFullPath NOT ready for submission - regenerating the necessary input files!"
+	    		            sixdeskmess
+				fi
+	    			__lGenerate=true
 			    fi
-	    		    __lGenerate=true
-	    	    fi
+	    		fi
 	        else
 	    	    __lGenerate=true
 	        fi
