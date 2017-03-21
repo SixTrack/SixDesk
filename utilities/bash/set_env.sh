@@ -213,7 +213,7 @@ elif ${lload} ; then
     envFilesPath="studies/${currStudy}"
 fi
 
-# - preliminary checks (i.e. input info is consisten with present workspace)
+# - preliminary checks (i.e. input info is consistent with present workspace)
 preliminaryChecks
 if [ $? -gt 0 ] ; then
     sixdeskexit 1
@@ -302,4 +302,31 @@ fi
 for tmpDir in ${lockingDirs[@]} ; do
     sixdeskunlock $tmpDir
 done
+
+# - kinit, to renew kerberos ticket
+sixdeskmess=" --> kinit:"
+sixdeskmess
+multipleTrials "kinit -R ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]"
+if [ $? -gt 0 ] ; then
+    sixdeskmess="--> kinit -R failed - AFS/Kerberos credentials expired??? aborting..."
+    sixdeskmess
+    exit
+else
+    sixdeskmess=" --> klist output after kinit -R:"
+    sixdeskmess
+    klist
+fi
+
+# - fs listquota
+echo ""
+sixdeskmess=" --> fs listquota:"
+sixdeskmess
+tmpLines=`fs listquota`
+echo "${tmpLines}"
+#   check, and in case raise a warning
+fraction=`echo "${tmpLines}" | tail -1 | awk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
+if [ ${fraction} -gt 90 ] ; then
+    sixdeskmess="WARNING: your quota is above 90%!! pay attention to occupancy of the current study, in case of submission..."
+    sixdeskmess
+fi
 
