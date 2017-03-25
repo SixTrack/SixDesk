@@ -7,6 +7,8 @@
 # NOTA BENE: there is a new option for a more precise proton mass
 # and also a new flag to ignore tunes (tune=0)
 # and a new bunch_charge option for both collision and injection
+# March 25th, 2017
+# synchronising with new scripts
 
 export pmass=938.272013
 # or you can use the older value
@@ -118,8 +120,9 @@ export kstep=1
 export emit=3.75
 export emit_beam=$emit
 
-#Crossing angle for substitution in mask and mother file
-export xing=185
+# Crossing angle for substitution in mask and mother file
+# uncomment it, to make it operational
+# export xing=185
 
 # e0 gamma
 if test $runtype = "inj"
@@ -181,6 +184,9 @@ then
   export tunex1=62.31
   export tuney1=60.32
 fi
+# switch for tune scans on a squared domain
+# uncomment it, to make it operational
+# export squaredTuneScan=yes
 
 #switch for Guignard resonance calculation
 export reson=0
@@ -230,8 +236,8 @@ then
   export lsfq=$longlsfq
   export lsfjobtype=sixtracking
 
-  #reduce angle steps at small angles, achieving a constant density painting of the phase space
-  export reduce_angs_with_aplitude=0
+  # reduce angle steps at small angles, achieving a constant density painting of the phase space
+  # export reduce_angs_with_aplitude=0
 fi  
 
 #da parameters 

@@ -1,6 +1,8 @@
 #!/bin/sh
 # February 29, 2012
 # All the variables the user will not normally want to see!
+# March 25th, 2017
+# synchronising with new scripts
 # The path to all scripts etc bin,Bin,scripts, exes, dots
 export sixdeskpath=/afs/cern.ch/group/si/slap/bin/sixdesk
 # The following SixTrack version is used for the one-turn
