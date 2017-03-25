@@ -5,6 +5,7 @@
 # commented out #mv .problem
 # Updated 13.12.2013 Nils, changed AFS dir ref
 # Updated 06.10.2016 A.Mereghetti, added megaZip functionality
+# Updated 25.03.2017 A.Mereghetti, sixtracktest + SixOut.zip (from .desc) + appname (from .desc)
 set -e
 
 #Set Variables
@@ -19,17 +20,17 @@ lockdir=$boincdir/pid_$host
 [ -d $lockdir ] || mkdir $lockdir
 lockfile=$lockdir/$(basename $0).lock
 
-application=sixtrack
-spooldir=/afs/cern.ch/work/b/boinc/boinc
+spooldir=/afs/cern.ch/work/b/boinc/boinctest
 spooldirUpload=$spooldir/upload
 
 # The relative path of the workunit template file from the config dir.
-WU_template=templates/sixtrack_4.01_wu_template_zip.xml 
+# this template will present Sixin.zip as the input file
+WU_template=templates/sixtrack_wu_template.xml 
 
 # The relative path of the result template file from the config dir.
-result_template=templates/sixtrack_4.01_reducedoutput_result_template.xml
-#result_template=templates/sixtrack_444.6_result3_template.xml
-
+result_template_def=templates/sixtrack_res_template.xml
+# this template will bring back the Sixout.zip results
+result_template_SixOutZip_def=templates/sixtrack_res_zip_template.xml
 
 
 #Define finctions
@@ -216,6 +217,12 @@ submit_descfile(){
 	    return 1
 	fi
 
+	if ${WUlSixOutZip} ; then
+	    local __result_template=${result_template_SixOutZip_def}
+	else
+	    local __result_template=${result_template_def}
+	fi
+
         #overriding delay bound
         WUdelayBound=$(cat $boincdir/suggested_deadline)
 	
@@ -248,10 +255,10 @@ submit_descfile(){
 
 create_cmd="$boincdir/bin/create_work 		\
  -config_dir $boincdir 				\
- -appname $application 				\
+ -appname $WUapplication		        \
  -wu_name $WUname	      			\
  -wu_template $WU_template 			\
- -result_template $result_template 		\
+ -result_template $__result_template 		\
  -rsc_fpops_est $WUfpopsEstimate 		\
  -rsc_fpops_bound $WUfpopsBound 		\
  -rsc_memory_bound $WUmemBound 			\
@@ -358,6 +365,8 @@ parse_descfile(){
 	read WUerrors
 	read WUnumIssues
 	read WUresultsWithoutConcensus
+	read WUapplication
+	read WUlSixOutZip
 	if read junk ; then 
 		warn "Problem with format of $(basename $1)"
 		return 1
@@ -376,6 +385,8 @@ clearWUvars(){
 	unset WUerrors
 	unset WUnumIssues
 	unset WUresultsWithoutConcensus
+	unset WUapplication
+	unset WUlSixOutZip
 }
 
 printhelp(){
