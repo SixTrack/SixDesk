@@ -815,6 +815,7 @@ $copies
 $errors
 $numIssues
 $resultsWithoutConcensus
+$appName
 EOF
 
 	    # - update MegaZip file:
