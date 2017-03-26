@@ -887,6 +887,31 @@ sixdeskSetPlatForm(){
     fi
     return 0
 }
+
+sixDeskCheckAppName(){
+    local __appname=$1
+    local __lerr=1
+    local __recognisedAppNames=( 'sixtrack' 'sixtracktest' )
+    __appname=`echo ${__appname} | tr '[A-Z]' '[a-z]'`
+    for __tmpRecognisedAppName in ${__recognisedAppName[@]} ; do
+	if [ "${__appname}" == "${__tmpRecognisedAppName}" ] ; then
+	    __lerr=0
+	    break
+	fi
+    done
+    if [ ${__lerr} -ne 0 ] ; then
+	sixdeskmess="Un-recognised appName ${appName}!"
+	sixdeskmess
+	sixdeskmess="Valid appNames are:"
+	sixdeskmess
+	for __tmpRecognisedAppName in ${__recognisedAppName[@]} ; do
+	    sixdeskmess=" --> ${__tmpRecognisedAppName}"
+	    sixdeskmess
+	done
+    fi
+    return ${__lerr}
+}
+
 sixDeskSetBOINCVars(){
     # The SixTrack executable is now ????.
     export boincdir=/afs/cern.ch/work/b/boinc

@@ -91,6 +91,12 @@ function preliminaryChecks(){
 	fi
     fi
 
+    # - sixtrack app name
+    sixDeskCheckAppName ${appName}
+    if [ $? -ne 0 ] ; then
+	sixdeskexit 9
+    fi
+
     return 0
 }
 

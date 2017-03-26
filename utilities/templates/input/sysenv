@@ -2,13 +2,17 @@
 # February 29, 2012
 # All the variables the user will not normally want to see!
 # March 25th, 2017
-# synchronising with new scripts
+# synchronising with new scripts + appname
 # The path to all scripts etc bin,Bin,scripts, exes, dots
 export sixdeskpath=/afs/cern.ch/group/si/slap/bin/sixdesk
+#
+# app name, used by any platform
+export appName=sixtrack
+# 
 # The following SixTrack version is used for the one-turn
 # SixTrack run to get the Beta values and for all LSF tasks (except DA)
 # and the BNL EXE which is the same I hope
-export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_pro
+export SIXTRACKEXE=$sixdeskpath/exes/$appName
 if test "$BIGNBLZ" != ""
 then
   export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_bignblz_pro
