@@ -8,21 +8,23 @@ function how_to_use() {
 
    actions (mandatory, one of the following):
    -s              set up new study or update existing one according to local
-                       version of input files (sixdeskenv/sysenv)
-                   NB: the local sixdeskenv and sysenv will be parsed, used and
+                       version of input files (sixdeskenv/sysenv/fort.3.local)
+                   NB: the local input files will be parsed, used and
                        saved in studies/
    -d <study_name> load existing study.
-                   NB: the sixdeskenv and sysenv in studies/<study_name> will
-                       be parsed, used and saved in sixjobs
-   -n              retrieve input files (sixdeskenv/sysenv) from template dir
-                       to prepare a brand new study. The template files will
-                       OVERWRITE the local ones. The template dir is:
+                   NB: the input files (sixdeskenv/sysenv/fort.3.local) in
+                       studies/<study_name> will be parsed, used and saved in
+                       sixjobs
+   -n              retrieve input files (sixdeskenv/sysenv/fort.3.local) from
+                       template dir to prepare a brand new study. The template
+                       files will OVERWRITE the local ones. The template dir is:
            ${SCRIPTDIR}/templates/input
 
    options (optional)
    -p      platform name (when running many jobs in parallel)
-   -e      just parse the concerned sixdeskenv/sysenv files, without
-               overwriting
+   -e      just parse the concerned sixdeskenv/sysenv/fort.3.local files,
+               without overwriting
+   -l      use fort.3.local
    -v      verbose (OFF by default)
 
 EOF
@@ -104,6 +106,32 @@ function consistencyChecks(){
     return 0
 }
 
+function getInfoFromFort3Local(){
+    export fort3localLines=`cat ${envFilesPath}/fort.3.local`
+    local __activeLines=`echo "${fort3localLines}" | grep -v '/'`
+    local __firstActiveBlock=`echo "${__activeLines}" | head -1 | cut -c1-4`
+    local __otherActiveBlocks=`echo "${__activeLines}" | grep -A1 NEXT | grep -v NEXT | grep -v '^\-\-' | cut -c1-4`
+    local __allActiveBlocks="${__firstActiveBlock} ${__otherActiveBlocks}"
+    __allActiveBlocks=( ${__allActiveBlocks} )
+    if [ ${#__allActiveBlocks[@]} -gt 0 ] ; then
+	sixdeskmess="active blocks in ${envFilesPath}/fort.3.local:"
+	sixdeskmess
+	for tmpActiveBlock in ${__allActiveBlocks[@]} ; do
+	    sixdeskmess="- ${tmpActiveBlock}"
+	    sixdeskmess
+	done
+	local __nLines=`echo "${__activeLines}" | wc -l`
+	sixdeskmess="for a total of ${__nLines} ACTIVE lines."
+	sixdeskmess
+	for tmpActiveBlock in ${__allActiveBlocks[@]} ; do
+	    if [ "${tmpActiveBlock}" == "ZIPF" ] ; then
+		lZIPF=true
+		break
+	    fi
+	done
+    fi
+}
+
 # ==============================================================================
 # main
 # ==============================================================================
@@ -125,11 +153,14 @@ lload=false
 lcptemplate=false
 loverwrite=true
 lverbose=false
+llocalfort3=false
 currPlatform=""
 currStudy=""
+# variables set based on parsing fort.3.local
+lZIPF=false
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hsvd:ep:n" opt ; do
+while getopts  ":hsvld:ep:n" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -155,6 +186,10 @@ while getopts  ":hsvd:ep:n" opt ; do
 	p)
 	    # the user is requesting a specific platform
 	    currPlatform="${OPTARG}"
+	    ;;
+	l)
+	    # use fort.3.local
+	    llocalfort3=true
 	    ;;
 	v)
 	    # verbose
@@ -204,6 +239,11 @@ if [ -n "${currPlatform}" ] ; then
     echo "--> User required a specific platform: ${currPlatform}"
     echo ""
 fi
+if ${llocalfort3} ; then
+    echo ""
+    echo " --> User requested inclusion of fort.3.local"
+    echo ""
+fi
 
 # ------------------------------------------------------------------------------
 # preparatory steps
@@ -213,7 +253,7 @@ export sixdeskhostname=`hostname`
 export sixdeskname=`basename $0`
 export sixdeskroot=`basename $PWD`
 export sixdeskwhere=`dirname $PWD`
-# Set up some temporary values until we execute sixdeskenv/sysenv
+# Set up some temporary values until we parse input files
 # Don't issue lock/unlock debug text (use 2 for that)
 export sixdesklogdir=""
 export sixdesklevel=1
@@ -234,7 +274,7 @@ if ${lcptemplate} ; then
 else
     lockingDirs=( . studies )
 fi
-# - path to active sixdeskenv/sysenv
+# - path to input files
 if ${lset} ; then
     envFilesPath="."
 elif ${lload} ; then
@@ -264,7 +304,7 @@ if ${lcptemplate} ; then
     sixdeskmess="template input files from ${SCRIPTDIR}/templates/input"
     sixdeskmess
 
-    for tmpFile in sixdeskenv sysenv ; do
+    for tmpFile in sixdeskenv sysenv fort.3.local ; do
 	sixdeskmess="${tmpFile}"
 	sixdeskmess
 	# preserve original time stamps
@@ -273,20 +313,28 @@ if ${lcptemplate} ; then
 
 else
 
-    # - make sure we have sixdeskenv/sysenv files
+    # - make sure we have sixdeskenv/sysenv/fort.3.local files
     sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s sixdeskenv sysenv
-    if [ $? -gt 0 ] ; then
+    exit_status=$?
+    if ${llocalfort3} ; then
+	sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s fort.3.local
+	let exit_status+=$?
+    fi
+    if [ ${exit_status} -gt 0 ] ; then
 	sixdeskexit 4
     fi
 
     # - source active sixdeskenv/sysenv
     source ${envFilesPath}/sixdeskenv
     source ${envFilesPath}/sysenv
+    if ${llocalfort3} ; then
+	getInfoFromFort3Local
+    fi
 
     # - perform some consistency checks on parsed info
     consistencyChecks
 
-    # - save sixdeskenv/sysenv
+    # - save input files
     if ${loverwrite} ; then
 	__lnew=false
 	if ${lset} ; then
@@ -307,18 +355,24 @@ else
 	if ${lset} ; then
 	    cp ${envFilesPath}/sixdeskenv studies/${LHCDescrip}
 	    cp ${envFilesPath}/sysenv studies/${LHCDescrip}
+	    if ${llocalfort3} ; then
+		cp ${envFilesPath}/fort.3.local studies/${LHCDescrip}
+	    fi
 	    if ${__lnew} ; then
   	        # new study
 		sixdeskmess="Created a NEW study $LHCDescrip"
 		sixdeskmess
 	    else
  	        # updating an existing study
-		sixdeskmess="Updated sixdeskenv/sysenv for $LHCDescrip"
+		sixdeskmess="Updated sixdeskenv/sysenv(/fort.3.local) for $LHCDescrip"
 		sixdeskmess
 	    fi
 	elif ${lload} ; then
 	    cp ${envFilesPath}/sixdeskenv .
 	    cp ${envFilesPath}/sysenv .
+	    if ${llocalfort3} ; then
+		cp ${envFilesPath}/fort.3.local .
+	    fi
 	    sixdeskmess="Switched to study $LHCDescrip"
 	    sixdeskmess
 	fi
@@ -329,6 +383,9 @@ else
 	platform=$currPlatform
     fi
     sixdeskSetPlatForm $platform
+
+    # export lZIPF
+    export lZIPF
 
     # - useful output
     PTEXT="[${sixdeskplatform}]"

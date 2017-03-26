@@ -40,6 +40,7 @@ function how_to_use() {
    -B      break backward-compatibility
            for the moment, this sticks only to expressions affecting ratio of
               emittances, amplitude scans and job names in fort.3
+   -l      use fort.3.local (only for generation/fixing)
    -v      verbose (OFF by default)
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
@@ -250,6 +251,20 @@ function preProcessFort3(){
     let __lerr+=$?
     sixdeskmess="Initial relative energy deviation $dpini"
     sixdeskmess
+    if ${llocalfort3} ; then
+	# insert fort.3.local just before ENDE in fortl.3.mask
+	sixdeskmess="using fort.3.local:"
+	sixdeskmess
+	echo "${fort3localLines}"
+	local __posENDE=`grep -n ENDE $sixdeskjobs_logs/fortl.3.mask | cut -d \: -f1`
+	local __nLines=`wc -l $sixdeskjobs_logs/fortl.3.mask | awk '{print ($1)}'`
+	let nHead=${__posENDE}-1
+	let nTail=${__nLines}-${__posENDE}+1
+	head -n ${nHead} $sixdeskjobs_logs/fortl.3.mask > $sixdeskjobs_logs/fortl.3.mask.temp
+	echo "${fort3localLines}" >> $sixdeskjobs_logs/fortl.3.mask.temp
+	tail -n ${nTail} $sixdeskjobs_logs/fortl.3.mask >> $sixdeskjobs_logs/fortl.3.mask.temp
+	mv $sixdeskjobs_logs/fortl.3.mask.temp $sixdeskjobs_logs/fortl.3.mask
+    fi
 
     # --------------------------------------------------------------------------
     # build fort.3 for DA run
@@ -803,6 +818,8 @@ function submitCreateFinalInputs(){
 	    #   NB: -j option, to store only the files, and not the source paths
 	    zip -j $RundirFullPath/$workunitName.zip $RundirFullPath/fort.2 $RundirFullPath/fort.3 $RundirFullPath/fort.8 $RundirFullPath/fort.16 >/dev/null 2>&1
 	    # - generate the workunit description file
+	    #   NB: appName from sysenv (+ sanity checks in dot_profile) and
+	    #       lZIPF from set_env.sh
 	    cat > $RundirFullPath/$workunitName.desc <<EOF
 $workunitName
 $fpopsEstimate 
@@ -816,6 +833,7 @@ $errors
 $numIssues
 $resultsWithoutConcensus
 $appName
+$lZIPF
 EOF
 
 	    # - update MegaZip file:
@@ -1663,15 +1681,17 @@ lcleanzip=false
 lselected=false
 lmegazip=false
 lbackcomp=true
+llocalfort3=false
 lverbose=false
 currPlatform=""
 currStudy=""
 optArgCurrStudy="-s"
 optArgCurrPlatForm=""
+optArgUseLocalFort3=""
 verbose=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgsctakfvBSCMd:p:" opt ; do
+while getopts  ":hgsctakfvBlSCMd:p:" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1723,6 +1743,10 @@ while getopts  ":hgsctakfvBSCMd:p:" opt ; do
 	    # use whatever breaks backward compatibility
 	    lbackcomp=false
 	    ;;
+	l) 
+	    # use fort.3.local
+	    llocalfort3=true
+	    ;;
 	d)
 	    # the user is requesting a specific study
 	    currStudy="${OPTARG}"
@@ -1769,6 +1793,9 @@ fi
 if ${lverbose} ; then
     verbose="-v"
 fi
+if ${llocalfort3} ; then
+    optArgUseLocalFort3="-l"
+fi
 
 # ------------------------------------------------------------------------------
 # preparatory steps
@@ -1777,7 +1804,7 @@ fi
 # - load environment
 #   NB: workaround to get getopts working properly in sourced script
 OPTIND=1
-source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${verbose} -e
+source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${verbose} ${optArgUseLocalFort3} -e
 # - settings for sixdeskmessages
 sixdeskmessleveldef=0
 sixdeskmesslevel=$sixdeskmessleveldef
