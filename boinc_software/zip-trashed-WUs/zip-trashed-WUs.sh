@@ -3,7 +3,7 @@
 # A.Mereghetti, 2016-08-18
 # script for zipping WUs according to study name
 iNLT=200
-boincDownloadDir="/afs/cern.ch/work/b/boinc/boinc/download"
+boincDownloadDir="/afs/cern.ch/work/b/boinc/download"
 
 echo ""
 echo " starting `basename $0` at `date` ..."
