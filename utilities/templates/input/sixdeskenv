@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # July 1st, 2012.
 # Better message handling, fewer locks on the database by
 # relying on the study lock, faster run_post???
