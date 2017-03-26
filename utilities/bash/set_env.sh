@@ -15,7 +15,8 @@ function how_to_use() {
                    NB: the sixdeskenv and sysenv in studies/<study_name> will
                        be parsed, used and saved in sixjobs
    -n              retrieve input files (sixdeskenv/sysenv) from template dir
-                       to prepare a brand new study. The template dir is:
+                       to prepare a brand new study. The template files will
+                       OVERWRITE the local ones. The template dir is:
            ${SCRIPTDIR}/templates/input
 
    options (optional)
