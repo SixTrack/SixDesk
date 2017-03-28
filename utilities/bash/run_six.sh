@@ -970,14 +970,14 @@ function dot_bsub(){
     dot_clean
     
     # actually submit
-    multipleTrials "tmpLines=\"`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job 2>&1`\" ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]"
+    multipleTrials "tmpLines=\"`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job 2>&1`\" ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Problem at bsub"
     let __lerr+=$?
 
     # verify that submission was successfull
     if  [ ${__lerr} -eq 0 ] ; then
 	# typical message returned by bsub:
 	#   Job <864248893> is submitted to queue <8nm>.
-	multipleTrials "taskno=\"`echo \"${tmpLines}\" | grep submitted | cut -d\< -f2 | cut -d\> -f1`\"" "[ -n \"\${taskno}\" ]"
+	multipleTrials "taskno=\"`echo \"${tmpLines}\" | grep submitted | cut -d\< -f2 | cut -d\> -f1`\"" "[ -n \"\${taskno}\" ]" "Problem at taskno"
 	let __lerr+=$?
 	if [ ${__lerr} -eq 0 ] ; then
 	    local __taskid="lsf${taskno}"
@@ -1020,7 +1020,7 @@ function dot_boinc(){
     sixdeskGetFileName "${descFileNames}" workunitname
     sixdeskGetTaskIDfromWorkUnitName $workunitname
     if ! ${lmegazip} ; then
-	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]"
+	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "MegaZip - Problem at cp"
 	let __lerr+=$?
 	if [ ${__lerr} -ne 0 ] ; then
 	    sixdeskmess="failed to submit boinc job!!!"
@@ -2327,7 +2327,7 @@ if ${lmegazip} ; then
     if ${lsubmit} ; then
 	sixdeskmess="submitting megaZip file ${__megaZipFileName}"
 	sixdeskmess
-	multipleTrials "cp ${megaZipName} ${megaZipPath} ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]"
+	multipleTrials "cp ${megaZipName} ${megaZipPath} ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "MegaZip - problem at upload"
 	if [ $? -ne 0 ] ; then
 	    sixdeskmess="failed to submit ${megaZipName} !!!"
 	    sixdeskmess
