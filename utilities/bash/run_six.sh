@@ -33,6 +33,9 @@ function how_to_use() {
            in case of submission, submit those directories requiring actual submission
               (see previous point)
            NB: this option is NOT active in case of -c only!
+   -R      restart action from the specified point in scan (e.g.
+           -R lhc_coll%1%s%65_64%3_4%5%37.5)
+           NB: cannot be used with -S!
    -M      MegaZip: in case of boinc, WUs all zipped in one file.
               (.zip/.desc files of each WU will be put in a big .zip)
            this option shall be used with both -g and -s actions, and in case
@@ -1339,10 +1342,6 @@ function treatLong(){
     for (( ampstart=$amp0; ampstart<$ampfinish; ampstart+=$ampincl )) ; do
     # ==========================================================================
 
-	# separate output for current case from previous one
-	echo ""
-	echo ""
-	
         fampstart=`gawk 'END{fnn='$ampstart'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
         fampstart=`echo $fampstart | sed -e's/0*$//'`
         fampstart=`echo $fampstart | sed -e's/\.$//'`
@@ -1352,6 +1351,18 @@ function treatLong(){
         fampend=`echo $fampend | sed -e's/\.$//'`
         Ampl="${fampstart}_${fampend}"
 
+	if ${lrestart} && ${lrestartAmpli} ; then
+	    if [ "${ampliStart}" == "${Ampl}" ] ; then
+		lrestartAmpli=false
+	    else
+		continue
+	    fi
+	fi
+
+	# separate output for current case from previous one
+	echo ""
+	echo ""
+	
         sixdeskmess="Considering amplitudes: $Ampl"
         sixdeskmess
 
@@ -1364,9 +1375,6 @@ function treatLong(){
 	for (( kk=$kinil; kk<=$kendl; kk+=$scaled_kstep )) ; do
 	# ======================================================================
 
-	    # separate output for current case from previous one
-	    echo ""
-	    
 	    # trigger for preparation
 	    local __lGenerate=false
 	    # trigger for submission
@@ -1380,12 +1388,23 @@ function treatLong(){
 	    sixdeskAngle $AngleStep $kk
 	    sixdeskkang $kk $kmaxl $lbackcomp
 
+	    if ${lrestart} && ${lrestartAngle} ; then
+		if [ "${angleStart}" == "${Angle}" ] ; then
+		    lrestartAngle=false
+		else
+		    continue
+		fi
+	    fi
+
 	    # get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
 	    sixdeskDefinePointTree $LHCDesName $iMad "s" $sixdesktunes $Ampl $turnsle $Angle $kk $sixdesktrack
 	    if [ $? -gt 0 ] ; then
 		# go to next WU (sixdeskmess already printed out and email sent to user/admins)
 		continue
 	    fi
+
+	    # separate output for current case from previous one
+	    echo ""
 	    sixdeskmess="Point in scan $Runnam $Rundir, k=$kk"
 	    sixdeskmess
 	    
@@ -1663,6 +1682,8 @@ lselected=false
 lmegazip=false
 lbackcomp=true
 lverbose=false
+lrestart=false
+restartPoint=""
 currPlatform=""
 currStudy=""
 optArgCurrStudy="-s"
@@ -1670,7 +1691,7 @@ optArgCurrPlatForm=""
 verbose=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgsctakfvBSCMd:p:" opt ; do
+while getopts  ":hgsctakfvBSCMd:p:R:" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1704,6 +1725,11 @@ while getopts  ":hgsctakfvBSCMd:p:" opt ; do
 	S)
 	    # selected points of scan only
 	    lselected=true
+	    ;;
+	R)
+	    # restart from point in scan
+	    lrestart=true
+	    restartPoint="${OPTARG}"
 	    ;;
 	f)
 	    # fix directories
@@ -1868,6 +1894,30 @@ if ! ${lbackcomp} ; then
     sixdeskmess=" --> flag for backward compatibility de-activated, as requested by user!"
     sixdeskmess
 fi
+#   . restart action
+if ${lrestart} ; then
+    if ${lselected} ; then
+	sixdeskmess="flags -R and -S are incompatible!"
+	sixdeskmess
+	exit
+    fi
+    sixdeskCheckNFieldsFromJobName "${restartPoint}"
+    if [ $? -ne 0 ] ; then
+	exit
+    fi
+    # get infos of starting point
+    sixdeskGetMADseedFromJobName "${restartPoint}" MADstart
+    sixdeskGetTunesTagFromJobName "${restartPoint}" tunesStart
+    sixdeskGetAmpliTagFromJobName "${restartPoint}" ampliStart
+    sixdeskGetAngleFromJobName "${restartPoint}" angleStart
+    lrestartTune=true
+    lrestartAmpli=true
+    lrestartAngle=true
+else
+    lrestartTune=false
+    lrestartAmpli=false
+    lrestartAngle=false
+fi
 
 # - define user tree
 sixdeskDefineUserTree $basedir $scratchdir $workspace
@@ -1878,7 +1928,7 @@ sixDeskSetBOINCVars
 # - preliminary checks
 preliminaryChecksRS
 if [ $? -gt 0 ] ; then
-    sixdeskexit
+    exit
 fi
 
 # - square hard-coded?!
@@ -2108,7 +2158,12 @@ else
 fi
 
 # main loop
-for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
+if ${lrestart} ; then
+    iMadStart=${MADstart}
+else
+    iMadStart=${ista}
+fi
+for (( iMad=${iMadStart}; iMad<=$iend; iMad++ )) ; do
     echo ""
     echo ""
     echo ""
@@ -2139,6 +2194,13 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	    tunexx=${tunesXX[$jj]}
 	    tuneyy=${tunesYY[$ii]}
 	    sixdesktunes=$tunexx"_"$tuneyy
+	    if ${lrestart} && ${lrestartTune} ; then
+		if [ "${tunesStart}" == "${sixdesktunes}" ] ; then
+		    lrestartTune=false
+		else
+		    continue
+		fi
+	    fi
             #   ...notify user
 	    echo ""
 	    echo ""
@@ -2224,6 +2286,28 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	done
     fi	    
 done
+
+# restart check
+if ${lrestart} ; then
+    if ! ${lrestartTune} || ! ${lrestartAmpli} || ! ${lrestartAngle} ; then
+	sixdeskmess="Something wrong with restarting the scan from point ${restartPoint}"
+	sixdeskmess
+	sixdeskmess="Scan was not restarted correctly"
+	sixdeskmess
+	if ${lrestartTune} ; then
+	    sixdeskmess="Starting tune ${tunesStart} was not properly recognised!"
+	    sixdeskmess
+	fi
+	if ${lrestartAmpli} ; then
+	    sixdeskmess="Starting amplitude range ${ampliStart} was not properly recognised!"
+	    sixdeskmess
+	fi
+	if ${lrestartAngle} ; then
+	    sixdeskmess="Starting angle ${angleStart} was not properly recognised!"
+	    sixdeskmess
+	fi
+    fi
+fi
 
 # megaZip, in case of boinc
 if ${lmegazip} ; then

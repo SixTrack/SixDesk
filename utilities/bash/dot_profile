@@ -748,6 +748,59 @@ sixdeskDefinePointTree(){
 
     return $__lerr
 }
+sixdeskGetMADseedFromJobName(){
+    local __Runnam=$1
+    local __result=`echo "${__Runnam}" | cut -d\% -f2`
+    eval "$2=${__result}"
+}
+sixdeskGetTunesTagFromJobName(){
+    local __Runnam=$1
+    local __result=`echo "${__Runnam}" | cut -d\% -f4`
+    eval "$2=${__result}"
+}
+sixdeskGetAmpliTagFromJobName(){
+    local __Runnam=$1
+    local __result=`echo "${__Runnam}" | cut -d\% -f5`
+    eval "$2=${__result}"
+}
+sixdeskGetAngleFromJobName(){
+    local __Runnam=$1
+    local __result=`echo "${__Runnam}" | cut -d\% -f7`
+    eval "$2=${__result}"
+}
+sixdeskGetNFieldsFromJobName(){
+    local __Runnam=$1
+    local __result=`echo "${__Runnam}" | awk 'BEGIN{FS="%"}{print (NF)}'`
+    eval "$2=${__result}"
+}
+sixdeskCheckNFieldsFromJobName(){
+    local __Runnam=$1
+    local __lerr=0
+    local __Nfields
+    sixdeskGetNFieldsFromJobName "${__Runnam}" __NFields
+    if [ ${NFields} -ne 7 ] ; then
+	sixdeskmess="Not valid format of point in scan; ${__Runnam}"
+	sixdeskmess
+	sixdeskmess="It should be made up of 7 fields separated by a '%' char"
+	sixdeskmess
+        sixdeskmess="1. LHCDesName;"
+	sixdeskmess
+        sixdeskmess="2. MadX seed;"
+	sixdeskmess
+        sixdeskmess="3. tag (s/t/m/d);"
+	sixdeskmess
+        sixdeskmess="4. tunes;"
+	sixdeskmess
+        sixdeskmess="5. amplitude range;"
+	sixdeskmess
+        sixdeskmess="6. turn exponent;"
+	sixdeskmess
+        sixdeskmess="7. angle"
+	sixdeskmess
+	__lerr=1
+    fi
+    return ${__lerr}
+}
 sixdeskDefineWorkUnitName(){
     # $1: workspace name (ie $workspace)
     # $2: name of job (ie $Runnam)
