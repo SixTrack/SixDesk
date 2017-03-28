@@ -46,7 +46,7 @@ function how_to_use() {
    -v      verbose (OFF by default)
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
-
+   -q      quiet mode, output is extremely reduced
 EOF
 }
 
@@ -702,7 +702,7 @@ function submitCreateRundir(){
     local __RunDirFullPath=$1
     local __actualDirNameFullPath=$2
     sixdeskmess="Taking care of running dir $__RunDirFullPath (and linking to $__actualDirNameFullPath)"
-    sixdeskmess
+    sixdeskmess ${messarg}
     [ ! -d $__RunDirFullPath ] || rm -rf $__RunDirFullPath
     mkdir -p $__RunDirFullPath
     [ ! -e $__actualDirNameFullPath ] || rm -rf $__actualDirNameFullPath
@@ -769,7 +769,7 @@ function submitCreateFinalInputs(){
     local __lerr=0
 
     sixdeskmess="Taking care of SIXTRACK fort.2/fort.3/fort.8/fort.16 in $RundirFullPath"
-    sixdeskmess
+    sixdeskmess ${messarg}
 
     # fort.3
     gzip -c $sixdeskjobs_logs/fort.3 > $RundirFullPath/fort.3.gz
@@ -797,7 +797,7 @@ function submitCreateFinalInputs(){
 	echo $sixdeskTaskId > $sixdeskhome/sixdeskTaskIds/$LHCDescrip/sixdeskTaskId
 	sixdesktaskid=boinc$sixdeskTaskId
 	sixdeskmess="sixdesktaskid: $sixdesktaskid - $sixdeskTaskId"
-	sixdeskmess
+	sixdeskmess ${messarg}
 	# - return sixdeskTaskName and workunitName
 	sixdeskDefineWorkUnitName $workspace $Runnam $sixdesktaskid
 	let __lerr+=$?
@@ -927,12 +927,12 @@ function checkDirReadyForSubmission(){
 	# - the two files should have the same name
 	if [ "${fileNames[0]}" != "${fileNames[1]}" ] ; then
 	    sixdeskmess="mismatch between .desc and .zip file names in $RundirFullPath: ${fileNames[0]} and ${fileNames[1]}!"
-	    sixdeskmess
+	    sixdeskmess ${messarg}
 	    let __lerr+=$?
 	else
 	    workunitName="${fileNames[0]}"
 	    sixdeskmess=".desc and .zip files present in $RundirFullPath!"
-	    sixdeskmess
+	    sixdeskmess ${messarg}
 	fi
     fi
     if [ $sussix -eq 1 ] ; then
@@ -1030,7 +1030,7 @@ function dot_boinc(){
 	else
 	    sixdeskmess="Submitting WU to BOINC as taskid ${sixdesktaskid}"
 	fi
-	sixdeskmess
+	sixdeskmess ${messarg}
     fi
 
     if [ ${__lerr} -eq 0 ] ; then
@@ -1091,7 +1091,7 @@ function dot_cleanZips(){
     local __descFileName=$3
     if [ ! -e ${__tmpPath}/JOB_NOT_YET_STARTED ] ; then
 	sixdeskmess="Removing .desc/.zip files in ${__tmpPath}"
-	sixdeskmess
+	sixdeskmess ${messarg}
 	rm -f ${__tmpPath}/${__zipFileName} ${__tmpPath}/${__descFileName}
     fi
 }
@@ -1304,7 +1304,7 @@ function treatShort(){
 	        else
 	    	    __lSubmit=true
 	    	    sixdeskmess="$RundirFullPath ready to submit!"
-	    	    sixdeskmess
+	    	    sixdeskmess ${messarg}
 	        fi
 		let NsuccessChk+=1
 	    fi
@@ -1404,9 +1404,14 @@ function treatLong(){
 	    fi
 
 	    # separate output for current case from previous one
-	    echo ""
+	    if ! ${lquiet}; then
+		echo ""
+	    fi
 	    sixdeskmess="Point in scan $Runnam $Rundir, k=$kk"
-	    sixdeskmess
+	    sixdeskmess ${messarg}
+
+	    sixdeskmess="Submitting - ${LHCDescrip} - Job: ${NsuccessSub} - Seed: $iMad/$iend - Ampl: $Ampl - Angle: $Angle"
+	    sixdeskmess 	    
 	    
 	    # ----------------------------------------------------------------------
 	    if ${lfix} ; then
@@ -1499,7 +1504,7 @@ function treatLong(){
 	            else
 	        	__lSubmit=true
 	        	sixdeskmess="$RundirFullPath ready to submit!"
-	        	sixdeskmess
+	        	sixdeskmess ${messarg}
 	            fi
 		    let NsuccessChk+=1
 	        fi
@@ -1683,6 +1688,7 @@ lmegazip=false
 lbackcomp=true
 lverbose=false
 lrestart=false
+lquiet=false
 restartPoint=""
 currPlatform=""
 currStudy=""
@@ -1691,7 +1697,7 @@ optArgCurrPlatForm=""
 verbose=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgsctakfvBSCMd:p:R:" opt ; do
+while getopts  ":hgsctakfvBSqCMd:p:R:" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1708,6 +1714,11 @@ while getopts  ":hgsctakfvBSCMd:p:R:" opt ; do
 	    how_to_use
 	    exit 1
 	    ;;
+	q)
+	    # quiet mode
+	    lquiet=true
+	    messarg=5
+	    ;;	
 	g)
 	    # generate simulation files
 	    lgenerate=true
