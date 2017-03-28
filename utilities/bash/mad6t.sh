@@ -111,9 +111,8 @@ function submit(){
     for (( iMad=$istamad ; iMad<=$iendmad ; iMad++ )) ; do
 	
 	# clean away any existing results for this seed
-#	sixdeskmess="MadX seed: $iMad"
 	if ${__lsecond} ; then
-	    sixdeskmess="        Sleeping ${__delay} seconds"
+	    sixdeskmess="Sleeping ${__delay} seconds"
 	    sixdeskmess
 	    sleep ${__delay}
 	fi
@@ -142,7 +141,6 @@ function submit(){
 	    cd ../
 	    rm -rf $sixdesktmpdir
 	else
-#	    bsub -q $madlsfq -o $junktmp/"${LHCDescrip}_mad6t_$iMad".log -J ${workspace}_${LHCDescrip}_mad6t_$iMad mad6t_"$iMad".lsf
 	    read BSUBOUT <<< $(bsub -q $madlsfq -o $junktmp/"${LHCDescrip}_mad6t_$iMad".log -J ${workspace}_${LHCDescrip}_mad6t_$iMad mad6t_"$iMad".lsf)
 	    sixdeskmess="Seed ${iMad}: ${BSUBOUT}"
 	    sixdeskmess
