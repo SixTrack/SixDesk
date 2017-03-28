@@ -1255,7 +1255,6 @@ function treatShort(){
 	    			__lGenerate=true
 			    fi
 	    		fi
-	    	    fi
 	        else
 	    	    __lGenerate=true
 	        fi
@@ -1345,7 +1344,7 @@ function treatShort(){
 		    fi
 	        else
 	    	    sixdeskmess="No submission!"
-		    if ! {lquiet}; then
+		    if ! ${lquiet}; then
 	    		sixdeskmess
 		    fi
 	        fi
