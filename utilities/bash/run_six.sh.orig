@@ -982,16 +982,17 @@ function dot_bsub(){
     dot_clean
     
     # actually submit
-    multipleTrials "tmpLines=\"`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job 2>&1`\" ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]"
+    multipleTrials "tmpLines=\"`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job 2>&1`\" ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Problem at bsub"
     let __lerr+=$?
 
     # verify that submission was successfull
     if  [ ${__lerr} -eq 0 ] ; then
 	# typical message returned by bsub:
 	#   Job <864248893> is submitted to queue <8nm>.
-	local __taskno=`echo "${tmpLines}" | grep submitted | cut -d\< -f2 | cut -d\> -f1`
-	if [ "${__taskno}" != "" ] ; then
-	    local __taskid="lsf${__taskno}"
+	multipleTrials "taskno=\"`echo \"${tmpLines}\" | grep submitted | cut -d\< -f2 | cut -d\> -f1`\"" "[ -n \"\${taskno}\" ]" "Problem at taskno"
+	let __lerr+=$?
+	if [ ${__lerr} -eq 0 ] ; then
+	    local __taskid="lsf${taskno}"
 	    sixdeskmess="`echo \"${tmpLines}\" | grep submitted`"
 	else
 	    local __taskid="lsf_unknown"
@@ -1031,7 +1032,7 @@ function dot_boinc(){
     sixdeskGetFileName "${descFileNames}" workunitname
     sixdeskGetTaskIDfromWorkUnitName $workunitname
     if ! ${lmegazip} ; then
-	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work ; local __exit_status=$?" "[ \$__exit_status -eq 0 ]"
+	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "MegaZip - Problem at cp"
 	let __lerr+=$?
 	if [ ${__lerr} -ne 0 ] ; then
 	    sixdeskmess="failed to submit boinc job!!!"
@@ -1255,7 +1256,6 @@ function treatShort(){
 	    			__lGenerate=true
 			    fi
 	    		fi
-	    	    fi
 	        else
 	    	    __lGenerate=true
 	        fi
@@ -1369,12 +1369,15 @@ function treatLong(){
     for (( ampstart=$amp0; ampstart<$ampfinish; ampstart+=$ampincl )) ; do
     # ==========================================================================
 
+<<<<<<< HEAD
 	# separate output for current case from previous one
 	if ! ${lquiet}; then    
 	    echo ""
 	    echo ""
 	fi
 	
+=======
+>>>>>>> amereghe/isolateScripts
         fampstart=`gawk 'END{fnn='$ampstart'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
         fampstart=`echo $fampstart | sed -e's/0*$//'`
         fampstart=`echo $fampstart | sed -e's/\.$//'`
@@ -1384,10 +1387,27 @@ function treatLong(){
         fampend=`echo $fampend | sed -e's/\.$//'`
         Ampl="${fampstart}_${fampend}"
 
+<<<<<<< HEAD
 	if ! ${lquiet}; then
             sixdeskmess="Considering amplitudes: $Ampl"
             sixdeskmess
 	fi
+=======
+	if ${lrestart} && ${lrestartAmpli} ; then
+	    if [ "${ampliStart}" == "${Ampl}" ] ; then
+		lrestartAmpli=false
+	    else
+		continue
+	    fi
+	fi
+
+	# separate output for current case from previous one
+	echo ""
+	echo ""
+	
+        sixdeskmess="Considering amplitudes: $Ampl"
+        sixdeskmess
+>>>>>>> amereghe/isolateScripts
 
 	# get AngleStep
 	sixdeskAngleStep 90 $kmaxl $lbackcomp
@@ -1398,11 +1418,14 @@ function treatLong(){
 	for (( kk=$kinil; kk<=$kendl; kk+=$scaled_kstep )) ; do
 	# ======================================================================
 
+<<<<<<< HEAD
 	    # separate output for current case from previous one
 	    if ! ${lquiet}; then
 		echo ""
 	    fi
 	    
+=======
+>>>>>>> amereghe/isolateScripts
 	    # trigger for preparation
 	    local __lGenerate=false
 	    # trigger for submission
@@ -1416,12 +1439,23 @@ function treatLong(){
 	    sixdeskAngle $AngleStep $kk
 	    sixdeskkang $kk $kmaxl $lbackcomp
 
+	    if ${lrestart} && ${lrestartAngle} ; then
+		if [ "${angleStart}" == "${Angle}" ] ; then
+		    lrestartAngle=false
+		else
+		    continue
+		fi
+	    fi
+
 	    # get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
 	    sixdeskDefinePointTree $LHCDesName $iMad "s" $sixdesktunes $Ampl $turnsle $Angle $kk $sixdesktrack
 	    if [ $? -gt 0 ] ; then
 		# go to next WU (sixdeskmess already printed out and email sent to user/admins)
 		continue
 	    fi
+
+	    # separate output for current case from previous one
+	    echo ""
 	    sixdeskmess="Point in scan $Runnam $Rundir, k=$kk"
 
 	    if ${lquiet}; then
@@ -1709,6 +1743,8 @@ lselected=false
 lmegazip=false
 lbackcomp=true
 lverbose=false
+lrestart=false
+restartPoint=""
 currPlatform=""
 currStudy=""
 optArgCurrStudy="-s"
@@ -1718,7 +1754,11 @@ verbose=""
 lquiet=false
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgsctaqkfvRBSCMd:p:" opt ; do
+<<<<<<< HEAD
+while getopts  ":hgsctaqkfvBSCMd:p:" opt ; do
+=======
+while getopts  ":hgsctakfvBSCMd:p:R:" opt ; do
+>>>>>>> amereghe/isolateScripts
     case $opt in
 	a)
 	    # do everything
@@ -1916,7 +1956,8 @@ NsuccessGen=0
 NsuccessChk=0
 NsuccessSub=0
 NsuccessSts=0
-echo ""
+
+
 
 # - option specific stuff
 #   . megaZip available only in case of boinc:
@@ -1932,6 +1973,30 @@ if ! ${lbackcomp} ; then
     sixdeskmess=" --> flag for backward compatibility de-activated, as requested by user!"
     sixdeskmess
 fi
+#   . restart action
+if ${lrestart} ; then
+    if ${lselected} ; then
+	sixdeskmess="flags -R and -S are incompatible!"
+	sixdeskmess
+	exit
+    fi
+    sixdeskCheckNFieldsFromJobName "${restartPoint}"
+    if [ $? -ne 0 ] ; then
+	exit
+    fi
+    # get infos of starting point
+    sixdeskGetMADseedFromJobName "${restartPoint}" MADstart
+    sixdeskGetTunesTagFromJobName "${restartPoint}" tunesStart
+    sixdeskGetAmpliTagFromJobName "${restartPoint}" ampliStart
+    sixdeskGetAngleFromJobName "${restartPoint}" angleStart
+    lrestartTune=true
+    lrestartAmpli=true
+    lrestartAngle=true
+else
+    lrestartTune=false
+    lrestartAmpli=false
+    lrestartAngle=false
+fi
 
 # - define user tree
 sixdeskDefineUserTree $basedir $scratchdir $workspace
@@ -1942,7 +2007,7 @@ sixDeskSetBOINCVars
 # - preliminary checks
 preliminaryChecksRS
 if [ $? -gt 0 ] ; then
-    sixdeskexit
+    exit
 fi
 
 # - square hard-coded?!
@@ -2174,7 +2239,12 @@ else
 fi
 
 # main loop
-for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
+if ${lrestart} ; then
+    iMadStart=${MADstart}
+else
+    iMadStart=${ista}
+fi
+for (( iMad=${iMadStart}; iMad<=$iend; iMad++ )) ; do
     echo ""
     echo ""
     echo ""
