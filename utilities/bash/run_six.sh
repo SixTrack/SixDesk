@@ -46,7 +46,7 @@ function how_to_use() {
    -v      verbose (OFF by default)
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
-   -q      quiet mode, output is extremely reduced
+   -q      quiet mode, output is strongly reduced
 EOF
 }
 
