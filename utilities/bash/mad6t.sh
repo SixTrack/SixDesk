@@ -113,7 +113,7 @@ function submit(){
 	# clean away any existing results for this seed
 #	sixdeskmess="MadX seed: $iMad"
 	if ${__lsecond} ; then
-	    sixdeskmess="Sleeping ${__delay} seconds"
+	    sixdeskmess="        Sleeping ${__delay} seconds"
 	    sixdeskmess
 	    sleep ${__delay}
 	fi

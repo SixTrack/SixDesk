@@ -1035,7 +1035,9 @@ function dot_boinc(){
 	else
 	    sixdeskmess="Submitting WU to BOINC as taskid ${sixdesktaskid}"
 	fi
-	sixdeskmess
+	if ! ${lquiet}; then
+	    sixdeskmess
+	fi
     fi
 
     if [ ${__lerr} -eq 0 ] ; then
@@ -1243,7 +1245,9 @@ function treatShort(){
 	    	            if [ $? -gt 0 ] ; then
 				if ! ${lquiet}; then
 	    		            sixdeskmess="$RundirFullPath NOT ready for submission - regenerating the necessary input files!"
-	    		            sixdeskmess
+				    if ! ${lquiet}; then
+	    				sixdeskmess
+				    fi
 				fi
 	    			__lGenerate=true
 			    fi
@@ -1307,11 +1311,15 @@ function treatShort(){
 	        fi
 	        if [ $__eCheckDirReadyForSubmission -gt 0 ] ; then
 	    	    sixdeskmess="$RundirFullPath NOT ready for submission!"
-	    	    sixdeskmess
+		    if ! ${lquiet}; then    
+	    		sixdeskmess
+		    fi
 	        elif [ $__eCheckDirAlreadyRun -gt 0 ] ; then
   	    	    # sensitive to jobs already run/submitted
 	    	    sixdeskmess="-> no need to submit: already submitted/finished!"
-	    	    sixdeskmess
+		    if ! ${lquiet}; then    
+	    		sixdeskmess
+		    fi
 	        else
 	    	    __lSubmit=true
 		    if ! ${lquiet}; then    
@@ -1333,7 +1341,9 @@ function treatShort(){
 		    fi
 	        else
 	    	    sixdeskmess="No submission!"
-	    	    sixdeskmess
+		    if ! {lquiet}; then
+	    		sixdeskmess
+		    fi
 	        fi
 	    fi
 
@@ -1370,8 +1380,10 @@ function treatLong(){
         fampend=`echo $fampend | sed -e's/\.$//'`
         Ampl="${fampstart}_${fampend}"
 
-        sixdeskmess="Considering amplitudes: $Ampl"
-        sixdeskmess
+	if ! ${lquiet}; then
+            sixdeskmess="Considering amplitudes: $Ampl"
+            sixdeskmess
+	fi
 
 	# get AngleStep
 	sixdeskAngleStep 90 $kmaxl $lbackcomp
@@ -1407,6 +1419,12 @@ function treatLong(){
 		continue
 	    fi
 	    sixdeskmess="Point in scan $Runnam $Rundir, k=$kk"
+
+	    if ${lquiet}; then
+		#sixdeskmess="Submission: $Runnam"
+		sixdeskmess="Submission - Job: ${NsuccessSub} - Seed: $iMad/$iend - Ampl: $Ampl - Angle: $Angle "		
+	    fi
+	    
 	    sixdeskmess
 	    
 	    # ----------------------------------------------------------------------
@@ -1441,7 +1459,9 @@ function treatLong(){
 	        	    checkDirReadyForSubmission >/dev/null 2>&1
 	        	    if [ $? -gt 0 ] ; then
 	        		sixdeskmess="$RundirFullPath NOT ready for submission - regenerating the necessary input files!"
-	        		sixdeskmess
+				if ! ${lquiet}; then
+	        		    sixdeskmess
+				fi
 	        		__lGenerate=true
 	        	    fi
 	        	fi
