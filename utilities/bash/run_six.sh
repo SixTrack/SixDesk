@@ -941,11 +941,6 @@ function dot_bsub(){
     local __lerr=0
     local __taskno=""
 
-    touch $RundirFullPath/JOB_NOT_YET_STARTED
-    
-    # clean, in case
-    dot_clean
-    
     # actually submit
     multipleTrials "tmpLines=\"`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job 2>&1`\" ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Problem at bsub"
     let __lerr+=$?
@@ -971,7 +966,7 @@ function dot_bsub(){
 
     if [ ${__lerr} -eq 0 ] ; then
         # keep track of the $Runnam-taskid couple
-	updateTaskIdsCases $sixdeskjobs/jobs $sixdeskjobs/incomplete_jobs $__taskid
+	updateTaskIdsCases $sixdeskjobs/jobs $sixdeskjobs/incomplete_jobs $__taskid $Runnam
     else
 	rm -f $RundirFullPath/JOB_NOT_YET_STARTED 
     fi
@@ -979,18 +974,20 @@ function dot_bsub(){
     return $__lerr
 }
 
-function dot_task(){
-    return
+function dot_htcondor(){
+
+    # temporary variables
+    local __lerr=0
+
+    # add current point in scan to list of points to be submitted:
+    echo "$Rundir" >> ${sixdesktrack}/${LHCDesName}.list
+
+    return $__lerr
 }
 
 function dot_boinc(){
 
     local __lerr=0
-    
-    touch $RundirFullPath/JOB_NOT_YET_STARTED
-
-    # clean, in case
-    dot_clean
     
     # actually submit
     descFileNames=`ls -1 $RundirFullPath/*.desc 2> /dev/null`
@@ -1011,7 +1008,7 @@ function dot_boinc(){
         # the job has just started
 	touch $RundirFullPath/JOB_NOT_YET_COMPLETED
         # keep track of the $Runnam-taskid couple
-	updateTaskIdsCases $sixdeskjobs/tasks $sixdeskjobs/incomplete_tasks $sixdesktaskid
+	updateTaskIdsCases $sixdeskjobs/tasks $sixdeskjobs/incomplete_tasks $sixdesktaskid $Runnam
     fi
 
     rm -f $RundirFullPath/JOB_NOT_YET_STARTED
@@ -1054,6 +1051,7 @@ function dot_clean(){
     if [ -s $RundirFullPath/fort.10.gz ] || [ -s $RundirFullPath/JOB_NOT_YET_COMPLETED ]; then
 	rm -f $RundirFullPath/fort.10.gz
 	rm -f $RundirFullPath/JOB_NOT_YET_COMPLETED
+	rm -f $RundirFullPath/JOB_NOT_YET_STARTED 
 	sed -i -e '/^'$Runnam'$/d' $sixdeskwork/completed_cases
 	sed -i -e '/^'$Runnam'$/d' $sixdeskwork/mycompleted_cases
     fi
@@ -1076,26 +1074,27 @@ function updateTaskIdsCases(){
     local __outFile1=$1
     local __outFile2=$2
     local __taskid=$3
+    local __Runnam=$4
     local __taskids
     local __oldtaskid
 
-    __oldtaskid=`grep "$Runnam " $sixdeskwork/taskids`
+    __oldtaskid=`grep "${__Runnam} " $sixdeskwork/taskids`
     if [ -n "$__oldtaskid" ] ; then
 	__oldtaskid=`echo $__oldtaskid | cut -d " " -f2-`
-	sed -i -e '/'$Runnam' /d' $sixdeskwork/taskids
-	__taskids=$__oldtaskid" "$__taskid" "
-	sixdeskmess="Job $Runnam re-submitted with JobId/taskid $__taskid; old JobId/taskid(s) $__oldtaskid"
+	sed -i -e "/${__Runnam} /d" $sixdeskwork/taskids
+	__taskids="${__oldtaskid} ${__taskid} "
+	sixdeskmess="Job ${__Runnam} re-submitted with JobId/taskid $__taskid; old JobId/taskid(s) $__oldtaskid"
 	sixdeskmess 1
     else
 	__taskids=$__taskid
-	echo $Runnam >> $sixdeskwork/incomplete_cases
-	echo $Runnam >> $sixdeskwork/myincomplete_cases
-	sixdeskmess="Job $Runnam submitted with JobId/taskid $__taskid"
+	echo ${__Runnam} >> $sixdeskwork/incomplete_cases
+	echo ${__Runnam} >> $sixdeskwork/myincomplete_cases
+	sixdeskmess="Job ${__Runnam} submitted with JobId/taskid $__taskid"
 	sixdeskmess 1
     fi
-    echo "$Runnam $__taskids " >> $sixdeskwork/taskids
-    echo "$Runnam $__taskid " >> $__outFile1
-    echo "$Runnam $__taskid " >> $__outFile2
+    echo "${__Runnam} ${__taskids} " >> $sixdeskwork/taskids
+    echo "${__Runnam} ${__taskid} " >> $__outFile1
+    echo "${__Runnam} ${__taskid} " >> $__outFile2
     
 }
 
@@ -1287,6 +1286,10 @@ function treatShort(){
 	    if ${lsubmit} ; then
 	    # ------------------------------------------------------------------
 	        if ${__lSubmit} ; then
+                    # clean, in case
+		    dot_clean
+		    touch $RundirFullPath/JOB_NOT_YET_STARTED
+		    # actually submit
 	    	    dot_bsub
 		    local __exStatus=$?
 		    if [ ${__exStatus} -eq 0 ] ; then
@@ -1482,11 +1485,14 @@ function treatLong(){
 	        if ${lsubmit} ; then
 	        # ------------------------------------------------------------------
 	            if ${__lSubmit} ; then
+                        # clean, in case
+			dot_clean
+			touch $RundirFullPath/JOB_NOT_YET_STARTED
 	        	if [ "$sixdeskplatform" == "lsf" ] ; then
 	        	    dot_bsub
 			    local __exStatus=$?
-	        	elif [ "$sixdeskplatform" == "cpss" ] ; then
-	        	    dot_task
+	        	elif [ "$sixdeskplatform" == "htcondor" ] ; then
+	        	    dot_htcondor
 			    local __exStatus=$?
 	        	elif [ "$sixdeskplatform" == "boinc" ] ; then
 	        	    dot_boinc
@@ -1580,6 +1586,9 @@ function treatDA(){
 	    let NsuccessGen+=1
         fi
         if ${lsubmit} ; then
+            # clean, in case
+	    dot_clean
+	    touch $RundirFullPath/JOB_NOT_YET_STARTED
             # actually submit
             dot_bsub
 	    local __exStatus=$?
@@ -2074,19 +2083,32 @@ factor=`gawk 'END{fac=sqrt('$emit'/'$gamma');print fac}' /dev/null`
 dimsus=`gawk 'END{dimsus='$dimen'/2;print dimsus}' /dev/null` 
 sixdeskmess="factor $factor - dimsus $dimsus"
 sixdeskmess
-# - touch some files related to monitoring of submission of jobs
+# - DB files
 if ${lsubmit} ; then
     touch $sixdeskwork/completed_cases
     touch $sixdeskwork/mycompleted_cases
     touch $sixdeskwork/incomplete_cases
     touch $sixdeskwork/myincomplete_cases
     touch $sixdeskwork/taskids
-    if [ "$sixdeskplatform" == "lsf" ] ; then
+    if [ "$sixdeskplatform" == "lsf" ] || [ "$sixdeskplatform" == "htcondor" ] ; then
 	touch $sixdeskjobs/jobs
 	touch $sixdeskjobs/incomplete_jobs
     elif [ "$sixdeskplatform" == "boinc" ] ; then
 	touch $sixdeskjobs/tasks
 	touch $sixdeskjobs/incomplete_tasks
+    fi
+fi
+# - preparatory steps for submission to htcondor:
+if ${lsubmit} ; then
+    if [ "$sixdeskplatform" == "htcondor" ] ; then
+	cp ${SCRIPTDIR}/templates/htcondor/job.sh ${sixdesktrack}/${LHCDesName}.sh
+	cp ${SCRIPTDIR}/templates/htcondor/run_six.sub ${sixdesktrack}/${LHCDesName}.sub
+	rm -f ${sixdesktrack}/${LHCDesName}.list
+	# some set up of htcondor submission scripts
+	sed -i "s/^exe=.*/exe=${SIXTRACKEXE}/g" ${sixdesktrack}/${LHCDesName}.sh
+	sed -i "s/^runDirBaseName=.*/runDirBaseName=${sixdesktrack}/g" ${sixdesktrack}/${LHCDesName}.sh
+	chmod +x ${sixdesktrack}/${LHCDesName}.sh
+	sed -i "s/^executable = .*/executable = ${LHCDesName}.sh/g" ${sixdesktrack}/${LHCDesName}.sub
     fi
 fi
 # - MegaZip: get file name
@@ -2280,6 +2302,55 @@ if ${lrestart} ; then
 	    sixdeskmess="Starting angle ${angleStart} was not properly recognised!"
 	    sixdeskmess
 	fi
+    fi
+fi
+
+# HTCondor: run the actual command
+if ${lsubmit} ; then
+    if [ "$sixdeskplatform" == "htcondor" ] ; then
+	cd ${sixdesktrack}
+	sixdeskmess="Submitting jobs to $sixdeskplatform from dir $PWD"
+	sixdeskmess
+	allCases=`cat ${sixdesktrack}/${LHCDesName}.list`
+	allCases=( ${allCases} )
+	multipleTrials "terseString=`condor_submit -terse ${LHCDesName}.sub | head -1`; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Problem at condor_submit"
+	let __lerr+=$?
+	if [ ${__lerr} -ne 0 ] ; then
+	    sixdeskmess="Something wrong with htcondor submission: submission didn't work properly - exit status: ${__lerr}"
+	    sixdeskmess
+	    # generate a fake terse string, to anyway save what is possible to save (eg taskids and incomplete_cases) for a light restart
+	    clusterID="FAILED"
+	    jobIDmax=${#allCases[@]}
+	    # clean
+	    for (( ii=0; ii<${jobIDmax}; ii++ )) ; do
+		rm -f ${allCases[$ii]}/JOB_NOT_YET_STARTED 
+	    done
+	else
+	    sixdeskmess="Submission was successful"
+	    sixdeskmess
+	    # parse terse output (example: "23548.0 - 23548.4")
+	    clusterID=`echo "${terseString}" | cut -d\- -f2 | cut -d\. -f1`
+	    jobIDmax=`echo "${terseString}" | cut -d\- -f2 | cut -d\. -f2`
+	    let jobIDmax+=1
+	    if [ ${jobIDmax} -ne ${#allCases[@]} ] ; then
+		sixdeskmess="Something wrong with htcondor submission: I requested ${#allCases[@]} to be submitted, and only ${jobIDmax} actually made it!"
+		sixdeskmess
+		if [ ${#allCases[@]} -lt ${jobIDmax} ] ; then
+		    jobIDmax=${#allCases[@]}
+		fi
+	    fi
+	fi
+	# save taskIDs
+	sixdeskmess="Updating DB"
+	sixdeskmess
+	for (( ii=0; ii<${jobIDmax}; ii++ )) ; do
+	    let jj=$ii-1
+	    taskid="htcondor${clusterID}.${ii}"
+	    sixdeskFromJobDirToJobName ${allCases[$ii]} Runnam
+	    updateTaskIdsCases $sixdeskjobs/jobs $sixdeskjobs/incomplete_jobs $taskid $Runnam
+	done
+	rm ${sixdesktrack}/${LHCDesName}.list
+	cd -
     fi
 fi
 

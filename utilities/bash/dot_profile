@@ -801,6 +801,24 @@ sixdeskCheckNFieldsFromJobName(){
     fi
     return ${__lerr}
 }
+sixdeskFromJobNameToJobDir(){
+    eval "$2=`echo ${1//%//}`"
+}
+sixdeskFromJobDirToJobName(){
+    eval "$2=`echo ${1//\//%}`"
+}
+sixdeskFromStoSimul(){
+    eval "$2=`echo ${1//\/s\//\/simul\/}`"
+}
+sixdeskFromTtoTrans(){
+    eval "$2=`echo ${1//\/t\//\/trans\/}`"
+}
+sixdeskFromMtoMomen(){
+    eval "$2=`echo ${1//\/m\//\/momen\/}`"
+}
+sixdeskFromDtoDa(){
+    eval "$2=`echo ${1//\/d\//\/da\/}`"
+}
 sixdeskDefineWorkUnitName(){
     # $1: workspace name (ie $workspace)
     # $2: name of job (ie $Runnam)
