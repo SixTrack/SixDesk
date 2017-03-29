@@ -11,4 +11,5 @@ log = $(Cluster).log
 transfer_output_files = ""
 ShouldTransferFiles = YES
 WhenToTransferOutput = ON_EXIT_OR_EVICT
-queue dirname from dirs.list
+SendCredential = True
+queue dirname from

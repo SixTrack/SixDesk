@@ -2125,10 +2125,11 @@ if ${lsubmit} ; then
 	cp ${SCRIPTDIR}/templates/htcondor/htcondor_run_six.sub ${sixdesktrack}/htcondor_run_six_${LHCDesName}.sub
 	rm -f ${sixdesktrack}/${LHCDesName}.list
 	# some set up of htcondor submission scripts
-	sed -i "s/^exe=.*/exe=${SIXTRACKEXE}/g" ${sixdesktrack}/htcondor_job_${LHCDesName}.sh
-	sed -i "s/^runDirBaseName=.*/runDirBaseName=${sixdesktrack}/g" ${sixdesktrack}/htcondor_job_${LHCDesName}.sh
+ 	sed -i "s#^exe=.*#exe=${SIXTRACKEXE}#g" ${sixdesktrack}/htcondor_job_${LHCDesName}.sh
+	sed -i "s#^runDirBaseName=.*#runDirBaseName=${sixdesktrack}#g" ${sixdesktrack}/htcondor_job_${LHCDesName}.sh
 	chmod +x ${sixdesktrack}/htcondor_job_${LHCDesName}.sh
-	sed -i "s/^executable = .*/executable = htcondor_job_${LHCDesName}.sh/g" ${sixdesktrack}/htcondor_run_six_${LHCDesName}.sub
+	sed -i "s#^executable = .*#executable = htcondor_job_${LHCDesName}.sh#g" ${sixdesktrack}/htcondor_run_six_${LHCDesName}.sub
+	sed -i "s#^queue dirname from.*#queue dirname from ${LHCDesName}.list#g" ${sixdesktrack}/htcondor_run_six_${LHCDesName}.sub
     fi
 fi
 # - MegaZip: get file name
@@ -2343,7 +2344,7 @@ if ${lsubmit} ; then
 	sixdeskmess
 	allCases=`cat ${sixdesktrack}/${LHCDesName}.list`
 	allCases=( ${allCases} )
-	multipleTrials "terseString=`condor_submit -terse htcondor_run_six_${LHCDesName}.sub | head -1`; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Problem at condor_submit"
+	multipleTrials "terseString=\"`condor_submit -terse htcondor_run_six_${LHCDesName}.sub`\" ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Problem at condor_submit"
 	let __lerr+=$?
 	if [ ${__lerr} -ne 0 ] ; then
 	    sixdeskmess="Something wrong with htcondor submission: submission didn't work properly - exit status: ${__lerr}"
@@ -2359,8 +2360,9 @@ if ${lsubmit} ; then
 	    sixdeskmess="Submission was successful"
 	    sixdeskmess
 	    # parse terse output (example: "23548.0 - 23548.4")
-	    clusterID=`echo "${terseString}" | cut -d\- -f2 | cut -d\. -f1`
-	    jobIDmax=`echo "${terseString}" | cut -d\- -f2 | cut -d\. -f2`
+	    clusterID=`echo "${terseString}" | head -1 | cut -d\- -f2 | cut -d\. -f1`
+	    clusterID=${clusterID//\ /}
+	    jobIDmax=`echo "${terseString}" | head -1 | cut -d\- -f2 | cut -d\. -f2`
 	    let jobIDmax+=1
 	    if [ ${jobIDmax} -ne ${#allCases[@]} ] ; then
 		sixdeskmess="Something wrong with htcondor submission: I requested ${#allCases[@]} to be submitted, and only ${jobIDmax} actually made it!"
@@ -2371,7 +2373,7 @@ if ${lsubmit} ; then
 	    fi
 	fi
 	# save taskIDs
-	sixdeskmess="Updating DB"
+	sixdeskmess="Updating DB..."
 	sixdeskmess
 	for (( ii=0; ii<${jobIDmax}; ii++ )) ; do
 	    let jj=$ii-1
@@ -2380,7 +2382,7 @@ if ${lsubmit} ; then
 	    updateTaskIdsCases $sixdeskjobs/jobs $sixdeskjobs/incomplete_jobs $taskid $Runnam
 	done
 	rm ${sixdesktrack}/${LHCDesName}.list
-	cd -
+	cd - > /dev/null 2>&1
     fi
 fi
 

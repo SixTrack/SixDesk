@@ -112,7 +112,7 @@ function submit(){
 	
 	# clean away any existing results for this seed
 	echo " MadX seed: $iMad"
-	if ${__lsecond} ; then
+	if ${__lsecond} && [ "$sixdeskplatform" == "htcondor" ] ; then
 	    sixdeskmess="Sleeping ${__delay} seconds"
 	    sixdeskmess
 	    sleep ${__delay}
