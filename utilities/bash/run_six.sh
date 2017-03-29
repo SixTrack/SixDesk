@@ -43,6 +43,8 @@ function how_to_use() {
    -B      break backward-compatibility
            for the moment, this sticks only to expressions affecting ratio of
               emittances, amplitude scans and job names in fort.3
+   -i      submit only incomplete cases
+           NB: for the time being, this option works only for HTCondor
    -v      verbose (OFF by default)
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
@@ -1666,6 +1668,7 @@ lmegazip=false
 lbackcomp=true
 lverbose=false
 lrestart=false
+lincomplete=false
 restartPoint=""
 currPlatform=""
 currStudy=""
@@ -1674,7 +1677,7 @@ optArgCurrPlatForm=""
 verbose=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgsctakfvBSCMd:p:R:" opt ; do
+while getopts  ":hgsctakfvBSCMid:p:R:" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1726,6 +1729,10 @@ while getopts  ":hgsctakfvBSCMd:p:R:" opt ; do
 	M)
 	    # submission to boinc through MegaZip
 	    lmegazip=true
+	    ;;
+	i)
+	    # submit incomplete cases only
+	    lincomplete=true
 	    ;;
 	B)
 	    # use whatever breaks backward compatibility
@@ -1900,6 +1907,19 @@ else
     lrestartTune=false
     lrestartAmpli=false
     lrestartAngle=false
+fi
+#   . incomplete cases
+if ${lincomplete} ; then
+    if ! ${lsubmit} ; then
+	sixdeskmess="-i option available ONLY for submission! Switching it off"
+	sixdeskmess
+	lincomplete=false
+    fi
+    if [ "$sixdeskplatform" != "htcondor" ] ; then
+	sixdeskmess="-i option NOT available for platform ${sixdeskplatform}"
+	sixdeskmess
+	lincomplete=false
+    fi
 fi
 
 # - define user tree
@@ -2154,134 +2174,144 @@ else
 fi
 
 # main loop
-if ${lrestart} ; then
-    iMadStart=${MADstart}
-else
-    iMadStart=${ista}
-fi
-for (( iMad=${iMadStart}; iMad<=$iend; iMad++ )) ; do
-    echo ""
-    echo ""
-    echo ""
-    sixdeskmess="MADX seed $iMad"
-    sixdeskmess
-    if ${lgenerate} || ${lfix} ; then
-	iForts="2 8 16"
-	if [ "$fort_34" != "" ] ; then
-	    iForts="${iForts} 34"
-	fi
-	# required not only by boinc, but also by chroma/beta jobs
-	for iFort in ${iForts} ; do
-	    gunzip -c $sixtrack_input/fort.${iFort}_$iMad.gz > $sixtrack_input/fort.${iFort}
-	done
-    fi
-
-    for (( ii=0 ; ii<${#tunesYY[@]} ; ii++ )) ; do
-	if ${lSquaredTuneScan} ; then
-	    # squared scan: for a value of Qy, explore all values of Qx
-	    jmin=0
-	    jmax=${#tunesXX[@]}
-	else
-	    # linear scan: for a value of Qy, run only one value of Qx
-	    jmin=$ii
-	    let jmax=$jmin+1
-	fi
-	for (( jj=$jmin; jj<$jmax ; jj++ )) ; do
-	    tunexx=${tunesXX[$jj]}
-	    tuneyy=${tunesYY[$ii]}
-	    sixdesktunes=$tunexx"_"$tuneyy
-	    if ${lrestart} && ${lrestartTune} ; then
-		if [ "${tunesStart}" == "${sixdesktunes}" ] ; then
-		    lrestartTune=false
-		else
-		    continue
-		fi
-	    fi
-            #   ...notify user
-	    echo ""
-	    echo ""
-	    sixdeskmess="Tunescan $sixdesktunes"
-	    sixdeskmess
-  	    # - get simul path (storage of beta values), stored in $Rundir (returns Runnam, Rundir, actualDirName)...
-	    sixdeskDefinePointTree $LHCDesName $iMad "s" $sixdesktunes "" "" "" "" $sixdesktrack
-	    if [ $? -gt 0 ] ; then
-		# go to next tune values (sixdeskmess already printed out and email sent to user/admins)
-		continue
-	    fi
-	    # - int tunes
-	    sixdeskinttunes
-	    # - beta values?
-	    if [ $short -eq 1 ] || [ $long -eq 1 ] ; then
-	        if ${lgenerate} || ${lfix} ; then
-	    	    if [ ! -s ${RundirFullPath}/betavalues ] ; then
-	    		[ -d $RundirFullPath ] || mkdir -p $RundirFullPath
-	    		cd $sixdeskjobs_logs
-	    		if [ $chrom -eq 0 ] ; then
-	    		    sixdeskmess="Running two `basename $SIXTRACKEXE` (one turn) jobs to compute chromaticity"
-	    		    sixdeskmess
-	    		    submitChromaJobs $RundirFullPath
-	    		else
-	    		    sixdeskmess="Using Chromaticity specified as $chromx $chromy"
-	    		    sixdeskmess
-	    		fi
-	    		sixdeskmess="Running `basename $SIXTRACKEXE` (one turn) to get beta values"
-	    		sixdeskmess
-	    		submitBetaJob $RundirFullPath
-	    		cd $sixdeskhome
-	    	    fi
-	        fi
-	        if ${lcheck} ; then
-	    	    # checks
-	    	    sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -d
-	    	    let __lerr+=$?
-	    	    if [ $chrom -eq 0 ] ; then
-	    		sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s mychrom
-	    		let __lerr+=$?
-	    	    fi
-	    	    sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s betavalues
-	    	    let __lerr+=$?
-	    	    if [ ${__lerr} -gt 0 ] ; then
-	    		sixdeskmess="Failure in preparation."
-	    		sixdeskmess
-	    		exit ${__lerr}
-	    	    fi
-	        fi
-	        parseBetaValues $RundirFullPath
-	    fi	    
-	    
-	    # Resonance Calculation only
-	    N1=0
-	    if [ $N1 -gt 0 ] ; then
-	        N2=9
-	        Qx=63.28
-	        Qy=59.31
-	        nsr=10.
-	        Ax=`gawk 'END{Ax='$nsr'*sqrt('$emit'/'$gamma'*'$beta_x');print Ax}' /dev/null`
-	        Ay=`gawk 'END{Ay='$nsr'*sqrt('$emit'/'$gamma'*'$beta_y');print Ay}' /dev/null`
-	        echo "$Qx $Qy $Ax $Ay $N1 $N2" > $sixdeskjobs_logs/resonance
-	    fi
-	    
-	    # further actions depend on type of job
-	    if [ $short -eq 1 ] ; then
-	        treatShort
-	    elif [ $long -eq 1 ] ; then
-	        treatLong
-	    elif [ $da -eq 1 ] ; then
-	        treatDA
-	    fi
-	done
+if ${lincomplete} ; then
+    # fill in the list oj points to be submitted from $sixdeskwork/incomplete_cases
+    allCases=`cat $sixdeskwork/incomplete_cases`
+    allCases=( ${allCases} )
+    for (( ii=0; ii<${jobIDmax}; ii++ )) ; do
+	sixdeskFromJobNameToJobDir ${allCases[$ii]} Rundir
+	echo ${Rundir} >> ${sixdesktrack}/${LHCDesName}.list
     done
-    if ${lgenerate} || ${lfix} ; then
-	iForts="2 8 16"
-	if [ "$fort_34" != "" ] ; then
-	    iForts="${iForts} 34"
-	fi
-	# required not only by boinc, but also by chroma/beta jobs
-	for iFort in ${iForts} ; do
-	    rm -f $sixtrack_input/fort.${iFort}
-	done
-    fi	    
-done
+else
+    if ${lrestart} ; then
+        iMadStart=${MADstart}
+    else
+        iMadStart=${ista}
+    fi
+    for (( iMad=${iMadStart}; iMad<=$iend; iMad++ )) ; do
+        echo ""
+        echo ""
+        echo ""
+        sixdeskmess="MADX seed $iMad"
+        sixdeskmess
+        if ${lgenerate} || ${lfix} ; then
+    	    iForts="2 8 16"
+    	    if [ "$fort_34" != "" ] ; then
+    		iForts="${iForts} 34"
+    	    fi
+    	    # required not only by boinc, but also by chroma/beta jobs
+    	    for iFort in ${iForts} ; do
+    		gunzip -c $sixtrack_input/fort.${iFort}_$iMad.gz > $sixtrack_input/fort.${iFort}
+    	    done
+        fi
+    
+        for (( ii=0 ; ii<${#tunesYY[@]} ; ii++ )) ; do
+    	    if ${lSquaredTuneScan} ; then
+    	        # squared scan: for a value of Qy, explore all values of Qx
+    		jmin=0
+    		jmax=${#tunesXX[@]}
+    	    else
+    	        # linear scan: for a value of Qy, run only one value of Qx
+    		jmin=$ii
+    		let jmax=$jmin+1
+    	    fi
+    	    for (( jj=$jmin; jj<$jmax ; jj++ )) ; do
+    		tunexx=${tunesXX[$jj]}
+    		tuneyy=${tunesYY[$ii]}
+    		sixdesktunes=$tunexx"_"$tuneyy
+    		if ${lrestart} && ${lrestartTune} ; then
+    		    if [ "${tunesStart}" == "${sixdesktunes}" ] ; then
+    			lrestartTune=false
+    		    else
+    			continue
+    		    fi
+    		fi
+                #   ...notify user
+    		echo ""
+    		echo ""
+    		sixdeskmess="Tunescan $sixdesktunes"
+    		sixdeskmess
+      	        # - get simul path (storage of beta values), stored in $Rundir (returns Runnam, Rundir, actualDirName)...
+    		sixdeskDefinePointTree $LHCDesName $iMad "s" $sixdesktunes "" "" "" "" $sixdesktrack
+    		if [ $? -gt 0 ] ; then
+    		    # go to next tune values (sixdeskmess already printed out and email sent to user/admins)
+    		    continue
+    		fi
+    	        # - int tunes
+    		sixdeskinttunes
+    	        # - beta values?
+    		if [ $short -eq 1 ] || [ $long -eq 1 ] ; then
+    	            if ${lgenerate} || ${lfix} ; then
+    	    		if [ ! -s ${RundirFullPath}/betavalues ] ; then
+    	    		    [ -d $RundirFullPath ] || mkdir -p $RundirFullPath
+    	    		    cd $sixdeskjobs_logs
+    	    		    if [ $chrom -eq 0 ] ; then
+    	    			sixdeskmess="Running two `basename $SIXTRACKEXE` (one turn) jobs to compute chromaticity"
+    	    			sixdeskmess
+    	    			submitChromaJobs $RundirFullPath
+    	    		    else
+    	    			sixdeskmess="Using Chromaticity specified as $chromx $chromy"
+    	    			sixdeskmess
+    	    		    fi
+    	    		    sixdeskmess="Running `basename $SIXTRACKEXE` (one turn) to get beta values"
+    	    		    sixdeskmess
+    	    		    submitBetaJob $RundirFullPath
+    	    		    cd $sixdeskhome
+    	    		fi
+    	            fi
+    	            if ${lcheck} ; then
+    	    	        # checks
+    	    		sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -d
+    	    		let __lerr+=$?
+    	    		if [ $chrom -eq 0 ] ; then
+    	    		    sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s mychrom
+    	    		    let __lerr+=$?
+    	    		fi
+    	    		sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s betavalues
+    	    		let __lerr+=$?
+    	    		if [ ${__lerr} -gt 0 ] ; then
+    	    		    sixdeskmess="Failure in preparation."
+    	    		    sixdeskmess
+    	    		    exit ${__lerr}
+    	    		fi
+    	            fi
+    	            parseBetaValues $RundirFullPath
+    		fi	    
+    		
+    	        # Resonance Calculation only
+    		N1=0
+    		if [ $N1 -gt 0 ] ; then
+    	            N2=9
+    	            Qx=63.28
+    	            Qy=59.31
+    	            nsr=10.
+    	            Ax=`gawk 'END{Ax='$nsr'*sqrt('$emit'/'$gamma'*'$beta_x');print Ax}' /dev/null`
+    	            Ay=`gawk 'END{Ay='$nsr'*sqrt('$emit'/'$gamma'*'$beta_y');print Ay}' /dev/null`
+    	            echo "$Qx $Qy $Ax $Ay $N1 $N2" > $sixdeskjobs_logs/resonance
+    		fi
+    		
+    	        # further actions depend on type of job
+    		if [ $short -eq 1 ] ; then
+    	            treatShort
+    		elif [ $long -eq 1 ] ; then
+    	            treatLong
+    		elif [ $da -eq 1 ] ; then
+    	            treatDA
+    		fi
+    	    done
+        done
+        if ${lgenerate} || ${lfix} ; then
+    	    iForts="2 8 16"
+    	    if [ "$fort_34" != "" ] ; then
+    		iForts="${iForts} 34"
+    	    fi
+    	    # required not only by boinc, but also by chroma/beta jobs
+    	    for iFort in ${iForts} ; do
+    		rm -f $sixtrack_input/fort.${iFort}
+    	    done
+        fi	    
+    done
+fi
 
 # restart check
 if ${lrestart} ; then
