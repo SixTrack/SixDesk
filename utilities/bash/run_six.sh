@@ -782,32 +782,11 @@ function submitCreateFinalInputs(){
 	# - return sixdeskTaskName and workunitName
 	sixdeskDefineWorkUnitName $workspace $Runnam $sixdesktaskid
 	# - generate zip file
-	local __gotit=false
-	for (( mytries=1 ; mytries<=10; mytries++ )) ; do
-	    #   NB: -j option, to store only the files, and not the source paths
-	    zip -j $RundirFullPath/$workunitName.zip $sixdeskjobs_logs/fort.3 $sixtrack_input/fort.2 $sixtrack_input/fort.8 $sixtrack_input/fort.16 > $RundirFullPath/zip.log 2>&1
- 	    # check zipping
-	    local __zip_exit_status=$?
-	    grep warning $RundirFullPath/zip.log >/dev/null 2>&1
-	    local __zip_warnings=$?
-	    if [ ${__zip_exit_status} -ne 0 ] || [ ${__zip_warnings} -eq 0 ] ; then
-		sixdeskmess="Failing to generate .zip file for WU ${workunitName} - trial ${mytries}!!!"
-		sixdeskmess
-	    else
-		__gotit=true
-		rm -f $RundirFullPath/zip.log
-		break
-	    fi
-	done
-	if ! ${__gotit} ; then
-	    sixdeskmess="failed to generate .zip file for WU ${workunitName} ${mytries} times!!!"
-	    sixdeskmess
-	    # leave the last log file in place, for post-mortem analysis
-	    exit ${mytries}
-	fi
-
-	# - generate the workunit description file
-	cat > $RundirFullPath/$workunitName.desc <<EOF
+	multipleTrials "zip -j $RundirFullPath/$workunitName.zip $sixdeskjobs_logs/fort.3 $sixtrack_input/fort.2 $sixtrack_input/fort.8 $sixtrack_input/fort.16 > $RundirFullPath/zip.log 2>&1; local __zip_exit_status=\$? ; grep warning $RundirFullPath/zip.log >/dev/null 2>&1 ; local __zip_warnings=\$? ; rm -f $RundirFullPath/zip.log" "[ \${__zip_exit_status} -eq 0 ] && [ \${__zip_warnings} -eq 0 ]" "Failing to generate .zip file for WU ${workunitName}"
+	let __lerr+=$?
+	if [ ${__lerr} -eq 0 ] ; then
+	    # - generate the workunit description file
+	    cat > $RundirFullPath/$workunitName.desc <<EOF
 $workunitName
 $fpopsEstimate 
 $fpopsBound
@@ -821,10 +800,11 @@ $numIssues
 $resultsWithoutConcensus
 EOF
 
-	# - update MegaZip file:
-	if ${lmegazip} ; then
-	    echo "$RundirFullPath/$workunitName.desc" >> ${sixdeskjobs_logs}/megaZipList.txt
-	    echo "$RundirFullPath/$workunitName.zip" >> ${sixdeskjobs_logs}/megaZipList.txt
+  	    # - update MegaZip file:
+	    if ${lmegazip} ; then
+		echo "$RundirFullPath/$workunitName.desc" >> ${sixdeskjobs_logs}/megaZipList.txt
+		echo "$RundirFullPath/$workunitName.zip" >> ${sixdeskjobs_logs}/megaZipList.txt
+	    fi
 	fi
     fi
     
