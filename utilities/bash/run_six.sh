@@ -339,23 +339,23 @@ function preProcessShort(){
             $sixdeskjobs_logs/sussix.tmp.3
 	let __lerr+=$?
 	sed -e 's/%suss//g' \
-	    ${SCRIPTDIR}/templates/lsf/${lsfjobtype}.job > $sixdeskjobs_logs/${lsfjobtype}.job
+	    ${SCRIPTDIR}/templates/lsf/${lsfjobtype}.sh > $sixdeskjobs_logs/${lsfjobtype}.sh
     else
 	sed -e 's/%suss/'#'/g' \
-            ${SCRIPTDIR}/templates/lsf/${lsfjobtype}.job > $sixdeskjobs_logs/${lsfjobtype}.job
+            ${SCRIPTDIR}/templates/lsf/${lsfjobtype}.sh > $sixdeskjobs_logs/${lsfjobtype}.sh
     fi
     let __lerr+=$?
     sed -i -e 's?SIXTRACKEXE?'$SIXTRACKEXE'?g' \
-           -e 's?SIXDESKHOME?'$sixdeskhome'?g' $sixdeskjobs_logs/${lsfjobtype}.job
+           -e 's?SIXDESKHOME?'$sixdeskhome'?g' $sixdeskjobs_logs/${lsfjobtype}.sh
     let __lerr+=$?
-    chmod 755 $sixdeskjobs_logs/${lsfjobtype}.job
+    chmod 755 $sixdeskjobs_logs/${lsfjobtype}.sh
     let __lerr+=$?
     sed -e 's/%suss/'#'/g' \
         -e 's?SIXTRACKEXE?'$SIXTRACKEXE'?g' \
 	-e 's?SIXDESKHOME?'$sixdeskhome'?g' \
-        ${SCRIPTDIR}/templates/lsf/${lsfjobtype}.job > $sixdeskjobs_logs/${lsfjobtype}0.job
+        ${SCRIPTDIR}/templates/lsf/${lsfjobtype}.sh > $sixdeskjobs_logs/${lsfjobtype}0.sh
     let __lerr+=$?
-    chmod 755 $sixdeskjobs_logs/${lsfjobtype}0.job
+    chmod 755 $sixdeskjobs_logs/${lsfjobtype}0.sh
     let __lerr+=$?
     return $__lerr
 }
@@ -880,7 +880,7 @@ function checkDirReadyForSubmission(){
     sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s fort.2.gz fort.3.gz fort.8.gz fort.16.gz
     let __lerr+=$?
     if [ "$sixdeskplatform" == "lsf" ] ; then
-	sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s $Runnam.job
+	sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s $Runnam.sh
 	let __lerr+=$?
     elif [ "$sixdeskplatform" == "boinc" ] ; then
 	# - there should be only 1 .desc/.zip files
@@ -944,7 +944,7 @@ function dot_bsub(){
     local __taskno=""
 
     # actually submit
-    multipleTrials "tmpLines=\"`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job 2>&1`\" ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Problem at bsub"
+    multipleTrials "tmpLines=\"`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.sh 2>&1`\" ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Problem at bsub"
     let __lerr+=$?
 
     # verify that submission was successfull
@@ -962,7 +962,7 @@ function dot_bsub(){
 	fi
 	sixdeskmess
     else
-	sixdeskmess="bsub of $RundirFullPath/$Runnam.job to Queue ${lsfq} failed !!! - going to next WU!"
+	sixdeskmess="bsub of $RundirFullPath/$Runnam.sh to Queue ${lsfq} failed !!! - going to next WU!"
 	sixdeskmess
     fi
 
@@ -1245,14 +1245,14 @@ function treatShort(){
 	    		sed -e 's?SIXJOBNAME?'$Runnam'?g' \
 	    		    -e 's?SIXJOBDIR?'$Rundir'?g' \
 	    		    -e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
-	    		    $sixdeskjobs_logs/${lsfjobtype}0.job > $RundirFullPath/$Runnam.job
+	    		    $sixdeskjobs_logs/${lsfjobtype}0.sh > $RundirFullPath/$Runnam.sh
 	    	    else
 	    		sed -e 's?SIXJOBNAME?'$Runnam'?g' \
 	    		    -e 's?SIXJOBDIR?'$Rundir'?g' \
 	    		    -e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
-	    		    $sixdeskjobs_logs/${lsfjobtype}.job > $RundirFullPath/$Runnam.job
+	    		    $sixdeskjobs_logs/${lsfjobtype}.sh > $RundirFullPath/$Runnam.sh
 	    	    fi
-	    	    chmod 755 $RundirFullPath/$Runnam.job
+	    	    chmod 755 $RundirFullPath/$Runnam.sh
 
 		    let NsuccessGen+=1
 	        fi
@@ -1450,8 +1450,8 @@ function treatLong(){
 	        		-e 's?SIXJOBDIR?'$Rundir'?g' \
 	        		-e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
 	        		-e 's?SIXTRACKEXE?'$SIXTRACKEXE'?g' \
-	        		-e 's?SIXCASTOR?'$sixdeskcastor'?g' ${SCRIPTDIR}/templates/lsf/${lsfjobtype}.job > $RundirFullPath/$Runnam.job
-	        	    chmod 755 $RundirFullPath/$Runnam.job
+	        		-e 's?SIXCASTOR?'$sixdeskcastor'?g' ${SCRIPTDIR}/templates/lsf/${lsfjobtype}.sh > $RundirFullPath/$Runnam.sh
+	        	    chmod 755 $RundirFullPath/$Runnam.sh
 	        	fi
 			let NsuccessGen+=1
 	            fi
@@ -1583,8 +1583,8 @@ function treatDA(){
                 -e 's?SIXTRACKDAEXE?'$SIXTRACKDAEXE'?g' \
                 -e 's?SIXJOBDIR?'$Rundir'?g' \
                 -e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
-                -e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' $sixdeskhome/utilities/${lsfjobtype}.job > $sixdeskjobs_logs/$Runnam.job
-            chmod 755 $sixdeskjobs_logs/$Runnam.job
+                -e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' $sixdeskhome/utilities/${lsfjobtype}.sh > $sixdeskjobs_logs/$Runnam.sh
+            chmod 755 $sixdeskjobs_logs/$Runnam.sh
 	    let NsuccessGen+=1
         fi
         if ${lsubmit} ; then
@@ -2041,7 +2041,7 @@ if ${lcheck} ; then
 	    let __lerr+=$?
 	    echo $__lerr
 	fi
-	sixdeskInspectPrerequisites true ${sixdeskjobs_logs} -s ${lsfjobtype}.job ${lsfjobtype}0.job
+	sixdeskInspectPrerequisites true ${sixdeskjobs_logs} -s ${lsfjobtype}.sh ${lsfjobtype}0.sh
 	let __lerr+=$?
     elif [ $da -eq 1 ] ; then
 	sixdeskInspectPrerequisites true ${sixdeskjobs_logs} -s dalie.data dalie.input dalie reson.data readda
