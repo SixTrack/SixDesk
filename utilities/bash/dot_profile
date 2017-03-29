@@ -637,20 +637,19 @@ sixdeskrundir()
 	local __lbackcomp=true
     fi
     if test "$BNL" = "" ; then
-	if ${__lbackcomp} ; then
-	    rundirname1=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/e\6/?'`
-	else
-	    rundirname1=`echo $runnamename | sed -e's?\([^%]*\)%\([^%]*\)%\([^%]\)%\([^%]*\)%\([^%]*\)%\([^%]*\)%?\1/\2/\3/\4/\5/\6/?'`
-	fi
-	rundirname2=`echo $rundirname1 | sed -e's?/s/?/simul/?'`
-	rundirname3=`echo $rundirname2 | sed -e's?/t/?/trans/?'`
-	rundirname4=`echo $rundirname3 | sed -e's?/m/?/momen/?'`
-	rundirname5=`echo $rundirname4 | sed -e's?/d/?/da/?'`
+	rundirname5=`echo "$runnamename" | awk -v "lbackcomp=${__lbackcomp}" '
+             BEGIN{FS="%"; OFS="/";}{
+                  if ( lbackcomp=="true" ) {$6="e"$6}
+                  if      ( $3=="s" ) {$3="simul"}
+                  else if ( $3=="t" ) {$3="trans"}
+                  else if ( $3=="m" ) {$3="momen"}
+                  else if ( $3=="d" ) {$3="da"}
+                  print}'`
     else
-	rundirname5=`echo $runnamename | sed -e 's?%?\/?g'`
+	rundirname5=`echo "$runnamename" | awk 'BEGIN{FS="%"; OFS="/";}{$3=$3; print}'`
     fi
     # remove trailing slashes
-    rundirname=`echo ${rundirname5} | sed 's:/*$::'`
+    rundirname=`echo "${rundirname5}" | sed 's:/*$::'`
 }
 sixdeskDefineUserTree(){
     # define the tree in the userspace
@@ -718,138 +717,100 @@ sixdeskDefinePointTree(){
     actualDirNameFullPath=""
 
     # temporary variables
-    iCountMax=10
     local __lerr=0
-    local __delay=3
+    local __errMess="sixdeskDefinePointTree - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9"
 
     # -- Runnam
-    iCount=0
-    local __lok=false
-    local __lprobl=false
-    while [ $iCount -lt $iCountMax ] ; do
-	if [ $iCount -gt 1 ] ; then
-            sixdeskmess="Sleeping ${__delay} seconds"
-            sixdeskmess
-	    sleep ${__delay}
-	fi
-	Runnam=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
-	sixdeskSanitizeString "${Runnam}" Runnam
-	if [ -n "${Runnam}" ] ; then
-	    __lok=true
-	    break
-	else
-	    __lprobl=true
-	    # get ready to report a problem
-	    sixdeskEchoEnvVars /tmp/envs_${iCount}.txt
-	fi
-	let iCount+=1
-    done
-    if ${__lprobl} ; then
-	if ${__lok} ; then
-	    sixdeskmess="Warn: failed to generate Runnam ${iCount} times, but managed to survive! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going on..."
-	    local __emailSubj='Warning'
-	else
-	    sixdeskmess="Err: failed to generate Runnam too many times (i.e. ${iCountMax})! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going to next WU..."
-	    local __emailSubj='Error'
-	    let __lerr+=1
-	fi
-	sixdeskmess
-	sixdeskSendNotifMail ${__emailSubj}
-    fi
+    multipleTrials "local __Runnam=${1}%${2}%${3}%${4}%${5}%${6}%${7}; sixdeskSanitizeString \"\${__Runnam}\" Runnam" "[ -n \"\${Runnam}\" ]" "Problem at Runnam - ${__errMess}"
+    let __lerr+=$?
 
     # -- Rundir
-    iCount=0
-    local __lok=false
-    local __lprobl=false
-    while [ $iCount -lt $iCountMax ] ; do
-	if [ $iCount -gt 1 ] ; then
-            sixdeskmess="Sleeping ${__delay} seconds"
-            sixdeskmess
-	    sleep ${__delay}
-	fi
-	if [ -z "$6" ] ; then
-	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%'$7
-	else
-	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%'$7
-	fi
-	sixdeskrundir false
-	Rundir=$rundirname
-	sixdeskSanitizeString "${Rundir}" Rundir
-	RundirFullPath="$9/$Rundir"
-	sixdeskSanitizeString "${RundirFullPath}" RundirFullPath
-	if [ -n "${Rundir}" ] && [ -n "${RundirFullPath}" ] ; then
-	    __lok=true
-	    break
-	else
-	    __lprobl=true
-	    # get ready to report a problem
-	    sixdeskEchoEnvVars /tmp/envs_${iCount}.txt
-	fi
-	let iCount+=1
-    done
-    if ${__lprobl} ; then
-	if ${__lok} ; then
-	    sixdeskmess="Warn: failed to generate Rundir and/or RundirFullPath ${iCount} times, but managed to survive! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going on..."
-	    local __emailSubj='Warning'
-	else
-	    sixdeskmess="Err: failed to generate Rundir and/or RundirFullPath too many times (i.e. ${iCountMax})! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going to next WU..."
-	    local __emailSubj='Error'
-	    let __lerr+=1
-	fi
-	sixdeskmess
-	sixdeskSendNotifMail ${__emailSubj}
+    if [ -z "$6" ] ; then
+	runnamename="${1}%${2}%${3}%${4}%${5}%${6}%${7}"
+    else
+	runnamename="${1}%${2}%${3}%${4}%${5}%e${6}%${7}"
     fi
+    multipleTrials "sixdeskrundir false; local __Rundir=\${rundirname}; sixdeskSanitizeString \"\${__Rundir}\" Rundir" "[ -n \"\${Rundir}\" ]" "Problem at Rundir - ${__errMess}"
+    let __lerr+=$?
+    multipleTrials "local __RundirFullPath=$9/$Rundir ; sixdeskSanitizeString \"\${__RundirFullPath}\" RundirFullPath" "[ -n \"\${RundirFullPath}\" ]" "Problem at RundirFullPath - ${__errMess}"
+    let __lerr+=$?
 
     # -- actualDirName
-    iCount=0
-    local __lok=false
-    local __lprobl=false
-    while [ $iCount -lt $iCountMax ] ; do
-	if [ $iCount -gt 1 ] ; then
-            sixdeskmess="Sleeping ${__delay} seconds"
-            sixdeskmess
-	    sleep ${__delay}
-	fi
-	if [ -z "$6" ] ; then
-	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%'$6'%.'$8
-	else
-	    runnamename=$1'%'$2'%'$3'%'$4'%'$5'%e'$6'%.'$8
-	fi
-	sixdeskrundir false
-	actualDirName=$rundirname
-	sixdeskSanitizeString "${actualDirName}" actualDirName
-	actualDirNameFullPath="$9/$actualDirName"
-	sixdeskSanitizeString "${actualDirNameFullPath}" actualDirNameFullPath
-	if [ -n "${actualDirName}" ] && [ -n "${actualDirNameFullPath}" ] ; then
-	    __lok=true
-	    break
-	else
-	    __lprobl=true
-	    # get ready to report a problem
-	    sixdeskEchoEnvVars /tmp/envs_${iCount}.txt
-	fi
-	let iCount+=1
-    done
-    if ${__lprobl} ; then
-	if ${__lok} ; then
-	    sixdeskmess="Warn: failed to generate actualDirName and/or actualDirNameFullPath ${iCount} times, but managed to survive! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going on... "
-	    local __emailSubj='Warning'
-	else
-	    sixdeskmess="Err: failed to generate actualDirName and/or actualDirNameFullPath too many times (i.e. ${iCountMax})! - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9 - going to next WU..."
-	    local __emailSubj='Error'
-	    let __lerr+=1
-	fi
-	sixdeskmess
-	sixdeskSendNotifMail ${__emailSubj}
+    if [ -z "$6" ] ; then
+	runnamename="${1}%${2}%${3}%${4}%${5}%${6}%.${8}"
+    else
+	runnamename="${1}%${2}%${3}%${4}%${5}%e${6}%.${8}"
     fi
+    multipleTrials "sixdeskrundir false; local __actualDirName=\${rundirname}; sixdeskSanitizeString \"\${__actualDirName}\" actualDirName" "[ -n \"\${actualDirName}\" ]" "Problem at actualDirName - ${__errMess}"
+    let __lerr+=$?
+    multipleTrials "local __actualDirNameFullPath=$9/$actualDirName ; sixdeskSanitizeString \"\${__actualDirNameFullPath}\" actualDirNameFullPath" "[ -n \"\${actualDirNameFullPath}\" ]" "Problem at actualDirNameFullPath - ${__errMess}"
+    let __lerr+=$?
+
     return $__lerr
+}
+sixdeskGetMADseedFromJobName(){
+    local __Runnam=$1
+    local __result=`echo "${__Runnam}" | cut -d\% -f2`
+    eval "$2=${__result}"
+}
+sixdeskGetTunesTagFromJobName(){
+    local __Runnam=$1
+    local __result=`echo "${__Runnam}" | cut -d\% -f4`
+    eval "$2=${__result}"
+}
+sixdeskGetAmpliTagFromJobName(){
+    local __Runnam=$1
+    local __result=`echo "${__Runnam}" | cut -d\% -f5`
+    eval "$2=${__result}"
+}
+sixdeskGetAngleFromJobName(){
+    local __Runnam=$1
+    local __result=`echo "${__Runnam}" | cut -d\% -f7`
+    eval "$2=${__result}"
+}
+sixdeskGetNFieldsFromJobName(){
+    local __Runnam=$1
+    local __result=`echo "${__Runnam}" | awk 'BEGIN{FS="%"}{print (NF)}'`
+    eval "$2=${__result}"
+}
+sixdeskCheckNFieldsFromJobName(){
+    local __Runnam=$1
+    local __lerr=0
+    local __Nfields
+    sixdeskGetNFieldsFromJobName "${__Runnam}" __NFields
+    if [ ${NFields} -ne 7 ] ; then
+	sixdeskmess="Not valid format of point in scan; ${__Runnam}"
+	sixdeskmess
+	sixdeskmess="It should be made up of 7 fields separated by a '%' char"
+	sixdeskmess
+        sixdeskmess="1. LHCDesName;"
+	sixdeskmess
+        sixdeskmess="2. MadX seed;"
+	sixdeskmess
+        sixdeskmess="3. tag (s/t/m/d);"
+	sixdeskmess
+        sixdeskmess="4. tunes;"
+	sixdeskmess
+        sixdeskmess="5. amplitude range;"
+	sixdeskmess
+        sixdeskmess="6. turn exponent;"
+	sixdeskmess
+        sixdeskmess="7. angle"
+	sixdeskmess
+	__lerr=1
+    fi
+    return ${__lerr}
 }
 sixdeskDefineWorkUnitName(){
     # $1: workspace name (ie $workspace)
     # $2: name of job (ie $Runnam)
     # $3: task ID (ie $sixdesktaskid)
-    sixdeskTaskName=`echo $1"_"$2 | sed -e's?%?__?g'`
-    workunitName=$sixdeskTaskName"_1_sixvf_"$3
+    local __lerr=0
+    multipleTrials "sixdeskTaskName=\"`echo \"${1}_${2}\" | awk 'BEGIN{FS=\"%\"; OFS=\"__\"}{\$3=\$3; print}'`\"" "[ -n \"\${sixdeskTaskName}\" ]"
+    let __lerr+=$?
+    multipleTrials "workunitName=\"${sixdeskTaskName}_1_sixvf_${3}\"" "[ -n \"\${workunitName}\" ]"
+    let __lerr+=$?
+    return $__lerr
 }
 sixdeskDefineMegaZipName(){
     local __workSpaceName=$1
@@ -1171,7 +1132,8 @@ function sixdeskSendNotifMail(){
     local __receiverNames="amereghe"
     # do bother user only in case of a real error
     if [ -n "${__emailSubj}" ] ; then
-	if [ `echo ${__emailSubj} | grep -e Error -e "ERROR" -e "error" | wc -l` -gt 0 ] ; then
+	if [ `echo ${__emailSubj} | grep -e "Error" -e "ERROR" -e "error" -e "Fatal" -e "FATAL" -e "fatal" | wc -l` -gt 0 ] ; then
+	    # email subject contains error/fatal: add user to list of recipients
 	    __receiverNames="${__receiverNames} $LOGNAME"
 	fi
     fi
@@ -1196,4 +1158,64 @@ function sixdeskEchoEnvVars(){
     else
 	compgen -v | while read line; do all=$line"[*]"; echo $line=${!all}; done
     fi
+}
+function multipleTrials(){
+    local __command="$1"
+    local __test="$2"
+    if [ $# -ge 3 ] ; then
+	local __errMess=$3
+    else
+	local __errMess="Failing command \"${__command}\""
+    fi
+    if [ $# -ge 4 ] ; then
+	local __delay=$4
+    else
+	local __delay=3
+    fi
+    if [ $# -ge 5 ] ; then
+	local __iCountMax=$5
+    else
+	local __iCountMax=10
+    fi
+    local __lsuccess=false
+
+    # initialise cycle
+    local __iCount=1
+    local __lok=false
+    local __lprobl=false
+    local __lerr=0
+    # cycle
+    while [ $__iCount -le $__iCountMax ] ; do
+	if [ $__iCount -ge 2 ] ; then
+            sixdeskmess="multipleTrials - trial n. ${__iCount} - sleeping ${__delay} seconds"
+            sixdeskmess
+	    sleep ${__delay}
+	fi
+	eval "${__command}"
+	if eval "${__test}" ; then
+	    __lok=true
+	    break
+	fi
+	__lprobl=true
+	# get ready to report a problem
+	sixdeskmess="${__errMess} - trial n. ${__iCount}!"
+	sixdeskEchoEnvVars /tmp/envs_${__iCount}.txt
+	let __iCount+=1
+    done
+    if ${__lprobl} ; then
+	if ${__lok} ; then
+	    sixdeskmess="Warning - ${__errMess} - but manged to survive at iteration n. ${__iCount}!"
+	    local __emailSubj='Warning'
+	else
+	    sixdeskmess="Error - ${__errMess} - reached max acceptable repetitions (ie ${__iCountMax})!"
+	    local __emailSubj='Error'
+	    let __lerr+=1
+	fi
+	sixdeskmess
+	sixdeskSendNotifMail "${__emailSubj}"
+    elif ${__lsuccess}; then
+	sixdeskmess="success!"
+	sixdeskmess
+    fi
+    return $__lerr
 }

@@ -54,7 +54,7 @@ function preliminaryChecksM6T(){
 }
 
 function submit(){
-    local __delay=2
+    local __delay=10
 
     # useful echo
     # - madx version and path
@@ -106,10 +106,17 @@ function submit(){
 
     # Loop over seeds
     mad6tjob=$lsfFilesPath/mad6t1.lsf
+    local __lfirst=true
+    local __lsecond=false
     for (( iMad=$istamad ; iMad<=$iendmad ; iMad++ )) ; do
 	
 	# clean away any existing results for this seed
 	echo " MadX seed: $iMad"
+	if ${__lsecond} ; then
+	    sixdeskmess="Sleeping ${__delay} seconds"
+	    sixdeskmess
+	    sleep ${__delay}
+	fi
 	for f in 2 8 16 34 ; do
 	    rm -f $sixtrack_input/fort.$f"_"$iMad.gz
 	done
@@ -127,10 +134,7 @@ function submit(){
 	    -e 's?%MADX%?'$MADX'?g' \
 	    -e 's?%SIXTRACK_INPUT%?'$sixtrack_input'?g' $mad6tjob > mad6t_"$iMad".lsf
 	chmod 755 mad6t_"$iMad".lsf
-        sixdeskmess="Sleeping ${__delay} seconds"
-        sixdeskmess
-	sleep ${__delay}
-	
+
 	if ${linter} ; then
 	    sixdeskmktmpdir batch ""
 	    cd $sixdesktmpdir
@@ -143,6 +147,12 @@ function submit(){
 	    fi
 	fi
 	mad6tjob=$lsfFilesPath/mad6t.lsf
+	if ${__lfirst} ; then
+	    __lfirst=false
+	    __lsecond=true
+	elif ${__lsecond} ; then
+	    __lsecond=false
+	fi
     done
 
     if [ "$sixdeskplatform" == "htcondor" ] && ! ${linter} ; then
@@ -174,7 +184,7 @@ function check(){
 	sixdeskmess
 	sixdeskmess="If these messages are annoying you and you have checked them carefully then"
 	sixdeskmess
-	sixdeskmess="just remove sixtrack_input/ERRORS or rm sixtrack_input/* and rerun `basname $0` -s!"
+	sixdeskmess="just remove sixtrack_input/ERRORS or rm sixtrack_input/* and rerun `basename $0` -s!"
 	sixdeskmess
 	echo "ERRORS"
 	cat $sixtrack_input/ERRORS

@@ -33,6 +33,9 @@ function how_to_use() {
            in case of submission, submit those directories requiring actual submission
               (see previous point)
            NB: this option is NOT active in case of -c only!
+   -R      restart action from the specified point in scan (e.g.
+           -R lhc_coll%1%s%65_64%3_4%5%37.5)
+           NB: cannot be used with -S!
    -M      MegaZip: in case of boinc, WUs all zipped in one file.
               (.zip/.desc files of each WU will be put in a big .zip)
            this option shall be used with both -g and -s actions, and in case
@@ -763,6 +766,8 @@ function submitCreateFinalFort3DA(){
 }
 
 function submitCreateFinalInputs(){
+    local __lerr=0
+
     sixdeskmess="Taking care of SIXTRACK fort.2/fort.3/fort.8/fort.16 in $RundirFullPath"
     sixdeskmess
 
@@ -831,8 +836,9 @@ EOF
 	    echo "$RundirFullPath/$workunitName.desc" >> ${sixdeskjobs_logs}/megaZipList.txt
 	    echo "$RundirFullPath/$workunitName.zip" >> ${sixdeskjobs_logs}/megaZipList.txt
 	fi
-
     fi
+    
+    return $__lerr
 }
 
 function fixDir(){
@@ -908,21 +914,17 @@ function checkDirReadyForSubmission(){
 	# - there should be only 1 .desc/.zip files
 	fileNames=""
 	for extension in .desc .zip ; do
-	    tmpFileNames=`ls -1 $RundirFullPath/*${extension} 2> /dev/null`
-	    if [ -z "${tmpFileNames}" ] ; then
+	    tmpFileName=`ls -1tr $RundirFullPath/*${extension} 2> /dev/null | tail -1`
+	    tmpPath="${tmpFileName%/*}"
+	    tmpFileName="${tmpFileName#$tmpPath/*}"
+	    tmpFileName="${tmpFileName%$extension}"
+	    if [ -z "${tmpFileName}" ] ; then
 		sixdeskmess="no ${extension} file in $RundirFullPath!!!"
 		sixdeskmess
 		let __lerr+=1
 	    else
-		nFiles=`echo "${tmpFileNames}" 2> /dev/null | wc -l`
-		if [ $nFiles -gt 1 ] ; then
-		    sixdeskmess="found ${nFiles} ${extension} files in $RundirFullPath (expected 1)!"
-		    sixdeskmess
-		    let __lerr+=1
-		else
-		    sixdeskGetFileName "${tmpFileNames}" tmpName
-		    fileNames="${fileNames} ${tmpName}"
-		fi
+		sixdeskGetFileName "${tmpFileName}" tmpName
+		fileNames="${fileNames} ${tmpName}"
 	    fi
 	done
 	fileNames=( ${fileNames} )
@@ -965,34 +967,46 @@ function checkDirAlreadyRun(){
 
 function dot_bsub(){
 
+    # temporary variables
+    local __lerr=0
+    local __taskno=""
+
     touch $RundirFullPath/JOB_NOT_YET_STARTED
     
     # clean, in case
     dot_clean
     
     # actually submit
-    bsub -q $lsfq $sixdeskM -o $RundirFullPath/$Runnam.log < $RundirFullPath/$Runnam.job > tmp 2>&1
+    multipleTrials "tmpLines=\"`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job 2>&1`\" ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Problem at bsub"
+    let __lerr+=$?
 
     # verify that submission was successfull
-    if  [ $? -eq 0 ] ; then
-	local __taskno=`tail -1 tmp | sed -e's/Job <\([0-9]*\)> is submitted to queue.*/\1/'`
-	if [ "$__taskno" == "" ] ; then
-	    sixdeskmess="bsub did NOT return a taskno !!!"
-	    sixdeskmess
-	    exit
+    if  [ ${__lerr} -eq 0 ] ; then
+	# typical message returned by bsub:
+	#   Job <864248893> is submitted to queue <8nm>.
+	multipleTrials "taskno=\"`echo \"${tmpLines}\" | grep submitted | cut -d\< -f2 | cut -d\> -f1`\"" "[ -n \"\${taskno}\" ]" "Problem at taskno"
+	let __lerr+=$?
+	if [ ${__lerr} -eq 0 ] ; then
+	    local __taskid="lsf${taskno}"
+	    sixdeskmess="`echo \"${tmpLines}\" | grep submitted`"
+	else
+	    local __taskid="lsf_unknown"
+	    sixdeskmess="bsub did NOT return a taskno !!! - assigning a default one"
 	fi
-	local __taskid=lsf$__taskno
-    else
-	rm -f $RundirFullPath/JOB_NOT_YET_STARTED 
-	sixdeskmess="bsub of $RundirFullPath/$Runnam.job to Queue ${lsfq} failed !!!"
 	sixdeskmess
-	exit
+    else
+	sixdeskmess="bsub of $RundirFullPath/$Runnam.job to Queue ${lsfq} failed !!! - going to next WU!"
+	sixdeskmess
     fi
 
-    # keep track of the $Runnam-taskid couple
-    updateTaskIdsCases $sixdeskjobs/jobs $sixdeskjobs/incomplete_jobs $__taskid
-    rm -f tmp
-    
+    if [ ${__lerr} -eq 0 ] ; then
+        # keep track of the $Runnam-taskid couple
+	updateTaskIdsCases $sixdeskjobs/jobs $sixdeskjobs/incomplete_jobs $__taskid
+    else
+	rm -f $RundirFullPath/JOB_NOT_YET_STARTED 
+    fi
+
+    return $__lerr
 }
 
 function dot_task(){
@@ -1001,7 +1015,7 @@ function dot_task(){
 
 function dot_boinc(){
 
-    local __taskid
+    local __lerr=0
     
     touch $RundirFullPath/JOB_NOT_YET_STARTED
 
@@ -1013,30 +1027,26 @@ function dot_boinc(){
     sixdeskGetFileName "${descFileNames}" workunitname
     sixdeskGetTaskIDfromWorkUnitName $workunitname
     if ! ${lmegazip} ; then
-	gotit=false
-	for (( mytries=1 ; mytries<=10; mytries++ )) ; do
-	    cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work
-	    if [ $? -ne 0 ] ; then
-		sixdeskmess="Failing to upload .desc/.zip files - trial $mytries!!!"
-		sixdeskmess
-	    else
-		gotit=true
-		break
-	    fi
-	done 
-	if ! ${gotit} ; then
-	    sixdeskmess="failed to submit boinc job ${mytries} times!!!"
-	    sixdeskmess
-	    exit
+	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "MegaZip - Problem at cp"
+	let __lerr+=$?
+	if [ ${__lerr} -ne 0 ] ; then
+	    sixdeskmess="failed to submit boinc job!!!"
+	else
+	    sixdeskmess="Submitting WU to BOINC as taskid ${sixdesktaskid}"
 	fi
-
-        # the job has just started
-	touch $RundirFullPath/JOB_NOT_YET_COMPLETED
-	rm -f $RundirFullPath/JOB_NOT_YET_STARTED
+	sixdeskmess
     fi
 
-    # keep track of the $Runnam-taskid couple
-    updateTaskIdsCases $sixdeskjobs/tasks $sixdeskjobs/incomplete_tasks $sixdesktaskid
+    if [ ${__lerr} -eq 0 ] ; then
+        # the job has just started
+	touch $RundirFullPath/JOB_NOT_YET_COMPLETED
+        # keep track of the $Runnam-taskid couple
+	updateTaskIdsCases $sixdeskjobs/tasks $sixdeskjobs/incomplete_tasks $sixdesktaskid
+    fi
+
+    rm -f $RundirFullPath/JOB_NOT_YET_STARTED
+
+    return $__lerr
 }
 
 function dot_megaZip(){
@@ -1205,12 +1215,14 @@ function treatShort(){
 	    submitCreateFinalFort3Short $kk
 	    # fix input files
 	    fixInputFiles $RundirFullPath
+	    let NsuccessFix+=1
 	    
 	# ----------------------------------------------------------------------
 	elif ${lstatus} ; then
         # ----------------------------------------------------------------------
 
 	    checkDirStatus
+	    let NsuccessSts+=1
 	    
 	# ----------------------------------------------------------------------
 	else
@@ -1220,51 +1232,58 @@ function treatShort(){
 	    if ${lgenerate} ; then
 	    # ------------------------------------------------------------------
 	        if ${lselected} ; then
-	    	checkDirAlreadyRun >/dev/null 2>&1
-	    	if [ $? -eq 0 ] ; then
-	    	    checkDirReadyForSubmission >/dev/null 2>&1
-	    	    if [ $? -gt 0 ] ; then
-	    		sixdeskmess="$RundirFullPath NOT ready for submission - regenerating the necessary input files!"
-	    		sixdeskmess
-	    		__lGenerate=true
+	    	    checkDirAlreadyRun >/dev/null 2>&1
+	    	    if [ $? -eq 0 ] ; then
+	    		checkDirReadyForSubmission >/dev/null 2>&1
+	    		if [ $? -gt 0 ] ; then
+	    		    sixdeskmess="$RundirFullPath NOT ready for submission - regenerating the necessary input files!"
+	    		    sixdeskmess
+	    		    __lGenerate=true
+	    		fi
 	    	    fi
-	    	fi
 	        else
-	    	__lGenerate=true
+	    	    __lGenerate=true
 	        fi
 	    
 	        if ${__lGenerate} ; then
 	        
-	    	# create rundir
-	    	submitCreateRundir $RundirFullPath $actualDirNameFullPath
+   	    	    # create rundir
+	    	    submitCreateRundir $RundirFullPath $actualDirNameFullPath
 	    
-	    	# finalise generation of fort.3
-		submitCreateFinalFort3Short $kk
+	    	    # finalise generation of fort.3
+		    submitCreateFinalFort3Short $kk
 	    	
-	    	# final preparation of all SIXTRACK files
-	    	# NB: for boinc, it returns workunitName
-	    	submitCreateFinalInputs
+	    	    # final preparation of all SIXTRACK files
+	    	    # NB: for boinc, it returns workunitName
+	    	    submitCreateFinalInputs
+		    if [ $? -ne 0 ] ; then
+			sixdeskmess="Carrying on with next WU"
+			sixdeskmess
+			continue
+		    fi
 	    	
-	    	# sussix input files
-	    	if [ $sussix -eq 1 ] ; then
-	    	    for tmpI in $(seq 1 3) ; do
-	    		cp $sixdeskjobs_logs/sussix.inp.$tmpI.gz $RundirFullPath
-	    	    done
-	    	fi
+	    	    # sussix input files
+	    	    if [ $sussix -eq 1 ] ; then
+	    		for tmpI in $(seq 1 3) ; do
+	    		    cp $sixdeskjobs_logs/sussix.inp.$tmpI.gz $RundirFullPath
+	    		done
+	    	    fi
 	        
-	    	# submission file
-	    	if [ $kk -eq 0 ] ; then
-	    	    sed -e 's?SIXJOBNAME?'$Runnam'?g' \
-	    		-e 's?SIXJOBDIR?'$Rundir'?g' \
-	    		-e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
-	    		 $sixdeskjobs_logs/${lsfjobtype}0.job > $RundirFullPath/$Runnam.job
-	    	else
-	    	    sed -e 's?SIXJOBNAME?'$Runnam'?g' \
-	    		-e 's?SIXJOBDIR?'$Rundir'?g' \
-	    		-e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
-	    		$sixdeskjobs_logs/${lsfjobtype}.job > $RundirFullPath/$Runnam.job
-	    	fi
-	    	chmod 755 $RundirFullPath/$Runnam.job
+	    	    # submission file
+	    	    if [ $kk -eq 0 ] ; then
+	    		sed -e 's?SIXJOBNAME?'$Runnam'?g' \
+	    		    -e 's?SIXJOBDIR?'$Rundir'?g' \
+	    		    -e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
+	    		    $sixdeskjobs_logs/${lsfjobtype}0.job > $RundirFullPath/$Runnam.job
+	    	    else
+	    		sed -e 's?SIXJOBNAME?'$Runnam'?g' \
+	    		    -e 's?SIXJOBDIR?'$Rundir'?g' \
+	    		    -e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
+	    		    $sixdeskjobs_logs/${lsfjobtype}.job > $RundirFullPath/$Runnam.job
+	    	    fi
+	    	    chmod 755 $RundirFullPath/$Runnam.job
+
+		    let NsuccessGen+=1
 	        fi
 	    fi
 	    
@@ -1272,25 +1291,26 @@ function treatShort(){
 	    if ${lcheck} ; then
             # ------------------------------------------------------------------
 	        if ${lselected} && ! ${__lGenerate} ; then
-	    	checkDirAlreadyRun
-	    	__eCheckDirAlreadyRun=$?
+	    	    checkDirAlreadyRun
+	    	    __eCheckDirAlreadyRun=$?
 	        fi
 	        if ! ${lselected} || [ $__eCheckDirAlreadyRun -eq 0 ] ; then
-	    	checkDirReadyForSubmission
-	    	__eCheckDirReadyForSubmission=$?
+	    	    checkDirReadyForSubmission
+	    	    __eCheckDirReadyForSubmission=$?
 	        fi
 	        if [ $__eCheckDirReadyForSubmission -gt 0 ] ; then
-	    	sixdeskmess="$RundirFullPath NOT ready for submission!"
-	    	sixdeskmess
+	    	    sixdeskmess="$RundirFullPath NOT ready for submission!"
+	    	    sixdeskmess
 	        elif [ $__eCheckDirAlreadyRun -gt 0 ] ; then
-	    	# sensitive to jobs already run/submitted
-	    	sixdeskmess="-> no need to submit: already submitted/finished!"
-	    	sixdeskmess
+  	    	    # sensitive to jobs already run/submitted
+	    	    sixdeskmess="-> no need to submit: already submitted/finished!"
+	    	    sixdeskmess
 	        else
-	    	__lSubmit=true
-	    	sixdeskmess="$RundirFullPath ready to submit!"
-	    	sixdeskmess
+	    	    __lSubmit=true
+	    	    sixdeskmess="$RundirFullPath ready to submit!"
+	    	    sixdeskmess
 	        fi
+		let NsuccessChk+=1
 	    fi
 	    
 	    # ------------------------------------------------------------------
@@ -1298,6 +1318,10 @@ function treatShort(){
 	    # ------------------------------------------------------------------
 	        if ${__lSubmit} ; then
 	    	    dot_bsub
+		    local __exStatus=$?
+		    if [ ${__exStatus} -eq 0 ] ; then
+			let NsuccessSub+=1
+		    fi
 	        else
 	    	    sixdeskmess="No submission!"
 	    	    sixdeskmess
@@ -1322,10 +1346,6 @@ function treatLong(){
     for (( ampstart=$amp0; ampstart<$ampfinish; ampstart+=$ampincl )) ; do
     # ==========================================================================
 
-	# separate output for current case from previous one
-	echo ""
-	echo ""
-	
         fampstart=`gawk 'END{fnn='$ampstart'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
         fampstart=`echo $fampstart | sed -e's/0*$//'`
         fampstart=`echo $fampstart | sed -e's/\.$//'`
@@ -1335,6 +1355,18 @@ function treatLong(){
         fampend=`echo $fampend | sed -e's/\.$//'`
         Ampl="${fampstart}_${fampend}"
 
+	if ${lrestart} && ${lrestartAmpli} ; then
+	    if [ "${ampliStart}" == "${Ampl}" ] ; then
+		lrestartAmpli=false
+	    else
+		continue
+	    fi
+	fi
+
+	# separate output for current case from previous one
+	echo ""
+	echo ""
+	
         sixdeskmess="Considering amplitudes: $Ampl"
         sixdeskmess
 
@@ -1347,9 +1379,6 @@ function treatLong(){
 	for (( kk=$kinil; kk<=$kendl; kk+=$scaled_kstep )) ; do
 	# ======================================================================
 
-	    # separate output for current case from previous one
-	    echo ""
-	    
 	    # trigger for preparation
 	    local __lGenerate=false
 	    # trigger for submission
@@ -1363,12 +1392,23 @@ function treatLong(){
 	    sixdeskAngle $AngleStep $kk
 	    sixdeskkang $kk $kmaxl $lbackcomp
 
+	    if ${lrestart} && ${lrestartAngle} ; then
+		if [ "${angleStart}" == "${Angle}" ] ; then
+		    lrestartAngle=false
+		else
+		    continue
+		fi
+	    fi
+
 	    # get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
 	    sixdeskDefinePointTree $LHCDesName $iMad "s" $sixdesktunes $Ampl $turnsle $Angle $kk $sixdesktrack
 	    if [ $? -gt 0 ] ; then
 		# go to next WU (sixdeskmess already printed out and email sent to user/admins)
 		continue
 	    fi
+
+	    # separate output for current case from previous one
+	    echo ""
 	    sixdeskmess="Point in scan $Runnam $Rundir, k=$kk"
 	    sixdeskmess
 	    
@@ -1382,12 +1422,14 @@ function treatLong(){
 		submitCreateFinalFort3Long
 		# fix input files
 		fixInputFiles $RundirFullPath
+		let NsuccessFix+=1
 	    
 	    # ----------------------------------------------------------------------
 	    elif ${lstatus} ; then
             # ----------------------------------------------------------------------
 
 		checkDirStatus
+		let NsuccessSts+=1
 	    
 	    # ----------------------------------------------------------------------
 	    else
@@ -1421,6 +1463,11 @@ function treatLong(){
 	        	# final preparation of all SIXTRACK files
 	        	# NB: for boinc, it returns workunitName
 	        	submitCreateFinalInputs
+			if [ $? -ne 0 ] ; then
+			    sixdeskmess="Carrying on with next WU"
+			    sixdeskmess
+			    continue
+			fi
 	        	
 	        	if [ "$sixdeskplatform" == "lsf" ] ; then
 	        	    # submission file
@@ -1431,6 +1478,7 @@ function treatLong(){
 	        		-e 's?SIXCASTOR?'$sixdeskcastor'?g' ${SCRIPTDIR}/templates/lsf/${lsfjobtype}.job > $RundirFullPath/$Runnam.job
 	        	    chmod 755 $RundirFullPath/$Runnam.job
 	        	fi
+			let NsuccessGen+=1
 	            fi
 	        fi
 	        
@@ -1457,6 +1505,7 @@ function treatLong(){
 	        	sixdeskmess="$RundirFullPath ready to submit!"
 	        	sixdeskmess
 	            fi
+		    let NsuccessChk+=1
 	        fi
 	        
 	        # ------------------------------------------------------------------
@@ -1465,11 +1514,17 @@ function treatLong(){
 	            if ${__lSubmit} ; then
 	        	if [ "$sixdeskplatform" == "lsf" ] ; then
 	        	    dot_bsub
+			    local __exStatus=$?
 	        	elif [ "$sixdeskplatform" == "cpss" ] ; then
 	        	    dot_task
+			    local __exStatus=$?
 	        	elif [ "$sixdeskplatform" == "boinc" ] ; then
 	        	    dot_boinc
+			    local __exStatus=$?
 	        	fi
+			if [ ${__exStatus} -eq 0 ] ; then
+			    let NsuccessSub+=1
+			fi
 	            else
 	        	sixdeskmess="No submission!"
 	        	sixdeskmess
@@ -1517,12 +1572,14 @@ function treatDA(){
 	submitCreateFinalFort3DA
 	# fix input files
 	fixInputFiles $RundirFullPath
+	let NsuccessFix+=1
 	    
     # ----------------------------------------------------------------------
     elif ${lstatus} ; then
     # ----------------------------------------------------------------------
 
 	checkDirStatus
+	let NsuccessSts+=1
 	    
     # ----------------------------------------------------------------------
     else
@@ -1537,6 +1594,11 @@ function treatDA(){
             # final preparation of all SIXTRACK files
             # NB: for boinc, it returns workunitName
             submitCreateFinalInputs
+	    if [ $? -ne 0 ] ; then
+		sixdeskmess="Carrying on with next WU"
+		sixdeskmess
+		return
+	    fi
             
             # submission file
             sed -e 's?SIXJOBNAME?'"$Runnam"'?g' \
@@ -1545,15 +1607,57 @@ function treatDA(){
                 -e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
                 -e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' $sixdeskhome/utilities/${lsfjobtype}.job > $sixdeskjobs_logs/$Runnam.job
             chmod 755 $sixdeskjobs_logs/$Runnam.job
+	    let NsuccessGen+=1
         fi
         if ${lsubmit} ; then
             # actually submit
-            source ${SCRIPTDIR}/bash/dot_bsub $Runnam $Rundir
+            dot_bsub
+	    local __exStatus=$?
+	    if [ ${__exStatus} -eq 0 ] ; then
+		let NsuccessSub+=1
+	    fi
         fi
 
     # ----------------------------------------------------------------------
     fi
     # ----------------------------------------------------------------------
+}
+
+function printSummary(){
+    if ${lfix} ; then
+	sixdeskmess="${NsuccessFix} dirs fixed!"
+	sixdeskmess
+    fi
+    if ${lgenerate} ; then
+	sixdeskmess="${NsuccessGen} dirs generated!"
+	sixdeskmess
+    fi
+    if ${lcheck} ; then
+	sixdeskmess="${NsuccessChk} dirs checked!"
+	sixdeskmess
+    fi
+    if ${lsubmit} ; then
+	sixdeskmess="${NsuccessSub} jobs submitted!"
+	sixdeskmess
+    fi
+    if ${lstatus} ; then
+	sixdeskmess="Listed status of ${NsuccessSts} dirs!"
+	sixdeskmess
+    fi
+    if [ $1 -eq 0 ] ; then
+	sixdeskmess="Completed normally."
+	sixdeskmess
+    else
+	sixdeskmess="Premature end."
+	sixdeskmess
+	if [ $1 -eq 11 ] ; then
+	    sixdeskEchoEnvVars /tmp/envs_SIGSEGV.txt
+	    sixdeskSendNotifMail "FATAL - SIGSEGV"
+	elif [ $1 -eq 8 ] ; then
+	    sixdeskEchoEnvVars /tmp/envs_SIGFPE.txt
+	    sixdeskSendNotifMail "FATAL - SIGFPE"
+	fi
+    fi
 }
 
 # ==============================================================================
@@ -1582,6 +1686,8 @@ lselected=false
 lmegazip=false
 lbackcomp=true
 lverbose=false
+lrestart=false
+restartPoint=""
 currPlatform=""
 currStudy=""
 optArgCurrStudy="-s"
@@ -1589,7 +1695,7 @@ optArgCurrPlatForm=""
 verbose=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgsctakfvBSCMd:p:" opt ; do
+while getopts  ":hgsctakfvBSCMd:p:R:" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1623,6 +1729,11 @@ while getopts  ":hgsctakfvBSCMd:p:" opt ; do
 	S)
 	    # selected points of scan only
 	    lselected=true
+	    ;;
+	R)
+	    # restart from point in scan
+	    lrestart=true
+	    restartPoint="${OPTARG}"
 	    ;;
 	f)
 	    # fix directories
@@ -1702,20 +1813,6 @@ sixdeskmesslevel=$sixdeskmessleveldef
 # - temporary trap
 trap "sixdeskexit 1" EXIT
 
-# - kinit, to renew kerberos ticket
-sixdeskmess=" --> kinit -R beforehand:"
-sixdeskmess
-kinit -R
-if [ $? -gt 0 ] ; then
-    sixdeskmess="--> kinit -R failed - AFS/Kerberos credentials expired!!! aborting..."
-    sixdeskmess
-    exit
-else
-    sixdeskmess=" --> klist output:"
-    sixdeskmess
-    klist
-fi
-
 # - action-dependent stuff
 echo ""
 if ${lfix} ; then
@@ -1780,6 +1877,11 @@ if ${lstatus} ; then
     nFound=( 0 0 0 0 0 0 )
     foundNames=( 'dirs' 'fort.2.gz' 'fort.3.gz' 'fort.8.gz' 'fort.16.gz' 'fort.10.gz' )
 fi
+NsuccessFix=0
+NsuccessGen=0
+NsuccessChk=0
+NsuccessSub=0
+NsuccessSts=0
 echo ""
 
 # - option specific stuff
@@ -1796,6 +1898,30 @@ if ! ${lbackcomp} ; then
     sixdeskmess=" --> flag for backward compatibility de-activated, as requested by user!"
     sixdeskmess
 fi
+#   . restart action
+if ${lrestart} ; then
+    if ${lselected} ; then
+	sixdeskmess="flags -R and -S are incompatible!"
+	sixdeskmess
+	exit
+    fi
+    sixdeskCheckNFieldsFromJobName "${restartPoint}"
+    if [ $? -ne 0 ] ; then
+	exit
+    fi
+    # get infos of starting point
+    sixdeskGetMADseedFromJobName "${restartPoint}" MADstart
+    sixdeskGetTunesTagFromJobName "${restartPoint}" tunesStart
+    sixdeskGetAmpliTagFromJobName "${restartPoint}" ampliStart
+    sixdeskGetAngleFromJobName "${restartPoint}" angleStart
+    lrestartTune=true
+    lrestartAmpli=true
+    lrestartAngle=true
+else
+    lrestartTune=false
+    lrestartAmpli=false
+    lrestartAngle=false
+fi
 
 # - define user tree
 sixdeskDefineUserTree $basedir $scratchdir $workspace
@@ -1806,7 +1932,7 @@ sixDeskSetBOINCVars
 # - preliminary checks
 preliminaryChecksRS
 if [ $? -gt 0 ] ; then
-    sixdeskexit
+    exit
 fi
 
 # - square hard-coded?!
@@ -1825,8 +1951,10 @@ for tmpDir in ${lockingDirs[@]} ; do
     sixdesklock $tmpDir
 done
 
-# - actual trap
-trap "sixdeskCleanExit 1" EXIT
+# - actual traps
+trap "printSummary  1 ; sixdeskCleanExit 1" EXIT SIGINT SIGQUIT
+trap "printSummary 11 ; sixdeskCleanExit 1" SIGSEGV
+trap "printSummary  8 ; sixdeskCleanExit 1" SIGFPE
 
 # - tunes
 echo ""
@@ -2034,7 +2162,12 @@ else
 fi
 
 # main loop
-for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
+if ${lrestart} ; then
+    iMadStart=${MADstart}
+else
+    iMadStart=${ista}
+fi
+for (( iMad=${iMadStart}; iMad<=$iend; iMad++ )) ; do
     echo ""
     echo ""
     echo ""
@@ -2065,6 +2198,13 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	    tunexx=${tunesXX[$jj]}
 	    tuneyy=${tunesYY[$ii]}
 	    sixdesktunes=$tunexx"_"$tuneyy
+	    if ${lrestart} && ${lrestartTune} ; then
+		if [ "${tunesStart}" == "${sixdesktunes}" ] ; then
+		    lrestartTune=false
+		else
+		    continue
+		fi
+	    fi
             #   ...notify user
 	    echo ""
 	    echo ""
@@ -2150,6 +2290,28 @@ for (( iMad=$ista; iMad<=$iend; iMad++ )) ; do
 	done
     fi	    
 done
+
+# restart check
+if ${lrestart} ; then
+    if ! ${lrestartTune} || ! ${lrestartAmpli} || ! ${lrestartAngle} ; then
+	sixdeskmess="Something wrong with restarting the scan from point ${restartPoint}"
+	sixdeskmess
+	sixdeskmess="Scan was not restarted correctly"
+	sixdeskmess
+	if ${lrestartTune} ; then
+	    sixdeskmess="Starting tune ${tunesStart} was not properly recognised!"
+	    sixdeskmess
+	fi
+	if ${lrestartAmpli} ; then
+	    sixdeskmess="Starting amplitude range ${ampliStart} was not properly recognised!"
+	    sixdeskmess
+	fi
+	if ${lrestartAngle} ; then
+	    sixdeskmess="Starting angle ${angleStart} was not properly recognised!"
+	    sixdeskmess
+	fi
+    fi
+fi
 
 # megaZip, in case of boinc
 if ${lmegazip} ; then
@@ -2253,21 +2415,11 @@ if ${lmegazip} ; then
     if ${lsubmit} ; then
 	sixdeskmess="submitting megaZip file ${__megaZipFileName}"
 	sixdeskmess
-	gotit=false
-	for (( mytries=1 ; mytries<=10; mytries++ )) ; do
-	    cp ${megaZipName} ${megaZipPath}
-	    if [ $? -ne 0 ] ; then
-		sixdeskmess="Failing to move ${megaZipName} to ${megaZipPath} - trial ${mytries}!!!"
-		sixdeskmess
-	    else
-		gotit=true
-		break
-	    fi
-	done 
-	if ! ${gotit} ; then
-	    sixdeskmess="failed to submit ${megaZipName} ${mytries} times!!!"
+	multipleTrials "cp ${megaZipName} ${megaZipPath} ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "MegaZip - problem at upload"
+	if [ $? -ne 0 ] ; then
+	    sixdeskmess="failed to submit ${megaZipName} !!!"
 	    sixdeskmess
-	    exit ${mytries}
+	    exit 10
 	fi
 	tmpZipFiles=`cat ${sixdeskjobs_logs}/megaZipList.txt | grep 'zip$'`
 	tmpZipFiles=( ${tmpZipFiles} )
@@ -2317,10 +2469,12 @@ fi
 # go home, man
 # ------------------------------------------------------------------------------
 
-# redefine trap
-trap "sixdeskCleanExit 0" EXIT
+# redefine traps
+trap "printSummary 0 ; sixdeskCleanExit 0" EXIT SIGINT SIGQUIT
+trap "" SIGSEGV
+trap "" SIGFPE
 
 # echo that everything went fine
 echo ""
-sixdeskmess="Completed normally"
+sixdeskmess="done."
 sixdeskmess
