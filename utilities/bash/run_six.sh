@@ -82,16 +82,6 @@ function preliminaryChecksRS(){
 	    sixdeskmess 1
 	    let __lerr+=1
 	fi
-    elif [ $long -eq 1 ] ; then
-	if [ "$sixdeskplatform" == "grid" ] ; then
-	    sixdeskmess="Running on GRID not yet implemented!!!"
-	    sixdeskmess 1
-	    let __lerr+=1
-	elif [ "$sixdeskplatform" != "lsf" ] && [ "$sixdeskplatform" != "cpss" ] && [ "$sixdeskplatform" != "boinc" ] ; then
-	    sixdeskmess="Platform not recognised: $sixdeskplatform!!!"
-	    sixdeskmess 1
-	    let __lerr+=1
-	fi
     fi
 
     return $__lerr
