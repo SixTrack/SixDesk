@@ -21,6 +21,7 @@ function how_to_use() {
 
    options (optional)
    -p      platform name (when running many jobs in parallel)
+           recognised platforms: LSF, BOINC, HTCONDOR
    -e      just parse the concerned sixdeskenv/sysenv files, without
                overwriting
    -v      verbose (OFF by default)
@@ -68,7 +69,7 @@ function consistencyChecks(){
     if [ -z "${workspace}" ] ; then
 	sixdeskmess="Workspace not declared in $envFilesPath/sixdeskenv!!!"
 	sixdeskmess
-	sixdeskexit 5
+	sixdeskexit 6
     fi
     local __cworkspace=`basename $sixdeskwhere`
     if [ "${workspace}" != "${__cworkspace}" ] ; then
@@ -76,7 +77,7 @@ function consistencyChecks(){
 	sixdeskmess
 	sixdeskmess="Check the workspace definition in $envFilesPath/sixdeskenv."
 	sixdeskmess
-	sixdeskexit 6
+	sixdeskexit 7
     fi
 
     # - study:
@@ -84,14 +85,14 @@ function consistencyChecks(){
     if [ -z "${LHCDescrip}" ] ; then
 	sixdeskmess="LHCDescrip not declared in $envFilesPath/sixdeskenv!!!"
 	sixdeskmess
-	sixdeskexit 7
+	sixdeskexit 8
     fi
     #   . make sure it corresponds to the expected one
     if ${lload} ; then
 	if [ "${LHCDescrip}" != "${currStudy}" ] ; then
 	    sixdeskmess="Study mismatch: ${LHCDescrip} (from sixdeskenv) different from $currStudy (command-line argument)!!!"
 	    sixdeskmess
-	    sixdeskexit 8
+	    sixdeskexit 9
 	fi
     fi
 
@@ -238,7 +239,7 @@ fi
 # - basic checks (i.e. dir structure)
 basicChecks
 if [ $? -gt 0 ] ; then
-    sixdeskexit 1
+    sixdeskexit 4
 fi
 
 # ------------------------------------------------------------------------------
@@ -270,7 +271,7 @@ else
     # - make sure we have sixdeskenv/sysenv files
     sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s sixdeskenv sysenv
     if [ $? -gt 0 ] ; then
-	sixdeskexit 4
+	sixdeskexit 5
     fi
 
     # - source active sixdeskenv/sysenv
@@ -323,6 +324,9 @@ else
 	platform=$currPlatform
     fi
     sixdeskSetPlatForm $platform
+    if [ $? -ne 0 ] ; then
+	sixdeskexit 10
+    fi
 
     # - useful output
     PTEXT="[${sixdeskplatform}]"

@@ -53,8 +53,8 @@ export sixtrack_input=$scratchdir/sixtrack_input/$workspace/$LHCDescrip
 export sixdeskforce=0
 
 # One and one only of the following options must be selected
-# BOINC for LHC@home, LSF for LSF batch, CPSS for Windows desktops at CERN, or GRID
-export platform=LSF
+# BOINC for LHC@home, LSF for LSF batch, CPSS for Windows desktops at CERN, GRID or HTCondor
+export platform=HTCondor
 
 # The message logging level: 0 => basic and error messages, 1 => plus info,
 # >= 2 => + plus info and debug
