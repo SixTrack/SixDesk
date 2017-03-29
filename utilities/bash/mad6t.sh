@@ -105,7 +105,7 @@ function submit(){
     cp $maskFilesPath/$filejob.mask .
 
     # Loop over seeds
-    mad6tjob=$lsfFilesPath/mad6t1.lsf
+    mad6tjob=$lsfFilesPath/mad6t1.sh
     local __lfirst=true
     local __lsecond=false
     for (( iMad=$istamad ; iMad<=$iendmad ; iMad++ )) ; do
@@ -132,21 +132,21 @@ function submit(){
 	    -e 's?%FORT_34%?'$fort_34'?g' \
 	    -e 's?%MADX_PATH%?'$MADX_PATH'?g' \
 	    -e 's?%MADX%?'$MADX'?g' \
-	    -e 's?%SIXTRACK_INPUT%?'$sixtrack_input'?g' $mad6tjob > mad6t_"$iMad".lsf
-	chmod 755 mad6t_"$iMad".lsf
+	    -e 's?%SIXTRACK_INPUT%?'$sixtrack_input'?g' $mad6tjob > mad6t_"$iMad".sh
+	chmod 755 mad6t_"$iMad".sh
 
 	if ${linter} ; then
 	    sixdeskmktmpdir batch ""
 	    cd $sixdesktmpdir
-	    ../mad6t_"$iMad".lsf | tee $junktmp/"${LHCDescrip}_mad6t_$iMad".log 2>&1
+	    ../mad6t_"$iMad".sh | tee $junktmp/"${LHCDescrip}_mad6t_$iMad".log 2>&1
 	    cd ../
 	    rm -rf $sixdesktmpdir
 	else
 	    if [ "$sixdeskplatform" == "lsf" ] ; then
-		bsub -q $madlsfq -o $junktmp/"${LHCDescrip}_mad6t_$iMad".log -J ${workspace}_${LHCDescrip}_mad6t_$iMad mad6t_"$iMad".lsf
+		bsub -q $madlsfq -o $junktmp/"${LHCDescrip}_mad6t_$iMad".log -J ${workspace}_${LHCDescrip}_mad6t_$iMad mad6t_"$iMad".sh
 	    fi
 	fi
-	mad6tjob=$lsfFilesPath/mad6t.lsf
+	mad6tjob=$lsfFilesPath/mad6t.sh
 	if ${__lfirst} ; then
 	    __lfirst=false
 	    __lsecond=true

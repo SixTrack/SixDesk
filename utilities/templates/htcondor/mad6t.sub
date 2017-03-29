@@ -5,5 +5,4 @@ error = $Fn(filename).err
 log = $Fn(filename).log
 ShouldTransferFiles = YES
 WhenToTransferOutput = ON_EXIT_OR_EVICT
-SendCredential = True
-queue filename matching files mad6t_*.lsf
+queue filename matching files mad6t_*.sh
