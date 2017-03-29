@@ -198,8 +198,8 @@ then
         -e 's?SIXJOBDIR?'$sixdeskRundir'?g' \
         -e 's?SIXTRACKDIR?'$sixdesktrack'?g' \
         -e 's?SIXTRACKEXE?'$SIXTRACKEXE'?g' \
-        -e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' "$sixdeskhome"/utilities/"${lsfjobtype}".lsf > $sixdesktrack/$sixdeskRundir/${sixdeskTaskName}.lsf
-    chmod 755 $sixdesktrack/$sixdeskRundir/${sixdeskTaskName}.lsf
+        -e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' "$sixdeskhome"/utilities/"${lsfjobtype}".sh > $sixdesktrack/$sixdeskRundir/${sixdeskTaskName}.sh
+    chmod 755 $sixdesktrack/$sixdeskRundir/${sixdeskTaskName}.sh
     gotit=""
     mytries=0
     while test "$gotit" != "OK" -a $mytries -ne 11
@@ -208,7 +208,7 @@ then
 
 ###    echo -q ${qpref}${lsfq} 
        bsub -q ${qpref}${lsfq} $sixdeskM -o $sixdesktrack/$sixdeskRundir/${sixdeskTaskName}.log \
-            $sixdesktrack/$sixdeskRundir/${sixdeskTaskName}.lsf > $tmp 2>&1
+            $sixdesktrack/$sixdeskRundir/${sixdeskTaskName}.sh > $tmp 2>&1
 
       sixdeskstat=$?
       cat $tmp
@@ -246,9 +246,9 @@ then
 ###     lsfjobid="91919191"
 
 
-#MACRO mymess 0 ${sixdeskTaskName}.lsf submitted
+#MACRO mymess 0 ${sixdeskTaskName}.sh submitted
         sixdeskmesslevel=0
-        sixdeskmess="${sixdeskTaskName}.lsf submitted"
+        sixdeskmess="${sixdeskTaskName}.sh submitted"
         sixdeskmess
 #MACRO mymess
 
@@ -272,9 +272,9 @@ then
       else
         rm -f $sixdesktrack/$sixdeskRundir/JOB_NOT_YET_STARTED
 
-#MACRO mymess 0 bsub of ${sixdeskTaskName}.lsf to Queue ${qpref}${longlsfq} failed !!!
+#MACRO mymess 0 bsub of ${sixdeskTaskName}.sh to Queue ${qpref}${longlsfq} failed !!!
         sixdeskmesslevel=0
-        sixdeskmess="bsub of ${sixdeskTaskName}.lsf to Queue ${qpref}${longlsfq} failed !!!"
+        sixdeskmess="bsub of ${sixdeskTaskName}.sh to Queue ${qpref}${longlsfq} failed !!!"
         sixdeskmess
 #MACRO mymess
 
