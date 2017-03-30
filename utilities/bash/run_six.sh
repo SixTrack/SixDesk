@@ -996,7 +996,7 @@ function dot_boinc(){
     sixdeskGetFileName "${descFileNames}" workunitname
     sixdeskGetTaskIDfromWorkUnitName $workunitname
     if ! ${lmegazip} ; then
-	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "MegaZip - Problem at cp"
+	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Submission to BOINC - Problem at cp to spooldir"
 	let __lerr+=$?
 	if [ ${__lerr} -ne 0 ] ; then
 	    sixdeskmess="failed to submit boinc job!!!"
