@@ -33,7 +33,7 @@ function basicChecks(){
     # - running dir
     if [ "$sixdeskroot" != "sixjobs" ] ; then
 	sixdeskmess="This script must be run in the directory sixjobs!!!"
-	sixdeskmess
+	sixdeskmess -1
 	sixdeskexit 1
     fi
 
@@ -52,9 +52,9 @@ function basicChecks(){
 	sixdeskInspectPrerequisites ${lverbose} ${envFilesPath} -d
 	if [ $? -gt 0 ] ; then
 	    sixdeskmess="Dir containing input files for study $currStudy not found!!!"
-	    sixdeskmess
+	    sixdeskmess -1
 	    sixdeskmess="Expected: ${envFilesPath}"
-	    sixdeskmess
+	    sixdeskmess -1
 	    sixdeskexit 3
 	fi
     fi
@@ -67,15 +67,15 @@ function consistencyChecks(){
     # - make sure we are in the correct workspace
     if [ -z "${workspace}" ] ; then
 	sixdeskmess="Workspace not declared in $envFilesPath/sixdeskenv!!!"
-	sixdeskmess
+	sixdeskmess -1
 	sixdeskexit 5
     fi
     local __cworkspace=`basename $sixdeskwhere`
     if [ "${workspace}" != "${__cworkspace}" ] ; then
 	sixdeskmess="Workspace mismatch: ${workspace} (from sixdeskenv) different from ${__cworkspace} (from current path)!!!"
-	sixdeskmess
+	sixdeskmess -1
 	sixdeskmess="Check the workspace definition in $envFilesPath/sixdeskenv."
-	sixdeskmess
+	sixdeskmess -1
 	sixdeskexit 6
     fi
 
@@ -83,14 +83,14 @@ function consistencyChecks(){
     #   . make sure we have one in sixdeskenv
     if [ -z "${LHCDescrip}" ] ; then
 	sixdeskmess="LHCDescrip not declared in $envFilesPath/sixdeskenv!!!"
-	sixdeskmess
+	sixdeskmess -1 
 	sixdeskexit 7
     fi
     #   . make sure it corresponds to the expected one
     if ${lload} ; then
 	if [ "${LHCDescrip}" != "${currStudy}" ] ; then
 	    sixdeskmess="Study mismatch: ${LHCDescrip} (from sixdeskenv) different from $currStudy (command-line argument)!!!"
-	    sixdeskmess
+	    sixdeskmess -1
 	    sixdeskexit 8
 	fi
     fi
@@ -210,7 +210,7 @@ export sixdeskwhere=`dirname $PWD`
 # Set up some temporary values until we execute sixdeskenv/sysenv
 # Don't issue lock/unlock debug text (use 2 for that)
 export sixdesklogdir=""
-export sixdesklevel=1
+#export sixdesklevel=1
 export sixdeskhome="."
 export sixdeskecho="yes!"
 if [ ! -s ${SCRIPTDIR}/bash/dot_profile ] ; then
@@ -254,13 +254,13 @@ done
 if ${lcptemplate} ; then
 
     sixdeskmess="copying here template files for brand new study"
-    sixdeskmess
+    sixdeskmess 1
     sixdeskmess="template input files from ${SCRIPTDIR}/templates/input"
-    sixdeskmess
+    sixdeskmess 1
 
     for tmpFile in sixdeskenv sysenv ; do
 	sixdeskmess="${tmpFile}"
-	sixdeskmess
+	sixdeskmess 1
 	# preserve original time stamps
 	cp -p ${SCRIPTDIR}/templates/input/${tmpFile} .
     done
@@ -276,6 +276,10 @@ else
     # - source active sixdeskenv/sysenv
     source ${envFilesPath}/sixdeskenv
     source ${envFilesPath}/sysenv
+
+    if ${loutform}; then
+	sixdesklevel=${sixdesklevel_option}
+    fi    
 
     # - perform some consistency checks on parsed info
     consistencyChecks
@@ -304,17 +308,17 @@ else
 	    if ${__lnew} ; then
   	        # new study
 		sixdeskmess="Created a NEW study $LHCDescrip"
-		sixdeskmess
+		sixdeskmess -1
 	    else
  	        # updating an existing study
 		sixdeskmess="Updated sixdeskenv/sysenv for $LHCDescrip"
-		sixdeskmess
+		sixdeskmess -1
 	    fi
 	elif ${lload} ; then
 	    cp ${envFilesPath}/sixdeskenv .
 	    cp ${envFilesPath}/sysenv .
 	    sixdeskmess="Switched to study $LHCDescrip"
-	    sixdeskmess
+	    sixdeskmess -1
 	fi
     fi
 
@@ -334,14 +338,14 @@ else
     fi
     NTEXT="["$sixdeskhostname"]"
     sixdeskmess="Using: Study $STEXT - Worskspace $WTEXT - Platform $PTEXT - Hostname $NTEXT - $BTEXT"
-    sixdeskmess
+    sixdeskmess -1
 
     if [ -e "$sixdeskstudy"/deleted ] ; then
 	if ${loverwrite} ; then
 	    rm -f "$sixdeskstudy"/deleted
 	else
 	    sixdeskmess="Warning! Study `basename $sixdeskstudy` has been deleted!!! Please restore it explicitely"
-	    sixdeskmess
+	    sixdeskmess -1
 	fi
     fi
 
@@ -354,28 +358,32 @@ done
 
 # - kinit, to renew kerberos ticket
 sixdeskmess=" --> kinit:"
-sixdeskmess
+sixdeskmess 1
 multipleTrials "kinit -R ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]"
 if [ $? -gt 0 ] ; then
     sixdeskmess="--> kinit -R failed - AFS/Kerberos credentials expired??? aborting..."
-    sixdeskmess
+    sixdeskmess -1
     exit
 else
     sixdeskmess=" --> klist output after kinit -R:"
-    sixdeskmess
-    klist
+    sixdeskmess 2
+    tmpLines=$(klist)
+    sixdeskmess="${tmpLines}"
+    sixdeskmess 2
 fi
 
 # - fs listquota
 echo ""
 sixdeskmess=" --> fs listquota:"
-sixdeskmess
+sixdeskmess 2
 tmpLines=`fs listquota`
-echo "${tmpLines}"
+#echo "${tmpLines}"
+#sixdeskmess="${tmpLines}"
+#sixdeskmess 2
 #   check, and in case raise a warning
 fraction=`echo "${tmpLines}" | tail -1 | awk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
 if [ ${fraction} -gt 90 ] ; then
     sixdeskmess="WARNING: your quota is above 90%!! pay attention to occupancy of the current study, in case of submission..."
-    sixdeskmess
+    sixdeskmess -1
 fi
 

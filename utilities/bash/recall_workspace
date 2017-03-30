@@ -234,7 +234,7 @@ fi
 source ${SCRIPTDIR}/bash/dot_profile
 # and set some defaults
 nomessages=""
-export sixdesklevel=1
+#export sixdesklevel=1
 export sixdeskecho="yes!"
 # A bit late, but we will lock .. now
 # sixjobs was already locked by the backup!!

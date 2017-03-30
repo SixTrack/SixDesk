@@ -16,6 +16,10 @@ function how_to_use() {
               connected to, no submission to lsf at all)
            option available only for submission to lsf
    -d      study name (when running many jobs in parallel)
+   -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
+               0: only error messages and basic output [default]
+               1: full output
+               2: extended output for debugging
 
 EOF
 }
@@ -27,13 +31,13 @@ function preliminaryChecksM6T(){
     if [ ! -s $maskFilesPath/$LHCDescrip.mask ] ; then
 	# error: mask file not present
 	sixdeskmess="$LHCDescrip.mask is required in sixjobs/mask !!! "
-	sixdeskmess
+	sixdeskmess -1
 	let __lerr+=1
     fi
     if [ ! -d "$sixtrack_input" ] ; then
 	# error: $sixtrack_input directory does not exist
 	sixdeskmess="The $sixtrack_input directory does not exist!!!"
-	sixdeskmess
+	sixdeskmess -1
 	let __lerr+=1
     fi
     if test "$beam" = "" -o "$beam" = "b1" -o "$beam" = "B1" ; then
@@ -43,7 +47,7 @@ function preliminaryChecksM6T(){
     else
 	# error: unrecognised beam option
 	sixdeskmess="Unrecognised beam option $beam : must be null, b1, B1, b2 or B2!!!"
-	sixdeskmess
+	sixdeskmess -1 
 	let __lerr+=1
     fi
     if [ ${__lerr} -gt 0 ] ; then
@@ -59,14 +63,14 @@ function submit(){
     # useful echo
     # - madx version and path
     sixdeskmess="Using madx Version $MADX in $MADX_PATH"
-    sixdeskmess
+    sixdeskmess 1
     # - Study, Runtype, Seeds
     sixdeskmess="Study: $LHCDescrip - Runtype: $runtype - Seeds: [$istamad:$iendmad]"
-    sixdeskmess
+    sixdeskmess -1 
     # - interactive madx
     if ${linter}  ; then
 	sixdeskmess="Interactive MADX runs"
-	sixdeskmess
+	sixdeskmess 1
     fi
 
     # copy templates...
@@ -84,7 +88,7 @@ function submit(){
 	# variable is defined
 	xing_rad=`echo "$xing" | awk '{print ($1*1E-06)}'`
 	sixdeskmess=" --> crossing defined: $xing ${xing_rad}"
-	sixdeskmess
+	sixdeskmess 1
 	sed -i -e 's?%xing?'$xing_rad'?g' \
   	    -e 's?/ bb_ho5b1_0?bb_ho5b1_0?g' \
 	    -e 's?/ bb_ho1b1_0?bb_ho5b1_0?g' $sixtrack_input/fort.3.mother1.tmp
@@ -113,7 +117,7 @@ function submit(){
 	# clean away any existing results for this seed
 	if ${__lsecond} ; then
 	    sixdeskmess="Sleeping ${__delay} seconds"
-	    sixdeskmess
+	    sixdeskmess -1
 	    sleep ${__delay}
 	fi
 	for f in 2 8 16 34 ; do
@@ -143,7 +147,7 @@ function submit(){
 	else
 	    read BSUBOUT <<< $(bsub -q $madlsfq -o $junktmp/"${LHCDescrip}_mad6t_$iMad".log -J ${workspace}_${LHCDescrip}_mad6t_$iMad mad6t_"$iMad".lsf)
 	    sixdeskmess="Seed ${iMad}: ${BSUBOUT}"
-	    sixdeskmess
+	    sixdeskmess -1
 
 	    
 	fi
@@ -160,9 +164,33 @@ function submit(){
     cd $sixdeskhome
 }
 
+function check_output_option(){
+    local __selected_output_valid
+    __selected_output_valid=false
+    
+    case ${OPTARG} in
+    ''|*[!0-2]*) __selected_output_valid=false ;;
+    *)           __selected_output_valid=true  ;;
+    esac
+
+    if ! ${__selected_output_valid}; then
+	echo "ERROR: Option -o requires the following arguments:"
+	echo "    0: only error messages and basic output [default]"
+	echo "    1: full output"
+	echo "    2: extended output for debugging"
+	exit
+    else
+	loutform=true
+	sixdesklevel=${OPTARG}
+	sixdesklevel_option=${OPTARG}
+    fi
+    
+}
+
+
 function check(){
     sixdeskmess="Checking $LHCDescrip"
-    sixdeskmess
+    sixdeskmess 1
 
     sixdeskmesslevel=0
     local __lerr=0
@@ -178,23 +206,23 @@ function check(){
     # check errors/warnings
     if [ -s $sixtrack_input/ERRORS ] ; then
 	sixdeskmess="There appear to be some MADX errors!"
-	sixdeskmess
+	sixdeskmess -1
 	sixdeskmess="If these messages are annoying you and you have checked them carefully then"
-	sixdeskmess
+	sixdeskmess -1
 	sixdeskmess="just remove sixtrack_input/ERRORS or rm sixtrack_input/* and rerun `basename $0` -s!"
-	sixdeskmess
+	sixdeskmess -1
 	echo "ERRORS"
 	cat $sixtrack_input/ERRORS
 	let __lerr+=1
     elif [ -s $sixtrack_input/WARNINGS ] ; then
 	sixdeskmess="There appear to be some MADX result warnings!"
-	sixdeskmess
+	sixdeskmess -1
 	sixdeskmess="Some files are being changed; details in sixtrack_input/WARNINGS"
-	sixdeskmess
+	sixdeskmess -1 
 	sixdeskmess="If these messages are annoying you and you have checked them carefully then"
-	sixdeskmess
+	sixdeskmess -1
 	sixdeskmess="just remove sixtrack_input/WARNINGS"
-	sixdeskmess
+	sixdeskmess -1
 	echo "WARNINGS"
 	cat $sixtrack_input/WARNINGS
 	let __lerr+=1
@@ -209,17 +237,17 @@ function check(){
     for iFort in ${iForts} ; do
 	nFort=0
 	sixdeskmess="Checking fort.${iFort}_??.gz..."
-	sixdeskmess
+	sixdeskmess 1
 	for (( iMad=${istamad}; iMad<=${iendmad}; iMad++ )) ; do
 	    let nFort+=`ls -1 $sixtrack_input/fort.${iFort}_${iMad}.gz 2> /dev/null | wc -l`
 	done
 	if [ ${nFort} -ne ${njobs} ] ; then
 	    sixdeskmess="Discrepancy!!! Found ${nFort} fort.${iFort}_??.gz in $sixtrack_input (expected $njobs)"
-	    sixdeskmess
+	    sixdeskmess -1
 	    let __lerr+=1
 	else
 	    sixdeskmess="...found ${nFort} fort.${iFort}_??.gz in $sixtrack_input (as expected)"
-	    sixdeskmess
+	    sixdeskmess 1
 	fi
     done
 
@@ -228,11 +256,11 @@ function check(){
 	    -o ! -s $sixtrack_input/fort.3.mother2
     then
 	sixdeskmess="Could not find fort.3.mother1/2 in $sixtrack_input"
-	sixdeskmess
+	sixdeskmess -1
 	let __lerr+=1
     else
 	sixdeskmess="all mother files are there"
-	sixdeskmess
+	sixdeskmess 1
     fi
 
     # multipole errors
@@ -253,10 +281,10 @@ function check(){
 	if [ $sixdeskmiss -eq 0 ] ; then
 	    echo "CORR_TEST MC_error files copied" > $sixtrack_input/CORR_TEST
 	    sixdeskmess="CORR_TEST MC_error files copied"
-	    sixdeskmess
+	    sixdeskmess 1
 	else
 	    sixdeskmess="$sixdeskmiss MC_error files could not be found!!!"
-	    sixdeskmess
+	    sixdeskmess -1
 	    let __lerr+=1
 	fi
     fi
@@ -266,11 +294,11 @@ function check(){
     else
 	# final remarks
 	sixdeskmess="All the mad6t jobs appear to have completed successfully using madx -X Version $MADX in $MADX_PATH"
-	sixdeskmess
+	sixdeskmess -1
 	sixdeskmess="Please check the sixtrack_input directory as the mad6t runs may have failed and just produced empty files!!!"
-	sixdeskmess
+	sixdeskmess -1
 	sixdeskmess="All jobs/logs/output are in sixtrack_input/mad.mad6t.sh* directories"
-	sixdeskmess
+	sixdeskmess -1
     fi
     return $__lerr
 }
@@ -294,11 +322,12 @@ fi
 linter=false
 lsub=false
 lcheck=false
+loutform=false
 currStudy=""
 optArgCurrStudy="-s"
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hiscd:" opt ; do
+while getopts  ":hiso:cd:" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -316,6 +345,10 @@ while getopts  ":hiscd:" opt ; do
 	    # required submission
 	    lsub=true
 	    ;;
+	o)
+	    # required submission
+	    check_output_option
+	    ;;	
 	d)
 	    # the user is requesting a specific study
 	    currStudy="${OPTARG}"
@@ -367,7 +400,7 @@ trap "sixdeskexit 1" EXIT
 # don't use this script in case of BNL
 if test "$BNL" != "" ; then
     sixdeskmess="Use prepare_bnl instead for BNL runs!!! aborting..."
-    sixdeskmess
+    sixdeskmess -1
     sixdeskexit 1
 fi
 
@@ -399,7 +432,7 @@ fi
 
 # echo that everything went fine
 sixdeskmess="Appears to have completed normally"
-sixdeskmess
+sixdeskmess 1
 
 # bye bye
 exit 0

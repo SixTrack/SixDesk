@@ -513,7 +513,7 @@ if [ -z "${currStudy}" ] ; then
     # Set up some temporary values until we execute sixdeskenv/sysenv
     # Don't issue lock/unlock debug text (use 2 for that)
     export sixdesklogdir=""
-    export sixdesklevel=1
+#    export sixdesklevel=1
     export sixdeskhome="."
     export sixdeskecho="yes!"
     if [ ! -s ${SCRIPTDIR}/bash/dot_profile ] ; then

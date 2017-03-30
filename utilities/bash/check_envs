@@ -39,9 +39,8 @@ then
   ${SCRIPTDIR}/bash/exec_env $sixdeskstudy/sixdeskenv $sixdeskstudy/sysenv > $oldenv
 
 #MACRO mymess 0 Environment changed for $LHCDescrip
-  sixdeskmesslevel=0
   sixdeskmess="Environment changed for $LHCDescrip"
-  sixdeskmess
+  sixdeskmess 1
 #MACRO mymess
 
   # and report changes
@@ -65,18 +64,16 @@ then
   egrep ">|<|\|" "$diffs" > $summary
   rm $oldenv $newenv $diffs
   if [ -e $summary -a `wc -l $summary | awk '{print ($1)}'` -gt 1 ] ; then
-      sixdeskmesslevel=0
       sixdeskmess="dot_env: env mismatch in `basename $sixdeskstudy` and active one!!!"
-      sixdeskmess
+      sixdeskmess -1
   fi
   while read aline
   do
     shortline=`echo $aline | sed -e's/  */ /'`
 
 #MACRO mymess 0 $shortline
-    sixdeskmesslevel=0
     sixdeskmess="$shortline"
-    sixdeskmess
+    sixdeskmess -1
 #MACRO mymess
 
   done < $summary
@@ -87,9 +84,8 @@ if test "$runtype" != "inj" -a "$runtype" != "col"
 then
 
 #MACRO mymess 0 dot_env: runtype must be 'inj' or 'col' !!!
-  sixdeskmesslevel=0
   sixdeskmess="dot_env: runtype must be 'inj' or 'col' !!!"
-  sixdeskmess
+  sixdeskmess -1
 #MACRO mymess
 
 
@@ -114,9 +110,8 @@ if test "$mytype" -ne 1
 then
 
 #MACRO mymess 0 dot_env: Must choose one, and only one, of short/long/da in sixdeskenv
-  sixdeskmesslevel=0
   sixdeskmess="dot_env: Must choose one, and only one, of short/long/da in sixdeskenv"
-  sixdeskmess
+  sixdeskmess -1
 #MACRO mymess
 
 
@@ -138,9 +133,8 @@ then
   then
 
 #MACRO mymess 0 The sixdeskenv flag short must be set to 1 for a sussix run!!!
-    sixdeskmesslevel=0
     sixdeskmess="The sixdeskenv flag short must be set to 1 for a sussix run!!!"
-    sixdeskmess
+    sixdeskmess -1
 #MACRO mymess
 
 
@@ -155,9 +149,8 @@ if test "$short" -eq 1 -a "$sixdeskplatform" != "lsf"
 then
 
 #MACRO mymess 0 Short runs must be made using the platform LSF!!!
-  sixdeskmesslevel=0
   sixdeskmess="Short runs must be made using the platform LSF!!!"
-  sixdeskmess
+  sixdeskmess -1
 #MACRO mymess
 
 
@@ -179,9 +172,8 @@ then
   then
 
 #MACRO mymess 0 BIGNBLZ runs must be made using the platform LSF!!!
-   sixdeskmesslevel=0
    sixdeskmess="BIGNBLZ runs must be made using the platform LSF!!!"
-   sixdeskmess
+   sixdeskmess -1
 #MACRO mymess
 
 
@@ -203,9 +195,8 @@ if test "$workspace" != "$cworkspace"
 then
 
 #MACRO mymess 0 Workspace mismatch $workspace/$cworkspace
-  sixdeskmesslevel=0
   sixdeskmess="Workspace mismatch $workspace/$cworkspace"
-  sixdeskmess
+  sixdeskmess -1
 #MACRO mymess
  
 
@@ -225,9 +216,8 @@ if test ! -d "$trackdir"
 then
 
 #MACRO mymess 0 The tracking directory $trackdir does NOT exist!!!
-  sixdeskmesslevel=0
   sixdeskmess="The tracking directory $trackdir does NOT exist!!!"
-  sixdeskmess
+  sixdeskmess -1
 #MACRO mymess
 
 
@@ -247,9 +237,8 @@ if test ! -d "$scratchdir"
 then
 
 #MACRO mymess 0 The scratch directory $scratchdir does NOT exist!!!
-  sixdeskmesslevel=0
   sixdeskmess="The scratch directory $scratchdir does NOT exist!!!"
-  sixdeskmess
+  sixdeskmess -1
 #MACRO mymess
 
 
