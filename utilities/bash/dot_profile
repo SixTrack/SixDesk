@@ -10,22 +10,20 @@ sixdeskmess()
   fi
   if test "$__sixdeskmesslevel" -le "$sixdesklevel"
   then
-    sixdeskday="`date +%a`"
-    sixdeskdate="`date +%d/%m/%y`"
-    sixdesktime="`date +%T`"
+    sixdesktime=$(date "+%a %d/%m/%y %T ")
     sixdeskname="`basename $0`                "
     sixdeskname=`echo $sixdeskname | cut -b 1-15`
     if test "$sixdeskecho" != "" -o "$__sixdeskmesslevel" -eq 0
     then
 	if test "$__sixdeskmesslevel" -ne 5; then
-	    echo "$sixdeskday $sixdeskdate $sixdesktime ""$sixdeskname"" $sixdeskmess"
+	    echo "$sixdesktime ""$sixdeskname"" $sixdeskmess"
 	fi
     fi
     if test "$sixdesklogdir" != ""
     then
-      echo "$sixdeskday $sixdeskdate $sixdesktime ""$sixdeskname"" $sixdeskmess" >> "$sixdesklogdir"/sixdesk.log
+      echo "$sixdesktime ""$sixdeskname"" $sixdeskmess" >> "$sixdesklogdir"/sixdesk.log
     else
-      echo "$sixdeskday $sixdeskdate $sixdesktime ""$sixdeskname"" $sixdeskmess" >> sixdesk.log
+      echo "$sixdesktime ""$sixdeskname"" $sixdeskmess" >> sixdesk.log
     fi
   fi
 }
