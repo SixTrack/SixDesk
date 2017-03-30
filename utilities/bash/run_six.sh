@@ -2342,6 +2342,8 @@ if ${lsubmit} ; then
 	cd ${sixdesktrack}
 	sixdeskmess="Submitting jobs to $sixdeskplatform from dir $PWD"
 	sixdeskmess
+	sixdeskmess="Depending on the number of points in the scan, this operation can take up to few minutes."
+	sixdeskmess
 	allCases=`cat ${sixdesktrack}/${LHCDesName}.list`
 	allCases=( ${allCases} )
 	multipleTrials "terseString=\"`condor_submit -terse htcondor_run_six_${LHCDesName}.sub`\" ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Problem at condor_submit"
@@ -2374,6 +2376,8 @@ if ${lsubmit} ; then
 	fi
 	# save taskIDs
 	sixdeskmess="Updating DB..."
+	sixdeskmess
+	sixdeskmess="Depending on the number of points in the scan, this operation can take up to few minutes."
 	sixdeskmess
 	for (( ii=0; ii<${jobIDmax}; ii++ )) ; do
 	    let jj=$ii-1

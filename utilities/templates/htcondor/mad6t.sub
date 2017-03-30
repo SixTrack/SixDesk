@@ -3,5 +3,5 @@ executable = $(filename)
 output = $Fn(filename).out
 error = $Fn(filename).err
 log = $Fn(filename).log
-SendCredential = True
+send_credential = True
 queue filename matching files mad6t_*.sh
