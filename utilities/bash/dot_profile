@@ -3,11 +3,22 @@
 sixdeskmess()
 {
   local __sixdeskmesslevel
-  local __sixdesklevel  
-  if [ $# -eq 1 ] ; then
-      __sixdeskmesslevel=$1
+  local __sixdesklevel
+  local __message
+  
+  if [ $# -eq 2 ] ; then
+      __sixdeskmesslevel=${1}
+      __message=${2}
   else
-      __sixdeskmesslevel=$sixdeskmesslevel
+      sixdeskname=$(basename $0)
+      sixdeskname=$(echo $sixdeskname | cut -b 1-15)      
+      echo ${sixdeskname}
+      echo "SERIOUS ERROR! sixdeskmess requires exactly two arguments"
+      
+      exit 1
+      #__sixdeskmesslevel=$sixdeskmesslevel
+      #__message=${sixdeskmess}
+      
   fi
   #
   if  [ -z "${sixdesklevel}" ] || [ ${__sixdeskmesslevel} -le ${sixdesklevel} ]  ; then
@@ -15,7 +26,7 @@ sixdeskmess()
       sixdeskname=$(basename $0)
       sixdeskname=$(echo $sixdeskname | cut -b 1-15)
 #      echo "sixdesklevel: ${sixdesklevel} -- sixdeskmesslevel: ${__sixdeskmesslevel}"
-      echo "$sixdesktime ""$sixdeskname"" $sixdeskmess"
+      echo "$sixdesktime ""$sixdeskname"" ${__message}"
   fi
 }
 sixdeskmktmp()

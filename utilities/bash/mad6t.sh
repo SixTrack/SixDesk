@@ -30,14 +30,12 @@ function preliminaryChecksM6T(){
     
     if [ ! -s $maskFilesPath/$LHCDescrip.mask ] ; then
 	# error: mask file not present
-	sixdeskmess="$LHCDescrip.mask is required in sixjobs/mask !!! "
-	sixdeskmess -1
+	sixdeskmess -1 "$LHCDescrip.mask is required in sixjobs/mask !!! "
 	let __lerr+=1
     fi
     if [ ! -d "$sixtrack_input" ] ; then
 	# error: $sixtrack_input directory does not exist
-	sixdeskmess="The $sixtrack_input directory does not exist!!!"
-	sixdeskmess -1
+	sixdeskmess -1 "The $sixtrack_input directory does not exist!!!"
 	let __lerr+=1
     fi
     if test "$beam" = "" -o "$beam" = "b1" -o "$beam" = "B1" ; then
@@ -46,8 +44,7 @@ function preliminaryChecksM6T(){
 	appendbeam='_b2'
     else
 	# error: unrecognised beam option
-	sixdeskmess="Unrecognised beam option $beam : must be null, b1, B1, b2 or B2!!!"
-	sixdeskmess -1 
+	sixdeskmess -1 "Unrecognised beam option $beam : must be null, b1, B1, b2 or B2!!!"
 	let __lerr+=1
     fi
     if [ ${__lerr} -gt 0 ] ; then
@@ -62,15 +59,12 @@ function submit(){
 
     # useful echo
     # - madx version and path
-    sixdeskmess="Using madx Version $MADX in $MADX_PATH"
-    sixdeskmess 1
+    sixdeskmess  1 "Using madx Version $MADX in $MADX_PATH"
     # - Study, Runtype, Seeds
-    sixdeskmess="Study: $LHCDescrip - Runtype: $runtype - Seeds: [$istamad:$iendmad]"
-    sixdeskmess -1 
+    sixdeskmess -1 "Study: $LHCDescrip - Runtype: $runtype - Seeds: [$istamad:$iendmad]"
     # - interactive madx
     if ${linter}  ; then
-	sixdeskmess="Interactive MADX runs"
-	sixdeskmess 1
+	sixdeskmess 1 "Interactive MADX runs"
     fi
 
     # copy templates...
@@ -87,8 +81,7 @@ function submit(){
     if [ -n "${xing}" ] ; then 
 	# variable is defined
 	xing_rad=`echo "$xing" | awk '{print ($1*1E-06)}'`
-	sixdeskmess=" --> crossing defined: $xing ${xing_rad}"
-	sixdeskmess 1
+	sixdeskmess  1 " --> crossing defined: $xing ${xing_rad}"
 	sed -i -e 's?%xing?'$xing_rad'?g' \
   	    -e 's?/ bb_ho5b1_0?bb_ho5b1_0?g' \
 	    -e 's?/ bb_ho1b1_0?bb_ho5b1_0?g' $sixtrack_input/fort.3.mother1.tmp
@@ -101,8 +94,7 @@ function submit(){
 
     sixdeskmktmpdir mad $sixtrack_input
     export junktmp=$sixdesktmpdir
-    sixdeskmess="Using junktmp: $junktmp"
-    sixdeskmess 1
+    sixdeskmess 1 "Using junktmp: $junktmp"
     
     cd $junktmp
     filejob=$LHCDescrip
@@ -116,8 +108,7 @@ function submit(){
 	
 	# clean away any existing results for this seed
 	if ${__lsecond} ; then
-	    sixdeskmess="Sleeping ${__delay} seconds"
-	    sixdeskmess -1
+	    sixdeskmess -1 "Sleeping ${__delay} seconds"
 	    sleep ${__delay}
 	fi
 	for f in 2 8 16 34 ; do
@@ -146,8 +137,7 @@ function submit(){
 	    rm -rf $sixdesktmpdir
 	else
 	    read BSUBOUT <<< $(bsub -q $madlsfq -o $junktmp/"${LHCDescrip}_mad6t_$iMad".log -J ${workspace}_${LHCDescrip}_mad6t_$iMad mad6t_"$iMad".lsf)
-	    sixdeskmess="Seed ${iMad}: ${BSUBOUT}"
-	    sixdeskmess -1
+	    sixdeskmess -1 "Seed ${iMad}: ${BSUBOUT}"
 
 	    
 	fi
@@ -189,8 +179,7 @@ function check_output_option(){
 
 
 function check(){
-    sixdeskmess="Checking $LHCDescrip"
-    sixdeskmess 1
+    sixdeskmess 1 "Checking $LHCDescrip"
 
     sixdeskmesslevel=0
     local __lerr=0
@@ -205,24 +194,17 @@ function check(){
     
     # check errors/warnings
     if [ -s $sixtrack_input/ERRORS ] ; then
-	sixdeskmess="There appear to be some MADX errors!"
-	sixdeskmess -1
-	sixdeskmess="If these messages are annoying you and you have checked them carefully then"
-	sixdeskmess -1
-	sixdeskmess="just remove sixtrack_input/ERRORS or rm sixtrack_input/* and rerun `basename $0` -s!"
-	sixdeskmess -1
+	sixdeskmess -1 "There appear to be some MADX errors!"
+	sixdeskmess -1 "If these messages are annoying you and you have checked them carefully then"
+	sixdeskmess -1 "just remove sixtrack_input/ERRORS or rm sixtrack_input/* and rerun `basename $0` -s!"
 	echo "ERRORS"
 	cat $sixtrack_input/ERRORS
 	let __lerr+=1
     elif [ -s $sixtrack_input/WARNINGS ] ; then
-	sixdeskmess="There appear to be some MADX result warnings!"
-	sixdeskmess -1
-	sixdeskmess="Some files are being changed; details in sixtrack_input/WARNINGS"
-	sixdeskmess -1 
-	sixdeskmess="If these messages are annoying you and you have checked them carefully then"
-	sixdeskmess -1
-	sixdeskmess="just remove sixtrack_input/WARNINGS"
-	sixdeskmess -1
+	sixdeskmess -1 "There appear to be some MADX result warnings!"
+	sixdeskmess -1 "Some files are being changed; details in sixtrack_input/WARNINGS"
+	sixdeskmess -1 "If these messages are annoying you and you have checked them carefully then"
+	sixdeskmess -1 "just remove sixtrack_input/WARNINGS"
 	echo "WARNINGS"
 	cat $sixtrack_input/WARNINGS
 	let __lerr+=1
@@ -236,18 +218,15 @@ function check(){
     fi
     for iFort in ${iForts} ; do
 	nFort=0
-	sixdeskmess="Checking fort.${iFort}_??.gz..."
-	sixdeskmess 1
+	sixdeskmess 1 "Checking fort.${iFort}_??.gz..."
 	for (( iMad=${istamad}; iMad<=${iendmad}; iMad++ )) ; do
 	    let nFort+=`ls -1 $sixtrack_input/fort.${iFort}_${iMad}.gz 2> /dev/null | wc -l`
 	done
 	if [ ${nFort} -ne ${njobs} ] ; then
-	    sixdeskmess="Discrepancy!!! Found ${nFort} fort.${iFort}_??.gz in $sixtrack_input (expected $njobs)"
-	    sixdeskmess -1
+	    sixdeskmess -1 "Discrepancy!!! Found ${nFort} fort.${iFort}_??.gz in $sixtrack_input (expected $njobs)"
 	    let __lerr+=1
 	else
-	    sixdeskmess="...found ${nFort} fort.${iFort}_??.gz in $sixtrack_input (as expected)"
-	    sixdeskmess 1
+	    sixdeskmess 1 "...found ${nFort} fort.${iFort}_??.gz in $sixtrack_input (as expected)"
 	fi
     done
 
@@ -255,12 +234,10 @@ function check(){
     if test ! -s $sixtrack_input/fort.3.mother1 \
 	    -o ! -s $sixtrack_input/fort.3.mother2
     then
-	sixdeskmess="Could not find fort.3.mother1/2 in $sixtrack_input"
-	sixdeskmess -1
+	sixdeskmess -1 "Could not find fort.3.mother1/2 in $sixtrack_input"
 	let __lerr+=1
     else
-	sixdeskmess="all mother files are there"
-	sixdeskmess 1
+	sixdeskmess 1 "all mother files are there"
     fi
 
     # multipole errors
@@ -280,11 +257,9 @@ function check(){
 	done
 	if [ $sixdeskmiss -eq 0 ] ; then
 	    echo "CORR_TEST MC_error files copied" > $sixtrack_input/CORR_TEST
-	    sixdeskmess="CORR_TEST MC_error files copied"
-	    sixdeskmess 1
+	    sixdeskmess 1 "CORR_TEST MC_error files copied"
 	else
-	    sixdeskmess="$sixdeskmiss MC_error files could not be found!!!"
-	    sixdeskmess -1
+	    sixdeskmess -1 "$sixdeskmiss MC_error files could not be found!!!"
 	    let __lerr+=1
 	fi
     fi
@@ -293,12 +268,9 @@ function check(){
 	exit ${__lerr}
     else
 	# final remarks
-	sixdeskmess="All the mad6t jobs appear to have completed successfully using madx -X Version $MADX in $MADX_PATH"
-	sixdeskmess -1
-	sixdeskmess="Please check the sixtrack_input directory as the mad6t runs may have failed and just produced empty files!!!"
-	sixdeskmess -1
-	sixdeskmess="All jobs/logs/output are in sixtrack_input/mad.mad6t.sh* directories"
-	sixdeskmess -1
+	sixdeskmess -1 "All the mad6t jobs appear to have completed successfully using madx -X Version $MADX in $MADX_PATH"
+	sixdeskmess -1 "Please check the sixtrack_input directory as the mad6t runs may have failed and just produced empty files!!!"
+	sixdeskmess -1 "All jobs/logs/output are in sixtrack_input/mad.mad6t.sh* directories"
     fi
     return $__lerr
 }
@@ -399,8 +371,7 @@ trap "sixdeskexit 1" EXIT
 
 # don't use this script in case of BNL
 if test "$BNL" != "" ; then
-    sixdeskmess="Use prepare_bnl instead for BNL runs!!! aborting..."
-    sixdeskmess -1
+    sixdeskmess -1 "Use prepare_bnl instead for BNL runs!!! aborting..."
     sixdeskexit 1
 fi
 
@@ -431,8 +402,7 @@ else
 fi
 
 # echo that everything went fine
-sixdeskmess="Appears to have completed normally"
-sixdeskmess 1
+sixdeskmess  1 "Appears to have completed normally"
 
 # bye bye
 exit 0
