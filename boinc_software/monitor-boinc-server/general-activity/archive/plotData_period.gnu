@@ -1,4 +1,4 @@
-period='2017-02'
+period='2017-04'
 iFileName='server_status_'.period
 
 set terminal postscript enhanced color 'Times-Roman, 10'
@@ -6,7 +6,7 @@ set output 'status_'.period.'.ps'
 
 set xdata time
 set timefmt '%Y-%m-%d %H:%M:%S'
-set format x '%Y-%m-%d %H:%M:%S'
+set format x '%Y-%m-%d %H:%M'
 set xlabel 'time'
 M=10.0
 
