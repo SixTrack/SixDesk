@@ -1,0 +1,50 @@
+#!/bin/bash
+#
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to scripts (normalised)
+if [ -z "${SCRIPTDIR}" ] ; then
+    SCRIPTDIR=`dirname $0`
+    SCRIPTDIR="`cd ${SCRIPTDIR};pwd`"
+    export SCRIPTDIR=`dirname ${SCRIPTDIR}`
+fi
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/bash/dot_env
+#
+# main loop
+#
+w=/tmp/mcintosh/comp_inputs
+mkdir -p $w
+rm -f $w/*
+t1=$sixtrack_input
+t2=/afs/cern.ch/user/m/mfittere/w14/sixjobs/sixtrack_input
+### t2=/afs/cern.ch/user/m/mfittere/w14miriam/sixjobs/sixtrack_input
+
+echo "Seeds $ista to $iend"
+i=$ista
+while test "$i" -le "$iend" 
+do
+  for fn in 2 8 16
+  do
+# What about fort.3 stuff
+    echo "Comparing"
+    echo "$t1/fort.${fn}_${i}.gz"
+    echo "$t2/fort.${fn}_${i}.gz"
+    cp $t1/fort.${fn}_${i}.gz $w/old.gz
+    cp $t2/fort.${fn}_${i}.gz $w/new.gz
+    gunzip $w/old.gz
+    gunzip $w/new.gz
+    diff $w/old $w/new
+    if test $? -eq 0
+    then
+      echo "OK"
+    else
+      echo "DIFF"
+    fi
+    rm $w/*
+  done
+  let i=i+1
+done

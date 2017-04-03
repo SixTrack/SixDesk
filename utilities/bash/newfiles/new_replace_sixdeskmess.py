@@ -11,7 +11,7 @@ old_notation=False
 with open(filename) as f:
     for line in f:
         skipline=False
-        if 'sixdeskmess=' in line:
+        sixdeskmess -1 ' in line:
             
             whitespace   = re.match(r"\s*", line).group()
             
@@ -25,7 +25,7 @@ with open(filename) as f:
             skipline=False
             print line,
         
-        elif 'sixdeskmess' in line and 'sixdeskmess=' not in line and 'sixdeskmesslevel' not in line:
+        sixdeskmess -1 ' not in line and 'sixdeskmesslevel' not in line:
             continue
             
 
