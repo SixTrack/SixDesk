@@ -46,8 +46,7 @@ source ${SCRIPTDIR}/bash/dot_profile
 # and make sure we have a studies directory!
 if test ! -d studies
 then
-  sixdeskmess="There is no studies directory in sixjobs!!!"
-  sixdeskmess -1
+  sixdeskmess -1 "There is no studies directory in sixjobs!!!"
 
 #MACRO myexit 1
   sixdeskexitparam=1
@@ -60,8 +59,7 @@ if test ! -s sixdeskenv -o ! -s sysenv
 then
 
 #MACRO mymess 0 sixjobs does not have a sixdeskenv or sysenv!!!
-  sixdeskmess="sixjobs does not have a sixdeskenv or sysenv!!!"
-  sixdeskmess -1
+  sixdeskmess -1 "sixjobs does not have a sixdeskenv or sysenv!!!"
 #MACRO mymess
 
 
@@ -79,14 +77,12 @@ if test "$workspace" != "$cworkspace"
 then
 
 #MACRO mymess 0 Workspace mismatch /$workspace/$cworkspace/!!!
-  sixdeskmess="Workspace mismatch /$workspace/$cworkspace/!!!"
-  sixdeskmess -1
+  sixdeskmess -1 "Workspace mismatch /$workspace/$cworkspace/!!!"
 #MACRO mymess
 
 
 #MACRO mymess 0 Check the workspace definition in sixdeskenv.
-  sixdeskmess="Check the workspace definition in sixdeskenv."
-  sixdeskmess -1
+  sixdeskmess -1 "Check the workspace definition in sixdeskenv."
 #MACRO mymess
 
 
@@ -107,8 +103,7 @@ if test "$mystudy" = ""
 then
 
 #MACRO mymess 0 Couldn't find an LHCDescrip in sixdeskenv!!!
-  sixdeskmess="Couldn't find an LHCDescrip in sixdeskenv!!!"
-  sixdeskmess -1
+  sixdeskmess -1 "Couldn't find an LHCDescrip in sixdeskenv!!!"
 #MACRO mymess
 
 
@@ -126,14 +121,12 @@ then
   then
 
 #MACRO mymess 0 Study /$newLHCDescrip/ not found in studies!!!
-    sixdeskmess="Study /$newLHCDescrip/ not found in studies!!!"
-    sixdeskmess -1
+    sixdeskmess -1 "Study /$newLHCDescrip/ not found in studies!!!"
 #MACRO mymess
 
 
 #MACRO mymess 0 Use set_env to create a new study with this name.
-    sixdeskmess="Use set_env to create a new study with this name."
-    sixdeskmess -1
+    sixdeskmess -1 "Use set_env to create a new study with this name."
 #MACRO mymess
 
 
@@ -147,8 +140,7 @@ then
   then
 
 #MACRO mymess 0 studies/$newLHCDescrip does not have sixdeskenv/sysenv!!!
-    sixdeskmess="studies/$newLHCDescrip does not have sixdeskenv/sysenv!!!"
-    sixdeskmess -1
+    sixdeskmess -1 "studies/$newLHCDescrip does not have sixdeskenv/sysenv!!!"
 #MACRO mymess
 
 
@@ -164,8 +156,7 @@ then
   then
 
 #MACRO mymess 0 Couldn't find an LHCDescrip in studies/$newLHCDescrip/sixdeskenv!!!
-    sixdeskmess="Couldn't find an LHCDescrip in studies/$newLHCDescrip/sixdeskenv!!!"
-    sixdeskmess -1
+    sixdeskmess -1 "Couldn't find an LHCDescrip in studies/$newLHCDescrip/sixdeskenv!!!"
 #MACRO mymess
 
 
@@ -179,8 +170,7 @@ then
   then
 
 #MACRO mymess 0 Study mismatch /$newstudy/$newLHCDescrip/
-    sixdeskmess="Study mismatch /$newstudy/$newLHCDescrip/"
-    sixdeskmess -1
+    sixdeskmess -1 "Study mismatch /$newstudy/$newLHCDescrip/"
 #MACRO mymess
 
 
@@ -199,8 +189,7 @@ then
     then
 
 #MACRO mymess 0 UNKNOWN sixdeskplatform $newplatform requested!!!
-      sixdeskmess="UNKNOWN sixdeskplatform $newplatform requested!!!"
-      sixdeskmess -1
+      sixdeskmess -1 "UNKNOWN sixdeskplatform $newplatform requested!!!"
 #MACRO mymess
 
 
@@ -262,22 +251,19 @@ then
 fi
 
 #MACRO mymess 0 Using$BTEXT Study $STEXT Platform $PTEXT
-sixdeskmess="Using$BTEXT Study $STEXT Platform $PTEXT"
-sixdeskmess 1 
+sixdeskmess -1 "Using$BTEXT Study $STEXT Platform $PTEXT"
 #MACRO mymess
 
 if test -e "$sixdeskstudy"/deleted
 then
 
 #MACRO mymess 0 Warning! Study /`basename $sixdeskstudy`/ has been deleted!!!
-  sixdeskmess="Warning! Study /`basename $sixdeskstudy`/ has been deleted!!!"
-  sixdeskmess -1
+  sixdeskmess -1 "Warning! Study /`basename $sixdeskstudy`/ has been deleted!!!"
 #MACRO mymess
 
 
 #MACRO mymess 0 Use set_env or recall_study to restore it.
-  sixdeskmess="Use set_env or recall_study to restore it."
-  sixdeskmess -1
+  sixdeskmess -1 "Use set_env or recall_study to restore it."
 #MACRO mymess
 
 fi

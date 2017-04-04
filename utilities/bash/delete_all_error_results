@@ -51,8 +51,7 @@ do
 
 #MACRO mymess 2 Deleting the result for task $taskid from the server
   sixdeskmesslevel=2
-  sixdeskmess="Deleting the result for task $taskid from the server"
-  sixdeskmess
+  sixdeskmess -1 "Deleting the result for task $taskid from the server"
 #MACRO mymess
 
   if test $sixdeskplatform = "cpss"
@@ -73,22 +72,19 @@ do
 
 #MACRO mymess 1 confirmResultDownload failed!!! `cat $tmp`
       sixdeskmesslevel=1
-      sixdeskmess="confirmResultDownload failed!!! `cat $tmp`"
-      sixdeskmess
+      sixdeskmess -1 "confirmResultDownload failed!!! `cat $tmp`"
 #MACRO mymess
 
     fi
     rm $tmp
     sixdeskmesslevel=1
-    sixdeskmess="Deleting task $taskid in $mytgid from the server"
-    sixdeskmess
+    sixdeskmess -1 "Deleting task $taskid in $mytgid from the server"
     perl ${SCRIPTDIR}/perl/deleteTask.pl $ntaskid $mytgid > $tmp 2>&1
     stat=$? 
     if test $stat -ne 0
     then
       sixdeskmesslevel=1
-      sixdeskmess="deleteTask failed!!! `cat $tmp`"
-      sixdeskmess
+      sixdeskmess -1 "deleteTask failed!!! `cat $tmp`"
     fi
     rm $tmp
   elif test $sixdeskplatform = "boinc"

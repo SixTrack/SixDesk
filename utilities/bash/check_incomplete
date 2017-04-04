@@ -17,8 +17,7 @@ source ${SCRIPTDIR}/bash/dot_env
 
 #MACRO mymess 0 Checking Study $LHCDescrip
 sixdeskmesslevel=0
-sixdeskmess="Checking Study $LHCDescrip"
-sixdeskmess
+sixdeskmess -1 "Checking Study $LHCDescrip"
 #MACRO mymess
 
 cases=0
@@ -43,8 +42,7 @@ cases=`expr $ccases + $icases`
 
 #MACRO mymess 0 Found $cases cases, $ccases complete ($icases incomplete)
 sixdeskmesslevel=0
-sixdeskmess="Found $cases cases, $ccases complete ($icases incomplete)"
-sixdeskmess
+sixdeskmess -1 "Found $cases cases, $ccases complete ($icases incomplete)"
 #MACRO mymess
 
 while read line

@@ -17,8 +17,7 @@ castorr()
 
 #MACRO mymess 0 Recalling $cin
   sixdeskmesslevel=0
-  sixdeskmess="Recalling $cin"
-  sixdeskmess
+  sixdeskmess -1 "Recalling $cin"
 #MACRO mymess
 
   castor_recall $cin $cout >> $sixdeskhome/../castor_recall.log 2>&1
@@ -29,8 +28,7 @@ castorr()
 
 #MACRO mymess 0 castor_recall failed!! See castor_recall.log.
       sixdeskmesslevel=0
-      sixdeskmess="castor_recall failed!! See castor_recall.log."
-      sixdeskmess
+      sixdeskmess -1 "castor_recall failed!! See castor_recall.log."
 #MACRO mymess
 
 
@@ -52,15 +50,13 @@ check_dir()
 
 #MACRO mymess 0 Recall of $LHCDescrip in $mystudy has failed!!!
     sixdeskmesslevel=0
-    sixdeskmess="Recall of $LHCDescrip in $mystudy has failed!!!"
-    sixdeskmess
+    sixdeskmess -1 "Recall of $LHCDescrip in $mystudy has failed!!!"
 #MACRO mymess
 
 
 #MACRO mymess 0 See castor_recall.log and inform eric.mcintosh@cern.ch.
     sixdeskmesslevel=0
-    sixdeskmess="See castor_recall.log and inform eric.mcintosh@cern.ch."
-    sixdeskmess
+    sixdeskmess -1 "See castor_recall.log and inform eric.mcintosh@cern.ch."
 #MACRO mymess
 
 
@@ -247,8 +243,7 @@ then
 
 #MACRO mymess 0 BUG there is a workspace mismatch!!!
   sixdeskmesslevel=0
-  sixdeskmess="BUG there is a workspace mismatch!!!"
-  sixdeskmess
+  sixdeskmess -1 "BUG there is a workspace mismatch!!!"
 #MACRO mymess
 
 
@@ -264,8 +259,7 @@ then
 
 #MACRO mymess 0 BUG Recalling $bstudy from $bname but the LHCDescrip is $LHCDescrip!!!
   sixdeskmesslevel=0
-  sixdeskmess="BUG Recalling $bstudy from $bname but the LHCDescrip is $LHCDescrip!!!"
-  sixdeskmess
+  sixdeskmess -1 "BUG Recalling $bstudy from $bname but the LHCDescrip is $LHCDescrip!!!"
 #MACRO mymess
 
 
@@ -278,8 +272,7 @@ fi
 
 #MACRO mymess 0 Recalling Study $mystudy to $myworkspace
 sixdeskmesslevel=0
-sixdeskmess="Recalling Study $mystudy to $myworkspace"
-sixdeskmess
+sixdeskmess -1 "Recalling Study $mystudy to $myworkspace"
 #MACRO mymess
 
 if test "$currentws" = "$bworkspace"
@@ -289,8 +282,7 @@ then
 
 #MACRO mymess 0 This study exists already; we will NOT overwrite it!!!
     sixdeskmesslevel=0
-    sixdeskmess="This study exists already; we will NOT overwrite it!!!"
-    sixdeskmess
+    sixdeskmess -1 "This study exists already; we will NOT overwrite it!!!"
 #MACRO mymess
 
 
@@ -304,8 +296,7 @@ else
 
 #MACRO mymess 0 Writing study to the new workspace
   sixdeskmesslevel=0
-  sixdeskmess="Writing study to the new workspace"
-  sixdeskmess
+  sixdeskmess -1 "Writing study to the new workspace"
 #MACRO mymess
 
 fi
@@ -325,8 +316,7 @@ sixdesklock
 
 #MACRO mymess 0 Starting recall of Study $mystudy to $myworkspace
 sixdeskmesslevel=0
-sixdeskmess="Starting recall of Study $mystudy to $myworkspace"
-sixdeskmess
+sixdeskmess -1 "Starting recall of Study $mystudy to $myworkspace"
 #MACRO mymess
 
 # We recall to same place (full path) or we have set cout=.
@@ -341,8 +331,7 @@ do
 
 #MACRO mymess 0 Recalling $nextd at `date +%d%m%y`/`date +%T`
   sixdeskmesslevel=0
-  sixdeskmess="Recalling $nextd at `date +%d%m%y`/`date +%T`"
-  sixdeskmess
+  sixdeskmess -1 "Recalling $nextd at `date +%d%m%y`/`date +%T`"
 #MACRO mymess
 
   if test "$nextd" = "logs"
@@ -365,8 +354,7 @@ do
 
 #MACRO mymess 0 Skipping logs.
       sixdeskmesslevel=0
-      sixdeskmess="Skipping logs."
-      sixdeskmess
+      sixdeskmess -1 "Skipping logs."
 #MACRO mymess
 
     fi
@@ -390,8 +378,7 @@ do
 
 #MACRO mymess 0 Skipping cronlogs
       sixdeskmesslevel=0
-      sixdeskmess="Skipping cronlogs"
-      sixdeskmess
+      sixdeskmess -1 "Skipping cronlogs"
 #MACRO mymess
 
     fi
@@ -415,8 +402,7 @@ do
 
 #MACRO mymess 0 Skipping track
       sixdeskmesslevel=0
-      sixdeskmess="Skipping track"
-      sixdeskmess
+      sixdeskmess -1 "Skipping track"
 #MACRO mymess
 
     fi
@@ -440,8 +426,7 @@ do
 
 #MACRO mymess 0 Skipping sixtrack_input
       sixdeskmesslevel=0
-      sixdeskmess="Skipping sixtrack_input"
-      sixdeskmess
+      sixdeskmess -1 "Skipping sixtrack_input"
 #MACRO mymess
 
     fi
@@ -465,8 +450,7 @@ do
 
 #MACRO mymess 0 Skipping work
       sixdeskmesslevel=0
-      sixdeskmess="Skipping work"
-      sixdeskmess
+      sixdeskmess -1 "Skipping work"
 #MACRO mymess
 
     fi
@@ -474,8 +458,7 @@ do
 
 #MACRO mymess 0 BUG!!! Trying to recall unknown data!!!
     sixdeskmesslevel=0
-    sixdeskmess="BUG!!! Trying to recall unknown data!!!"
-    sixdeskmess
+    sixdeskmess -1 "BUG!!! Trying to recall unknown data!!!"
 #MACRO mymess
 
 
@@ -528,8 +511,7 @@ then
 
 #MACRO mymess 0 Updating the input links fort.2|8|16
   sixdeskmesslevel=0
-  sixdeskmess="Updating the input links fort.2|8|16"
-  sixdeskmess
+  sixdeskmess -1 "Updating the input links fort.2|8|16"
 #MACRO mymess
 
 
@@ -567,8 +549,7 @@ fi
 
 #MACRO mymess 0 Recall of $mystudy to $myworkspace finished at `date +%d%m%y`/`date +%T`
 sixdeskmesslevel=0
-sixdeskmess="Recall of $mystudy to $myworkspace finished at `date +%d%m%y`/`date +%T`"
-sixdeskmess
+sixdeskmess -1 "Recall of $mystudy to $myworkspace finished at `date +%d%m%y`/`date +%T`"
 #MACRO mymess
 
 

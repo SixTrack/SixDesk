@@ -70,8 +70,7 @@ do
 
 #MACRO mymess 0 The directory $sixdeskRundir for job $sixdeskRunnam does NOT exist!!!
     sixdeskmesslevel=0
-    sixdeskmess="The directory $sixdeskRundir for job $sixdeskRunnam does NOT exist!!!"
-    sixdeskmess
+    sixdeskmess -1 "The directory $sixdeskRundir for job $sixdeskRunnam does NOT exist!!!"
 #MACRO mymess
 
 
@@ -100,8 +99,7 @@ do
 
 #MACRO mymess 0 dot_task/dot_boinc/dot_grid failed!!!
     sixdeskmesslevel=0
-    sixdeskmess="dot_task/dot_boinc/dot_grid failed!!!"
-    sixdeskmess
+    sixdeskmess -1 "dot_task/dot_boinc/dot_grid failed!!!"
 #MACRO mymess
 
 

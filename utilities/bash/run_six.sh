@@ -47,7 +47,7 @@ function how_to_use() {
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
    -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
-               0: only error messages and basic output [default]
+               0: only error messages and basic output 
                1: full output
                2: extended output for debugging
 EOF
@@ -1271,6 +1271,7 @@ function treatShort(){
 		    fi
 	        else
 	    	    sixdeskmess -1 "No submission!"
+		    echo 
 	        fi
 	    fi
 
@@ -1356,7 +1357,7 @@ function treatLong(){
 	    if ! ${lquiet}; then
 		echo ""
 	    fi
-	    sixdeskmess  1 "Point in scan $Runnam $Rundir, k 
+	    sixdeskmess  1 "Point in scan $Runnam $Rundir, k"
 	    sixdeskmess -1 "Submitting - ${LHCDescrip} - Job: ${NsuccessSub} - Seed: $iMad/$iend - Ampl: $Ampl - Angle: $Angle"
 	    
 	    # ----------------------------------------------------------------------
@@ -1469,6 +1470,7 @@ function treatLong(){
 			fi
 	            else
 	        	sixdeskmess -1 "No submission!"
+			echo
 	            fi
 	        fi
 	        
@@ -1564,19 +1566,19 @@ function treatDA(){
 
 function printSummary(){
     if ${lfix} ; then
-	sixdeskmess -1 "${NsuccessFix} dirs fixed!"
+	sixdeskmess -1 "FIXED          ${NsuccessFix} directories"
     fi
     if ${lgenerate} ; then
-	sixdeskmess -1 "${NsuccessGen} dirs generated!"
+	sixdeskmess -1 "GENERATED      ${NsuccessGen} directories"	
     fi
     if ${lcheck} ; then
-	sixdeskmess -1 "${NsuccessChk} dirs checked!"
+	sixdeskmess -1 "CHECKED        ${NsuccessChk} directories"		
     fi
     if ${lsubmit} ; then
-	sixdeskmess -1 "${NsuccessSub} jobs submitted!"
+	sixdeskmess -1 "SUBMITTED      ${NsuccessSub} jobs"		
     fi
     if ${lstatus} ; then
-	sixdeskmess -1 "Listed status of ${NsuccessSts} dirs!"
+	sixdeskmess -1 "STATUS LISTED  ${NsuccessSub} jobs"			
     fi
     if [ $1 -eq 0 ] ; then
 	sixdeskmess -1 "Completed normally."
@@ -1616,6 +1618,7 @@ lfix=false
 lcleanzip=false
 lselected=false
 lmegazip=false
+loutform=false
 lbackcomp=true
 lverbose=false
 lrestart=false
@@ -1640,6 +1643,11 @@ while getopts  ":hgo:sctakfvBSCMd:p:R:" opt ; do
 	    # check only
 	    lcheck=true
 	    ;;
+	o)
+	    # output option
+    	    loutform=true
+	    sixdesklevel_option=${OPTARG}
+	    ;;	
 	h)
 	    how_to_use
 	    exit 1
@@ -1740,8 +1748,8 @@ fi
 OPTIND=1
 source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${verbose} -e
 # - settings for sixdeskmessages
-sixdeskmessleveldef=0
-sixdeskmesslevel=$sixdeskmessleveldef
+#sixdeskmessleveldef=0
+#sixdeskmesslevel=$sixdeskmessleveldef
 # - temporary trap
 trap "sixdeskexit 1" EXIT
 
@@ -1767,7 +1775,7 @@ if ${lgenerate} ; then
 fi
 if ${lcheck} ; then
     #
-    sixdeskmess -1 "Checking that all sixtrack input files for study $LHCDescrip are there"
+    sixdeskmess  1 "Checking that all sixtrack input files for study $LHCDescrip are there"
     #
     lockingDirs=( "$sixdeskstudy" "$sixdeskjobs_logs" )
     #
@@ -1776,7 +1784,7 @@ if ${lcheck} ; then
 fi
 if ${lsubmit} ; then
     #
-    sixdeskmess -1 "Submitting sixtrack input files for study $LHCDescrip"
+    sixdeskmess  1 "Submitting sixtrack input files for study $LHCDescrip"
     #
     lockingDirs=( "$sixdeskstudy" "$sixdeskjobs_logs" )
     #

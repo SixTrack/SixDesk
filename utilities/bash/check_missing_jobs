@@ -17,8 +17,7 @@ then
 
 #MACRO mymess 0 run_missing_jobs can be used only with LSF !!!
   sixdeskmesslevel=0
-  sixdeskmess="run_missing_jobs can be used only with LSF !!!"
-  sixdeskmess
+  sixdeskmess -1 "run_missing_jobs can be used only with LSF !!!"
 #MACRO mymess
 
 
@@ -33,8 +32,7 @@ then
 
 #MACRO mymess 0 The file $sixdeskjobs/missing_jobs is empty!!!
   sixdeskmesslevel=0
-  sixdeskmess="The file $sixdeskjobs/missing_jobs is empty!!!"
-  sixdeskmess
+  sixdeskmess -1 "The file $sixdeskjobs/missing_jobs is empty!!!"
 #MACRO mymess
 
 
@@ -83,8 +81,7 @@ do
 
 #MACRO mymess 0 The $sixdeskRundir is missing for $sixdeskRunnam!!!
     sixdeskmesslevel=0
-    sixdeskmess="The $sixdeskRundir is missing for $sixdeskRunnam!!!"
-    sixdeskmess
+    sixdeskmess -1 "The $sixdeskRundir is missing for $sixdeskRunnam!!!"
 #MACRO mymess
 
   else
@@ -93,8 +90,7 @@ do
 
 #MACRO mymess 0 The .lsf job is missing for $sixdeskRunnam in sixdeskRundir!!!
       sixdeskmesslevel=0
-      sixdeskmess="The .lsf job is missing for $sixdeskRunnam in sixdeskRundir!!!"
-      sixdeskmess
+      sixdeskmess -1 "The .lsf job is missing for $sixdeskRunnam in sixdeskRundir!!!"
 #MACRO mymess
 
     fi
@@ -105,8 +101,7 @@ do
 
 #MACRO mymess 0 The fort.${fn}.gz is missing for $sixdeskRunnam in sixdeskRundir
         sixdeskmesslevel=0
-        sixdeskmess="The fort.${fn}.gz is missing for $sixdeskRunnam in sixdeskRundir"
-        sixdeskmess
+        sixdeskmess -1 "The fort.${fn}.gz is missing for $sixdeskRunnam in sixdeskRundir"
 #MACRO mymess
 
       else 
@@ -117,8 +112,7 @@ do
 
 #MACRO mymess 0 The fort.${fn}.gz is missing for $sixdeskRunnam in sixdeskRundir
           sixdeskmesslevel=0
-          sixdeskmess="The fort.${fn}.gz is missing for $sixdeskRunnam in sixdeskRundir"
-          sixdeskmess
+          sixdeskmess -1 "The fort.${fn}.gz is missing for $sixdeskRunnam in sixdeskRundir"
 #MACRO mymess
 
         fi

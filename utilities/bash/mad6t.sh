@@ -17,7 +17,7 @@ function how_to_use() {
            option available only for submission to lsf
    -d      study name (when running many jobs in parallel)
    -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
-               0: only error messages and basic output [default]
+               0: only error messages and basic output 
                1: full output
                2: extended output for debugging
 
@@ -61,7 +61,11 @@ function submit(){
     # - madx version and path
     sixdeskmess  1 "Using madx Version $MADX in $MADX_PATH"
     # - Study, Runtype, Seeds
-    sixdeskmess -1 "Study: $LHCDescrip - Runtype: $runtype - Seeds: [$istamad:$iendmad]"
+    echo
+    sixdeskmess -1 "STUDY          ${LHCDescrip}"
+    sixdeskmess -1 "RUNTYPE        ${runtype}"
+    sixdeskmess -1 "SEEDS          [${istamad}:${iendmad}]"
+    echo
     # - interactive madx
     if ${linter}  ; then
 	sixdeskmess 1 "Interactive MADX runs"
@@ -108,7 +112,7 @@ function submit(){
 	
 	# clean away any existing results for this seed
 	if ${__lsecond} ; then
-	    sixdeskmess -1 "Sleeping ${__delay} seconds"
+	    sixdeskmess -1 "               Sleeping ${__delay} seconds"
 	    sleep ${__delay}
 	fi
 	for f in 2 8 16 34 ; do
@@ -137,9 +141,8 @@ function submit(){
 	    rm -rf $sixdesktmpdir
 	else
 	    read BSUBOUT <<< $(bsub -q $madlsfq -o $junktmp/"${LHCDescrip}_mad6t_$iMad".log -J ${workspace}_${LHCDescrip}_mad6t_$iMad mad6t_"$iMad".lsf)
-	    sixdeskmess -1 "Seed ${iMad}: ${BSUBOUT}"
-
-	    
+	    tmpString=$(printf "Seed %2i        %40s\n" ${iMad} "${BSUBOUT}")
+	    sixdeskmess -1 "${tmpString}"
 	fi
 	mad6tjob=$lsfFilesPath/mad6t.lsf
 	if ${__lfirst} ; then
@@ -171,7 +174,6 @@ function check_output_option(){
 	exit
     else
 	loutform=true
-	sixdesklevel=${OPTARG}
 	sixdesklevel_option=${OPTARG}
     fi
     
@@ -180,15 +182,13 @@ function check_output_option(){
 
 function check(){
     sixdeskmess 1 "Checking $LHCDescrip"
-
-    sixdeskmesslevel=0
     local __lerr=0
     
     # check jobs still running
     nJobs=`bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t | wc -l`
     if [ ${nJobs} -gt 0 ] ; then
 	bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t
-	echo "There appear to be some mad6t jobs still not finished"
+	sixdeskmess -1 "There appear to be some mad6t jobs still not finished"
 	let __lerr+=1
     fi
     
@@ -268,9 +268,9 @@ function check(){
 	exit ${__lerr}
     else
 	# final remarks
-	sixdeskmess -1 "All the mad6t jobs appear to have completed successfully using madx -X Version $MADX in $MADX_PATH"
-	sixdeskmess -1 "Please check the sixtrack_input directory as the mad6t runs may have failed and just produced empty files!!!"
-	sixdeskmess -1 "All jobs/logs/output are in sixtrack_input/mad.mad6t.sh* directories"
+	sixdeskmess 1 "All the mad6t jobs appear to have completed successfully using madx -X Version $MADX in $MADX_PATH"
+	sixdeskmess 1 "Please check the sixtrack_input directory as the mad6t runs may have failed and just produced empty files!!!"
+	sixdeskmess 1 "All jobs/logs/output are in sixtrack_input/mad.mad6t.sh* directories"
     fi
     return $__lerr
 }
@@ -363,8 +363,6 @@ OPTIND=1
 source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} -e
 # build paths
 sixDeskDefineMADXTree ${SCRIPTDIR}
-# sixdeskmess level
-sixdeskmesslevel=0
 
 # define trap
 trap "sixdeskexit 1" EXIT
@@ -402,7 +400,8 @@ else
 fi
 
 # echo that everything went fine
-sixdeskmess  1 "Appears to have completed normally"
 
+sixdeskmess -1 "               Appears to have completed normally"
+echo 
 # bye bye
 exit 0
