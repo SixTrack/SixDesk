@@ -531,7 +531,7 @@ then
 
 #MACRO mymess 2 For BOINC $ready Results are available
 #     sixdeskmesslevel=2
-sixdeskmess -1 "For BOINC $ready Results are available"
+#     sixdeskmess -1 "For BOINC $ready Results are available"
 #     sixdeskmess
 #MACRO mymess
 

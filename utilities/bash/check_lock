@@ -21,7 +21,6 @@ else
 fi
 
 #MACRO mymess 0 check_lock: Checking lockdir $sixdesklockdir
-sixdeskmesslevel=0
 sixdeskmess -1 "check_lock: Checking lockdir $sixdesklockdir"
 #MACRO mymess
 
@@ -29,7 +28,6 @@ if test ! -d $sixdesklockdir
 then
 
 #MACRO mymess 0 check_lock: The lock directory $sixdesklockdir does not exist!!!
-  sixdeskmesslevel=0
   sixdeskmess -1 "check_lock: The lock directory $sixdesklockdir does not exist!!!"
 #MACRO mymess
 
@@ -44,7 +42,6 @@ if test ! -f $sixdesklockdir/sixdesklock
 then
 
 #MACRO mymess 0 check_lock: The lockfile $sixdesklockdir/sixdesklock does not exist!!!
-  sixdeskmesslevel=0
   sixdeskmess -1 "check_lock: The lockfile $sixdesklockdir/sixdesklock does not exist!!!"
 #MACRO mymess
 

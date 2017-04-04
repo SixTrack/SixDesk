@@ -430,7 +430,7 @@ then
 
 #MACRO mymess 0 $ready Results are available
 # sixdeskmesslevel=0
-sixdeskmess -1 "$ready Results are available"
+# sixdeskmess -1 "$ready Results are available"
 # sixdeskmess
 #MACRO mymess
 

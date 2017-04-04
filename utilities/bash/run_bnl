@@ -60,7 +60,7 @@ mkdir -p $sixdeskjobs_logs
 
 #MACRO mymess 0 Using $sixdeskjobs_logs locked
 ###sixdeskmesslevel=0
-sixdeskmess -1 "Using $sixdeskjobs_logs locked"
+### sixdeskmess -1 "Using $sixdeskjobs_logs locked"
 #MACRO mymess
 
 #
@@ -81,7 +81,7 @@ tree=$sixdesktrack
 
 #MACRO mymess 0 The OS $OS is not currently supported
 #  sixdeskmesslevel=0
-sixdeskmess -1 "The OS $OS is not currently supported"
+#  sixdeskmess -1 "The OS $OS is not currently supported"
 #  sixdeskmess
 #MACRO mymess
 

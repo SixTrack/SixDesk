@@ -95,6 +95,30 @@ function preliminaryChecksRS(){
     return $__lerr
 }
 
+
+function check_output_option(){
+    local __selected_output_valid
+    __selected_output_valid=false
+    
+    case ${OPTARG} in
+    ''|*[!0-2]*) __selected_output_valid=false ;;
+    *)           __selected_output_valid=true  ;;
+    esac
+
+    if ! ${__selected_output_valid}; then
+	echo "ERROR: Option -o requires the following arguments:"
+	echo "    0: only error messages and basic output [default]"
+	echo "    1: full output"
+	echo "    2: extended output for debugging"
+	exit
+    else
+	loutform=true
+	sixdesklevel_option=${OPTARG}
+    fi
+    
+}
+
+
 function preProcessFort3(){
     local __POST=POST
     local __DIFF=DIFF
@@ -1645,8 +1669,7 @@ while getopts  ":hgo:sctakfvBSCMd:p:R:" opt ; do
 	    ;;
 	o)
 	    # output option
-    	    loutform=true
-	    sixdesklevel_option=${OPTARG}
+	    check_output_option
 	    ;;	
 	h)
 	    how_to_use
