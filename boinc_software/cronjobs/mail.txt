@@ -1,0 +1,26 @@
+Dear SixDesk user <SixDeskUser>,
+
+Please find in attachment a list of directories in the BOINC spooldir
+   <spooldir>
+older than <xxx> days which belong to you. These directories have been
+used ONLY to submit work units to BOINC and retrieve results.
+
+If you think that you will no longer need these directories, then I could
+remove them, freeing disk space and improving the performance of the system.
+To do so, after you had a look at the list, please upload it to
+   <spooldir>/delete
+and I will take care of cleaning.
+
+If you think that, for any reason, some directories should not be removed,
+then please remove them from the list, either heading a '#' char to the name
+of the study or deleting the line.
+
+Thanks for your cooperation,
+Alessio (via a crontab job)
+
+NB: checking of old studies is periodically performed every month.
+Once you upload any list, it may take up to 24h before deleting actually
+takes place.
+
+NB: Please find below the breakdown of the space taken by your spooldirs:
+
