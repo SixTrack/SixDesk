@@ -166,12 +166,16 @@ sixdeskunlock()
 
     chmod 644 $sixdesklockdir/sixdesklock
 
-#MACRO mymess 0 Lock $sixdesklockdir unlocked
-    if [ ${sixdesklevel} -gt 0 ]; then
+ #MACRO mymess 0 Lock $sixdesklockdir unlocked
+    if [ -z ${sixdesklevel} ] ; then
 	sixdeskmess -1 "Lock $sixdesklockdir unlocked"
     else
-	sixdeskmess -1 "[UNLOCKED]     ${sixdesklockdir}"
-    fi
+	if [ ${sixdesklevel} -gt 0 ]; then
+	    sixdeskmess -1 "Lock $sixdesklockdir unlocked"
+	else
+	    sixdeskmess -1 "[UNLOCKED]     ${sixdesklockdir}"
+	fi	      
+    fi    
 #MACRO mymess
 
     SIXDESKLOCKED=`echo "$SIXDESKLOCKED" | sed -e's?'"$sixdesklockdir "'??'`
@@ -323,11 +327,15 @@ sixdesklock()
       else
 
 #MACRO mymess 0 Lock $sixdesklockdir locked
-    if [ ${sixdesklevel} -gt 0 ]; then
-	sixdeskmess -1 "Lock $sixdesklockdir locked"
-    else
-	sixdeskmess -1 "[LOCKED]       ${sixdesklockdir}"
-    fi	  
+	  if [ -z ${sixdesklevel} ] ; then
+	      sixdeskmess -1 "Lock $sixdesklockdir locked"
+	  else
+	      if [ ${sixdesklevel} -gt 0 ]; then
+		  sixdeskmess -1 "Lock $sixdesklockdir locked"
+	      else
+		  sixdeskmess -1 "[LOCKED]       ${sixdesklockdir}"
+	      fi	      
+	  fi
 #MACRO mymess
 
       fi
