@@ -224,11 +224,6 @@ source ${SCRIPTDIR}/bash/dot_profile
 #sixdeskmesslevel=$sixdeskmessleveldef
 
 
-# in case the -o option is not used, load the sixdesklevel from sixdeskenv
-if [ ! -z ${loutform} ] || [ ! ${loutform} ]; then
-    tmpString=$(grep 'sixdesklevel' ${envFilesPath}/sixdeskenv)
-    ${tmpString}
-fi
 
 # - locking dirs
 if ${lcptemplate} ; then
@@ -242,6 +237,13 @@ if ${lset} ; then
 elif ${lload} ; then
     envFilesPath="studies/${currStudy}"
 fi
+
+# in case the -o option is not used, load the sixdesklevel from sixdeskenv
+if [ ! -z ${loutform} ] || [ ! ${loutform} ]; then
+    tmpString=$(grep 'sixdesklevel' ${envFilesPath}/sixdeskenv)
+    ${tmpString}
+fi
+
 
 # - basic checks (i.e. dir structure)
 basicChecks
