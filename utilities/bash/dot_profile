@@ -778,7 +778,7 @@ sixdeskCheckNFieldsFromJobName(){
     local __lerr=0
     local __Nfields
     sixdeskGetNFieldsFromJobName "${__Runnam}" __NFields
-    if [ ${NFields} -ne 7 ] ; then
+    if [ ${__NFields} -ne 7 ] ; then
 	sixdeskmess="Not valid format of point in scan; ${__Runnam}"
 	sixdeskmess
 	sixdeskmess="It should be made up of 7 fields separated by a '%' char"
