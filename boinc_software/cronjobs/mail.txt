@@ -5,22 +5,31 @@ Please find in attachment a list of directories in the BOINC spooldir
 older than <xxx> days which belong to you. These directories have been
 used ONLY to submit work units to BOINC and retrieve results.
 
-If you think that you will no longer need these directories, then I could
-remove them, freeing disk space and improving the performance of the system.
-To do so, after you had a look at the list, please upload it to
+If you think that you will no longer need these directories (e.g. because
+the study is complete), then I could remove them, freeing disk space and
+improving the performance of the system. To do so, after you had a look at
+the list, please upload it to
    <spooldir>/delete
 and I will take care of cleaning.
 
-If you think that, for any reason, some directories should not be removed,
-then please remove them from the list, either heading a '#' char to the name
-of the study or deleting the line.
+If you think that, for any reason, some directories should not be deleted
+(e.g. because the study is still on-going and you are still waiting for
+results), then please remove them from the list, either heading a '#' char
+to the name of the study or deleting the corresponding line.
+
+I remain at your disposal for any questions.
 
 Thanks for your cooperation,
 Alessio (via a crontab job)
 
 NB: checking of old studies is periodically performed every month.
-Once you upload any list, it may take up to 24h before deleting actually
+Once you upload the list, it may take up to 24h before deleting actually
 takes place.
 
-NB: Please find below the breakdown of the space taken by your spooldirs:
+NB: please be reminded that the TOTAL disk space available on the AFS
+volume work.boinc (where the BOINC spooldir is located) is 100GB.
+This value is a total one; hence, the occupancy by all users is summed up.
+
+NB: Please find below the breakdown of the space taken by your directories in
+the quoted BOINC spooldir:
 

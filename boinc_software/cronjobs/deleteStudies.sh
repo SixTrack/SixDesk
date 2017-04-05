@@ -9,14 +9,16 @@
 echo " starting `basename $0` at `date` ..."
 
 # delete spooldirs labelled for deletion
-[ -d delete ] || mkdir delete
 for userfile in `ls -1 delete/*` ; do
+    echo ""
+    echo "file ${userfile} ..."
     dos2unix ${userfile}
-    echo "studies listed in file ${userfile} ..."
     allStudies=`grep . ${userfile} | grep -v '#' | awk '{for (ii=1;ii<=NF;ii++) {print ($ii)}}'`
     for tmpStudy in ${allStudies} ; do
-	echo "rm -rf ${tmpStudy}"
-	rm -rf ${tmpStudy}
+	if [ -d ${tmpStudy} ] ; then
+	    echo "rm -rf ${tmpStudy}"
+	    rm -rf ${tmpStudy}
+	fi
     done
     echo "rm ${userfile}"
     rm ${userfile}
