@@ -1327,7 +1327,7 @@ function treatLong(){
         Ampl="${fampstart}_${fampend}"
 
 	if ${lrestart} && ${lrestartAmpli} ; then
-	    if [ "${ampliStart}" == "${Ampl}" ] ; then
+	    if [ "${amplisFromName}" == "${Ampl}" ] ; then
 		lrestartAmpli=false
 	    else
 		continue
@@ -1363,7 +1363,7 @@ function treatLong(){
 	    sixdeskkang $kk $kmaxl $lbackcomp
 
 	    if ${lrestart} && ${lrestartAngle} ; then
-		if [ "${angleStart}" == "${Angle}" ] ; then
+		if [ "${angleFromName}" == "${Angle}" ] ; then
 		    lrestartAngle=false
 		else
 		    continue
@@ -1858,10 +1858,7 @@ if ${lrestart} ; then
 	exit
     fi
     # get infos of starting point
-    sixdeskGetMADseedFromJobName "${restartPoint}" MADstart
-    sixdeskGetTunesTagFromJobName "${restartPoint}" tunesStart
-    sixdeskGetAmpliTagFromJobName "${restartPoint}" ampliStart
-    sixdeskGetAngleFromJobName "${restartPoint}" angleStart
+    sixdeskSmashJobName
     lrestartTune=true
     lrestartAmpli=true
     lrestartAngle=true
@@ -2096,7 +2093,7 @@ fi
 
 # main loop
 if ${lrestart} ; then
-    iMadStart=${MADstart}
+    iMadStart=${MADseedFromName}
 else
     iMadStart=${ista}
 fi
@@ -2131,7 +2128,7 @@ for (( iMad=${iMadStart}; iMad<=$iend; iMad++ )) ; do
 	    tuneyy=${tunesYY[$ii]}
 	    sixdesktunes=$tunexx"_"$tuneyy
 	    if ${lrestart} && ${lrestartTune} ; then
-		if [ "${tunesStart}" == "${sixdesktunes}" ] ; then
+		if [ "${tunesFromName}" == "${sixdesktunes}" ] ; then
 		    lrestartTune=false
 		else
 		    continue
@@ -2224,13 +2221,13 @@ if ${lrestart} ; then
 	sixdeskmess -1 "Something wrong with restarting the scan from point ${restartPoint}"
 	sixdeskmess -1 "Scan was not restarted correctly"
 	if ${lrestartTune} ; then
-	    sixdeskmess -1 "Starting tune ${tunesStart} was not properly recognised!"
+	    sixdeskmess -1 "Starting tune ${tunesFromName} was not properly recognised!"
 	fi
 	if ${lrestartAmpli} ; then
-	    sixdeskmess -1 "Starting amplitude range ${ampliStart} was not properly recognised!"
+	    sixdeskmess -1 "Starting amplitude range ${amplisFromName} was not properly recognised!"
 	fi
 	if ${lrestartAngle} ; then
-	    sixdeskmess -1 "Starting angle ${angleStart} was not properly recognised!"
+	    sixdeskmess -1 "Starting angle ${angleFromName} was not properly recognised!"
 	fi
     fi
 fi

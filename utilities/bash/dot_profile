@@ -605,17 +605,22 @@ sixdeskrundir()
     else
 	local __lbackcomp=true
     fi
+    rundirname1=""
+    rundirname2=""
+    rundirname3=""
+    rundirname4=""
+    rundirname5=""
+    sixdeskFromJobNameToJobDir ${runnamename} rundirname1
     if test "$BNL" = "" ; then
-	rundirname5=`echo "$runnamename" | awk -v "lbackcomp=${__lbackcomp}" '
-             BEGIN{FS="%"; OFS="/";}{
-                  if ( lbackcomp=="true" ) {$6="e"$6}
-                  if      ( $3=="s" ) {$3="simul"}
-                  else if ( $3=="t" ) {$3="trans"}
-                  else if ( $3=="m" ) {$3="momen"}
-                  else if ( $3=="d" ) {$3="da"}
-                  print}'`
+	if ${__lbackcomp} ; then
+	    rundirname1=`echo "$rundirname1" | awk -v 'BEGIN{FS="%";}{$6="e"$6; print}'`
+	fi
+	rundirname2=${rundirname1//\/s\//\/simul\/}
+	rundirname3=${rundirname2//\/t\//\/trans\/}
+	rundirname4=${rundirname3//\/m\//\/momen\/}
+	rundirname5=${rundirname4//\/d\//\/da\/}
     else
-	rundirname5=`echo "$runnamename" | awk 'BEGIN{FS="%"; OFS="/";}{$3=$3; print}'`
+	rundirname5=${rundirname1}
     fi
     # remove trailing slashes
     rundirname=`echo "${rundirname5}" | sed 's:/*$::'`
@@ -717,25 +722,13 @@ sixdeskDefinePointTree(){
 
     return $__lerr
 }
-sixdeskGetMADseedFromJobName(){
-    local __Runnam=$1
-    local __result=`echo "${__Runnam}" | cut -d\% -f2`
-    eval "$2=${__result}"
-}
-sixdeskGetTunesTagFromJobName(){
-    local __Runnam=$1
-    local __result=`echo "${__Runnam}" | cut -d\% -f4`
-    eval "$2=${__result}"
-}
-sixdeskGetAmpliTagFromJobName(){
-    local __Runnam=$1
-    local __result=`echo "${__Runnam}" | cut -d\% -f5`
-    eval "$2=${__result}"
-}
-sixdeskGetAngleFromJobName(){
-    local __Runnam=$1
-    local __result=`echo "${__Runnam}" | cut -d\% -f7`
-    eval "$2=${__result}"
+# manipulation of point name
+sixdeskSmashJobName(){
+    MADseedFromName=`echo "$1" | cut -d\% -f2`
+    tunesFromName=`echo "$1" | cut -d\% -f4`
+    amplisFromName=`echo "$1" | cut -d\% -f5`
+    exponentFromName=`echo "$1" | cut -d\% -f6`
+    angleFromName=`echo "$1" | cut -d\% -f7`
 }
 sixdeskGetNFieldsFromJobName(){
     local __Runnam=$1
@@ -760,6 +753,12 @@ sixdeskCheckNFieldsFromJobName(){
 	      __lerr=1
     fi
     return ${__lerr}
+}
+sixdeskFromJobNameToJobDir(){
+    eval "$2=`echo ${1//%//}`"
+}
+sixdeskFromJobDirToJobName(){
+    eval "$2=`echo ${1//\//%}`"
 }
 sixdeskDefineWorkUnitName(){
     # $1: workspace name (ie $workspace)
