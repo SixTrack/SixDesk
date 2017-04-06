@@ -205,6 +205,7 @@ fi
 
 export sixdeskhostname=`hostname`
 export sixdeskname=`basename $0`
+export sixdesknameshort=`echo "${sixdeskname}" | cut -b 1-15`
 export sixdeskroot=`basename $PWD`
 export sixdeskwhere=`dirname $PWD`
 # Set up some temporary values until we execute sixdeskenv/sysenv

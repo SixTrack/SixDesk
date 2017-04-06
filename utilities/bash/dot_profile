@@ -1,42 +1,42 @@
 #!/bin/bash
 # A set of Subroutines called by Macros for the SixDesk environment
-sixdeskmess()
-{
-  local __sixdeskmesslevel
-  local __sixdesklevel
-  local __message
-  local __oldsixdeskmess=false
-
-  if   [ $# -eq 0 ] || [ $# -eq 1 ]; then
-      __sixdeskmesslevel=-1
-      __oldsixdeskmess=true
-  elif [ $# -eq 2 ] ; then
-      __sixdeskmesslevel=${1}
-      __message=${2}
-  else
-      sixdeskname=$(basename $0)
-      sixdeskname=$(echo $sixdeskname | cut -b 1-15)      
-      echo ${sixdeskname}
-      echo "SERIOUS ERROR! sixdeskmess requires between 0 and 2 arguments"
-      
-      exit 1
-      #__sixdeskmesslevel=$sixdeskmesslevel
-      #__message=${sixdeskmess}
-      
-  fi
-  #
-  if  [ -z "${sixdesklevel}" ] || [ ${__sixdeskmesslevel} -le ${sixdesklevel} ] || ${__oldsixdeskmess} ; then
-      sixdesktime=$(date "+%a %d/%m/%y %T ")
-      sixdeskname=$(basename $0)
-      sixdeskname=$(echo $sixdeskname | cut -b 1-15)
-      if ! ${__oldsixdeskmess}; then
-	  echo "${sixdesktime} ${sixdeskname} ${__message}"
-      else
-	  echo "${sixdesktime} ${sixdeskname} ${sixdeskmess}"
-      fi
-  fi
-
-  
+sixdeskmess(){
+    # levels:
+    # -1: desperate (echo whatever is user's selection)
+    #  0: minimal echo
+    #  1: verbose
+    #  2: debugging
+    local __sixdeskmesslevel
+    local __sixdesklevel
+    local __message
+    # backward compatibility on nameshort
+    if [ -z "${sixdesknameshort}" ] ; then
+	export sixdesknameshort=`basename $0 | cut -b 1-15`
+    fi
+    
+    if [ $# -eq 0 ] ; then
+	if [ -z "${sixdeskmesslevel}" ] ; then
+	    __sixdeskmesslevel=-1
+	else
+	    __sixdeskmesslevel=${sixdeskmesslevel}
+	fi
+	__message=${sixdeskmess}
+    elif [ $# -eq 1 ]; then
+	__sixdeskmesslevel=${1}
+	__message=${sixdeskmess}
+    elif [ $# -eq 2 ] ; then
+	__sixdeskmesslevel=${1}
+	__message=${2}
+    else
+	echo ${__sixdeskname}
+	echo "SERIOUS ERROR! sixdeskmess requires between 0 and 2 arguments"
+	exit 1
+    fi
+    
+    if  [ -z "${sixdesklevel}" ] || [ ${__sixdeskmesslevel} -le ${sixdesklevel} ] ; then
+	local __sixdesktime=$(date "+%a %d/%m/%y %T ")
+	echo "${__sixdesktime} ${sixdesknameshort} ${__message}"
+    fi
 }
 sixdeskmktmp()
 {
