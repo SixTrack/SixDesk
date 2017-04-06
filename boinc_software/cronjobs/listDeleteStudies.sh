@@ -4,7 +4,7 @@
 # find studies to be deleted; then, send an email for confirmation
 # to be run in:
 #     /afs/cern.ch/work/b/boinc/boinc
-oldN=60 # days
+oldN=30 # days
 BOINCspoolDir=$PWD
 SCRIPTDIR=`dirname $0`
 SCRIPTDIR="`cd ${SCRIPTDIR} ; pwd`"

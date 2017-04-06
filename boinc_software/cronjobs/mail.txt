@@ -1,9 +1,10 @@
 Dear SixDesk user <SixDeskUser>,
 
-Please find in attachment a list of directories in the BOINC spooldir
+Please find in attachment a list of buffer directories in the BOINC spooldir
    <spooldir>
 older than <xxx> days which belong to you. These directories have been
-used ONLY to submit work units to BOINC and retrieve results.
+used ONLY as BOINC buffers, i.e. to submit work units to BOINC and retrieve
+results.
 
 If you think that you will no longer need these directories (e.g. because
 the study is complete), then I could remove them, freeing disk space and
