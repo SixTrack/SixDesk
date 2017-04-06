@@ -748,8 +748,8 @@ sixdeskCheckNFieldsFromJobName(){
     local __Nfields
     sixdeskGetNFieldsFromJobName "${__Runnam}" __NFields
     if [ ${__NFields} -ne 7 ] ; then
-	sixdeskmess -1 "Not valid format of point in scan; ${__Runnam}"
-	sixdeskmess -1 "It should be made up of 7 fields separated by a '%' char"
+	      sixdeskmess -1 "Not valid format of point in scan; ${__Runnam}"
+	      sixdeskmess -1 "It should be made up of 7 fields separated by a '%' char"
         sixdeskmess -1 "1. LHCDesName;"
         sixdeskmess -1 "2. MadX seed;"
         sixdeskmess -1 "3. tag (s/t/m/d);"
@@ -757,7 +757,7 @@ sixdeskCheckNFieldsFromJobName(){
         sixdeskmess -1 "5. amplitude range;"
         sixdeskmess -1 "6. turn exponent;"
         sixdeskmess -1 "7. angle"
-	__lerr=1
+	      __lerr=1
     fi
     return ${__lerr}
 }
