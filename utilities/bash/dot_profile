@@ -3,29 +3,40 @@
 sixdeskmess()
 {
   local __sixdeskmesslevel
-  if [ $# -eq 1 ] ; then
-      __sixdeskmesslevel=$1
+  local __sixdesklevel
+  local __message
+  local __oldsixdeskmess=false
+
+  if   [ $# -eq 0 ] || [ $# -eq 1 ]; then
+      __sixdeskmesslevel=-1
+      __oldsixdeskmess=true
+  elif [ $# -eq 2 ] ; then
+      __sixdeskmesslevel=${1}
+      __message=${2}
   else
-      __sixdeskmesslevel=$sixdeskmesslevel
+      sixdeskname=$(basename $0)
+      sixdeskname=$(echo $sixdeskname | cut -b 1-15)      
+      echo ${sixdeskname}
+      echo "SERIOUS ERROR! sixdeskmess requires between 0 and 2 arguments"
+      
+      exit 1
+      #__sixdeskmesslevel=$sixdeskmesslevel
+      #__message=${sixdeskmess}
+      
   fi
-  if test "$__sixdeskmesslevel" -le "$sixdesklevel"
-  then
-    sixdeskday="`date +%a`"
-    sixdeskdate="`date +%d/%m/%y`"
-    sixdesktime="`date +%T`"
-    sixdeskname="`basename $0`                "
-    sixdeskname=`echo $sixdeskname | cut -b 1-15`
-    if test "$sixdeskecho" != "" -o "$__sixdeskmesslevel" -eq 0
-    then
-      echo "$sixdeskday $sixdeskdate $sixdesktime ""$sixdeskname"" $sixdeskmess" 
-    fi
-    if test "$sixdesklogdir" != ""
-    then
-      echo "$sixdeskday $sixdeskdate $sixdesktime ""$sixdeskname"" $sixdeskmess" >> "$sixdesklogdir"/sixdesk.log
-    else
-      echo "$sixdeskday $sixdeskdate $sixdesktime ""$sixdeskname"" $sixdeskmess" >> sixdesk.log
-    fi
+  #
+  if  [ -z "${sixdesklevel}" ] || [ ${__sixdeskmesslevel} -le ${sixdesklevel} ] || ${__oldsixdeskmess} ; then
+      sixdesktime=$(date "+%a %d/%m/%y %T ")
+      sixdeskname=$(basename $0)
+      sixdeskname=$(echo $sixdeskname | cut -b 1-15)
+      if ! ${__oldsixdeskmess}; then
+	  echo "${sixdesktime} ${sixdeskname} ${__message}"
+      else
+	  echo "${sixdesktime} ${sixdeskname} ${sixdeskmess}"
+      fi
   fi
+
+  
 }
 sixdeskmktmp()
 {
@@ -46,9 +57,7 @@ sixdeskmktmp()
   then
 
 #MACRO mymess 0 sixdeskmktmp mktemp failed to produce a temporary file!!!
-    sixdeskmesslevel=0
-    sixdeskmess="sixdeskmktmp mktemp failed to produce a temporary file!!!"
-    sixdeskmess
+    sixdeskmess -1 "sixdeskmktmp mktemp failed to produce a temporary file!!!"
 #MACRO mymess
 
 
@@ -84,9 +93,7 @@ sixdeskmktmpdir()
     then
 
 #MACRO mymess 0 sixdeskmktmpdir: mkdir failed to make $sixdesktmpdirarg!!!
-      sixdeskmesslevel=0
-      sixdeskmess="sixdeskmktmpdir: mkdir failed to make $sixdesktmpdirarg!!!"
-      sixdeskmess
+      sixdeskmess -1 "sixdeskmktmpdir: mkdir failed to make $sixdesktmpdirarg!!!"
 #MACRO mymess
 
 
@@ -102,9 +109,7 @@ sixdeskmktmpdir()
   then
 
 #MACRO mymess 0 sixdeskmktmpdir: mktemp failed to produce a temporary directory!!!
-    sixdeskmesslevel=0
-    sixdeskmess="sixdeskmktmpdir: mktemp failed to produce a temporary directory!!!"
-    sixdeskmess
+    sixdeskmess -1 "sixdeskmktmpdir: mktemp failed to produce a temporary directory!!!"
 #MACRO mymess
 
 
@@ -125,9 +130,7 @@ sixdeskexit()
   then
 
 #MACRO mymess 0 sixdeskexit: Freeing lock(s) $SIXDESKLOCKED!!!
-    sixdeskmesslevel=0
-    sixdeskmess="sixdeskexit: Freeing lock(s) $SIXDESKLOCKED!!!"
-    sixdeskmess
+    sixdeskmess 1 "sixdeskexit: Freeing lock(s) $SIXDESKLOCKED!!!"
 #MACRO mymess
 
     while test "$SIXDESKLOCKED" != ""
@@ -162,33 +165,33 @@ sixdeskunlock()
   then
 
 #MACRO mymess 2 Freeing lock $sixdesklockdir
-    sixdeskmesslevel=2
-    sixdeskmess="Freeing lock $sixdesklockdir"
-    sixdeskmess
+    sixdeskmess 1 "Freeing lock $sixdesklockdir"
 #MACRO mymess
 
 
 #MACRO mymess 2 held by `cat $sixdesklockdir/sixdesklock`
-    sixdeskmesslevel=2
-    sixdeskmess="held by `cat $sixdesklockdir/sixdesklock`"
-    sixdeskmess
+    sixdeskmess 1 "held by `cat $sixdesklockdir/sixdesklock`"
 #MACRO mymess
 
     chmod 644 $sixdesklockdir/sixdesklock
 
-#MACRO mymess 0 Lock $sixdesklockdir unlocked
-    sixdeskmesslevel=0
-    sixdeskmess="Lock $sixdesklockdir unlocked"
-    sixdeskmess
+ #MACRO mymess 0 Lock $sixdesklockdir unlocked
+    if [ -z ${sixdesklevel} ] ; then
+	sixdeskmess -1 "Lock $sixdesklockdir unlocked"
+    else
+	if [ ${sixdesklevel} -gt 0 ]; then
+	    sixdeskmess -1 "Lock $sixdesklockdir unlocked"
+	else
+	    sixdeskmess -1 "[UNLOCKED]     ${sixdesklockdir}"
+	fi	      
+    fi    
 #MACRO mymess
 
     SIXDESKLOCKED=`echo "$SIXDESKLOCKED" | sed -e's?'"$sixdesklockdir "'??'`
   else
 
 #MACRO mymess 0 sixdeskunlock: The lock $sixdesklockdir does NOT exist!!!
-    sixdeskmesslevel=0
-    sixdeskmess="sixdeskunlock: The lock $sixdesklockdir does NOT exist!!!"
-    sixdeskmess
+    sixdeskmess -1 "sixdeskunlock: The lock $sixdesklockdir does NOT exist!!!"
 #MACRO mymess
 
   fi
@@ -212,9 +215,7 @@ sixdesklock()
   then
 
 #MACRO mymess 0 sixdesklock: The requested lock directory $sixdesklockdir does not exist!!!
-    sixdeskmesslevel=0
-    sixdeskmess="sixdesklock: The requested lock directory $sixdesklockdir does not exist!!!"
-    sixdeskmess
+    sixdeskmess -1 "sixdesklock: The requested lock directory $sixdesklockdir does not exist!!!"
 #MACRO mymess
 
 
@@ -232,9 +233,7 @@ sixdesklock()
     then
 
 #MACRO mymess 0 sixdesklock: The lock $sixdesklockdir is already locked!!!
-      sixdeskmesslevel=0
-      sixdeskmess="sixdesklock: The lock $sixdesklockdir is already locked!!!"
-      sixdeskmess
+      sixdeskmess -1 "sixdesklock: The lock $sixdesklockdir is already locked!!!"
 #MACRO mymess
 
       lockstat=1
@@ -244,9 +243,7 @@ sixdesklock()
   then
 
 #MACRO mymess 2 sixdesklock: Obtaining lock $sixdesklockdir
-    sixdeskmesslevel=2
-    sixdeskmess="sixdesklock: Obtaining lock $sixdesklockdir"
-    sixdeskmess
+    sixdeskmess 1 "sixdesklock: Obtaining lock $sixdesklockdir"
 #MACRO mymess
 
     sixdeskgotit="false"
@@ -286,16 +283,12 @@ sixdesklock()
         then
 
 #MACRO mymess 1 The directory $sixdesklockdir is currently locked by
-          sixdeskmesslevel=1
-          sixdeskmess="The directory $sixdesklockdir is currently locked by"
-          sixdeskmess
+          sixdeskmess -1 "The directory $sixdesklockdir is currently locked by"
 #MACRO mymess
 
 
 #MACRO mymess 1 script `cat $sixdesklockdir/sixdesklock`
-          sixdeskmesslevel=1
-          sixdeskmess="script `cat $sixdesklockdir/sixdesklock`"
-          sixdeskmess
+          sixdeskmess -1 "script `cat $sixdesklockdir/sixdesklock`"
 #MACRO mymess
 
         fi
@@ -306,37 +299,27 @@ sixdesklock()
             sixdeskwait="true"  
 
 #MACRO mymess 1 This script $0 will just wait for it to become free.
-            sixdeskmesslevel=1
-            sixdeskmess="This script $0 will just wait for it to become free."
-            sixdeskmess
+            sixdeskmess -1 "This script $0 will just wait for it to become free."
 #MACRO mymess
 
 
 #MACRO mymess 1 If this situation continues for ever then it may be false.
-            sixdeskmesslevel=1
-            sixdeskmess="If this situation continues for ever then it may be false."
-            sixdeskmess
+            sixdeskmess -1 "If this situation continues for ever then it may be false."
 #MACRO mymess
 
 
 #MACRO mymess 1 You may have CTRL_C/killed a script and left the lock locked.
-            sixdeskmesslevel=1
-            sixdeskmess="You may have CTRL_C/killed a script and left the lock locked."
-            sixdeskmess
+            sixdeskmess -1 "You may have CTRL_C/killed a script and left the lock locked."
 #MACRO mymess
 
 
 #MACRO mymess 1 Some other error like a missing file may also cause a script to die
-            sixdeskmesslevel=1
-            sixdeskmess="Some other error like a missing file may also cause a script to die"
-            sixdeskmess
+            sixdeskmess -1 "Some other error like a missing file may also cause a script to die"
 #MACRO mymess
 
 
 #MACRO mymess 1 To reset the lock just issue an unlock $sixdesklockdir command
-            sixdeskmesslevel=1
-            sixdeskmess="To reset the lock just issue an unlock $sixdesklockdir command"
-            sixdeskmess
+            sixdeskmess -1 "To reset the lock just issue an unlock $sixdesklockdir command"
 #MACRO mymess
 
             lessmess=1
@@ -346,18 +329,22 @@ sixdesklock()
         delay=`expr $delay + 5`
 
 #MACRO mymess 2 Sleeping $delay seconds
-        sixdeskmesslevel=2
-        sixdeskmess="Sleeping $delay seconds"
-        sixdeskmess
+        sixdeskmess -1 "Sleeping $delay seconds"
 #MACRO mymess
 
         sleep $delay
       else
 
 #MACRO mymess 0 Lock $sixdesklockdir locked
-        sixdeskmesslevel=0
-        sixdeskmess="Lock $sixdesklockdir locked"
-        sixdeskmess
+	  if [ -z ${sixdesklevel} ] ; then
+	      sixdeskmess -1 "Lock $sixdesklockdir locked"
+	  else
+	      if [ ${sixdesklevel} -gt 0 ]; then
+		  sixdeskmess -1 "Lock $sixdesklockdir locked"
+	      else
+		  sixdeskmess -1 "[LOCKED]       ${sixdesklockdir}"
+	      fi	      
+	  fi
 #MACRO mymess
 
       fi
@@ -368,25 +355,17 @@ sixdeskchecklock()
 {
     # $1: dir where to check
     dirToCheck=$1
-    sixdeskmesslevel=1
     if [ ! -d ${dirToCheck} ] ; then
-	sixdeskmess="The directory ${dirToCheck} does not exist!!!"
-        sixdeskmess
+	sixdeskmess -1 "The directory ${dirToCheck} does not exist!!!"
     elif [ ! -f ${dirToCheck}/sixdesklock ] ; then
-	sixdeskmess="The lockfile ${dirToCheck}/sixdesklock does not exist!!!"
-        sixdeskmess
+	sixdeskmess -1 "The lockfile ${dirToCheck}/sixdesklock does not exist!!!"
     elif [ ! -w ${dirToCheck}/sixdesklock ] ; then
-	sixdeskmess="The directory ${dirToCheck} is currently locked by"
-        sixdeskmess
-        sixdeskmess="script `cat ${dirToCheck}/sixdesklock`"
-        sixdeskmess
+	sixdeskmess -1 "The directory ${dirToCheck} is currently locked by"
+        sixdeskmess -1 "script `cat ${dirToCheck}/sixdesklock`"
     else
-	sixdeskmess="The directory ${dirToCheck} is currently unlocked"
-        sixdeskmess
-	sixdeskmess="last lock: `ls -l ${dirToCheck}/sixdesklock`"
-        sixdeskmess
-	sixdeskmess="`cat ${dirToCheck}/sixdesklock`"
-        sixdeskmess
+	sixdeskmess -1 "The directory ${dirToCheck} is currently unlocked"
+	sixdeskmess -1 "last lock: `ls -l ${dirToCheck}/sixdesklock`"
+	sixdeskmess -1 "`cat ${dirToCheck}/sixdesklock`"
     fi
 }
 sixdesktunes(){
@@ -396,7 +375,7 @@ sixdesktunes(){
     # it produces also xlen and ylen (ie length of fractional part)
     # reworked by A.Mereghetti, 2016-07-19
 
-    sixdeskmesslevel=0
+
     sixdeskexitparam=12
     
     if [ -z "$tunex1" ] ; then
@@ -488,33 +467,27 @@ sixdesktunes(){
 
     # some consistency checks
     if [ $itunex1 -lt $itunex ] ; then
-	sixdeskmess="sixdesktunes: tunex1 $tunex1 .lt. tunex $tunex!!!"
-	sixdeskmess
+	sixdeskmess -1 "sixdesktunes: tunex1 $tunex1 .lt. tunex $tunex!!!"
 	sixdeskexit
     elif [ $itunex1 -ne $itunex ] && [ $ideltax -eq 0 ] ; then
-	sixdeskmess="sixdesktunes: deltax .eq. 0 !!!"
-	sixdeskmess
+	sixdeskmess -1 "sixdesktunes: deltax .eq. 0 !!!"
 	sixdeskexit
     fi
     if [ $ituney1 -lt $ituney ] ; then
-	sixdeskmess="sixdesktunes: tuney1 $tuney1 .lt. tuney $tuney!!!"
-	sixdeskmess
+	sixdeskmess -1 "sixdesktunes: tuney1 $tuney1 .lt. tuney $tuney!!!"
 	sixdeskexit
     elif [ $ituney1 -ne $ituney ] && [ $ideltay -eq 0 ] ; then
-	sixdeskmess="sixdesktunes: deltay .eq. 0 !!!"
-	sixdeskmess
+	sixdeskmess -1 "sixdesktunes: deltay .eq. 0 !!!"
 	sixdeskexit
     fi
 
     # notify user
     if [ $ideltax -eq $itunex ] && [ $ideltay -eq $ituney ] ; then
 	# only one point
-	sixdeskmess="sixdesktunes: Tune ${tunex}_${tuney}"
-	sixdeskmess
+	sixdeskmess 1 "sixdesktunes: Tune ${tunex}_${tuney}"
     else
 	# full scan
-	sixdeskmess="sixdesktunes: Tunescan (${tunex},${tuney}) to (${tunex1},${tuney1}) by (${deltax}, ${deltay})"
-	sixdeskmess
+	sixdeskmess 1 "sixdesktunes: Tunescan (${tunex},${tuney}) to (${tunex1},${tuney1}) by (${deltax}, ${deltay})"
     fi
 }
 sixdeskPrepareTunes(){
@@ -609,9 +582,7 @@ sixdeskamps()
   then
 
 #MACRO mymess 0 sixdeskamps: Problem with amplitude definitions, $ns1l, $ns2l, $nsincl
-    sixdeskmesslevel=0
-    sixdeskmess="sixdeskamps: Problem with amplitude definitions, $ns1l, $ns2l, $nsincl"
-    sixdeskmess
+    sixdeskmess -1 "sixdeskamps: Problem with amplitude definitions, $ns1l, $ns2l, $nsincl"
 #MACRO mymess
 
 
@@ -623,9 +594,7 @@ sixdeskamps()
   fi
 
 #MACRO mymess 0 sixdeskamps: Amps $ampstart to $ampfinish by $ampincl
-  sixdeskmesslevel=0
-  sixdeskmess="sixdeskamps: Amps $ampstart to $ampfinish by $ampincl"
-  sixdeskmess
+  sixdeskmess -1 "sixdeskamps: Amps $ampstart to $ampfinish by $ampincl"
 #MACRO mymess
 
 }
@@ -779,25 +748,16 @@ sixdeskCheckNFieldsFromJobName(){
     local __Nfields
     sixdeskGetNFieldsFromJobName "${__Runnam}" __NFields
     if [ ${__NFields} -ne 7 ] ; then
-	sixdeskmess="Not valid format of point in scan; ${__Runnam}"
-	sixdeskmess
-	sixdeskmess="It should be made up of 7 fields separated by a '%' char"
-	sixdeskmess
-        sixdeskmess="1. LHCDesName;"
-	sixdeskmess
-        sixdeskmess="2. MadX seed;"
-	sixdeskmess
-        sixdeskmess="3. tag (s/t/m/d);"
-	sixdeskmess
-        sixdeskmess="4. tunes;"
-	sixdeskmess
-        sixdeskmess="5. amplitude range;"
-	sixdeskmess
-        sixdeskmess="6. turn exponent;"
-	sixdeskmess
-        sixdeskmess="7. angle"
-	sixdeskmess
-	__lerr=1
+	      sixdeskmess -1 "Not valid format of point in scan; ${__Runnam}"
+	      sixdeskmess -1 "It should be made up of 7 fields separated by a '%' char"
+        sixdeskmess -1 "1. LHCDesName;"
+        sixdeskmess -1 "2. MadX seed;"
+        sixdeskmess -1 "3. tag (s/t/m/d);"
+        sixdeskmess -1 "4. tunes;"
+        sixdeskmess -1 "5. amplitude range;"
+        sixdeskmess -1 "6. turn exponent;"
+        sixdeskmess -1 "7. angle"
+	      __lerr=1
     fi
     return ${__lerr}
 }
@@ -922,8 +882,7 @@ sixdeskSetPlatForm(){
     local __platform=$1
     export sixdeskplatform=`echo "$__platform" | tr '[A-Z]' '[a-z]'`
     if [ "$sixdeskplatform" != "boinc" ] && [ "$sixdeskplatform" != "cpss" ] && [ "$sixdeskplatform" != "lsf" ]  && [ "$sixdeskplatform" != "htcondor" ] ; then
-	sixdeskmess="unknown platform: ${sixdeskplatform}"
-	sixdeskmess
+	sixdeskmess -1 "unknown platform: ${sixdeskplatform}"
 	return 1
     fi
     export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
@@ -1083,13 +1042,11 @@ function __inspectPrerequisite(){
     if [ $? -ne 0 ] ; then
 	let __lerr+=1
 	if ${__lverbose} ; then
-	    sixdeskmess="${__entry} NOT there!"
-	    sixdeskmess
+	    sixdeskmess -1 "${__entry} NOT there!"
 	fi
     else
 	if ${__lverbose} ; then
-	    sixdeskmess="${__entry} EXISTs!"
-	    sixdeskmess
+	    sixdeskmess 1 "${__entry} EXISTs!"
 	fi
     fi
     return $__lerr
@@ -1181,8 +1138,7 @@ function multipleTrials(){
     # cycle
     while [ $__iCount -le $__iCountMax ] ; do
 	if [ $__iCount -ge 2 ] ; then
-            sixdeskmess="multipleTrials - trial n. ${__iCount} - sleeping ${__delay} seconds"
-            sixdeskmess
+            sixdeskmess 1 "multipleTrials - trial n. ${__iCount} - sleeping ${__delay} seconds"
 	    sleep ${__delay}
 	fi
 	eval "${__command}"
@@ -1192,24 +1148,22 @@ function multipleTrials(){
 	fi
 	__lprobl=true
 	# get ready to report a problem
-	sixdeskmess="${__errMess} - trial n. ${__iCount}!"
+	sixdeskmess -1 "${__errMess} - trial n. ${__iCount}!"
 	sixdeskEchoEnvVars /tmp/envs_${__iCount}.txt
 	let __iCount+=1
     done
     if ${__lprobl} ; then
 	if ${__lok} ; then
-	    sixdeskmess="Warning - ${__errMess} - but manged to survive at iteration n. ${__iCount}!"
+	    sixdeskmess -1 "Warning - ${__errMess} - but manged to survive at iteration n. ${__iCount}!"
 	    local __emailSubj='Warning'
 	else
-	    sixdeskmess="Error - ${__errMess} - reached max acceptable repetitions (ie ${__iCountMax})!"
+	    sixdeskmess -1 "Error - ${__errMess} - reached max acceptable repetitions (ie ${__iCountMax})!"
 	    local __emailSubj='Error'
 	    let __lerr+=1
 	fi
-	sixdeskmess
 	sixdeskSendNotifMail "${__emailSubj}"
     elif ${__lsuccess}; then
-	sixdeskmess="success!"
-	sixdeskmess
+	sixdeskmess 1 "success!"
     fi
     return $__lerr
 }

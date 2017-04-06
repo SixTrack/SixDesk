@@ -33,8 +33,7 @@ cd $PLOTHOME
 
 #MACRO mymess 0 Running on `hostname` using directory $plottmp
 sixdeskmesslevel=0
-sixdeskmess="Running on `hostname` using directory $plottmp"
-sixdeskmess
+sixdeskmess -1 "Running on `hostname` using directory $plottmp"
 #MACRO mymess
 
 # Locks study (as does join10)
@@ -101,8 +100,7 @@ if [ $long -eq 1 ] ;then
 
 #MACRO mymess 0 Define Ampl for longterm postprocessing ...!!!
     sixdeskmesslevel=0
-    sixdeskmess="Define Ampl for longterm postprocessing ...!!!"
-    sixdeskmess
+    sixdeskmess -1 "Define Ampl for longterm postprocessing ...!!!"
 #MACRO mymess
 
 
@@ -138,8 +136,7 @@ else
 
 #MACRO mymess 0 No general_input file: Run stopped!!!
   sixdeskmesslevel=0
-  sixdeskmess="No general_input file: Run stopped!!!"
-  sixdeskmess
+  sixdeskmess -1 "No general_input file: Run stopped!!!"
 #MACRO mymess
 
 
@@ -243,8 +240,7 @@ do
 
 #MACRO mymess 0 Qx $tunexx Qy $tuneyy angle $j seed $i
        sixdeskmesslevel=0
-       sixdeskmess="Qx $tunexx Qy $tuneyy angle $j seed $i"
-       sixdeskmess
+       sixdeskmess -1 "Qx $tunexx Qy $tuneyy angle $j seed $i"
 #MACRO mymess
  
        dir=$LHCDesHome/$i/$mode/$sixdesktunes/$Ampl/e$turnse/$end
@@ -255,8 +251,7 @@ do
 
 #MACRO mymess 0 File: 
          sixdeskmesslevel=0
-         sixdeskmess="File:  $file does not exist, case skipped"
-         sixdeskmess
+         sixdeskmess -1 "File:  $file does not exist, case skipped"
 #MACRO mymess
          echo "No_fort10" >> DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j
        else
@@ -320,8 +315,7 @@ rm -r $PLOTHOME/inc
 
 #MACRO mymess 0 Completed normally
 sixdeskmesslevel=0
-sixdeskmess="Completed normally"
-sixdeskmess
+sixdeskmess -1 "Completed normally"
 #MACRO mymess
 
 

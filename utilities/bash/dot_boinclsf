@@ -29,8 +29,7 @@ then
 
 #MACRO mymess 0 The workspace/LHCDescrip $sixdeskboincdirname are already in use by $sixdeskowner!!!
     sixdeskmesslevel=0
-    sixdeskmess="The workspace/LHCDescrip $sixdeskboincdirname are already in use by $sixdeskowner!!!"
-    sixdeskmess
+    sixdeskmess -1 "The workspace/LHCDescrip $sixdeskboincdirname are already in use by $sixdeskowner!!!"
 #MACRO mymess
 
 
@@ -68,8 +67,7 @@ then
 
 #MACRO mymess 0 $SIXDESKWHERE is NOT a directory!!!
   sixdeskmesslevel=0
-  sixdeskmess="$SIXDESKWHERE is NOT a directory!!!"
-  sixdeskmess
+  sixdeskmess -1 "$SIXDESKWHERE is NOT a directory!!!"
 #MACRO mymess
  
 
@@ -85,8 +83,7 @@ then
 
 #MACRO mymess 1 Task $sixdeskRunnam already completed; we will NOT re-submit
   sixdeskmesslevel=1
-  sixdeskmess="Task $sixdeskRunnam already completed; we will NOT re-submit"
-  sixdeskmess
+  sixdeskmess -1 "Task $sixdeskRunnam already completed; we will NOT re-submit"
 #MACRO mymess
 
   sixdeskrunit="false"
@@ -112,8 +109,7 @@ else
 
 #MACRO mymess 1 Task $sixdeskRunnam already submitted taskid(s) $sixdeskoldtaskid; skipping it
           sixdeskmesslevel=1
-          sixdeskmess="Task $sixdeskRunnam already submitted taskid(s) $sixdeskoldtaskid; skipping it"
-          sixdeskmess
+          sixdeskmess -1 "Task $sixdeskRunnam already submitted taskid(s) $sixdeskoldtaskid; skipping it"
 #MACRO mymess
 
           sixdeskrunit="false"
@@ -147,8 +143,7 @@ then
 
 #MACRO mymess 0 File $SIXDESKWHERE/fort.$sixdeski.gz does NOT exist!!!
       sixdeskmesslevel=0
-      sixdeskmess="File $SIXDESKWHERE/fort.$sixdeski.gz does NOT exist!!!"
-      sixdeskmess
+      sixdeskmess -1 "File $SIXDESKWHERE/fort.$sixdeski.gz does NOT exist!!!"
 #MACRO mymess
 
     else
@@ -161,15 +156,13 @@ then
 
 #MACRO mymess 0 There are $sixdeskexists input files missing!!! in $SIXDESKWHERE
     sixdeskmesslevel=0
-    sixdeskmess="There are $sixdeskexists input files missing!!! in $SIXDESKWHERE"
-    sixdeskmess
+    sixdeskmess -1 "There are $sixdeskexists input files missing!!! in $SIXDESKWHERE"
 #MACRO mymess
 
 
 #MACRO mymess 0 Skipping this case which will require a RUN_SIX!!!
     sixdeskmesslevel=0
-    sixdeskmess="Skipping this case which will require a RUN_SIX!!!"
-    sixdeskmess
+    sixdeskmess -1 "Skipping this case which will require a RUN_SIX!!!"
 #MACRO mymess
 
     rm -f $tmp
@@ -221,15 +214,13 @@ then
 
 #MACRO mymess 0 bsub did NOT return a jobid !!!
           sixdeskmesslevel=0
-          sixdeskmess="bsub did NOT return a jobid !!!"
-          sixdeskmess
+          sixdeskmess -1 "bsub did NOT return a jobid !!!"
 #MACRO mymess
 
 
 #MACRO mymess 0 `cat $tmp`
           sixdeskmesslevel=0
-          sixdeskmess="`cat $tmp`"
-          sixdeskmess
+          sixdeskmess -1 "`cat $tmp`"
 #MACRO mymess
 
 
@@ -248,22 +239,19 @@ then
 
 #MACRO mymess 0 ${sixdeskTaskName}.lsf submitted
         sixdeskmesslevel=0
-        sixdeskmess="${sixdeskTaskName}.lsf submitted"
-        sixdeskmess
+        sixdeskmess -1 "${sixdeskTaskName}.lsf submitted"
 #MACRO mymess
 
 
 #MACRO mymess 0 submitted to Queue ${qpref}${longlsfq}
         sixdeskmesslevel=0
-        sixdeskmess="submitted to Queue ${qpref}${longlsfq}"
-        sixdeskmess
+        sixdeskmess -1 "submitted to Queue ${qpref}${longlsfq}"
 #MACRO mymess
 
 
 #MACRO mymess 0 with LSF JID $lsfjobid for $sixdesktaskid
         sixdeskmesslevel=0
-        sixdeskmess="with LSF JID $lsfjobid for $sixdesktaskid"
-        sixdeskmess
+        sixdeskmess -1 "with LSF JID $lsfjobid for $sixdesktaskid"
 #MACRO mymess
 
         touch $sixdesktrack/$sixdeskRundir/JOB_NOT_YET_STARTED
@@ -274,15 +262,13 @@ then
 
 #MACRO mymess 0 bsub of ${sixdeskTaskName}.lsf to Queue ${qpref}${longlsfq} failed !!!
         sixdeskmesslevel=0
-        sixdeskmess="bsub of ${sixdeskTaskName}.lsf to Queue ${qpref}${longlsfq} failed !!!"
-        sixdeskmess
+        sixdeskmess -1 "bsub of ${sixdeskTaskName}.lsf to Queue ${qpref}${longlsfq} failed !!!"
 #MACRO mymess
 
 
 #MACRO mymess 0 `cat $tmp`
         sixdeskmesslevel=0
-        sixdeskmess="`cat $tmp`"
-        sixdeskmess
+        sixdeskmess -1 "`cat $tmp`"
 #MACRO mymess
 
         rm $tmp
@@ -299,8 +285,7 @@ then
 
 #MACRO mymess 0 FAILED to submit job 10 times!!
       sixdeskmesslevel=0
-      sixdeskmess="FAILED to submit job 10 times!!"
-      sixdeskmess
+      sixdeskmess -1 "FAILED to submit job 10 times!!"
 #MACRO mymess
 
       rm -f $tmp
@@ -350,8 +335,7 @@ then
 
 #MACRO mymess 1 Task $sixdeskRunnam re-submitted with TaskId $sixdesktaskid; other tasks $sixdeskoldtaskid
       sixdeskmesslevel=1
-      sixdeskmess="Task $sixdeskRunnam re-submitted with TaskId $sixdesktaskid; other tasks $sixdeskoldtaskid"
-      sixdeskmess
+      sixdeskmess -1 "Task $sixdeskRunnam re-submitted with TaskId $sixdesktaskid; other tasks $sixdeskoldtaskid"
 #MACRO mymess
 
     else
@@ -360,8 +344,7 @@ then
 
 #MACRO mymess 1 Task $sixdeskRunnam submitted with TaskId $sixdesktaskid
       sixdeskmesslevel=1
-      sixdeskmess="Task $sixdeskRunnam submitted with TaskId $sixdesktaskid"
-      sixdeskmess
+      sixdeskmess -1 "Task $sixdeskRunnam submitted with TaskId $sixdesktaskid"
 #MACRO mymess
 
     fi
