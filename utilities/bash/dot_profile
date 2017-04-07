@@ -520,24 +520,19 @@ sixdeskFixZerosFloat(){
     local __result=`echo "$__input" | sed -e's?0*$??' | sed -e's?^0??' | awk '{lstring=length($1); dpos=index($1,"."); if (dpos==1) print("0"$1); else print($1);}' | awk '{lstring=length($1); dpos=index($1,"."); if (dpos==lstring) print($1"0"); else print($1);}'`
     echo "$__result"
 }
-sixdeskinttunes()
-{
-  tmp=`echo $tunexx | sed -e's? ??g'`
-  first=`echo $tunexx | cut -c1`
-  if test "$first" = "."
-  then
-    inttunexx=0.
-  else
-    inttunexx=`echo $tmp | sed -e's?\([0-9][0-9]*\.\).*?\1?'`
-  fi
-  tmp=`echo $tuneyy | sed -e's/ //g'`
-  first=`echo $tuneyy | cut -c1`
-  if test "$first" = "."
-  then
-    inttuneyy=0.
-  else
-    inttuneyy=`echo $tmp | sed -e's?\([0-9][0-9]*\.\).*?\1?'`
-  fi
+sixdeskinttunes(){
+    inttunexx=$(sixdeskinttune ${tunexx})
+    inttuneyy=$(sixdeskinttune ${tuneyy})
+}
+sixdeskinttune(){
+    # get integer part of tune, with a dot afterwards
+    # in case the integer part is not in the orignal value, 0 is staken
+    # 2017-04-07, A.Mereghetti: use bash builtin functionalities
+    local __inttune=${1//\.*/\.}
+    if [ "${__inttune}" == "." ] ; then
+	__inttune="0."
+    fi
+    echo "${__intune}"
 }
 sixdeskamps()
 {

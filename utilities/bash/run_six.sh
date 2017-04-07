@@ -2059,17 +2059,23 @@ if ${lmegazip} ; then
     # get name of zip as from initialisation
     megaZipName=`cat ${sixdeskjobs_logs}/megaZipName.txt`
 fi
-# - prepare tune scans
+# - prepare tune scans (including integer part of tune)
 tunesXX=""
 tunesYY=""
+inttunesXX=""
+inttunesYY=""
 for (( itunexx=$itunex; itunexx<=$itunex1; itunexx+=$ideltax )) ; do
     tunesXX="${tunesXX} $(sixdeskPrepareTune $itunexx $xlen)"
+    inttunesXX="${inttunesXX} $(sixdeskinttune $itunexx)"
 done
 for (( ituneyy=$ituney; ituneyy<=$ituney1; ituneyy+=$ideltay )) ; do
     tunesYY="${tunesYY} $(sixdeskPrepareTune $ituneyy $ylen)"
+    inttunesYY="${inttunesYY} $(sixdeskinttune $itunexx)"
 done
 tunesXX=( ${tunesXX} )
 tunesYY=( ${tunesYY} )
+inttunesXX=( ${inttunesXX} )
+inttunesYY=( ${inttunesYY} )
 sixdeskmess -1 "scanning the following tunes:"
 sixdeskmess -1 "Qx: ${tunesXX[@]}"
 sixdeskmess -1 "Qy: ${tunesYY[@]}"
@@ -2090,13 +2096,14 @@ else
 	sixdeskmess -1 "over a linear domain (i.e. as done so far), for a total of ${iTotal} points for each MADX seed (limited in V)."
     fi
 fi
-
-# main loop
+# - starting WISE seed
 if ${lrestart} ; then
     iMadStart=${MADseedFromName}
 else
     iMadStart=${ista}
 fi
+
+# main loop
 for (( iMad=${iMadStart}; iMad<=$iend; iMad++ )) ; do
     echo ""
     echo ""
@@ -2134,6 +2141,9 @@ for (( iMad=${iMadStart}; iMad<=$iend; iMad++ )) ; do
 		    continue
 		fi
 	    fi
+	    # - int tunes
+	    inttunexx=${inttunesXX[$jj]}
+	    inttuneyy=${inttunesYY[$jj]}
             #   ...notify user
 	    echo ""
 	    echo ""
@@ -2144,8 +2154,6 @@ for (( iMad=${iMadStart}; iMad<=$iend; iMad++ )) ; do
 		# go to next tune values (sixdeskmess already printed out and email sent to user/admins)
 		continue
 	    fi
-	    # - int tunes
-	    sixdeskinttunes
 	    # - beta values?
 	    if [ $short -eq 1 ] || [ $long -eq 1 ] ; then
 	        if ${lgenerate} || ${lfix} ; then
