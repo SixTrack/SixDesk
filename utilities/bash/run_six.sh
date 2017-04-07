@@ -2126,7 +2126,7 @@ for (( iMad=${iMadStart}; iMad<=$iend; iMad++ )) ; do
 	for (( jj=$jmin; jj<$jmax ; jj++ )) ; do
 	    tunexx=${tunesXX[$jj]}
 	    tuneyy=${tunesYY[$ii]}
-	    sixdesktunes=$tunexx"_"$tuneyy
+	    multipleTrials "sixdesktunes=\"${tunexx}_${tuneyy}\"; local __string1=`echo \${sixdesktunes} | cut -d\_ -f1`; local __string2=`echo \${sixdesktunes} | cut -d\_ -f2`" "[ -n \"\${__string1}\" ] && [ -n \"\${__string2}\" ]" "problem with generating tunes string"
 	    if ${lrestart} && ${lrestartTune} ; then
 		if [ "${tunesFromName}" == "${sixdesktunes}" ] ; then
 		    lrestartTune=false
