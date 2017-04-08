@@ -673,6 +673,11 @@ sixdeskAllAmplitudes(){
     # A.Mereghetti, 2017-04-08
     # new function, to generate all amplitude steps
     allAmplitudeSteps=""
+    fAmpStarts=""
+    fAmpEnds=""
+    ampstart=""
+    ampfinish=""
+    local __iLast=0
 
     # get all amplitude points
     local __allAmplitudes=$(sixdeskAllFloats $ns1l $ns2l $nsincl)
@@ -686,8 +691,17 @@ sixdeskAllAmplitudes(){
 	multipleTrials "Ampl=\"${allAmplitudes[iAmpli]}_${allAmplitudes[jAmpli]}\"; local __string1=`echo \${Ampl} | cut -d\_ -f1`; local __string2=`echo \${Ampl} | cut -d\_ -f2`" "[ -n \"\${__string1}\" ] && [ -n \"\${__string2}\" ]" "problem with generating amplitudes string"
 	if [ $? -eq 0 ] ; then
 	    allAmplitudeSteps="${allAmplitudeSteps} ${Ampl}"
+	    fAmpStarts="${fAmpStarts} ${allAmplitudes[iAmpli]}"
+	    fAmpEnds="${fAmpEnds} ${allAmplitudes[jAmpli]}"
 	fi
     done
+
+    allAmplitudeSteps=( ${allAmplitudeSteps} )
+    fAmpStarts=( ${fAmpStarts} )
+    fAmpEnds=( ${fAmpEnds} )
+    ampstart=${fAmpStarts[0]}
+    let __iLast=${#fAmpEnds[@]}-1
+    ampfinish=${fAmpEnds[${__iLast}]}
 }
 sixdeskrundir()
 {

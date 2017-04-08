@@ -1315,9 +1315,13 @@ function treatShort(){
 function treatLong(){
 
     # ==========================================================================
-    for Ampl in ${allAmplitudeSteps[@]} ; do
+    for (( iAmple=0; iAmple<${#allAmplitudeSteps[@]}; iAmple++ )) ; do
     # ==========================================================================
 
+	Ampl=${allAmplitudeSteps[${iAmple}]}
+	fampstart=${fAmpStarts[${iAmple}]}
+	fampend=${fAmpEnds[${iAmple}]}
+	
 	if ${lrestart} && ${lrestartAmpli} ; then
 	    if [ "${amplisFromName}" == "${Ampl}" ] ; then
 		lrestartAmpli=false
@@ -2077,7 +2081,7 @@ else
     fi
 fi
 if [ $long -eq 1 ] ; then
-    # generate array of amplitudes (it returns allAmplitudeSteps)
+    # generate array of amplitudes (it returns allAmplitudeSteps, fAmpStarts, fAmpEnds, ampstart, ampfinish)
     sixdeskAllAmplitudes
     iTotalAmplitudeSteps=${#allAmplitudeSteps[@]}
     sixdeskmess -1 "- Amplitudes: from $ns1l to $ns2l by $nsincl - total: ${iTotalAmplitudeSteps} amplitude steps;"
