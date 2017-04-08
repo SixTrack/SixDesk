@@ -1890,26 +1890,16 @@ __lerr=0
 # actual operations
 # ------------------------------------------------------------------------------
 
-# - lock dirs
+# lock dirs
 for tmpDir in ${lockingDirs[@]} ; do
     [ -d $tmpDir ] || mkdir -p $tmpDir
     sixdesklock $tmpDir
 done
 
-# - actual traps
+# actual traps
 trap "printSummary  1 ; sixdeskCleanExit 1" EXIT SIGINT SIGQUIT
 trap "printSummary 11 ; sixdeskCleanExit 1" SIGSEGV
 trap "printSummary  8 ; sixdeskCleanExit 1" SIGFPE
-
-# - tunes
-echo ""
-sixdeskmess -1 "Main loop, MadX seeds $ista to $iend"
-sixdesktunes
-if [ $long -eq 1 ] ; then
-    sixdeskmess  1 "Amplitudes $ns1l to $ns2l by $nsincl, Angles $kinil, $kendl, $kmaxl by $kstep"
-elif [ $short -eq 1 ] || [ $da -eq 1 ] ; then
-    sixdeskmess  1 "Amplitudes $ns1s to $ns2s by $nss, Angles $kini, $kend, $kmax by $kstep"
-fi
 
 # preparation to main loop
 if ${lgenerate} || ${lfix} ; then
@@ -2059,48 +2049,47 @@ if ${lmegazip} ; then
     # get name of zip as from initialisation
     megaZipName=`cat ${sixdeskjobs_logs}/megaZipName.txt`
 fi
-# - prepare tune scans (including integer part of tune)
-tunesXX=""
-tunesYY=""
-inttunesXX=""
-inttunesYY=""
-for (( itunexx=$itunex; itunexx<=$itunex1; itunexx+=$ideltax )) ; do
-    tunesXX="${tunesXX} $(sixdeskPrepareTune $itunexx $xlen)"
-    inttunesXX="${inttunesXX} $(sixdeskinttune $itunexx)"
-done
-for (( ituneyy=$ituney; ituneyy<=$ituney1; ituneyy+=$ideltay )) ; do
-    tunesYY="${tunesYY} $(sixdeskPrepareTune $ituneyy $ylen)"
-    inttunesYY="${inttunesYY} $(sixdeskinttune $itunexx)"
-done
-tunesXX=( ${tunesXX} )
-tunesYY=( ${tunesYY} )
-inttunesXX=( ${inttunesXX} )
-inttunesYY=( ${inttunesYY} )
-sixdeskmess -1 "scanning the following tunes:"
-sixdeskmess -1 "Qx: ${tunesXX[@]}"
-sixdeskmess -1 "Qy: ${tunesYY[@]}"
-if [ -n "${squaredTuneScan}" ] ; then
-    lSquaredTuneScan=true
-    let iTotal=${#tunesXX[@]}*${#tunesYY[@]}
-    sixdeskmess -1 "over a squared domain (i.e. considering all combinations), for a total of ${iTotal} points for each MADX seed."
-else
-    lSquaredTuneScan=false
-    if [ ${#tunesXX[@]} -eq ${#tunesYY[@]} ] ;  then
-	iTotal=${#tunesXX[@]}
-	sixdeskmess -1 "over a linear domain (i.e. as done so far), for a total of ${iTotal} points for each MADX seed."
-    elif [ ${#tunesXX[@]} -lt ${#tunesYY[@]} ] ;  then
-	iTotal=${#tunesXX[@]}
-	sixdeskmess -1 "over a linear domain (i.e. as done so far), for a total of ${iTotal} points for each MADX seed (limited in H)."
-    else
-	iTotal=${#tunesYY[@]}
-	sixdeskmess -1 "over a linear domain (i.e. as done so far), for a total of ${iTotal} points for each MADX seed (limited in V)."
-    fi
-fi
-# - starting WISE seed
+# - starting MadX seed
 if ${lrestart} ; then
     iMadStart=${MADseedFromName}
 else
     iMadStart=${ista}
+fi
+# - prepare tune scans (including integer part of tune)
+#   it returns tunesXX/YY and inttunesXX/YY as arrays
+sixdeskAllTunes
+
+# - echo
+echo ""
+sixdeskmess -1 "Infos about loop:"
+let iTotalMad=${iend}-${iMadStart}+1
+sixdeskmess -1 "- MadX seeds: from ${iMadStart} to ${iend} - total: ${iTotalMad}"
+sixdeskmess -1 "- Tune values:"
+sixdeskmess -1 "  . Qx: ${tunesXX[@]}"
+sixdeskmess -1 "  . Qy: ${tunesYY[@]}"
+if [ -n "${squaredTuneScan}" ] ; then
+    lSquaredTuneScan=true
+    let iTotalTunes=${#tunesXX[@]}*${#tunesYY[@]}
+    sixdeskmess -1 "  --> over a squared domain in (Qx,Qy), for a total of ${iTotalTunes} pairs."
+else
+    lSquaredTuneScan=false
+    if [ ${#tunesXX[@]} -eq ${#tunesYY[@]} ] ;  then
+	iTotalTunes=${#tunesXX[@]}
+	sixdeskmess -1 "  --> along a line in (Qx,Qy), for a total of ${iTotalTunes} pairs."
+    elif [ ${#tunesXX[@]} -lt ${#tunesYY[@]} ] ;  then
+	iTotalTunes=${#tunesXX[@]}
+	sixdeskmess -1 "  --> along a line in (Qx,Qy), for a total of ${iTotalTunes} pairs (limited in H)."
+    else
+	iTotalTunes=${#tunesYY[@]}
+	sixdeskmess -1 "  --> along a line in (Qx,Qy), for a total of ${iTotalTunes} pairs (limited in V)."
+    fi
+fi
+if [ $long -eq 1 ] ; then
+    sixdeskmess -1 "- Amplitudes: from $ns1l to $ns2l by $nsincl"
+    sixdeskmess -1 "- Angles: $kinil, $kendl, $kmaxl by $kstep"
+elif [ $short -eq 1 ] || [ $da -eq 1 ] ; then
+    sixdeskmess -1 "- Amplitudes: from $ns1s to $ns2s by $nss"
+    sixdeskmess -1 "- Angles: $kini, $kend, $kmax by $kstep"
 fi
 
 # main loop
@@ -2120,20 +2109,20 @@ for (( iMad=${iMadStart}; iMad<=$iend; iMad++ )) ; do
 	done
     fi
 
-    for (( ii=0 ; ii<${#tunesYY[@]} ; ii++ )) ; do
+    for (( iTuneY=0 ; iTuneY<${#tunesYY[@]} ; iTuneY++ )) ; do
 	if ${lSquaredTuneScan} ; then
 	    # squared scan: for a value of Qy, explore all values of Qx
 	    jmin=0
 	    jmax=${#tunesXX[@]}
 	else
 	    # linear scan: for a value of Qy, run only one value of Qx
-	    jmin=$ii
+	    jmin=$iTuneY
 	    let jmax=$jmin+1
 	fi
-	for (( jj=$jmin; jj<$jmax ; jj++ )) ; do
-	    tunexx=${tunesXX[$jj]}
-	    tuneyy=${tunesYY[$ii]}
-	    multipleTrials "sixdesktunes=\"${tunexx}_${tuneyy}\"; local __string1=`echo \${sixdesktunes} | cut -d\_ -f1`; local __string2=`echo \${sixdesktunes} | cut -d\_ -f2`" "[ -n \"\${__string1}\" ] && [ -n \"\${__string2}\" ]" "problem with generating tunes string"
+	for (( iTuneX=$jmin; iTuneX<$jmax ; iTuneX++ )) ; do
+	    tunexx=${tunesXX[$iTuneX]}
+	    tuneyy=${tunesYY[$iTuneY]}
+	    sixdeskPrepareTunes new
 	    if ${lrestart} && ${lrestartTune} ; then
 		if [ "${tunesFromName}" == "${sixdesktunes}" ] ; then
 		    lrestartTune=false
@@ -2141,9 +2130,9 @@ for (( iMad=${iMadStart}; iMad<=$iend; iMad++ )) ; do
 		    continue
 		fi
 	    fi
-	    # - int tunes
-	    inttunexx=${inttunesXX[$jj]}
-	    inttuneyy=${inttunesYY[$jj]}
+	    # - int tunes (used in fort.3 for post-processing)
+	    inttunexx=${inttunesXX[$iTuneX]}
+	    inttuneyy=${inttunesYY[$iTuneY]}
             #   ...notify user
 	    echo ""
 	    echo ""

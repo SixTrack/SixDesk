@@ -493,9 +493,13 @@ sixdesktunes(){
 sixdeskPrepareTunes(){
     # by A.Mereghetti, 2016-07-19
     # converts itunexx/ituneyy into tunexx/tuneyy
-    tunexx=$(sixdeskPrepareTune $itunexx $xlen)
-    tuneyy=$(sixdeskPrepareTune $ituneyy $ylen)
-    sixdesktunes=$tunexx"_"$tuneyy
+    local __lnew=$1
+    if [ $# -eq 0 ] ; then
+	# old call
+	tunexx=$(sixdeskPrepareTune $itunexx $xlen)
+	tuneyy=$(sixdeskPrepareTune $ituneyy $ylen)
+    fi
+    multipleTrials "sixdesktunes=\"${tunexx}_${tuneyy}\"; local __string1=`echo \${sixdesktunes} | cut -d\_ -f1`; local __string2=`echo \${sixdesktunes} | cut -d\_ -f2`" "[ -n \"\${__string1}\" ] && [ -n \"\${__string2}\" ]" "problem with generating tunes string"
 }
 sixdeskPrepareTune(){
     # by A.Mereghetti, 2017-02-06
@@ -592,6 +596,75 @@ sixdeskamps()
   sixdeskmess -1 "sixdeskamps: Amps $ampstart to $ampfinish by $ampincl"
 #MACRO mymess
 
+}
+sixdeskAllFloats(){
+    # A.Mereghetti, 2017-04-08
+    # new function, to generate an array of floating point values
+    local __precision=1.0E-15
+    local __xMin=$1
+    local __xMax=$2
+    local __xDelta=$3
+    # - preliminary checks - to be moved to check_env.sh
+    if [ -z "${__xMax}" ] ; then
+	__xMax=${__xMin}
+	__xDelta=${__xMin}
+    elif [ `echo ${__xMax} ${__xMin} ${__precision} | awk '{delta=$1/$2-1; if (delta<0) {delta=-delta}; print (delta<$3);}'` -eq 1 ] ; then
+	# __xMax is substantially __xMin
+	__xMax=${__xMin}
+	__xDelta=${__xMin}
+    fi
+    if [ -z "${__xDelta}" ] ; then
+	__xMax=${__xMin}
+	__xDelta=${__xMin}
+    elif [ `echo ${__xDelta} ${__precision} | awk '{if ($1<0) {$1=-$1}; print ($1<$2);}'` -eq 1 ] ; then
+	# __xDelta is substantially 0
+	__xMax=${__xMin}
+	__xDelta=${__xMin}
+    fi
+    # - get all values
+    echo ${__xMin} ${__xMax} ${__xDelta} ${__precision} | awk '{for (x=$1; x<=($2*(1+$4)); x+=$3) {print (x)}}'
+}
+sixdeskFixDotFloat(){
+    # A.Mereghetti, 2017-04-08
+    # new function, to get always a dotted number (eg fortran input)
+    if [ "${1:0:1}" == "." ] ; then
+	# echo 0.xxxx
+	echo "0${1}"
+    elif [ "${1:(-1)}" == "." ] ; then
+	# echo xxxx.0
+	echo "${1}0"
+    elif [ `expr index "$1" .` -eq 0 ] ; then
+	# echo xxxx.0
+	echo "${1}.0"
+    fi
+}
+sixdeskAllTunes(){
+    # A.Mereghetti, 2017-04-08
+    # new function, to generate all tune values
+    # - tunesXX: returned array of hor tune values
+    # - tunesYY: returned array of ver tune values
+    # - inttunesXX: returned array of integer part of hor tunes
+    # - inttunesYY: returned array of integer part of ver tunes
+    # hor:
+    tunesXX=""
+    inttunesXX=""
+    local __tunesXX=$(sixdeskAllFloats $tunex $tunex1 $deltax)
+    for tmptn in ${__tunesXX} ; do
+	tunesXX="${tunesXX} $(sixdeskFixDotFloat ${tmptn})"
+	inttunesXX="${inttunesXX} $(sixdeskinttune ${tmptn})"
+    done
+    tunesXX=( ${tunesXX} )
+    inttunesXX=( ${inttunesXX} )
+    # ver:
+    tunesYY=""
+    inttunesYY=""
+    local __tunesYY=$(sixdeskAllFloats $tuney $tuney1 $deltay)
+    for tmptn in ${__tunesYY} ; do
+	tunesYY="${tunesYY} $(sixdeskFixDotFloat ${tmptn})"
+	inttunesYY="${inttunesYY} $(sixdeskinttune ${tmptn})"
+    done
+    tunesYY=( ${tunesYY} )
+    inttunesYY=( ${inttunesYY} )
 }
 sixdeskrundir()
 {
