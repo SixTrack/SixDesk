@@ -492,14 +492,17 @@ sixdesktunes(){
 }
 sixdeskPrepareTunes(){
     # by A.Mereghetti, 2016-07-19
-    # converts itunexx/ituneyy into tunexx/tuneyy
+    # converts itunexx/ituneyy into tunexx/tuneyy + generate string of tune
     local __lnew=$1
+    local __lerr=0
     if [ $# -eq 0 ] ; then
 	# old call
 	tunexx=$(sixdeskPrepareTune $itunexx $xlen)
 	tuneyy=$(sixdeskPrepareTune $ituneyy $ylen)
     fi
     multipleTrials "sixdesktunes=\"${tunexx}_${tuneyy}\"; local __string1=`echo \${sixdesktunes} | cut -d\_ -f1`; local __string2=`echo \${sixdesktunes} | cut -d\_ -f2`" "[ -n \"\${__string1}\" ] && [ -n \"\${__string2}\" ]" "problem with generating tunes string"
+    let __lerr+=$?
+    return $__lerr
 }
 sixdeskPrepareTune(){
     # by A.Mereghetti, 2017-02-06
@@ -665,6 +668,22 @@ sixdeskAllTunes(){
     done
     tunesYY=( ${tunesYY} )
     inttunesYY=( ${inttunesYY} )
+}
+sixdeskAllAmplitudes(){
+    # A.Mereghetti, 2017-04-08
+    # new function, to generate all amplitude steps
+    allAmplitudes=$(sixdeskAllFloats $ns1l $ns2l $nsincl)
+    allAmplitudes=( ${allAmplitudes} )
+}
+sixdeskPrepareAmplitudes(){
+    # A.Mereghetti, 2017-04-08
+    # new function, to generate the string for an amplitude step
+    local __lerr=0
+    local __ampliMin=$1
+    local __ampliMax=$2
+    multipleTrials "Ampl=\"${__ampliMin}_${__ampliMax}\"; local __string1=`echo \${Ampl} | cut -d\_ -f1`; local __string2=`echo \${Ampl} | cut -d\_ -f2`" "[ -n \"\${__string1}\" ] && [ -n \"\${__string2}\" ]" "problem with generating amplitudes string"
+    let __lerr+=$?
+    return $__lerr
 }
 sixdeskrundir()
 {

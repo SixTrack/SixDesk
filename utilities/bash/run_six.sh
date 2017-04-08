@@ -1309,22 +1309,17 @@ function treatShort(){
 
 function treatLong(){
 
-    sixdeskamps
-
-    amp0=$ampstart
-
+    local __iAmpliMax
+    let __iAmpliMax=${#allAmplitudes[@]}-1
+    
     # ==========================================================================
-    for (( ampstart=$amp0; ampstart<$ampfinish; ampstart+=$ampincl )) ; do
+    for (( iAmpli=0; iAmpli<${__iAmpliMax}; iAmpli++ )) ; do
     # ==========================================================================
 
-        fampstart=`gawk 'END{fnn='$ampstart'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
-        fampstart=`echo $fampstart | sed -e's/0*$//'`
-        fampstart=`echo $fampstart | sed -e's/\.$//'`
-        ampend=`expr "$ampstart" + "$ampincl"`
-        fampend=`gawk 'END{fnn='$ampend'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
-        fampend=`echo $fampend | sed -e's/0*$//'`
-        fampend=`echo $fampend | sed -e's/\.$//'`
-        Ampl="${fampstart}_${fampend}"
+	# prepare tune amplitude string (returns Ampl)
+	let jAmpli=${iAmpli}+1
+	sixdeskPrepareAmplitudes ${allAmplitudes[iAmpli]} ${allAmplitudes[jAmpli]}
+	exitStatus=$?
 
 	if ${lrestart} && ${lrestartAmpli} ; then
 	    if [ "${amplisFromName}" == "${Ampl}" ] ; then
@@ -1334,11 +1329,16 @@ function treatLong(){
 	    fi
 	fi
 
+	if [ $exitStatus -ne 0 ] ; then
+	    # go to next amplitude step (sixdeskmess already printed out and email sent to user/admins)
+	    continue
+	fi
+
 	# separate output for current case from previous one
 	echo ""
 	echo ""
 	
-        sixdeskmess -1 "Considering amplitudes: $Ampl"
+        sixdeskmess -1 "Considering amplitude step: $Ampl"
 
 	# get AngleStep
 	sixdeskAngleStep 90 $kmaxl $lbackcomp
@@ -2063,32 +2063,36 @@ sixdeskAllTunes
 echo ""
 sixdeskmess -1 "Infos about loop:"
 let iTotalMad=${iend}-${iMadStart}+1
-sixdeskmess -1 "- MadX seeds: from ${iMadStart} to ${iend} - total: ${iTotalMad}"
+sixdeskmess -1 "- MadX seeds: from ${iMadStart} to ${iend} - total: ${iTotalMad} seeds;"
 sixdeskmess -1 "- Tune values:"
 sixdeskmess -1 "  . Qx: ${tunesXX[@]}"
 sixdeskmess -1 "  . Qy: ${tunesYY[@]}"
 if [ -n "${squaredTuneScan}" ] ; then
     lSquaredTuneScan=true
     let iTotalTunes=${#tunesXX[@]}*${#tunesYY[@]}
-    sixdeskmess -1 "  --> over a squared domain in (Qx,Qy), for a total of ${iTotalTunes} pairs."
+    sixdeskmess -1 "  --> over a squared domain in (Qx,Qy) - total: ${iTotalTunes} pairs;"
 else
     lSquaredTuneScan=false
     if [ ${#tunesXX[@]} -eq ${#tunesYY[@]} ] ;  then
 	iTotalTunes=${#tunesXX[@]}
-	sixdeskmess -1 "  --> along a line in (Qx,Qy), for a total of ${iTotalTunes} pairs."
+	sixdeskmess -1 "  --> along a line in (Qx,Qy) - total: ${iTotalTunes} pairs;"
     elif [ ${#tunesXX[@]} -lt ${#tunesYY[@]} ] ;  then
 	iTotalTunes=${#tunesXX[@]}
-	sixdeskmess -1 "  --> along a line in (Qx,Qy), for a total of ${iTotalTunes} pairs (limited in H)."
+	sixdeskmess -1 "  --> along a line in (Qx,Qy) - total: ${iTotalTunes} pairs;"
     else
 	iTotalTunes=${#tunesYY[@]}
-	sixdeskmess -1 "  --> along a line in (Qx,Qy), for a total of ${iTotalTunes} pairs (limited in V)."
+	sixdeskmess -1 "  --> along a line in (Qx,Qy) - total: ${iTotalTunes} pairs;"
     fi
 fi
 if [ $long -eq 1 ] ; then
-    sixdeskmess -1 "- Amplitudes: from $ns1l to $ns2l by $nsincl"
+    # generate array of amplitudes (it returns allAmplitudes)
+    sixdeskAllAmplitudes
+    let iTotalAmplitudes=${#allAmplitudes[@]}-1
+    sixdeskmess -1 "- Amplitudes: from $ns1l to $ns2l by $nsincl - total: ${iTotalAmplitudes} amplitude intervals;"
     sixdeskmess -1 "- Angles: $kinil, $kendl, $kmaxl by $kstep"
 elif [ $short -eq 1 ] || [ $da -eq 1 ] ; then
-    sixdeskmess -1 "- Amplitudes: from $ns1s to $ns2s by $nss"
+    iTotalAmplitudes=1
+    sixdeskmess -1 "- Amplitudes: from $ns1s to $ns2s by $nss - total: ${iTotalAmplitudes} amplitude intervals;"
     sixdeskmess -1 "- Angles: $kini, $kend, $kmax by $kstep"
 fi
 
@@ -2122,13 +2126,19 @@ for (( iMad=${iMadStart}; iMad<=$iend; iMad++ )) ; do
 	for (( iTuneX=$jmin; iTuneX<$jmax ; iTuneX++ )) ; do
 	    tunexx=${tunesXX[$iTuneX]}
 	    tuneyy=${tunesYY[$iTuneY]}
+	    # generate tune string (dir/job name)
 	    sixdeskPrepareTunes new
+	    exitStatus=$?
 	    if ${lrestart} && ${lrestartTune} ; then
 		if [ "${tunesFromName}" == "${sixdesktunes}" ] ; then
 		    lrestartTune=false
 		else
 		    continue
 		fi
+	    fi
+	    if [ $exitStatus -ne 0 ] ; then
+		# go to next tune couple (sixdeskmess already printed out and email sent to user/admins)
+		continue
 	    fi
 	    # - int tunes (used in fort.3 for post-processing)
 	    inttunexx=${inttunesXX[$iTuneX]}
