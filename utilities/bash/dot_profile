@@ -672,18 +672,22 @@ sixdeskAllTunes(){
 sixdeskAllAmplitudes(){
     # A.Mereghetti, 2017-04-08
     # new function, to generate all amplitude steps
-    allAmplitudes=$(sixdeskAllFloats $ns1l $ns2l $nsincl)
-    allAmplitudes=( ${allAmplitudes} )
-}
-sixdeskPrepareAmplitudes(){
-    # A.Mereghetti, 2017-04-08
-    # new function, to generate the string for an amplitude step
-    local __lerr=0
-    local __ampliMin=$1
-    local __ampliMax=$2
-    multipleTrials "Ampl=\"${__ampliMin}_${__ampliMax}\"; local __string1=`echo \${Ampl} | cut -d\_ -f1`; local __string2=`echo \${Ampl} | cut -d\_ -f2`" "[ -n \"\${__string1}\" ] && [ -n \"\${__string2}\" ]" "problem with generating amplitudes string"
-    let __lerr+=$?
-    return $__lerr
+    allAmplitudeSteps=""
+
+    # get all amplitude points
+    local __allAmplitudes=$(sixdeskAllFloats $ns1l $ns2l $nsincl)
+    __allAmplitudes=( ${__allAmplitudes} )
+
+    # get all amplitude intervals
+    let __iAmpliMax=${#__allAmplitudes[@]}-1
+    for (( iAmpli=0; iAmpli<${__iAmpliMax}; iAmpli++ )) ; do
+	# prepare amplitude string
+	let jAmpli=${iAmpli}+1
+	multipleTrials "Ampl=\"${allAmplitudes[iAmpli]}_${allAmplitudes[jAmpli]}\"; local __string1=`echo \${Ampl} | cut -d\_ -f1`; local __string2=`echo \${Ampl} | cut -d\_ -f2`" "[ -n \"\${__string1}\" ] && [ -n \"\${__string2}\" ]" "problem with generating amplitudes string"
+	if [ $? -eq 0 ] ; then
+	    allAmplitudeSteps="${allAmplitudeSteps} ${Ampl}"
+	fi
+    done
 }
 sixdeskrundir()
 {

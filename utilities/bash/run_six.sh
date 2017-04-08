@@ -65,15 +65,20 @@ function preliminaryChecksRS(){
 
     # - check definition of amplitude range
     if [ $short -eq 1 ] ; then
-	Ampl="${ns1s}_${ns2s}"
+	if [ -z "${ns1s}" ] || [ -z "${ns2s}" ] ; then
+	    sixdeskmess -1 "Please check ns1s/ns2s..."
+	    let __lerr+=1
+	fi
     elif [ $long -eq 1 ] ; then
-	Ampl="${ns1l}_${ns2l}"
+	if [ -z "${ns1l}" ] || [ -z "${ns2l}" ] ; then
+	    sixdeskmess -1 "Please check ns1l/ns2l..."
+	    let __lerr+=1
+	fi
     elif [ $da -eq 1 ] ; then
-	Ampl="0$dimda"
-    fi
-    if [ -z "$Ampl" ] ; then
-	sixdeskmess -1 "Ampl not defined. Please check ns1s/ns2s or ns1l/ns2l or dimda..."
-	let __lerr+=1
+	if [ -z "${dimda}" ] ; then
+	    sixdeskmess -1 "Please check dimda..."
+	    let __lerr+=1
+	fi
     fi
 
     # - check platforms (to be moved to set_env)
@@ -1309,17 +1314,9 @@ function treatShort(){
 
 function treatLong(){
 
-    local __iAmpliMax
-    let __iAmpliMax=${#allAmplitudes[@]}-1
-    
     # ==========================================================================
-    for (( iAmpli=0; iAmpli<${__iAmpliMax}; iAmpli++ )) ; do
+    for Ampl in ${allAmplitudeSteps[@]} ; do
     # ==========================================================================
-
-	# prepare tune amplitude string (returns Ampl)
-	let jAmpli=${iAmpli}+1
-	sixdeskPrepareAmplitudes ${allAmplitudes[iAmpli]} ${allAmplitudes[jAmpli]}
-	exitStatus=$?
 
 	if ${lrestart} && ${lrestartAmpli} ; then
 	    if [ "${amplisFromName}" == "${Ampl}" ] ; then
@@ -1327,11 +1324,6 @@ function treatLong(){
 	    else
 		continue
 	    fi
-	fi
-
-	if [ $exitStatus -ne 0 ] ; then
-	    # go to next amplitude step (sixdeskmess already printed out and email sent to user/admins)
-	    continue
 	fi
 
 	# separate output for current case from previous one
@@ -2085,14 +2077,14 @@ else
     fi
 fi
 if [ $long -eq 1 ] ; then
-    # generate array of amplitudes (it returns allAmplitudes)
+    # generate array of amplitudes (it returns allAmplitudeSteps)
     sixdeskAllAmplitudes
-    let iTotalAmplitudes=${#allAmplitudes[@]}-1
-    sixdeskmess -1 "- Amplitudes: from $ns1l to $ns2l by $nsincl - total: ${iTotalAmplitudes} amplitude intervals;"
+    iTotalAmplitudeSteps=${#allAmplitudeSteps[@]}
+    sixdeskmess -1 "- Amplitudes: from $ns1l to $ns2l by $nsincl - total: ${iTotalAmplitudeSteps} amplitude steps;"
     sixdeskmess -1 "- Angles: $kinil, $kendl, $kmaxl by $kstep"
 elif [ $short -eq 1 ] || [ $da -eq 1 ] ; then
-    iTotalAmplitudes=1
-    sixdeskmess -1 "- Amplitudes: from $ns1s to $ns2s by $nss - total: ${iTotalAmplitudes} amplitude intervals;"
+    iTotalAmplitudeSteps=1
+    sixdeskmess -1 "- Amplitudes: from $ns1s to $ns2s by $nss - total: ${iTotalAmplitudeSteps} amplitude steps;"
     sixdeskmess -1 "- Angles: $kini, $kend, $kmax by $kstep"
 fi
 
