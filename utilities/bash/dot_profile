@@ -28,8 +28,8 @@ sixdeskmess(){
 	__sixdeskmesslevel=${1}
 	__message=${2}
     else
-	echo ${__sixdeskname}
-	echo "SERIOUS ERROR! sixdeskmess requires between 0 and 2 arguments"
+	echo ${sixdeskname}
+	echo "SERIOUS ERROR! sixdeskmess requires between 0 and 2 arguments - you gave $#"
 	exit 1
     fi
     
@@ -500,7 +500,7 @@ sixdeskPrepareTunes(){
 	tunexx=$(sixdeskPrepareTune $itunexx $xlen)
 	tuneyy=$(sixdeskPrepareTune $ituneyy $ylen)
     fi
-    multipleTrials "sixdesktunes=\"${tunexx}_${tuneyy}\"; local __string1=`echo \${sixdesktunes} | cut -d\_ -f1`; local __string2=`echo \${sixdesktunes} | cut -d\_ -f2`" "[ -n \"\${__string1}\" ] && [ -n \"\${__string2}\" ]" "problem with generating tunes string"
+    multipleTrials "sixdesktunes=\"\${tunexx}_\${tuneyy}\"; local __string1=\`echo \${sixdesktunes} | cut -d\_ -f1\`; local __string2=\`echo \${sixdesktunes} | cut -d\_ -f2\`" "[ -n \"\${__string1}\" ] && [ -n \"\${__string2}\" ]" "problem with generating tunes string"
     let __lerr+=$?
     return $__lerr
 }
@@ -539,7 +539,7 @@ sixdeskinttune(){
     if [ "${__inttune}" == "." ] ; then
 	__inttune="0."
     fi
-    echo "${__intune}"
+    echo "${__inttune}"
 }
 sixdeskamps()
 {
@@ -608,24 +608,12 @@ sixdeskAllFloats(){
     local __xMax=$2
     local __xDelta=$3
     # - preliminary checks - to be moved to check_env.sh
-    if [ -z "${__xMax}" ] ; then
-	__xMax=${__xMin}
-	__xDelta=${__xMin}
-    elif [ `echo ${__xMax} ${__xMin} ${__precision} | awk '{delta=$1/$2-1; if (delta<0) {delta=-delta}; print (delta<$3);}'` -eq 1 ] ; then
-	# __xMax is substantially __xMin
-	__xMax=${__xMin}
-	__xDelta=${__xMin}
-    fi
-    if [ -z "${__xDelta}" ] ; then
-	__xMax=${__xMin}
-	__xDelta=${__xMin}
-    elif [ `echo ${__xDelta} ${__precision} | awk '{if ($1<0) {$1=-$1}; print ($1<$2);}'` -eq 1 ] ; then
-	# __xDelta is substantially 0
+    if [ -z "${__xMax}" ] || [ -z "${__xDelta}" ] ; then
 	__xMax=${__xMin}
 	__xDelta=${__xMin}
     fi
     # - get all values
-    echo ${__xMin} ${__xMax} ${__xDelta} ${__precision} | awk '{for (x=$1; x<=($2*(1+$4)); x+=$3) {print (x)}}'
+    python ${SCRIPTDIR}/python/generate_floats.py ${__xMin} ${__xMax} ${__xDelta} ${__precision}
 }
 sixdeskFixDotFloat(){
     # A.Mereghetti, 2017-04-08
@@ -639,6 +627,9 @@ sixdeskFixDotFloat(){
     elif [ `expr index "$1" .` -eq 0 ] ; then
 	# echo xxxx.0
 	echo "${1}.0"
+    else
+	# regular output
+	echo "${1}"
     fi
 }
 sixdeskAllTunes(){
@@ -688,11 +679,11 @@ sixdeskAllAmplitudes(){
     for (( iAmpli=0; iAmpli<${__iAmpliMax}; iAmpli++ )) ; do
 	# prepare amplitude string
 	let jAmpli=${iAmpli}+1
-	multipleTrials "Ampl=\"${allAmplitudes[iAmpli]}_${allAmplitudes[jAmpli]}\"; local __string1=`echo \${Ampl} | cut -d\_ -f1`; local __string2=`echo \${Ampl} | cut -d\_ -f2`" "[ -n \"\${__string1}\" ] && [ -n \"\${__string2}\" ]" "problem with generating amplitudes string"
+	multipleTrials "Ampl=\"\${__allAmplitudes[\${iAmpli}]}_\${__allAmplitudes[\${jAmpli}]}\"; local __string1=\`echo \${Ampl} | cut -d\_ -f1\`; local __string2=\`echo \${Ampl} | cut -d\_ -f2\`;" "[ -n \"\${__string1}\" ] && [ -n \"\${__string2}\" ]" "problem with generating amplitudes string"
 	if [ $? -eq 0 ] ; then
 	    allAmplitudeSteps="${allAmplitudeSteps} ${Ampl}"
-	    fAmpStarts="${fAmpStarts} ${allAmplitudes[iAmpli]}"
-	    fAmpEnds="${fAmpEnds} ${allAmplitudes[jAmpli]}"
+	    fAmpStarts="${fAmpStarts} ${__allAmplitudes[${iAmpli}]}"
+	    fAmpEnds="${fAmpEnds} ${__allAmplitudes[${jAmpli}]}"
 	fi
     done
 
@@ -702,6 +693,76 @@ sixdeskAllAmplitudes(){
     ampstart=${fAmpStarts[0]}
     let __iLast=${#fAmpEnds[@]}-1
     ampfinish=${fAmpEnds[${__iLast}]}
+}
+sixdeskAllAngles(){
+    # A.Mereghetti, 2017-04-10
+    # new function, to generate all angles
+    local __kmin=$1
+    local __kend=$2
+    local __kmax=$3
+    local __kstep=$4
+    local __ampstart=$5
+    local __ampfinish=$6
+    local __lbackcomp=$7
+    local __reduce_angs_with_aplitude=$8
+    local __totAngle=90
+    local __factor=0.3
+
+    # generated arrays:
+    KKs=""
+    Angles=""
+    kAngs=""
+    KKs_reduced=""
+    Angles_reduced=""
+    kAngs_reduced=""
+    
+    # AngleStep [deg]
+    if ${__lbackcomp} ; then
+	local __angleStep=`echo ${__totAngle} ${__kmax} | awk '{print ($1/($2+1))}'`
+    else
+	local __angleStep=`echo ${__totAngle} ${__kmax} | awk '{printf ("%.16E",$1/($2+1))}'`
+    fi
+
+    # generate regular angle steps:
+    if [ -n "${__reduce_angs_with_aplitude}" ] && [ ${__reduce_angs_with_aplitude} -eq 1 ] ; then
+	local __kstepNew=`echo ${__ampfinish} ${__ampstart} ${__kstep} | awk '{print ($1/$2*$3)}'`
+    else
+	local __kstepNew=${__kstep}
+    fi
+    for (( kk=${__kmin}; kk<=${__kend}; kk+=${__kstepNew} )) ; do
+	KKs="${KKs} ${kk}"
+	local __tmpAngle=`echo ${kk} ${__angleStep} | awk '{print ($1*$2)}'`
+	Angles="${Angles} ${__tmpAngle}"
+	if ${__lbackcomp} ; then
+	    local __kang=`echo ${kk} ${__kmax} | awk '{print ($1/($2+1))}'`
+	else
+	    local __kang=`echo ${kk} ${__kmax} | awk '{printf ("%.16E",$1/($2+1))}'`
+	fi
+	kAngs="${kAngs} ${__kang}"
+    done
+    # generate reduced angle steps:
+    if [ -n "${__reduce_angs_with_aplitude}" ] && [ ${__reduce_angs_with_aplitude} -eq 1 ] ; then
+	local __kstepNew=`echo ${__ampfinish} ${__factor} ${__kstep} | awk '{print ($1/$2*$3)}'`
+	for (( kk=${__kmin}; kk<=${__kend}; kk+=${__kstepNew} )) ; do
+	    KKs_reduced="${KKs_reduced} ${kk}"
+	    local __tmpAngle=`echo ${kk} ${__angleStep} | awk '{print ($1*$2)}'`
+	    Angles_reduced="${Angles_reduced} ${__tmpAngle}"
+	    if ${__lbackcomp} ; then
+		local __kang=`echo ${kk} ${__kmax} | awk '{print ($1/($2+1))}'`
+	    else
+		local __kang=`echo ${kk} ${__kmax} | awk '{printf ("%.16E",$1/($2+1))}'`
+	    fi
+	    kAngs_reduced="${kAngs_reduced} ${__kang}"
+	done
+    fi
+
+    # make arrays
+    KKs=( ${KKs} )
+    Angles=( ${Angles} )
+    kAngs=( ${kAngs} )
+    KKs_reduced=( ${KKs_reduced} )
+    Angles_reduced=( ${Angles_reduced} )
+    kAng_reduceds=( ${kAngs_reduced} )
 }
 sixdeskrundir()
 {

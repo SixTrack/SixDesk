@@ -87,14 +87,6 @@ function consistencyChecks(){
 	fi
     fi
 
-    #   make sure sixdesklevel defined in sixdeskenv
-    if [ -z "${sixdesklevel}" ] ; then
-	sixdeskmess -1 "sixdesklevel not declared in $envFilesPath/sixdeskenv!!!"
-	sixdeskexit 9
-    else
-	sixdeskmess -1 "sixdesklevel: ${sixdesklevel}"
-    fi
-    
     return 0
 }
 
@@ -211,20 +203,15 @@ export sixdeskwhere=`dirname $PWD`
 # Set up some temporary values until we execute sixdeskenv/sysenv
 # Don't issue lock/unlock debug text (use 2 for that)
 export sixdesklogdir=""
-#export sixdesklevel=1
 export sixdeskhome="."
 export sixdeskecho="yes!"
+export sixdesklevel=-1
 if [ ! -s ${SCRIPTDIR}/bash/dot_profile ] ; then
     echo "dot_profile is missing!!!"
     exit 1
 fi
 # - load environment
 source ${SCRIPTDIR}/bash/dot_profile
-# - settings for sixdeskmessages
-#sixdeskmessleveldef=0
-#sixdeskmesslevel=$sixdeskmessleveldef
-
-
 
 # - locking dirs
 if ${lcptemplate} ; then
@@ -238,13 +225,6 @@ if ${lset} ; then
 elif ${lload} ; then
     envFilesPath="studies/${currStudy}"
 fi
-
-# in case the -o option is not used, load the sixdesklevel from sixdeskenv
-if [ ! -z ${loutform} ] || [ ! ${loutform} ]; then
-    tmpString=$(grep 'sixdesklevel' ${envFilesPath}/sixdeskenv)
-    ${tmpString}
-fi
-
 
 # - basic checks (i.e. dir structure)
 basicChecks
@@ -264,11 +244,10 @@ done
 
 if ${lcptemplate} ; then
 
-    sixdeskmess 1 "copying here template files for brand new study"
-    sixdeskmess 1 "template input files from ${SCRIPTDIR}/templates/input"
+    sixdeskmess -1 "copying here template files for brand new study"
+    sixdeskmess -1 "template input files from ${SCRIPTDIR}/templates/input"
 
     for tmpFile in sixdeskenv sysenv ; do
-	sixdeskmess 1 "${tmpFile}"
 	# preserve original time stamps
 	cp -p ${SCRIPTDIR}/templates/input/${tmpFile} .
     done
@@ -284,10 +263,6 @@ else
     # - source active sixdeskenv/sysenv
     source ${envFilesPath}/sixdeskenv
     source ${envFilesPath}/sysenv
-
-    if ${loutform}; then
-	sixdesklevel=${sixdesklevel_option}
-    fi    
 
     # - perform some consistency checks on parsed info
     consistencyChecks
@@ -366,23 +341,21 @@ for tmpDir in ${lockingDirs[@]} ; do
 done
 
 # - kinit, to renew kerberos ticket
-sixdeskmess 2 " --> kinit:"
+sixdeskmess -1 " --> kinit;"
 multipleTrials "kinit -R ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]"
 if [ $? -gt 0 ] ; then
     sixdeskmess -1 "--> kinit -R failed - AFS/Kerberos credentials expired??? aborting..."
     exit
 else
-    sixdeskmess 2 " --> klist output after kinit -R:"
-    tmpLines=$(klist)
-    sixdeskmess 2 "${tmpLines}"
+    sixdeskmess -1 " --> klist output after kinit -R:"
+    klist
 fi
 
 # - fs listquota
 echo ""
-sixdeskmess 2 " --> fs listquota:"
+sixdeskmess -1 " --> fs listquota:"
 tmpLines=`fs listquota`
-#echo "${tmpLines}"
-sixdeskmess 2 "${tmpLines}"
+echo "${tmpLines}"
 #   check, and in case raise a warning
 fraction=`echo "${tmpLines}" | tail -1 | awk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
 if [ ${fraction} -gt 90 ] ; then

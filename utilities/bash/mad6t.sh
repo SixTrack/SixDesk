@@ -361,6 +361,9 @@ fi
 # NB: workaround to get getopts working properly in sourced script
 OPTIND=1
 source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} -e
+if ${loutform} ; then
+    sixdesklevel=${sixdesklevel_option}
+fi
 # build paths
 sixDeskDefineMADXTree ${SCRIPTDIR}
 

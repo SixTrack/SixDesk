@@ -1143,12 +1143,29 @@ function treatShort(){
 	fi
     fi
 
-    # get AngleStep
-    sixdeskAngleStep 90 $kmax $lbackcomp
-
-    # ==========================================================================
-    for (( kk=$kini; kk<=$kend; kk+=$kstep )) ; do
-    # ==========================================================================
+    # angles
+    if [ -n "${__reduce_angs_with_aplitude}" ] && [ ${__reduce_angs_with_aplitude} -eq 1 ] ; then
+	if [ ${__ampstart} -gt ${__factor} ] ;then
+	    kksLoop=${KKs[@]}
+	    anglesLoop=${Angles[@]}
+	    kangsLoop=${kAngs[@]}
+	else
+	    kksLoop=${KKs_reduced[@]}
+	    anglesLoop=${Angles_reduced[@]}
+	    kangsLoop=${kAngs_reduced[@]}
+	fi
+    else
+	kksLoop=${KKs[@]}
+	anglesLoop=${Angles[@]}
+	kangsLoop=${kAngs[@]}
+    fi
+    kksLoop=( ${kksLoop} )
+    anglesLoop=( ${anglesLoop} )
+    kangsLoop=( ${kangsLoop} )
+    
+    # ======================================================================
+    for (( iAngle=0; iAngle<${#kkLoop[@]}; iAngle++ )) ; do
+    # ======================================================================
 
 	# separate output for current case from previous one
 	echo ""
@@ -1162,9 +1179,10 @@ function treatShort(){
 	# exit status: dir already run
 	local __eCheckDirAlreadyRun=0
 
-	# get Angle and kang
-	sixdeskAngle $AngleStep $kk
-	sixdeskkang $kk $kmax $lbackcomp
+	# kk, Angle and kang
+	kk=${kksLoop[${iAngle}]}
+	Angle=${anglesLoop[${iAngle}]}
+	kang=${kangsLoop[${iAngle}]}
 
 	# get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
 	# ...and notify user
@@ -1335,14 +1353,29 @@ function treatLong(){
 	echo ""
 	
         sixdeskmess -1 "Considering amplitude step: $Ampl"
-
-	# get AngleStep
-	sixdeskAngleStep 90 $kmaxl $lbackcomp
-	# get scaled_kstep
-	sixdeskScaledKstep $kstep "${reduce_angs_with_aplitude}" $ampstart $ampfinish
-
+	
+	# angles
+	if [ -n "${__reduce_angs_with_aplitude}" ] && [ ${__reduce_angs_with_aplitude} -eq 1 ] ; then
+	    if [ ${__ampstart} -gt ${__factor} ] ;then
+		kksLoop=${KKs[@]}
+		anglesLoop=${Angles[@]}
+		kangsLoop=${kAngs[@]}
+	    else
+		kksLoop=${KKs_reduced[@]}
+		anglesLoop=${Angles_reduced[@]}
+		kangsLoop=${kAngs_reduced[@]}
+	    fi
+	else
+	    kksLoop=${KKs[@]}
+	    anglesLoop=${Angles[@]}
+	    kangsLoop=${kAngs[@]}
+	fi
+	kksLoop=( ${kksLoop} )
+	anglesLoop=( ${anglesLoop} )
+	kangsLoop=( ${kangsLoop} )
+	
 	# ======================================================================
-	for (( kk=$kinil; kk<=$kendl; kk+=$scaled_kstep )) ; do
+	for (( iAngle=0; iAngle<${#kksLoop[@]}; iAngle++ )) ; do
 	# ======================================================================
 
 	    # trigger for preparation
@@ -1354,9 +1387,10 @@ function treatLong(){
 	    # exit status: dir already run
 	    local __eCheckDirAlreadyRun=0
 
-	    # get Angle and kang
-	    sixdeskAngle $AngleStep $kk
-	    sixdeskkang $kk $kmaxl $lbackcomp
+	    # kk, Angle and kang
+	    kk=${kksLoop[${iAngle}]}
+	    Angle=${anglesLoop[${iAngle}]}
+	    kang=${kangsLoop[${iAngle}]}
 
 	    if ${lrestart} && ${lrestartAngle} ; then
 		if [ "${angleFromName}" == "${Angle}" ] ; then
@@ -1767,8 +1801,9 @@ fi
 OPTIND=1
 source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${verbose} -e
 # - settings for sixdeskmessages
-#sixdeskmessleveldef=0
-#sixdeskmesslevel=$sixdeskmessleveldef
+if ${loutform} ; then
+    sixdesklevel=${sixdesklevel_option}
+fi
 # - temporary trap
 trap "sixdeskexit 1" EXIT
 
@@ -2045,24 +2080,20 @@ if ${lmegazip} ; then
     # get name of zip as from initialisation
     megaZipName=`cat ${sixdeskjobs_logs}/megaZipName.txt`
 fi
-# - starting MadX seed
-if ${lrestart} ; then
-    iMadStart=${MADseedFromName}
-else
-    iMadStart=${ista}
-fi
+
+# - final set-ups and echo
+echo ""
+sixdeskmess -1 "Infos about loop (as from input):"
+let iTotalMad=${iend}-${ista}+1
+sixdeskmess -1 "- MadX seeds: from ${ista} to ${iend} - total: ${iTotalMad} seeds;"
 # - prepare tune scans (including integer part of tune)
 #   it returns tunesXX/YY and inttunesXX/YY as arrays
 sixdeskAllTunes
-
-# - echo
-echo ""
-sixdeskmess -1 "Infos about loop:"
-let iTotalMad=${iend}-${iMadStart}+1
-sixdeskmess -1 "- MadX seeds: from ${iMadStart} to ${iend} - total: ${iTotalMad} seeds;"
 sixdeskmess -1 "- Tune values:"
-sixdeskmess -1 "  . Qx: ${tunesXX[@]}"
-sixdeskmess -1 "  . Qy: ${tunesYY[@]}"
+tunesXString="${tunesXX[@]}"
+sixdeskmess -1 "  . Qx: ${tunesXString}"
+tunesYString="${tunesYY[@]}"
+sixdeskmess -1 "  . Qy: ${tunesYString}"
 if [ -n "${squaredTuneScan}" ] ; then
     lSquaredTuneScan=true
     let iTotalTunes=${#tunesXX[@]}*${#tunesYY[@]}
@@ -2085,13 +2116,26 @@ if [ $long -eq 1 ] ; then
     sixdeskAllAmplitudes
     iTotalAmplitudeSteps=${#allAmplitudeSteps[@]}
     sixdeskmess -1 "- Amplitudes: from $ns1l to $ns2l by $nsincl - total: ${iTotalAmplitudeSteps} amplitude steps;"
-    sixdeskmess -1 "- Angles: $kinil, $kendl, $kmaxl by $kstep"
+    # generate array of angles (it returns KKs, Angles and kAngs, and reduced ones)
+    sixdeskAllAngles $kinil $kendl $kmaxl $kstep $ampstart $ampfinish $lbackcomp "${reduce_angs_with_aplitude}"
+    iTotalAngles=${#KKs[@]}
+    sixdeskmess -1 "- Angles: $kinil, $kendl, $kmaxl by $kstep - total: ${iTotalAngles} angles"
 elif [ $short -eq 1 ] || [ $da -eq 1 ] ; then
     iTotalAmplitudeSteps=1
     sixdeskmess -1 "- Amplitudes: from $ns1s to $ns2s by $nss - total: ${iTotalAmplitudeSteps} amplitude steps;"
-    sixdeskmess -1 "- Angles: $kini, $kend, $kmax by $kstep"
+    sixdeskAllAngles $kini $kend $kmax $kstep $ampstart $ampfinish $lbackcomp "${reduce_angs_with_aplitude}"
+    iTotalAngles=${#KKs[@]}
+    sixdeskmess -1 "- Angles: $kini, $kend, $kmax by $kstep - total: ${iTotalAngles} angles"
 fi
+let iTotal=${iTotalMad}*${iTotalTunes}*${iTotalAmplitudeSteps}*${iTotalAngles}
+sixdeskmess -1 "for a total of ${iTotal} points."
 
+# - starting MadX seed
+if ${lrestart} ; then
+    iMadStart=${MADseedFromName}
+else
+    iMadStart=${ista}
+fi
 # main loop
 for (( iMad=${iMadStart}; iMad<=$iend; iMad++ )) ; do
     echo ""
