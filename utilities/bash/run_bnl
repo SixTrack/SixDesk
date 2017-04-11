@@ -18,8 +18,7 @@ then
 
 #MACRO mymess 0 Something up!! run_bnl expects BNL $BNL
   sixdeskmesslevel=0
-  sixdeskmess="Something up!! run_bnl expects BNL $BNL"
-  sixdeskmess
+  sixdeskmess -1 "Something up!! run_bnl expects BNL $BNL"
 #MACRO mymess
  to be set
 fi
@@ -27,8 +26,7 @@ dir16=$sixtrack_input
 
 #MACRO mymess 0 Using sixtrack_input $dir16
 sixdeskmesslevel=0
-sixdeskmess="Using sixtrack_input $dir16"
-sixdeskmess
+sixdeskmess -1 "Using sixtrack_input $dir16"
 #MACRO mymess
 
 if test ! -d "$dir16" 
@@ -36,8 +34,7 @@ then
 
 #MACRO mymess 0 The directory $dir16 does not exist!!!
   sixdeskmesslevel=0
-  sixdeskmess="The directory $dir16 does not exist!!!"
-  sixdeskmess
+  sixdeskmess -1 "The directory $dir16 does not exist!!!"
 #MACRO mymess
  
 
@@ -63,8 +60,7 @@ mkdir -p $sixdeskjobs_logs
 
 #MACRO mymess 0 Using $sixdeskjobs_logs locked
 ###sixdeskmesslevel=0
-###sixdeskmess="Using $sixdeskjobs_logs locked"
-###sixdeskmess
+### sixdeskmess -1 "Using $sixdeskjobs_logs locked"
 #MACRO mymess
 
 #
@@ -85,7 +81,7 @@ tree=$sixdesktrack
 
 #MACRO mymess 0 The OS $OS is not currently supported
 #  sixdeskmesslevel=0
-#  sixdeskmess="The OS $OS is not currently supported"
+#  sixdeskmess -1 "The OS $OS is not currently supported"
 #  sixdeskmess
 #MACRO mymess
 
@@ -111,8 +107,7 @@ tree=$sixdesktrack
 
 #MACRO mymess 2 Main loop (long) for Study $LHCDescrip, Seeds $bnlseeds to $bnlseede
 sixdeskmesslevel=2
-sixdeskmess="Main loop (long) for Study $LHCDescrip, Seeds $bnlseeds to $bnlseede"
-sixdeskmess
+sixdeskmess -1 "Main loop (long) for Study $LHCDescrip, Seeds $bnlseeds to $bnlseede"
 #MACRO mymess
 
 bnlseed=$bnlseeds
@@ -122,8 +117,7 @@ do
 
 #MACRO mymess 2 Using sixtrack_input $dir16
   sixdeskmesslevel=2
-  sixdeskmess="Using sixtrack_input $dir16"
-  sixdeskmess
+  sixdeskmess -1 "Using sixtrack_input $dir16"
 #MACRO mymess
 
   if test ! -d "$dir16" 
@@ -131,8 +125,7 @@ do
 
 #MACRO mymess 0 The directory $dir16 does not exist!!!
     sixdeskmesslevel=0
-    sixdeskmess="The directory $dir16 does not exist!!!"
-    sixdeskmess
+    sixdeskmess -1 "The directory $dir16 does not exist!!!"
 #MACRO mymess
  
 
@@ -159,8 +152,7 @@ do
 
 #MACRO mymess 0 There is NO fort.3.mother in $dir16
     sixdeskmesslevel=0
-    sixdeskmess="There is NO fort.3.mother in $dir16"
-    sixdeskmess
+    sixdeskmess -1 "There is NO fort.3.mother in $dir16"
 #MACRO mymess
 
 
@@ -199,15 +191,13 @@ do
 
 #MACRO mymess 1 Runnam/Rundir $Runnam $Rundir
       sixdeskmesslevel=1
-      sixdeskmess="Runnam/Rundir $Runnam $Rundir"
-      sixdeskmess
+      sixdeskmess -1 "Runnam/Rundir $Runnam $Rundir"
 #MACRO mymess
 
 
 #MACRO mymess 1 $LHCDesName $bnlseed $bnlsample $bnlpair $bnlturnse
       sixdeskmesslevel=1
-      sixdeskmess="$LHCDesName $bnlseed $bnlsample $bnlpair $bnlturnse"
-      sixdeskmess
+      sixdeskmess -1 "$LHCDesName $bnlseed $bnlsample $bnlpair $bnlturnse"
 #MACRO mymess
 
       if test ! -d "$tree"/"$Rundir"
@@ -215,15 +205,13 @@ do
 
 #MACRO mymess 0 $Rundir does NOT exist!!!
         sixdeskmesslevel=0
-        sixdeskmess="$Rundir does NOT exist!!!"
-        sixdeskmess
+        sixdeskmess -1 "$Rundir does NOT exist!!!"
 #MACRO mymess
 
 
 #MACRO mymess 0 Have you run prepare_bnl for the seed(s), sample(s), etc???
         sixdeskmesslevel=0
-        sixdeskmess="Have you run prepare_bnl for the seed(s), sample(s), etc???"
-        sixdeskmess
+        sixdeskmess -1 "Have you run prepare_bnl for the seed(s), sample(s), etc???"
 #MACRO mymess
 
 
@@ -250,15 +238,13 @@ do
 
 #MACRO mymess 0 $Rundir/$sixdeskbnlin
         sixdeskmesslevel=0
-        sixdeskmess="$Rundir/$sixdeskbnlin"
-        sixdeskmess
+        sixdeskmess -1 "$Rundir/$sixdeskbnlin"
 #MACRO mymess
 ".gz (beambeamdist.dat) does NOT exist!!!"
 
 #MACRO mymess 0 Have you run prepare_bnl for the seed(s), sample(s), etc???
         sixdeskmesslevel=0
-        sixdeskmess="Have you run prepare_bnl for the seed(s), sample(s), etc???"
-        sixdeskmess
+        sixdeskmess -1 "Have you run prepare_bnl for the seed(s), sample(s), etc???"
 #MACRO mymess
 
 
@@ -285,8 +271,7 @@ do
 
 #MACRO mymess 1 fort.3 setup $Runnam
       sixdeskmesslevel=1
-      sixdeskmess="fort.3 setup $Runnam"
-      sixdeskmess
+      sixdeskmess -1 "fort.3 setup $Runnam"
 #MACRO mymess
 
       sed -e 's/%napx%/'$bnlperjob'/g' \
@@ -302,8 +287,7 @@ do
 
 #MACRO mymess 0 No SIXTRACK geometry file (fort.2): Run stopped
         sixdeskmesslevel=0
-        sixdeskmess="No SIXTRACK geometry file (fort.2): Run stopped"
-        sixdeskmess
+        sixdeskmess -1 "No SIXTRACK geometry file (fort.2): Run stopped"
 #MACRO mymess
 
 
@@ -332,8 +316,7 @@ do
 
 #MACRO mymess 0 No SIXTRACK control file (fort.3): Run stopped
         sixdeskmesslevel=0
-        sixdeskmess="No SIXTRACK control file (fort.3): Run stopped"
-        sixdeskmess
+        sixdeskmess -1 "No SIXTRACK control file (fort.3): Run stopped"
 #MACRO mymess
 
 
@@ -362,8 +345,7 @@ do
 
 #MACRO mymess 0 No SIXTRACK misalignment file (fort.8): dummy file created
         sixdeskmesslevel=0
-        sixdeskmess="No SIXTRACK misalignment file (fort.8): dummy file created"
-        sixdeskmess
+        sixdeskmess -1 "No SIXTRACK misalignment file (fort.8): dummy file created"
 #MACRO mymess
 
         touch "$tree"/"$Rundir"/fort.8
@@ -376,8 +358,7 @@ do
 
 #MACRO mymess 0 No SIXTRACK error file (fort.16): dummy file created
         sixdeskmesslevel=0
-        sixdeskmess="No SIXTRACK error file (fort.16): dummy file created"
-        sixdeskmess
+        sixdeskmess -1 "No SIXTRACK error file (fort.16): dummy file created"
 #MACRO mymess
 
         touch "$tree"/"$Rundir"/fort.16
@@ -410,8 +391,7 @@ do
 
 #MACRO mymess 0 Running on GRID not yet implemented!!!
         sixdeskmesslevel=0
-        sixdeskmess="Running on GRID not yet implemented!!!"
-        sixdeskmess
+        sixdeskmess -1 "Running on GRID not yet implemented!!!"
 #MACRO mymess
 
 
@@ -443,8 +423,7 @@ do
 
 #MACRO mymess 0 You have not selected a platform CPSS, LSF, BOINC or GRID!!!
         sixdeskmesslevel=0
-        sixdeskmess="You have not selected a platform CPSS, LSF, BOINC or GRID!!!"
-        sixdeskmess
+        sixdeskmess -1 "You have not selected a platform CPSS, LSF, BOINC or GRID!!!"
 #MACRO mymess
 
 

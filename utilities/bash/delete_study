@@ -223,8 +223,7 @@ then
 
 #MACRO mymess 0 Exit with nothing deleted
   sixdeskmesslevel=0
-  sixdeskmess="Exit with nothing deleted"
-  sixdeskmess
+  sixdeskmess -1 "Exit with nothing deleted"
 #MACRO mymess
 
 
@@ -250,8 +249,7 @@ then
 
 #MACRO mymess 0 Deleting $sixtrack_input/*
   sixdeskmesslevel=0
-  sixdeskmess="Deleting $sixtrack_input/*"
-  sixdeskmess
+  sixdeskmess -1 "Deleting $sixtrack_input/*"
 #MACRO mymess
 
   echo rm -rf "$sixtrack_input"/*
@@ -264,8 +262,7 @@ then
 
 #MACRO mymess 0 Deleting $sixdesktrack/$LHCDescrip/*
   sixdeskmesslevel=0
-  sixdeskmess="Deleting $sixdesktrack/$LHCDescrip/*"
-  sixdeskmess
+  sixdeskmess -1 "Deleting $sixdesktrack/$LHCDescrip/*"
 #MACRO mymess
 
   echo rm -rf $sixdesktrack/$LHCDescrip/*
@@ -275,8 +272,7 @@ then
 
 #MACRO mymess 0 Deleting the tracking input fort.2|3|8|16.gz
   sixdeskmesslevel=0
-  sixdeskmess="Deleting the tracking input fort.2|3|8|16.gz"
-  sixdeskmess
+  sixdeskmess -1 "Deleting the tracking input fort.2|3|8|16.gz"
 #MACRO mymess
 
   echo find $sixdesktrack/$LHCDescrip -name fort.2.gz -exec rm {} \;
@@ -292,8 +288,7 @@ then
 
 #MACRO mymess 0 Deleting the LSF Jobs and logs
   sixdeskmesslevel=0
-  sixdeskmess="Deleting the LSF Jobs and logs"
-  sixdeskmess
+  sixdeskmess -1 "Deleting the LSF Jobs and logs"
 #MACRO mymess
 
   echo find $sixdesktrack/$LHCDescrip -name \*.lsf -exec rm {} \;
@@ -305,8 +300,7 @@ then
 
 #MACRO mymess 0 Deleting all fort.10.gz in $sixdesktrack/$LHCDescrip
   sixdeskmesslevel=0
-  sixdeskmess="Deleting all fort.10.gz in $sixdesktrack/$LHCDescrip"
-  sixdeskmess
+  sixdeskmess -1 "Deleting all fort.10.gz in $sixdesktrack/$LHCDescrip"
 #MACRO mymess
 
   echo find $sixdesktrack/$LHCDescrip -name fort.10.gz -exec rm {} \;
@@ -317,8 +311,7 @@ then
 
 #MACRO mymess 0 Removing all plotting in plot/$LHCDescrip/*
   sixdeskmesslevel=0
-  sixdeskmess="Removing all plotting in plot/$LHCDescrip/*"
-  sixdeskmess
+  sixdeskmess -1 "Removing all plotting in plot/$LHCDescrip/*"
 #MACRO mymess
 
   echo rm -rf plot/$LHCDescrip/*
@@ -331,8 +324,7 @@ then
 
 #MACRO mymess 0 Removing all database entries and leftovers in $sixdeskwork/*
   sixdeskmesslevel=0
-  sixdeskmess="Removing all database entries and leftovers in $sixdeskwork/*"
-  sixdeskmess
+  sixdeskmess -1 "Removing all database entries and leftovers in $sixdeskwork/*"
 #MACRO mymess
 
   echo rm -rf $sixdeskwork/*
@@ -346,8 +338,7 @@ then
 
 #MACRO mymess 0 Deleting the logfiles
   sixdeskmesslevel=0
-  sixdeskmess="Deleting the logfiles"
-  sixdeskmess
+  sixdeskmess -1 "Deleting the logfiles"
 #MACRO mymess
 
   if test -h sixdesk.log
@@ -368,8 +359,7 @@ fi
 
 #MACRO mymess 0 Deleting the BOINC buffers
 sixdeskmesslevel=0
-sixdeskmess="Deleting the BOINC buffers"
-sixdeskmess
+sixdeskmess -1 "Deleting the BOINC buffers"
 #MACRO mymess
 
 rm -rf $sixdeskboincdir

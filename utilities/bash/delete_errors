@@ -48,8 +48,7 @@ fi
 
 #MACRO mymess 0 Found $cases cases, $ccases complete ($icases incomplete)
 sixdeskmesslevel=0
-sixdeskmess="Found $cases cases, $ccases complete ($icases incomplete)"
-sixdeskmess
+sixdeskmess -1 "Found $cases cases, $ccases complete ($icases incomplete)"
 #MACRO mymess
 
 
@@ -146,8 +145,7 @@ do
 
 #MACRO mymess 0 $Runnam added to incomplete_cases
       sixdeskmesslevel=0
-      sixdeskmess="$Runnam added to incomplete_cases"
-      sixdeskmess
+      sixdeskmess -1 "$Runnam added to incomplete_cases"
 #MACRO mymess
 
       touch $where/JOB_NOT_YET_COMPLETED
@@ -181,8 +179,7 @@ fi
 
 #MACRO mymess 0 Now   $cases cases, $ccases complete ($icases incomplete)
 sixdeskmesslevel=0
-sixdeskmess="Now   $cases cases, $ccases complete ($icases incomplete)"
-sixdeskmess
+sixdeskmess -1 "Now   $cases cases, $ccases complete ($icases incomplete)"
 #MACRO mymess
 
 

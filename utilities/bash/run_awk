@@ -21,8 +21,7 @@ sixdesklock
 
 #MACRO mymess 0 Study $LHCDescrip
 sixdeskmesslevel=0
-sixdeskmess="Study $LHCDescrip"
-sixdeskmess
+sixdeskmess -1 "Study $LHCDescrip"
 #MACRO mymess
 
 
@@ -44,8 +43,7 @@ do
 
 #MACRO mymess 0 Processing tunes $sixdesktunes
   sixdeskmesslevel=0
-  sixdeskmess="Processing tunes $sixdesktunes"
-  sixdeskmess
+  sixdeskmess -1 "Processing tunes $sixdesktunes"
 #MACRO mymess
 
   rm -f DAres.${LHCDesName}.${sixdesktunes}.${turnse}.plot
@@ -54,8 +52,7 @@ do
 
 #MACRO mymess 0 Processing angles $kinil to $kendl by $kstep
   sixdeskmesslevel=0
-  sixdeskmess="Processing angles $kinil to $kendl by $kstep"
-  sixdeskmess
+  sixdeskmess -1 "Processing angles $kinil to $kendl by $kstep"
 #MACRO mymess
 
   while test "$j" -le "$kendl"
@@ -63,8 +60,7 @@ do
 
 #MACRO mymess 0 DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j
     sixdeskmesslevel=0
-    sixdeskmess="DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
-    sixdeskmess
+    sixdeskmess -1 "DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
 #MACRO mymess
 
     if test -s "DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j"
@@ -74,8 +70,7 @@ do
 
 #MACRO mymess 0 Skipping Angle $j; DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j missing or empty
       sixdeskmesslevel=0
-      sixdeskmess="Skipping Angle $j; DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j missing or empty"
-      sixdeskmess
+      sixdeskmess -1 "Skipping Angle $j; DAres.${LHCDesName}.${sixdesktunes}.${turnse}.$j missing or empty"
 #MACRO mymess
 
     fi

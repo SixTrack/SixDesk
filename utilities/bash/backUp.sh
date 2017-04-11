@@ -102,29 +102,21 @@ function preliminaryChecks(){
 function echoOptions(){
     echo ""
     if ${lFree} ; then
-	sixdeskmess="freeing locks from a previous run!"
-	sixdeskmess
+	sixdeskmess 1 "freeing locks from a previous run!"
     else
-	sixdeskmess="back up:"
-	sixdeskmess
-	sixdeskmess="- source:      ${fullSource}"
-	sixdeskmess
-	sixdeskmess="- destination: ${fullDest}"
-	sixdeskmess
-	sixdeskmess="- protocol:    ${comProt}"
-	sixdeskmess
+	sixdeskmess 1 "back up:"
+	sixdeskmess 1 "- source:      ${fullSource}"
+	sixdeskmess 1 "- destination: ${fullDest}"
+	sixdeskmess 1 "- protocol:    ${comProt}"
 	if ${lverbose} ; then
-	    sixdeskmess="--> verbose option active!"
-	    sixdeskmess
+	    sixdeskmess 1 "--> verbose option active!"
 	fi
 	if ${lStudyGiven} ; then
 	    if ! ${lzip} ; then
-		sixdeskmess="--> do not zip before creating (unzip after restoring) back-up file!"
-		sixdeskmess
+		sixdeskmess 1 "--> do not zip before creating (unzip after restoring) back-up file!"
 	    fi
 	    if ! ${lclean} ; then
-		sixdeskmess="--> .zip files won't be removed locally!"
-		sixdeskmess
+		sixdeskmess 1 "--> .zip files won't be removed locally!"
 	    fi
 	fi
     fi    
@@ -326,16 +318,14 @@ function backUpCleanExit(){
 
     # remove zip files
     if $lclean ; then
-	sixdeskmess="cleaning zip files..."
-	sixdeskmess
+	sixdeskmess 1 "cleaning zip files..."
 	cleanFiles="${fileName}"
 	if ${lzip} ; then
 	    cleanFiles="${cleanFiles} ${zipFiles}"
 	fi
 	for cleanFile in  ${cleanFiles}; do
 	    if ${lverbose} ; then
-		sixdeskmess="- file: ${cleanFile}"
-		sixdeskmess
+		sixdeskmess 1 "- file: ${cleanFile}"
 	    fi
 	    rm -f ${cleanFile}
 	done
@@ -513,7 +503,7 @@ if [ -z "${currStudy}" ] ; then
     # Set up some temporary values until we execute sixdeskenv/sysenv
     # Don't issue lock/unlock debug text (use 2 for that)
     export sixdesklogdir=""
-    export sixdesklevel=1
+#    export sixdesklevel=1
     export sixdeskhome="."
     export sixdeskecho="yes!"
     if [ ! -s ${SCRIPTDIR}/bash/dot_profile ] ; then
@@ -577,8 +567,7 @@ if ${lzip} && [ "${sourcePath}" == "." ] ; then
     for (( ii=0; ii<${#zipDirs[@]} ; ii++ )) ; do
 	tmpZipFileName=${currStudy}_${nickDirs[$ii]}.zip
 	echo ""
-	sixdeskmess="zipping files in ${nickDirs[$ii]} dir ${zipDirs[$ii]} in ${tmpZipFileName}"
-	sixdeskmess
+	sixdeskmess 1 "zipping files in ${nickDirs[$ii]} dir ${zipDirs[$ii]} in ${tmpZipFileName}"
 	cd ${zipDirs[$ii]}
 	if ${lverbose} ; then
 	    zip -r --symlinks -b /tmp ${currDir}/${tmpZipFileName} .
@@ -588,8 +577,7 @@ if ${lzip} && [ "${sourcePath}" == "." ] ; then
 	    let lerr+=$?
 	fi
 	cd - > /dev/null 2>&1
-	sixdeskmess="zipping ${tmpZipFileName} in ${fileName}"
-	sixdeskmess
+	sixdeskmess 1 "zipping ${tmpZipFileName} in ${fileName}"
 	if ${lverbose} ; then
 	    zip -b /tmp ${fileName} ${tmpZipFileName}
 	    let lerr+=$?
@@ -602,8 +590,7 @@ if ${lzip} && [ "${sourcePath}" == "." ] ; then
     if [ -s "${sixdeskTaskIds/$LHCDescrip/sixdeskTaskId}" ] ; then
 	# sixdesktaskid
 	echo ""
-	sixdeskmess="zipping sixdeskTaskId file"
-	sixdeskmess
+	sixdeskmess 1 "zipping sixdeskTaskId file"
 	if ${lverbose} ; then
 	    zip -b /tmp ${fileName} sixdeskTaskIds/$LHCDescrip/sixdeskTaskId
 	    let lerr+=$?
@@ -615,8 +602,7 @@ if ${lzip} && [ "${sourcePath}" == "." ] ; then
     if [ -s "${currStudy}.db" ] ; then
 	# sixdeskDB
 	echo ""
-	sixdeskmess="zipping sixdb file ${currStudy}.db"
-	sixdeskmess
+	sixdeskmess 1 "zipping sixdb file ${currStudy}.db"
 	if ${lverbose} ; then
 	    zip -b /tmp ${fileName} ${currStudy}.db
 	    let lerr+=$?
@@ -627,8 +613,7 @@ if ${lzip} && [ "${sourcePath}" == "." ] ; then
     fi
     if [ $lerr -ne 0 ] ; then
 	echo ""
-	sixdeskmess="errors while zipping!"
-	sixdeskmess
+	sixdeskmess 1 "errors while zipping!"
 	exit $lerr
     fi
 fi
@@ -641,12 +626,9 @@ fi
 checkSourceFile
 lerr=$?
 if [ $lerr -ne 0 ] ; then
-    sixdeskmess="source file on ${storageServiceSource}:"
-    sixdeskmess
-    sixdeskmess="  ${fullPathSource}/${fileName}"
-    sixdeskmess
-    sixdeskmess="does not exists!"
-    sixdeskmess
+    sixdeskmess 1 "source file on ${storageServiceSource}:"
+    sixdeskmess 1 "  ${fullPathSource}/${fileName}"
+    sixdeskmess 1 "does not exists!"
     exit $lerr
 fi
 
@@ -654,14 +636,12 @@ fi
 prepareDest
 
 echo ""
-sixdeskmess="copying back-up file..."
-sixdeskmess
+sixdeskmess 1 "copying back-up file..."
 ${comProt} ${fullSource} ${fullDest}
 lerr=$?
 if [ $lerr -ne 0 ] ; then
     echo ""
-    sixdeskmess="errors while copying backup file!"
-    sixdeskmess
+    sixdeskmess 1 "errors while copying backup file!"
     exit $lerr
 fi
 
@@ -674,24 +654,20 @@ if ${lzip} && [ "${destPath}" == "." ] ; then
     zipFiles=""
     if ! [ -s ${fileName} ] ; then
 	echo ""
-	sixdeskmess="file ${fileName} does NOT exist!"
-	sixdeskmess
+	sixdeskmess 1 "file ${fileName} does NOT exist!"
 	exit 1
     fi
     archives=`zipinfo -1 ${fileName}`
     if [ -z "${archives}" ] ; then
 	echo ""
-	sixdeskmess="${fileName} is an empty zip file!"
-	sixdeskmess
+	sixdeskmess 1 "${fileName} is an empty zip file!"
 	exit 1
     fi
     if ! ${lverbose} ; then
-	sixdeskmess="archive ${fileName} contains:"
-	sixdeskmess
+	sixdeskmess 1 "archive ${fileName} contains:"
 	unzip -l ${fileName}
     fi
-    sixdeskmess="unzipping..."
-    sixdeskmess
+    sixdeskmess 1 "unzipping..."
     if ${lverbose} ; then
 	unzip ${fileName}
 	let lerr+=$?
@@ -701,12 +677,10 @@ if ${lzip} && [ "${destPath}" == "." ] ; then
     fi
     for (( ii=0; ii<${#zipDirs[@]} ; ii++ )) ; do
 	echo ""
-	sixdeskmess="unzipping files in ${nickDirs[$ii]} dir ${zipDirs[$ii]}"
-	sixdeskmess
+	sixdeskmess 1 "unzipping files in ${nickDirs[$ii]} dir ${zipDirs[$ii]}"
 	tmpZipFileName=`echo "${archives}" | grep ${currStudy}_${nickDirs[$ii]}_ | grep zip`
 	if [ -z "${tmpZipFileName}" ] ; then
-	    sixdeskmess="--> no backup in ${fileName}! skipping it..."
-	    sixdeskmess
+	    sixdeskmess 1 "--> no backup in ${fileName}! skipping it..."
 	    continue
 	fi
 	cd ${zipDirs[$ii]}
@@ -723,14 +697,12 @@ if ${lzip} && [ "${destPath}" == "." ] ; then
     tmpSixDbFileName=`echo "${archives}" | grep '\.db'`
     if [ -n "${tmpSixDbFileName}" ] ; then
 	for tmpSixDB in ${tmpSixDbFileName} ; do
-	    sixdeskmess="sixdb file ${tmpSixDB} unzipped!"
-	    sixdeskmess
+	    sixdeskmess 1 "sixdb file ${tmpSixDB} unzipped!"
 	done
     fi
     if [ $lerr -ne 0 ] ; then
 	echo ""
-	sixdeskmess="errors while unzipping!"
-	sixdeskmess
+	sixdeskmess 1 "errors while unzipping!"
 	exit $lerr
     fi
 fi
@@ -744,5 +716,4 @@ trap "backUpCleanExit 0" EXIT
 
 # echo that everything went fine
 echo ""
-sixdeskmess="Completed normally"
-sixdeskmess
+sixdeskmess 1 "Completed normally"

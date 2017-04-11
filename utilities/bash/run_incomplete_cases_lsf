@@ -52,8 +52,7 @@ do
 
 #MACRO mymess 0 Something badly wrong!!! We cannot find $sixdeskRunnam in $sixdeskwork/taskids
     sixdeskmesslevel=0
-    sixdeskmess="Something badly wrong!!! We cannot find $sixdeskRunnam in $sixdeskwork/taskids"
-    sixdeskmess
+    sixdeskmess -1 "Something badly wrong!!! We cannot find $sixdeskRunnam in $sixdeskwork/taskids"
 #MACRO mymess
 
 
@@ -84,8 +83,7 @@ do
 
 #MACRO mymess 0 The directory $sixdeskRundir for job $sixdeskRunnam does NOT exist!!!
     sixdeskmesslevel=0
-    sixdeskmess="The directory $sixdeskRundir for job $sixdeskRunnam does NOT exist!!!"
-    sixdeskmess
+    sixdeskmess -1 "The directory $sixdeskRundir for job $sixdeskRunnam does NOT exist!!!"
 #MACRO mymess
 
 
@@ -106,8 +104,7 @@ do
 
 #MACRO mymess 1 Job incomplete $taskids for $sixdeskRunnam
     sixdeskmesslevel=1
-    sixdeskmess="Job incomplete $taskids for $sixdeskRunnam"
-    sixdeskmess
+    sixdeskmess -1 "Job incomplete $taskids for $sixdeskRunnam"
 #MACRO mymess
 
     if test $sixdeskforce -eq 0
@@ -123,8 +120,7 @@ do
 
 #MACRO mymess 0 dot_boinclsf failed!!!
       sixdeskmesslevel=0
-      sixdeskmess="dot_boinclsf failed!!!"
-      sixdeskmess
+      sixdeskmess -1 "dot_boinclsf failed!!!"
 #MACRO mymess
 
 
@@ -146,8 +142,7 @@ sixdeskunlock
 
 #MACRO mymess 0 Completed normally
 sixdeskmesslevel=0
-sixdeskmess="Completed normally"
-sixdeskmess
+sixdeskmess -1 "Completed normally"
 #MACRO mymess
 
 
