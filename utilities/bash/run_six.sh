@@ -548,9 +548,6 @@ function submitChromaJobs(){
     rm -f fort.10
     $SIXTRACKEXE > first_oneturn
     if test $? -ne 0 -o ! -s fort.10 ; then
-	if [ ${sixdesklevel} -lt 1 ]; then
-	    sixdeskmess -1 "Running the first one turn job for chromaticity"
-	fi
         sixdeskmess -1 "The first turn Sixtrack for chromaticity FAILED!!!"
         sixdeskmess -1 "Look in $sixdeskjobs_logs to see SixTrack input and output."
         sixdeskmess -1 "Check the file first_oneturn which contains the SixTrack fort.6 output."
@@ -564,9 +561,6 @@ function submitChromaJobs(){
     rm -f fort.10
     $SIXTRACKEXE > second_oneturn
     if test $? -ne 0 -o ! -s fort.10 ; then
-	if [ ${sixdesklevel} -lt 1 ]; then
-	    sixdeskmess -1 "Running the second one turn job for chromaticity"
-	fi	
         sixdeskmess -1 "The second turn Sixtrack for chromaticity FAILED!!!"
         sixdeskmess -1 "Look in $sixdeskjobs_logs to see SixTrack input and output."
         sixdeskmess -1 "Check the file second_oneturn which contains the SixTrack fort.6 output."
@@ -877,7 +871,6 @@ function fixInputFiles(){
 }
 
 function checkDirStatus(){
-    let nExpected+=1
     sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -d
     if [ $? -eq 0 ] ; then
 	let nFound[0]+=1
@@ -1184,6 +1177,8 @@ function treatShort(){
 	Angle=${anglesLoop[${iAngle}]}
 	kang=${kangsLoop[${iAngle}]}
 
+	let nConsidered+=1
+	
 	# get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
 	# ...and notify user
         if [ $kk -eq 0 ] ; then
@@ -1400,6 +1395,8 @@ function treatLong(){
 		fi
 	    fi
 
+	    let nConsidered+=1
+
 	    # get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
 	    sixdeskDefinePointTree $LHCDesName $iMad "s" $sixdesktunes $Ampl $turnsle $Angle $kk $sixdesktrack
 	    if [ $? -gt 0 ] ; then
@@ -1411,8 +1408,8 @@ function treatLong(){
 	    if ! ${lquiet}; then
 		echo ""
 	    fi
-	    sixdeskmess  1 "Point in scan $Runnam $Rundir, k"
-	    sixdeskmess -1 "Submitting - ${LHCDescrip} - Job: ${NsuccessSub} - Seed: $iMad/$iend - Ampl: $Ampl - Angle: $Angle"
+	    sixdeskmess  1 "Point in scan $Runnam $Rundir"
+	    sixdeskmess -1 "study: ${LHCDescrip} - Job: ${nConsidered}/${iTotal} - Seed: $iMad [${iMadStart}:${iend}] - Ampl: $Ampl - Angle: $Angle"
 	    
 	    # ----------------------------------------------------------------------
 	    if ${lfix} ; then
@@ -1549,6 +1546,8 @@ function treatLong(){
 function treatDA(){
     Angle=0
     kk=0
+    
+    let nConsidered+=1
     
     # get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
     sixdeskDefinePointTree $LHCDesName $iMad "d" $sixdesktunes $Ampl "0" $Angle $kk $sixdesktrack
@@ -1852,8 +1851,8 @@ if ${lstatus} ; then
     lockingDirs=( "$sixdeskstudy" )
     #
     # initialise some counters:
-    # - expected number of points in scan
-    nExpected=0
+    # - considered number of points in scan
+    nConsidered=0
     # - actually found:
     nFound=( 0 0 0 0 0 0 )
     foundNames=( 'dirs' 'fort.2.gz' 'fort.3.gz' 'fort.8.gz' 'fort.16.gz' 'fort.10.gz' )
@@ -2405,9 +2404,9 @@ if ${lstatus} ; then
     echo ""
     echo ""
     sixdeskmess -1 "Summary of status of study $LHCDescrip:"
-    sixdeskmess -1 "- number of EXPECTED points in scan (dirs): ${nExpected};"
+    sixdeskmess -1 "- number of EXPECTED points in scan (dirs): ${nConsidered};"
     for (( iFound=0; iFound<${#foundNames[@]}; iFound++ )) ; do
-	if [ ${nFound[$iFound]} == ${nExpected} ] ; then
+	if [ ${nFound[$iFound]} == ${nConsidered} ] ; then
 	    expectation="AS EXPECTED!"
 	else
 	    expectation="NOT as expected: MIMATCH!"
