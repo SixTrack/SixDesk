@@ -237,7 +237,7 @@ then
   export lsfjobtype=sixtracking
 
   # reduce angle steps at small angles, achieving a constant density painting of the phase space
-  # export reduce_angs_with_aplitude=0
+  # export reduce_angs_with_amplitude=1
 fi  
 
 #da parameters 

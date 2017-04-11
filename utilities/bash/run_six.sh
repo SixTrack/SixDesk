@@ -1136,28 +1136,8 @@ function treatShort(){
 	fi
     fi
 
-    # angles
-    if [ -n "${__reduce_angs_with_aplitude}" ] && [ ${__reduce_angs_with_aplitude} -eq 1 ] ; then
-	if [ ${__ampstart} -gt ${__factor} ] ;then
-	    kksLoop=${KKs[@]}
-	    anglesLoop=${Angles[@]}
-	    kangsLoop=${kAngs[@]}
-	else
-	    kksLoop=${KKs_reduced[@]}
-	    anglesLoop=${Angles_reduced[@]}
-	    kangsLoop=${kAngs_reduced[@]}
-	fi
-    else
-	kksLoop=${KKs[@]}
-	anglesLoop=${Angles[@]}
-	kangsLoop=${kAngs[@]}
-    fi
-    kksLoop=( ${kksLoop} )
-    anglesLoop=( ${anglesLoop} )
-    kangsLoop=( ${kangsLoop} )
-    
     # ======================================================================
-    for (( iAngle=0; iAngle<${#kkLoop[@]}; iAngle++ )) ; do
+    for (( iAngle=0; iAngle<${#KKs[@]}; iAngle++ )) ; do
     # ======================================================================
 
 	# separate output for current case from previous one
@@ -1173,9 +1153,9 @@ function treatShort(){
 	local __eCheckDirAlreadyRun=0
 
 	# kk, Angle and kang
-	kk=${kksLoop[${iAngle}]}
-	Angle=${anglesLoop[${iAngle}]}
-	kang=${kangsLoop[${iAngle}]}
+	kk=${KKs[${iAngle}]}
+	Angle=${Angles[${iAngle}]}
+	kang=${kAngs[${iAngle}]}
 
 	let nConsidered+=1
 	
@@ -1350,8 +1330,8 @@ function treatLong(){
         sixdeskmess -1 "Considering amplitude step: $Ampl"
 	
 	# angles
-	if [ -n "${__reduce_angs_with_aplitude}" ] && [ ${__reduce_angs_with_aplitude} -eq 1 ] ; then
-	    if [ ${__ampstart} -gt ${__factor} ] ;then
+	if ${lReduceAngsWithAmplitude} ; then
+	    if [ ${ampstart} -gt ${ampFactor} ] ;then
 		kksLoop=${KKs[@]}
 		anglesLoop=${Angles[@]}
 		kangsLoop=${kAngs[@]}
@@ -2116,13 +2096,13 @@ if [ $long -eq 1 ] ; then
     iTotalAmplitudeSteps=${#allAmplitudeSteps[@]}
     sixdeskmess -1 "- Amplitudes: from $ns1l to $ns2l by $nsincl - total: ${iTotalAmplitudeSteps} amplitude steps;"
     # generate array of angles (it returns KKs, Angles and kAngs, and reduced ones)
-    sixdeskAllAngles $kinil $kendl $kmaxl $kstep $ampstart $ampfinish $lbackcomp "${reduce_angs_with_aplitude}"
+    sixdeskAllAngles $kinil $kendl $kmaxl $kstep $ampstart $ampfinish $lbackcomp ${lReduceAngsWithAmplitude} ${totAngle} ${ampFactor}
     iTotalAngles=${#KKs[@]}
     sixdeskmess -1 "- Angles: $kinil, $kendl, $kmaxl by $kstep - total: ${iTotalAngles} angles"
 elif [ $short -eq 1 ] || [ $da -eq 1 ] ; then
     iTotalAmplitudeSteps=1
     sixdeskmess -1 "- Amplitudes: from $ns1s to $ns2s by $nss - total: ${iTotalAmplitudeSteps} amplitude steps;"
-    sixdeskAllAngles $kini $kend $kmax $kstep $ampstart $ampfinish $lbackcomp "${reduce_angs_with_aplitude}"
+    sixdeskAllAngles $kini $kend $kmax $kstep $ampstart $ampfinish $lbackcomp ${lReduceAngsWithAmplitude} ${totAngle} ${ampFactor}
     iTotalAngles=${#KKs[@]}
     sixdeskmess -1 "- Angles: $kini, $kend, $kmax by $kstep - total: ${iTotalAngles} angles"
 fi

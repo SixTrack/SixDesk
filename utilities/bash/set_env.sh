@@ -90,6 +90,32 @@ function consistencyChecks(){
     return 0
 }
 
+function setFurtherEnvs(){
+    # scan angles:
+    export totAngle=90
+    export ampFactor=0.3
+    lReduceAngsWithAmplitude=false
+    # - reduce angles with amplitude
+    if [ -n "${reduce_angs_with_aplitude}" ] ; then
+	if [ ${reduce_angs_with_aplitude} -eq 1 ] ; then
+	    if [ ${long} -eq 1 ] ; then
+		lReduceAngsWithAmplitude=true
+	    else
+		sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
+	    fi
+	fi
+    elif [ -n "${reduce_angs_with_amplitude}" ] ; then
+	if [ ${reduce_angs_with_amplitude} -eq 1 ] ; then
+	    if [ ${long} -eq 1 ] ; then
+		lReduceAngsWithAmplitude=true
+	    else
+		sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
+	    fi
+	fi
+    fi
+    export ${lReduceAngsWithAmplitude}
+}
+
 # ==============================================================================
 # main
 # ==============================================================================
@@ -266,6 +292,9 @@ else
 
     # - perform some consistency checks on parsed info
     consistencyChecks
+
+    # - set further envs
+    setFurtherEnvs
 
     # - save sixdeskenv/sysenv
     if ${loverwrite} ; then
