@@ -55,8 +55,6 @@ function preliminaryChecksM6T(){
 }
 
 function submit(){
-    local __delay=10
-
     # useful echo
     # - madx version and path
     sixdeskmess  1 "Using madx Version $MADX in $MADX_PATH"
@@ -106,15 +104,9 @@ function submit(){
 
     # Loop over seeds
     mad6tjob=$lsfFilesPath/mad6t1.lsf
-    local __lfirst=true
-    local __lsecond=false
     for (( iMad=$istamad ; iMad<=$iendmad ; iMad++ )) ; do
 	
 	# clean away any existing results for this seed
-	if ${__lsecond} ; then
-	    sixdeskmess -1 "               Sleeping ${__delay} seconds"
-	    sleep ${__delay}
-	fi
 	for f in 2 8 16 34 ; do
 	    rm -f $sixtrack_input/fort.$f"_"$iMad.gz
 	done
@@ -145,12 +137,6 @@ function submit(){
 	    sixdeskmess -1 "${tmpString}"
 	fi
 	mad6tjob=$lsfFilesPath/mad6t.lsf
-	if ${__lfirst} ; then
-	    __lfirst=false
-	    __lsecond=true
-	elif ${__lsecond} ; then
-	    __lsecond=false
-	fi
     done
 
     # End loop over seeds
