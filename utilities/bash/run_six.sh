@@ -959,23 +959,15 @@ function dot_bsub(){
     dot_clean
     
     # actually submit
-    multipleTrials "tmpLines=\"`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job 2>&1`\" ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Problem at bsub"
+    # typical message returned by bsub:
+    #   Job <864248893> is submitted to queue <8nm>.
+    multipleTrials "tmpLines=\"`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.sh 2>&1`\" ; taskno=\"`echo \"${tmpLines}\" | grep submitted | cut -d\< -f2 | cut -d\> -f1`\"" "[ -n \"\${taskno}\" ]" "Problem at bsub"
     let __lerr+=$?
 
     # verify that submission was successfull
     if  [ ${__lerr} -eq 0 ] ; then
-	# typical message returned by bsub:
-	#   Job <864248893> is submitted to queue <8nm>.
-	multipleTrials "taskno=\"`echo \"${tmpLines}\" | grep submitted | cut -d\< -f2 | cut -d\> -f1`\"" "[ -n \"\${taskno}\" ]" "Problem at taskno"
-	let __lerr+=$?
-	if [ ${__lerr} -eq 0 ] ; then
-	    local __taskid="lsf${taskno}"
-	    sixdeskmess  1 "`echo \"${tmpLines}\" | grep submitted`"
-	else
-	    local __taskid="lsf_unknown"
-	    sixdeskmess -1 "bsub did NOT return a taskno !!! - assigning a default one"
-	fi
-
+	local __taskid="lsf${taskno}"
+	sixdeskmess  1 "`echo \"${tmpLines}\" | grep submitted`"
     else
 	sixdeskmess -1 "bsub of $RundirFullPath/$Runnam.job to Queue ${lsfq} failed !!! - going to next WU!"
     fi
@@ -1868,7 +1860,7 @@ if ${lrestart} ; then
 	exit
     fi
     # get infos of starting point
-    sixdeskSmashJobName
+    sixdeskSmashJobName "${restartPoint}"
     lrestartTune=true
     lrestartAmpli=true
     lrestartAngle=true
@@ -2243,7 +2235,7 @@ done
 
 # restart check
 if ${lrestart} ; then
-    if ! ${lrestartTune} || ! ${lrestartAmpli} || ! ${lrestartAngle} ; then
+    if ${lrestartTune} || ${lrestartAmpli} || ${lrestartAngle} ; then
 	sixdeskmess -1 "Something wrong with restarting the scan from point ${restartPoint}"
 	sixdeskmess -1 "Scan was not restarted correctly"
 	if ${lrestartTune} ; then
