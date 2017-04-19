@@ -10,6 +10,9 @@ function how_to_use() {
    -c      check
    -s      submit
               in this case, madx jobs are submitted to lsf
+   -w      submit wrong seeds
+              NB: the list of wrong seeds must be generated beforehand,
+                  by a `basename $0` -c run
 
    options (optional):
    -i      madx is run interactively (ie on the node you are locally
