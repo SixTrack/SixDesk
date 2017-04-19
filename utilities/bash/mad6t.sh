@@ -94,56 +94,69 @@ function submit(){
 	rm -f $sixtrack_input/$tmpFile
     done
 
-    sixdeskmktmpdir mad $sixtrack_input
-    export junktmp=$sixdesktmpdir
-    sixdeskmess 1 "Using junktmp: $junktmp"
-    
-    cd $junktmp
-    filejob=$LHCDescrip
-    cp $maskFilesPath/$filejob.mask .
+    if ! ${lwrong} ; then
 
-    # Loop over seeds
-    mad6tjob=$lsfFilesPath/mad6t1.sh
-    for (( iMad=$istamad ; iMad<=$iendmad ; iMad++ )) ; do
+	sixdeskmktmpdir mad $sixtrack_input
+	export junktmp=$sixdesktmpdir
+	sixdeskmess 1 "Using junktmp: $junktmp"
 	
-	# clean away any existing results for this seed
-	for f in 2 8 16 34 ; do
-	    rm -f $sixtrack_input/fort.$f"_"$iMad.gz
-	done
-    
-	sed -e 's?%NPART?'$bunch_charge'?g' \
-	    -e 's?%EMIT_BEAM?'$emit_beam'?g' \
-	    -e 's?%SEEDSYS?'$iMad'?g' \
-	    -e 's?%SEEDRAN?'$iMad'?g' $filejob.mask > $filejob."$iMad"
-	sed -e 's?%SIXJUNKTMP%?'$junktmp'?g' \
-	    -e 's?%SIXI%?'$iMad'?g' \
-	    -e 's?%SIXFILEJOB%?'$filejob'?g' \
-	    -e 's?%CORR_TEST%?'$CORR_TEST'?g' \
-	    -e 's?%FORT_34%?'$fort_34'?g' \
-	    -e 's?%MADX_PATH%?'$MADX_PATH'?g' \
-	    -e 's?%MADX%?'$MADX'?g' \
-	    -e 's?%SIXTRACK_INPUT%?'$sixtrack_input'?g' $mad6tjob > mad6t_"$iMad".sh
-	chmod 755 mad6t_"$iMad".sh
+	cd $junktmp
+	filejob=$LHCDescrip
+	cp $maskFilesPath/$filejob.mask .
 
-	if ${linter} ; then
-	    sixdeskmktmpdir batch ""
-	    cd $sixdesktmpdir
-	    ../mad6t_"$iMad".sh | tee $junktmp/"${LHCDescrip}_mad6t_$iMad".log 2>&1
-	    cd ../
-	    rm -rf $sixdesktmpdir
-	else
-	    if [ "$sixdeskplatform" == "lsf" ] ; then
-		read BSUBOUT <<< $(bsub -q $madlsfq -o $junktmp/"${LHCDescrip}_mad6t_$iMad".log -J ${workspace}_${LHCDescrip}_mad6t_$iMad mad6t_"$iMad".sh)
-		tmpString=$(printf "Seed %2i        %40s\n" ${iMad} "${BSUBOUT}")
-		sixdeskmess -1 "${tmpString}"
-	    fi
+	# remove any previous list of jobs
+	if [ "$sixdeskplatform" == "htcondor" ] ; then
+	    rm -f jobs.list
 	fi
-	mad6tjob=$lsfFilesPath/mad6t.sh
-    done
 
+	# Loop over seeds
+	mad6tjob=$lsfFilesPath/mad6t1.sh
+	for (( iMad=$istamad ; iMad<=$iendmad ; iMad++ )) ; do
+	    
+	    # clean away any existing results for this seed
+	    for f in 2 8 16 34 ; do
+		rm -f $sixtrack_input/fort.$f"_"$iMad.gz
+	    done
+	    
+	    sed -e 's?%NPART?'$bunch_charge'?g' \
+		-e 's?%EMIT_BEAM?'$emit_beam'?g' \
+		-e 's?%SEEDSYS?'$iMad'?g' \
+		-e 's?%SEEDRAN?'$iMad'?g' $filejob.mask > $filejob."$iMad"
+	    sed -e 's?%SIXJUNKTMP%?'$junktmp'?g' \
+		-e 's?%SIXI%?'$iMad'?g' \
+		-e 's?%SIXFILEJOB%?'$filejob'?g' \
+		-e 's?%CORR_TEST%?'$CORR_TEST'?g' \
+		-e 's?%FORT_34%?'$fort_34'?g' \
+		-e 's?%MADX_PATH%?'$MADX_PATH'?g' \
+		-e 's?%MADX%?'$MADX'?g' \
+		-e 's?%SIXTRACK_INPUT%?'$sixtrack_input'?g' $mad6tjob > mad6t_"$iMad".sh
+	    chmod 755 mad6t_"$iMad".sh
+	    
+	    if ${linter} ; then
+		sixdeskmktmpdir batch ""
+		cd $sixdesktmpdir
+		../mad6t_"$iMad".sh | tee $junktmp/"${LHCDescrip}_mad6t_$iMad".log 2>&1
+		cd ../
+		rm -rf $sixdesktmpdir
+	    else
+		if [ "$sixdeskplatform" == "lsf" ] ; then
+		    read BSUBOUT <<< $(bsub -q $madlsfq -o $junktmp/"${LHCDescrip}_mad6t_$iMad".log -J ${workspace}_${LHCDescrip}_mad6t_$iMad mad6t_"$iMad".sh)
+		    tmpString=$(printf "Seed %2i        %40s\n" ${iMad} "${BSUBOUT}")
+		    sixdeskmess -1 "${tmpString}"
+		elif [ "$sixdeskplatform" == "htcondor" ] ; then
+		    echo mad6t_${iMad}.sh >> jobs.list
+		fi
+	    fi
+	    mad6tjob=$lsfFilesPath/mad6t.sh
+	done
+    fi
+	
     if [ "$sixdeskplatform" == "htcondor" ] && ! ${linter} ; then
 	cp ${SCRIPTDIR}/templates/htcondor/mad6t.sub .
 	condor_submit mad6t.sub
+	if [ $? -eq 0 ] ; then
+	    rm -f jobs.list
+	fi
     fi
 
     # End loop over seeds
@@ -213,6 +226,7 @@ function check(){
     if [ "$fort_34" != "" ] ; then
 	iForts="${iForts} 34"
     fi
+    iSeedsResubmit=""
     for iFort in ${iForts} ; do
 	# - the expected number of files have been generated
 	nFort=0
@@ -247,10 +261,28 @@ function check(){
 		if [ `echo ${tmpDimens[$ii]} ${tmpAve} ${__factor} | awk '{diff=($1/$2-1); if (diff<0) {diff=-diff} ; print(diff<$3/100)}'` -eq 0 ] ; then
 		    sixdeskmess -1 "   --> dimension of file `basename ${tmpFiles[$ii]}` is different from average by more than ${__factor} % !!"
 		    let __lerr+=1
+		    iSeed=`basename ${tmpFiles[$ii]} | cut -d\_ -f2 | cut -d\. -f1`
+		    iSeedsResubmit="${iSeedsResubmit}\n${iSeed}"
 		fi
 	    done
 	fi
     done
+    # - unique list of seeds
+    iSeedsResubmit=`echo -e "${iSeedsResubmit}" | sort -u`
+    iSeedsResubmit=( ${iSeedsResubmit} )
+    if [ ${#iSeedsResubmit[@]} -gt 0 ] ; then
+	# prepare jobs.list file
+	# - last junk dir, in case it is needed to re-run selected seeds
+	local __lastJunkDir=`\ls -trd ${sixtrack_input}/*/ 2> /dev/null`
+	if [ -z "${__lastJunkDir}" ] ; then
+	    sixdeskmktmpdir mad $sixtrack_input
+	    local __lastJunkDir=$sixdesktmpdir
+	fi
+	# - actual list
+	for iSeedResubmit in ${iSeedsResubmit[@]} ; do
+	    echo mad6t_${iSeedResubmit}.sh >> jobs.list
+	done
+    fi
 
     # check mother files
     if test ! -s $sixtrack_input/fort.3.mother1 \
@@ -319,11 +351,12 @@ linter=false
 lsub=false
 lcheck=false
 loutform=false
+lwrong=false
 currStudy=""
 optArgCurrStudy="-s"
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hiso:cd:" opt ; do
+while getopts  ":hiwso:cd:" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -342,12 +375,20 @@ while getopts  ":hiso:cd:" opt ; do
 	    lsub=true
 	    ;;
 	o)
-	    # required submission
+	    # requested specific output option
 	    check_output_option
 	    ;;	
 	d)
 	    # the user is requesting a specific study
 	    currStudy="${OPTARG}"
+	    ;;
+	w)
+	    # re-submit wrong seeds
+	    lwrong=true
+	    # require submission
+	    lsub=true
+	    # disable checking
+	    lcheck=false
 	    ;;
 	:)
 	    how_to_use
@@ -397,7 +438,7 @@ trap "sixdeskexit 1" EXIT
 # don't use this script in case of BNL
 if test "$BNL" != "" ; then
     sixdeskmess -1 "Use prepare_bnl instead for BNL runs!!! aborting..."
-    sixdeskexit 1
+    exit
 fi
 
 if ${lsub} ; then
@@ -409,7 +450,16 @@ if ${lsub} ; then
 	# set the platform to the default value
 	sixdeskSetPlatForm ""
     fi
-
+    if ${lwrong} ; then
+	if [ "$sixdeskplatform" == "htcondor" ]; then
+	    # set the platform to htcondor
+	    sixdeskSetPlatForm "htcondor"
+	fi
+	if [ -n `\ls -trd ${sixtrack_input}/*/jobs.list 2> /dev/null` ] ; then
+	    sixdeskmess -1 "no jobs list previously generated! - I need one for using -w option"
+	    exit
+	fi
+    fi
     
     # - define locking dirs
     lockingDirs=( "$sixdeskstudy" "$sixtrack_input" )
