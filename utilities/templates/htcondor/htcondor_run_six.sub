@@ -4,12 +4,11 @@ universe = vanilla
 # executable, completed by run_six.sh
 executable = 
 arguments = "$(dirname)"
-output = $(dirname)htcondor.out
-error = $(dirname)htcondor.err
-log = $(Cluster).log
+output = $(dirname)/htcondor.out
+error = $(dirname)/htcondor.err
+log = $(dirname)/htcondor.log
 # do not ask htcondor to take care of output files, otherwise empty ones will be created while the simulation proceeds
 transfer_output_files = ""
 ShouldTransferFiles = YES
 WhenToTransferOutput = ON_EXIT_OR_EVICT
-send_credential = True
 queue dirname from
