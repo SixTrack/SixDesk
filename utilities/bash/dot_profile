@@ -771,25 +771,7 @@ sixdeskrundir()
     else
 	local __lbackcomp=true
     fi
-    rundirname1=""
-    rundirname2=""
-    rundirname3=""
-    rundirname4=""
-    rundirname5=""
-    sixdeskFromJobNameToJobDir ${runnamename} rundirname1
-    if test "$BNL" = "" ; then
-	if ${__lbackcomp} ; then
-	    rundirname1=`echo "$rundirname1" | awk -v 'BEGIN{FS="%";}{$6="e"$6; print}'`
-	fi
-	rundirname2=${rundirname1//\/s\//\/simul\/}
-	rundirname3=${rundirname2//\/t\//\/trans\/}
-	rundirname4=${rundirname3//\/m\//\/momen\/}
-	rundirname5=${rundirname4//\/d\//\/da\/}
-    else
-	rundirname5=${rundirname1}
-    fi
-    # remove trailing slashes
-    rundirname=`echo "${rundirname5}" | sed 's:/*$::'`
+    rundirname=$(sixdeskFromJobNameToJobDir ${runnamename} ${__lbackcomp})
 }
 sixdeskDefineUserTree(){
     # define the tree in the userspace
@@ -921,10 +903,42 @@ sixdeskCheckNFieldsFromJobName(){
     return ${__lerr}
 }
 sixdeskFromJobNameToJobDir(){
-    eval "$2=`echo ${1//%//}`"
+    if [ $# -eq 2 ] ; then
+	local __lbackcomp=$2
+    else
+	local __lbackcomp=true
+    fi
+    rundirname0=$1
+    rundirname1=${rundirname0//\%/\/}
+    if ${__lbackcomp} ; then
+	rundirname1=`echo "$rundirname1" | awk 'BEGIN{FS="/";OFS="/"}{$6="e"$6; print}'`
+    fi
+    rundirname2=${rundirname1//\/s\//\/simul\/}
+    rundirname3=${rundirname2//\/t\//\/trans\/}
+    rundirname4=${rundirname3//\/m\//\/momen\/}
+    rundirname5=${rundirname4//\/d\//\/da\/}
+    # remove trailing slashes
+    rundirname5=`echo "${rundirname5}" | sed 's:/*$::'`
+    echo ${rundirname5}
 }
 sixdeskFromJobDirToJobName(){
-    eval "$2=`echo ${1//\//%}`"
+    if [ $# -eq 2 ] ; then
+	local __lbackcomp=$2
+    else
+	local __lbackcomp=true
+    fi
+    rundirname0=$1
+    rundirname1=${rundirname0//\/da\//\/d\/}
+    rundirname2=${rundirname1//\/momen\//\/m\/}
+    rundirname3=${rundirname2//\/trans\//\/t\/}
+    rundirname4=${rundirname3//\/simul\//\/s\/}
+    # remove trailing slashes
+    rundirname4=`echo "${rundirname4}" | sed 's:/*$::'`
+    if ${__lbackcomp} ; then
+	rundirname4=`echo "$rundirname4" | awk 'BEGIN{FS="/";OFS="/"}{gsub(/e/,"",$6); print}'`
+    fi
+    rundirname5=${rundirname4//\//\%}
+    echo ${rundirname5}
 }
 sixdeskDefineWorkUnitName(){
     # $1: workspace name (ie $workspace)
@@ -1033,6 +1047,7 @@ sixdeskSetPlatForm(){
 	return 1
     fi
     export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
+    export sixdeskjobs_logs=$sixdeskjobs/jobs_logs
     if [ "$BNL" != "" ] ; then
 	export sixdeskbnlin="fort.54"
 	export bnlfilenames="beambeam-output.dat beambeamlostID.dat SixTwiss.dat checkdist.dat"
