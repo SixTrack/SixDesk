@@ -178,11 +178,13 @@ function check(){
     local __lerr=0
     
     # check jobs still running
-    nJobs=`bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t | wc -l`
-    if [ ${nJobs} -gt 0 ] ; then
-	bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t
-	sixdeskmess -1 "There appear to be some mad6t jobs still not finished"
-	let __lerr+=1
+    if [ "$sixdeskplatform" == "lsf" ] ; then
+	nJobs=`bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t | wc -l`
+	if [ ${nJobs} -gt 0 ] ; then
+	    bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t
+	    sixdeskmess -1 "There appear to be some mad6t jobs still not finished"
+	    let __lerr+=1
+	fi
     fi
     
     # check errors/warnings
@@ -373,6 +375,13 @@ if ${lsub} ; then
     # - some checks
     preliminaryChecksM6T
 
+    # - platform
+    if [ "$sixdeskplatform" != "lsf" ] && [ "$sixdeskplatform" == "htcondor" ]; then
+	# set the platform to the default value
+	sixdeskSetPlatForm ""
+    fi
+
+    
     # - define locking dirs
     lockingDirs=( "$sixdeskstudy" "$sixtrack_input" )
 
