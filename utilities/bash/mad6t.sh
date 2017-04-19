@@ -156,7 +156,8 @@ function submit(){
     done
 
     if [ "$sixdeskplatform" == "htcondor" ] && ! ${linter} ; then
-	condor_submit ${SCRIPTDIR}/templates/htcondor/mad6t.sub
+	cp ${SCRIPTDIR}/templates/htcondor/mad6t.sub .
+	condor_submit mad6t.sub
     fi
 
     # End loop over seeds
