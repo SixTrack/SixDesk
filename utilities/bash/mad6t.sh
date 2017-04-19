@@ -14,7 +14,7 @@ function how_to_use() {
    options (optional):
    -i      madx is run interactively (ie on the node you are locally
               connected to, no submission to lsf at all)
-           option available only for submission to lsf
+           option available only for submission, not for checking
    -d      study name (when running many jobs in parallel)
    -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
                0: only error messages and basic output 
@@ -167,8 +167,10 @@ function check_output_option(){
 
 
 function check(){
-    sixdeskmess 1 "Checking $LHCDescrip"
+    sixdeskmess 1 "Checking MADX runs for study $LHCDescrip in ${sixtrack_input}"
     local __lerr=0
+    # accepted discrepancy in file dimensions [%]
+    local __factor=1
     
     # check jobs still running
     nJobs=`bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t | wc -l`
@@ -196,23 +198,48 @@ function check(){
 	let __lerr+=1
     fi
 
-    # check that the expected number of files have been generated
+    # check generated files
     let njobs=$iendmad-$istamad+1
     iForts="2 8 16"
     if [ "$fort_34" != "" ] ; then
 	iForts="${iForts} 34"
     fi
     for iFort in ${iForts} ; do
+	# - the expected number of files have been generated
 	nFort=0
-	sixdeskmess 1 "Checking fort.${iFort}_??.gz..."
+	sixdeskmess 1 "Checking that a fort.${iFort}_??.gz exists for each MADX seed requested..."
 	for (( iMad=${istamad}; iMad<=${iendmad}; iMad++ )) ; do
 	    let nFort+=`ls -1 $sixtrack_input/fort.${iFort}_${iMad}.gz 2> /dev/null | wc -l`
 	done
 	if [ ${nFort} -ne ${njobs} ] ; then
-	    sixdeskmess -1 "Discrepancy!!! Found ${nFort} fort.${iFort}_??.gz in $sixtrack_input (expected $njobs)"
+	    sixdeskmess -1 "Discrepancy!!! Found ${nFort} fort.${iFort}_??.gz (expected $njobs)"
+	    let __lerr+=1
+	    continue
+	else
+	    sixdeskmess -1 "...found ${nFort} fort.${iFort}_??.gz (as expected)"
+	fi
+        # - files are all of comparable dimensions
+	tmpFilesDimensions=`\ls -l $sixtrack_input/fort.${iFort}_*.gz 2> /dev/null | awk '{print ($5,$9)}'`
+	tmpFiles=`echo "${tmpFilesDimensions}" | awk '{print ($2)}'`
+	tmpFiles=( ${tmpFiles} )
+	tmpDimens=`echo "${tmpFilesDimensions}" | awk '{print ($1)}'`
+	tmpAve=`echo "${tmpDimens}" | awk '{tot+=$1}END{print (tot/NR)}'`
+	tmpSig=`echo "${tmpDimens}" | awk -v "ave=${tmpAve}" '{tot+=($1-ave)**2}END{print (sqrt(tot)/NR)}'`
+	sixdeskmess -1 "   average dimension (kB): ${tmpAve} - sigma (kB): ${tmpSig}"
+	if [ `echo ${tmpAve} | awk '{print ($1==0)}'` -eq 1 ] ; then
+	    sixdeskmess -1 "   --> NULL average file dimension!! Maybe something wrong with MADX runs?"
+	    let __lerr+=1
+	elif [ `echo ${tmpAve} ${tmpSig} ${__factor} | awk '{print ($2<$1*$3/100)}'` -eq 0 ] ; then
+	    sixdeskmess -1 "   --> spread in file dimensions larger than ${__factor} % !! Maybe something wrong with MADX runs?"
 	    let __lerr+=1
 	else
-	    sixdeskmess 1 "...found ${nFort} fort.${iFort}_??.gz in $sixtrack_input (as expected)"
+	    tmpDimens=( ${tmpDimens} )
+	    for (( ii=0; ii<${#tmpDimens[@]}; ii++ )) ; do
+		if [ `echo ${tmpDimens[$ii]} ${tmpAve} ${__factor} | awk '{diff=($1/$2-1); if (diff<0) {diff=-diff} ; print(diff<$3/100)}'` -eq 0 ] ; then
+		    sixdeskmess -1 "   --> dimension of file `basename ${tmpFiles[$ii]}` is different from average by more than ${__factor} % !!"
+		    let __lerr+=1
+		fi
+	    done
 	fi
     done
 
@@ -251,6 +278,8 @@ function check(){
     fi
 
     if [ ${__lerr} -gt 0 ] ; then
+	# final remarks
+	sixdeskmess 1 "Problems with MADX runs!"
 	exit ${__lerr}
     else
 	# final remarks
