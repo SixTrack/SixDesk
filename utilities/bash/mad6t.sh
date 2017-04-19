@@ -156,6 +156,7 @@ function submit(){
 	
     if [ "$sixdeskplatform" == "htcondor" ] && ! ${linter} ; then
 	cp ${SCRIPTDIR}/templates/htcondor/mad6t.sub .
+	sed -i "s#^+JobFlavour =.*#+JobFlavour = ${madHTCq}#" mad6t.sub
 	condor_submit mad6t.sub
 	if [ $? -eq 0 ] ; then
 	    rm -f jobs.list
@@ -463,6 +464,9 @@ if ${lsub} ; then
 	    exit
 	fi
     fi
+
+    # - queue
+    sixdeskSetQueue madlsfq madHTCq
     
     # - define locking dirs
     lockingDirs=( "$sixdeskstudy" "$sixtrack_input" )

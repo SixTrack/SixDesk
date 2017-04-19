@@ -11,4 +11,5 @@ log = $(dirname)/htcondor.log
 transfer_output_files = ""
 ShouldTransferFiles = YES
 WhenToTransferOutput = ON_EXIT_OR_EVICT
++JobFlavour = 
 queue dirname from

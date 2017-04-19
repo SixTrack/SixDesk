@@ -6,4 +6,5 @@ log = $Fn(filename).log
 # do not ask htcondor to take care of input/output files
 # the bash script used as exe will take care of that
 transfer_output_files = ""
++JobFlavour = 
 queue filename from jobs.list

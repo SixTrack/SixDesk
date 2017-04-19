@@ -89,6 +89,11 @@ export madlsfq=1nh
 export shortlsfq=8nh
 export longlsfq=1nd
 export dalsfq=1nd
+# equivalent queues for htcondor
+export madHTCq=microcentury
+export shortHTCq=workday
+export longHTCq=tomorrow
+export daHTCq=tomorrow
 
 # Format: "col" or "inj" ( also for run_six)
 export runtype=col
@@ -214,6 +219,7 @@ then
   export kmax=5
   # and set up the LSF job type and queue
   export lsfq=$shortlsfq
+  export HTCq=$shortHTCq
   export lsfjobtype=sixmedium
 fi
  
@@ -234,6 +240,7 @@ then
   export kmaxl=5
           # and set up the LSF job type and queue
   export lsfq=$longlsfq
+  export HTCq=$longHTCq
   export lsfjobtype=sixtracking
 
   # reduce angle steps at small angles, achieving a constant density painting of the phase space
@@ -247,6 +254,7 @@ if test $da -eq 1
 then
   export sixdeskM="-M 1000000"
   export lsfq=$dalsfq
+  export HTCq=$daHTCq
   export lsfjobtype=sixda
 # some physics needed here
 # dimda = 4 or 6 but MUST be set to NOT null for short/long
