@@ -10,6 +10,11 @@ runDirBaseName=
 # $1 is received from HTCONDOR
 WUdir=$1
 
+# echo input parameters
+echo "exe: ${exe}"
+echo "runDirBaseName: ${runDirBaseName}"
+echo "WUdir: ${WUdir}"
+
 # declare job has started
 rm -f ${runDirBaseName}/${WUdir}/JOB_NOT_YET_STARTED
 touch ${runDirBaseName}/${WUdir}/JOB_NOT_YET_COMPLETED
