@@ -3,5 +3,7 @@ executable = $(filename)
 output = $Fn(filename).out
 error = $Fn(filename).err
 log = $Fn(filename).log
-send_credential = True
+# do not ask htcondor to take care of input/output files
+# the bash script used as exe will take care of that
+transfer_output_files = ""
 queue filename matching files mad6t_*.sh
