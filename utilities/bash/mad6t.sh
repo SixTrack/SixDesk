@@ -61,11 +61,19 @@ function submit(){
     # useful echo
     # - madx version and path
     sixdeskmess  1 "Using madx Version $MADX in $MADX_PATH"
-    # - Study, Runtype, Seeds
+    # - Study, Runtype, Seeds, platform, queue
     echo
     sixdeskmess -1 "STUDY          ${LHCDescrip}"
     sixdeskmess -1 "RUNTYPE        ${runtype}"
-    sixdeskmess -1 "SEEDS          [${istamad}:${iendmad}]"
+    if ! ${lwrong} ; then
+	sixdeskmess -1 "SEEDS          [${istamad}:${iendmad}]"
+    fi
+    sixdeskmess -1 "PLATFORM       ${sixdeskplatform}"
+    if [ "$sixdeskplatform" == "lsf" ] ; then
+	sixdeskmess -1 "QUEUE          ${madlsfq}"
+    elif [ "$sixdeskplatform" == "htcondor" ] ; then
+	sixdeskmess -1 "QUEUE          ${madHTCq}"
+    fi
     echo
     # - interactive madx
     if ${linter}  ; then
@@ -195,14 +203,29 @@ function check(){
     local __lerr=0
     # accepted discrepancy in file dimensions [%]
     local __factor=1
+    local __njobs
     
     # check jobs still running
     if [ "$sixdeskplatform" == "lsf" ] ; then
-	nJobs=`bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t | wc -l`
-	if [ ${nJobs} -gt 0 ] ; then
+	__njobs=`bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t | wc -l`
+	if [ ${__njobs} -gt 0 ] ; then
 	    bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t
 	    sixdeskmess -1 "There appear to be some mad6t jobs still not finished"
 	    let __lerr+=1
+	fi
+    elif [ "$sixdeskplatform" == "htcondor" ] ; then
+	local __lastLogFile=`\ls -trd ${sixtrack_input}/*/*log 2> /dev/null | tail -1`
+	if [ -z "${__lastLogFile}" ] ; then
+	    sixdeskmess -1 "no htcondor log files, hence cannot get cluster ID!!"
+	else
+	    local __clusterID=`head -1 ${__lastLogFile} 2> /dev/null | cut -d\( -f2 | cut -d\. -f1`
+	    if [ -z "${__clusterID}" ] ; then
+		sixdeskmess -1 "cannot get cluster ID from htcondor log file ${__lastLogFile}!!"
+	    else
+		sixdeskmess -1 "echo of condor_q ${__clusterID} -run -wide"
+		condor_q ${__clusterID} -run -wide
+		echo ""
+	    fi
 	fi
     fi
     
@@ -225,7 +248,7 @@ function check(){
     fi
 
     # check generated files
-    let njobs=$iendmad-$istamad+1
+    let __njobs=$iendmad-$istamad+1
     iForts="2 8 16"
     if [ "$fort_34" != "" ] ; then
 	iForts="${iForts} 34"
@@ -238,8 +261,8 @@ function check(){
 	for (( iMad=${istamad}; iMad<=${iendmad}; iMad++ )) ; do
 	    let nFort+=`ls -1 $sixtrack_input/fort.${iFort}_${iMad}.gz 2> /dev/null | wc -l`
 	done
-	if [ ${nFort} -ne ${njobs} ] ; then
-	    sixdeskmess -1 "Discrepancy!!! Found ${nFort} fort.${iFort}_??.gz (expected $njobs)"
+	if [ ${nFort} -ne ${__njobs} ] ; then
+	    sixdeskmess -1 "Discrepancy!!! Found ${nFort} fort.${iFort}_??.gz (expected $__njobs)"
 	    let __lerr+=1
 	    continue
 	else
@@ -445,17 +468,18 @@ if test "$BNL" != "" ; then
     exit
 fi
 
+# platform
+if [ "$sixdeskplatform" != "lsf" ] && [ "$sixdeskplatform" != "htcondor" ]; then
+    # set the platform to the default value
+    sixdeskSetPlatForm ""
+fi
+
 if ${lsub} ; then
     # - some checks
     preliminaryChecksM6T
 
-    # - platform
-    if [ "$sixdeskplatform" != "lsf" ] && [ "$sixdeskplatform" == "htcondor" ]; then
-	# set the platform to the default value
-	sixdeskSetPlatForm ""
-    fi
     if ${lwrong} ; then
-	if [ "$sixdeskplatform" == "htcondor" ]; then
+	if [ "$sixdeskplatform" != "htcondor" ]; then
 	    # set the platform to htcondor
 	    sixdeskSetPlatForm "htcondor"
 	fi

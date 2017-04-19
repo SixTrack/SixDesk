@@ -1079,7 +1079,7 @@ sixdeskSetQueue(){
     else
 	case ${!1} in
             8nm | 1nh | 8nh | 1nd | 2nd | 1nw | 2nw )
-		sixdeskmess 2 "requested LSF queue ${!1}"
+		sixdeskmess 2 "LSF queue in sixdeskenv: ${!1}"
 		;;
 	    *)
 		# set default queue
@@ -1091,7 +1091,7 @@ sixdeskSetQueue(){
     if [ -n "${!2}" ] ; then
 	case ${!2} in
             espresso | microcentury | workday | tomorrow | testmatch | 1nextweek )
-		sixdeskmess 2 "requested HTCONDOR queue ${!2}"
+		sixdeskmess 2 "HTCONDOR queue in sixdeskenv: ${!2}"
 		;;
 	    *)
 		# set default queue
