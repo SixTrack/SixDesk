@@ -65,7 +65,7 @@ touch mycompleted_cases
 touch $sixdeskwork/taskids
 cp $sixdeskwork/completed_cases $sixdeskwork/backup
 cp $sixdeskwork/mycompleted_cases $sixdeskwork/backup
-cp $sixdeskwork/incompleted_case $sixdeskwork/backup
+cp $sixdeskwork/incomplete_case $sixdeskwork/backup
 cp $sixdeskwork/myincomplete_cases $sixdeskwork/backup
 
 #MACRO mymktmpdir tmp /tmp/$LOGNAME
@@ -140,10 +140,17 @@ do
     echo "$Runnam" >> incomplete_cases
   fi
 done < taskids
-cp completed_cases $sixdeskwork/completed_cases
-cp incomplete_cases $sixdeskwork/incomplete_cases
-cp completed_cases $sixdeskwork/mycompleted_cases
-cp incomplete_cases $sixdeskwork/myincomplete_cases
+for tmpFile in completed_cases incomplete_cases ; do
+    if [ -s ${tmpFile} ] ; then
+	cp ${tmpFile} $sixdeskwork/${tmpFile}
+	cp ${tmpFile} $sixdeskwork/my${tmpFile}
+    else
+	rm -f $sixdeskwork/${tmpFile}
+	touch $sixdeskwork/${tmpFile}
+	rm -f $sixdeskwork/my${tmpFile}
+	touch $sixdeskwork/my${tmpFile}
+    fi
+done
 cd $sixdeskhome
 rm -r $tmp
 # and report status after correction
