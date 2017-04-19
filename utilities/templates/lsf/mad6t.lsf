@@ -8,7 +8,10 @@ export CORR_TEST=%CORR_TEST%
 export fort_34=%FORT_34%
 export MADX_PATH=%MADX_PATH%
 export MADX=%MADX%
-
+waitTime=60
+ 
+echo "sleeping ${waitTime} s..."
+sleep ${waitTime}
 echo "Calling madx version $MADX in $MADX_PATH"
 $MADX_PATH/$MADX < $junktmp/$filejob."$i" > $filejob.out."$i"
 cp -f $filejob.out."$i" $junktmp
