@@ -105,7 +105,21 @@ function submit(){
 	rm -f $sixtrack_input/$tmpFile
     done
 
-    if ! ${lwrong} ; then
+    if ${lwrong} ; then
+
+	junktmp=`dirname ${lastJobsList}`
+	cd ${junktmp}
+	sixdeskmess 1 "Using junktmp: $junktmp"
+
+	tmpFiles=`cat ${lastJobsList}`
+	tmpFiles=( ${tmpFiles} )
+	for tmpFile in ${tmpFiles[@]} ; do
+	    for extension in .err .log .out ; do
+		rm -f ${tmpFile//.sh/${extension}}
+	    done
+	done
+	
+    else
 
 	sixdeskmktmpdir mad $sixtrack_input
 	export junktmp=$sixdesktmpdir
@@ -253,16 +267,20 @@ function check(){
     if [ "$fort_34" != "" ] ; then
 	iForts="${iForts} 34"
     fi
-    iSeedsResubmit=""
+    iMadsResubmit=""
     for iFort in ${iForts} ; do
 	# - the expected number of files have been generated
 	nFort=0
 	sixdeskmess 1 "Checking that a fort.${iFort}_??.gz exists for each MADX seed requested..."
 	for (( iMad=${istamad}; iMad<=${iendmad}; iMad++ )) ; do
-	    let nFort+=`ls -1 $sixtrack_input/fort.${iFort}_${iMad}.gz 2> /dev/null | wc -l`
+	    if [ -s $sixtrack_input/fort.${iFort}_${iMad}.gz ] ; then
+		let nFort+=1
+	    else
+		iMadsResubmit="${iMadsResubmit}\n${iMad}"
+	    fi
 	done
 	if [ ${nFort} -ne ${__njobs} ] ; then
-	    sixdeskmess -1 "Discrepancy!!! Found ${nFort} fort.${iFort}_??.gz (expected $__njobs)"
+	    sixdeskmess -1 "...discrepancy!!! Found ${nFort} fort.${iFort}_??.gz (expected $__njobs)"
 	    let __lerr+=1
 	    continue
 	else
@@ -288,26 +306,31 @@ function check(){
 		if [ `echo ${tmpDimens[$ii]} ${tmpAve} ${__factor} | awk '{diff=($1/$2-1); if (diff<0) {diff=-diff} ; print(diff<$3/100)}'` -eq 0 ] ; then
 		    sixdeskmess -1 "   --> dimension of file `basename ${tmpFiles[$ii]}` is different from average by more than ${__factor} % !!"
 		    let __lerr+=1
-		    iSeed=`basename ${tmpFiles[$ii]} | cut -d\_ -f2 | cut -d\. -f1`
-		    iSeedsResubmit="${iSeedsResubmit}\n${iSeed}"
+		    iMad=`basename ${tmpFiles[$ii]} | cut -d\_ -f2 | cut -d\. -f1`
+		    iMadsResubmit="${iMadsResubmit}\n${iMad}"
 		fi
 	    done
 	fi
     done
     # - unique list of seeds
-    iSeedsResubmit=`echo -e "${iSeedsResubmit}" | sort -u`
-    iSeedsResubmit=( ${iSeedsResubmit} )
-    if [ ${#iSeedsResubmit[@]} -gt 0 ] ; then
+    iMadsResubmit=`echo -e "${iMadsResubmit}" | sort -u`
+    iMadsResubmit=( ${iMadsResubmit} )
+    if [ ${#iMadsResubmit[@]} -gt 0 ] ; then
 	# prepare jobs.list file
 	# - last junk dir, in case it is needed to re-run selected seeds
-	local __lastJunkDir=`\ls -trd ${sixtrack_input}/*/ 2> /dev/null`
+	local __lastJunkDir=`\ls -trd ${sixtrack_input}/*/ 2> /dev/null | tail -1`
 	if [ -z "${__lastJunkDir}" ] ; then
 	    sixdeskmktmpdir mad $sixtrack_input
-	    local __lastJunkDir=$sixdesktmpdir
+	    __lastJunkDir=$sixdesktmpdir
+	else
+	    # remove trailing '/'
+	    __lastJunkDir=`echo "${__lastJunkDir}" | sed 's/\/$//'`
 	fi
 	# - actual list
-	for iSeedResubmit in ${iSeedsResubmit[@]} ; do
-	    echo mad6t_${iSeedResubmit}.sh >> jobs.list
+	sixdeskmess 1 "generating list of missing MADX seed in ${__lastJunkDir}/jobs.list"
+	rm -f ${__lastJunkDir}/jobs.list
+	for iMadResubmit in ${iMadsResubmit[@]} ; do
+	    echo mad6t_${iMadResubmit}.sh >> ${__lastJunkDir}/jobs.list
 	done
     fi
 
@@ -483,7 +506,8 @@ if ${lsub} ; then
 	    # set the platform to htcondor
 	    sixdeskSetPlatForm "htcondor"
 	fi
-	if [ -n `\ls -trd ${sixtrack_input}/*/jobs.list 2> /dev/null` ] ; then
+	lastJobsList=`\ls -trd ${sixtrack_input}/*/jobs.list 2> /dev/null`
+	if [ -z "${lastJobsList}" ] ; then
 	    sixdeskmess -1 "no jobs list previously generated! - I need one for using -w option"
 	    exit
 	fi
