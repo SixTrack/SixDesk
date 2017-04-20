@@ -40,9 +40,10 @@ done
 allUsers=`ls -1 /tmp/delete_*txt | cut -d\_ -f2`
 for tmpUserName in ${allUsers} ; do
     echo "sending notification to ${tmpUserName} ..."
-    allStudies=`cat /tmp/delete_${tmpUserName}_${now}.txt`
-    echo -e "`cat ${SCRIPTDIR}/mail.txt`\n`\du -ch --summarize ${allStudies}`" | sed -e "s/<SixDeskUser>/${tmpUserName}/g" -e "s#<spooldir>#${BOINCspoolDir}#g" -e "s/<xxx>/${oldN}/g" | mail -a /tmp/delete_${tmpUserName}_${now}.txt -c amereghe@cern.ch -s "old studies in BOINC spooldir ${BOINCspoolDir}" ${tmpUserName}@cern.ch
-    rm /tmp/delete_${tmpUserName}_${now}.txt
+    fileList=delete_${tmpUserName}_${now}.txt
+    allStudies=`cat /tmp/${fileList}`
+    echo -e "`cat ${SCRIPTDIR}/mail.txt`\n`\du -ch --summarize ${allStudies}`" | sed -e "s/<SixDeskUser>/${tmpUserName}/g" -e "s#<spooldir>#${BOINCspoolDir}#g" -e "s/<xxx>/${oldN}/g" -e "s#<fileList>#${fileList}#g" | mail -a /tmp/${fileList} -c amereghe@cern.ch -s "old studies in BOINC spooldir ${BOINCspoolDir}" ${tmpUserName}@cern.ch
+    rm /tmp/${fileList}
 done
 
 errorFiles=""
@@ -50,7 +51,7 @@ errorFiles=""
 [ ! -e /tmp/mismatched_owners_${now}.txt ] || errorFiles="${errorFiles} /tmp/mismatched_owners_${now}.txt"
 if [ -n "${errorFiles}" ] ; then
     echo "sending error notification to amereghe ..."
-    echo "errors!" | mail -a /tmp/no_owner_${now}.txt -s 'old studies in BOINC spooldir ${BOINCspoolDir} - errors!' amereghe@cern.ch
+    echo "errors!" | mail -a /tmp/no_owner_${now}.txt -s "old studies in BOINC spooldir ${BOINCspoolDir} - errors!" amereghe@cern.ch
     rm -f /tmp/no_owner_${now}.txt
     rm -f /tmp/mismatched_owners_${now}.txt
 fi
