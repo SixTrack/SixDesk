@@ -22,10 +22,13 @@ utilities/bats/*
 utilities/exes/*
 utilities/fortran/*
 utilities/gnuplot/*
-utilities/perl/*
+utilities/perl/lib/*
 utilities/python/*
 utilities/sed/*
-utilities/templates/*
+utilities/templates/input/*
+utilities/templates/lsf/*
+utilities/templates/sussix/*
+utilities/templates/htcondor/*
 utilities/tex/*
 EOF
     # add proper remote
