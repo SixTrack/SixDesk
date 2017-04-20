@@ -29,7 +29,7 @@ if [ $? -eq 0 ] ; then
 	done
 	echo "rm ${userfile}"
 	rm ${userfile}
-	echo " ...for ${nStudies} studies: `tail -1 \"${duLines}\"`;"
+	echo " ...for ${nStudies} studies: `echo \"${duLines}\" | tail -1`;"
     done
 else
     echo " nothing to do: no files in delete/"
