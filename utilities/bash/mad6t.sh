@@ -425,7 +425,7 @@ while getopts  ":hiwso:cd:" opt ; do
 	    lsub=true
 	    ;;
 	o)
-	    # requested specific output option
+	    # output option
 	    check_output_option
 	    ;;	
 	d)

@@ -9,6 +9,8 @@ sixdeskmess(){
     local __sixdeskmesslevel
     local __sixdesklevel
     local __message
+    local __additionalCommand
+    local __ladditionalCommand=false
     # backward compatibility on nameshort
     if [ -z "${sixdesknameshort}" ] ; then
 	export sixdesknameshort=`basename $0 | cut -b 1-15`
@@ -27,6 +29,11 @@ sixdeskmess(){
     elif [ $# -eq 2 ] ; then
 	__sixdeskmesslevel=${1}
 	__message=${2}
+    elif [ $# -eq 3 ] ; then
+	__sixdeskmesslevel=${1}
+	__message=${2}
+	__additionalCommand=${3}
+	__ladditionalCommand=true
     else
 	echo ${sixdeskname}
 	echo "SERIOUS ERROR! sixdeskmess requires between 0 and 2 arguments - you gave $#"
@@ -36,6 +43,9 @@ sixdeskmess(){
     if  [ -z "${sixdesklevel}" ] || [ ${__sixdeskmesslevel} -le ${sixdesklevel} ] ; then
 	local __sixdesktime=$(date "+%a %d/%m/%y %T ")
 	echo "${__sixdesktime} ${sixdesknameshort} ${__message}"
+	if ${__ladditionalCommand} ; then
+	    ${__additionalCommand}
+	fi
     fi
 }
 sixdeskmktmp()
