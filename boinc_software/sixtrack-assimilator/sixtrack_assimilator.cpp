@@ -103,6 +103,14 @@ int assimilate_handler( WORKUNIT& wu, vector<RESULT>& /*results*/, RESULT& canon
 
     SCOPE_MSG_LOG scope_messages(log_messages, MSG_NORMAL);
     scope_messages.printf("[%s] Handler: Assimilating\n", wu.name);
+
+     //Patch to discard remotely submitted jobs via condor
+     //
+     if (!std::string("condor#").compare(std::string(wu.name).substr(0,7))) {
+        log_messages.printf(MSG_NORMAL, "Found Condor Jobs\n");
+        return 0;
+    }
+
     if (wu.canonical_resultid) {
         OUTPUT_FILE_INFO output_file;
 
@@ -142,7 +150,6 @@ int assimilate_handler( WORKUNIT& wu, vector<RESULT>& /*results*/, RESULT& canon
     }
 /*____________________________________________________________________________*/
 
-
         vector<OUTPUT_FILE_INFO> output_files;
 
         char dire_path[STR_SIZE];
@@ -151,14 +158,14 @@ int assimilate_handler( WORKUNIT& wu, vector<RESULT>& /*results*/, RESULT& canon
         unsigned int nfiles = output_files.size();
         bool file_copied = false;
 	DIR *dirp = NULL;
-
+ 
 /* find name of the directory based on the convention SPOOLDIR/dir-name__ */
 	strncpy(buf,wu.name,STR_SIZE);
 	buf[STR_SIZE-1] = '\0';
         char *dirnul = strstr(buf,"__");           // convention: buf contains the first part of the name = directory name
         char *dirres = (char *) (dirnul + 2);      // convention: dirres contains the second (unique) part of the name
-        *dirnul = '\0';
-
+        //*dirnul = '\0';
+ 
 /* iza debug:  
 	int lenwname = strlen(buf);
 	snprintf(dire_path,STR_SIZE,"check: files=%d len=%d - %s",n,lenwname,buf);
@@ -256,15 +263,11 @@ int assimilate_handler( WORKUNIT& wu, vector<RESULT>& /*results*/, RESULT& canon
 		else file_copied = true;
         }
 /*
-
 	FINISH:
 	int errnolast = errno;
-
         if (!file_copied) {
 		if( (err=snprintf(copy_path,STR_SIZE,"%s/%s_%s",dire_path,wu.name,"no_output")) >= STR_SIZE) return write_error(5,copy_path);
 //on the boinc machine:            copy_path = config.project_path("%s/%s_%s",RESULTDIR, wu.name, "no_output_files");
-
-
 		FILE* f = fopen(copy_path, "w");
 		if (!f) write_error(6,copy_path);
 		else {
