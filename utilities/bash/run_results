@@ -12,6 +12,7 @@ function how_to_use() {
    options (optional)
    -B      break backward-compatibility
            for the moment, this sticks only to job names
+   -t      reprocess old archives of trashed WUs already parsed
 
 EOF
 }
@@ -48,7 +49,7 @@ update_cases()
   while read mycase
   do
   #make a sed script
-    echo '/^'$mycase'$/d' >> $sixdeskwork/sedscript.sed
+    echo "/^${mycase}$/d" >> $sixdeskwork/sedscript.sed
   done < $sixdeskwork/completed_this_run
   sed -f $sixdeskwork/sedscript.sed $sixdeskwork/myincomplete_cases > $newicases
   cp $newicases $sixdeskwork/myincomplete_cases
@@ -73,14 +74,12 @@ update_cases()
   icases=0
   if test -s $sixdeskwork/myincomplete_cases
   then
-    icases=`wc -l $sixdeskwork/myincomplete_cases`
-    icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+    icases=`wc -l $sixdeskwork/myincomplete_cases | awk '{print ($1)}'`
   fi
   ccases=0
   if test -s $sixdeskwork/mycompleted_cases
   then
-    ccases=`wc -l $sixdeskwork/mycompleted_cases`
-    ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+    ccases=`wc -l $sixdeskwork/mycompleted_cases | awk '{print ($1)}'`
   fi
 
 #MACRO mymess 0 Before/after this download $cases mycases, $ccases complete ($icases incomplete)
@@ -92,7 +91,7 @@ update_cases()
 function getListNewResults(){
     
     local __origPath=$1
-    local __ready=0
+    tmpReady=0
     
 #MACRO mymktmp tmp $sixdeskjobs
     sixdesktmpname=tmp
@@ -137,7 +136,7 @@ function getListNewResults(){
 	mytgid=`echo $tgid | sed -e 's/TaskGroupID: *//'`
 	
 #MACRO mymess 0 Checking TaskGroup $mytgid for $LHCDescrip
-	sixdeskmess -1 "Checking TaskGroup $mytgid for $LHCDescrip"
+	sixdeskmess 1 "Checking TaskGroup $mytgid for $LHCDescrip"
 #MACRO mymess
 	
 	perl ${SCRIPTDIR}/perl/queryReadyResults.pl $mytgid > $tmp
@@ -176,10 +175,10 @@ function getListNewResults(){
 	awk -f ${SCRIPTDIR}/awk/remover.awk $tmp > $sixdeskresults
 	rm $tmp
 	tot=`grep TotalTasks $sixdeskresults | sed -e 's/TotalTasks: *//'`
-	__ready=`grep ResultsReady $sixdeskresults | sed -e 's/ResultsReady: *//'`
+	tmpReady=`grep ResultsReady $sixdeskresults | sed -e 's/ResultsReady: *//'`
 	
 #MACRO mymess 1 Out of $tot Tasks $ready Results are available
-	sixdeskmess -1 "Out of $tot Tasks ${__ready} Results are available"
+	sixdeskmess -1 "Out of $tot Tasks ${tmpReady} Results are available"
 #MACRO mymess
 	
 	cat $sixdeskresults
@@ -256,18 +255,18 @@ function getListNewResults(){
 	
 	sed -f ${SCRIPTDIR}/sed/boincnames.sed $tmp > $sixdeskresults
 	rm $tmp
-	__ready=`wc -l $sixdeskresults | awk '{print ($1)}'`
+	tmpReady=`wc -l $sixdeskresults | awk '{print ($1)}'`
 	
 #MACRO mymess 0 $ready Results are available
 	# sixdeskmesslevel=0
-	# sixdeskmess -1 "${__ready} Results are available"
+	# sixdeskmess -1 "${tmpReady} Results are available"
 	# sixdeskmess
 #MACRO mymess
 	
 	cat $sixdeskresults
 
 #MACRO mymess 0 $ready Results are available
-	sixdeskmess -1 "${__ready} Results are available"
+	sixdeskmess -1 "${tmpReady} Results are available"
 #MACRO mymess
 	
 	cut -d"%" -f6- $sixdeskresults > $tmp 
@@ -294,7 +293,7 @@ function getListNewResults(){
 
     fi
 
-    let ready+=${__ready}
+    let ready+=${tmpReady}
 }
 
 function downloadNewResults(){
@@ -326,7 +325,7 @@ function downloadNewResults(){
 	unknown="false"
 	
 #MACRO mymess 1 Now treating TaskID $taskid
-	sixdeskmess -1 "Now treating TaskID $taskid"
+	sixdeskmess 1 "Now treating TaskID $taskid"
 #MACRO mymess
 	
 	Runnam=""
@@ -358,8 +357,7 @@ function downloadNewResults(){
 #MACRO mymktmp
 		    
 		    grep " $taskid " $IDS/taskids > $boincdup
-		    mytimes=`wc -l $boincdup`
-		    mytimes=`echo "$mytimes" | sed -e 's? *\([0-9]*\).*?\1?'`
+		    mytimes=`wc -l $boincdup | awk '{print ($1)}'`
 		    if test "$mytimes" -gt 1
 		    then
 			
@@ -371,6 +369,7 @@ function downloadNewResults(){
 			do
 			    aRunnam=`echo $myline | cut -d" " -f1`
 			    aboincRunnam=`echo $aRunnam | sed -e's/%/__/g'`
+			    local __resName=${workspace}_${aboincRunnam}_1_sixvf_${taskid}${__suffix}
 			    if test -f ${__origPath}/${__resName}
 			    then
 				#found one, may be more!
@@ -415,7 +414,7 @@ function downloadNewResults(){
 	    where=$sixdesktrack/$Rundir
 	    
 #MACRO mymess 1 Task $taskid for job $Runnam found in $Rundir
-	    sixdeskmess -1 "Task $taskid for job $Runnam found in $Rundir"
+	    sixdeskmess 1 "Task $taskid for job $Runnam found in $Rundir"
 #MACRO mymess
 	    
 	fi
@@ -452,6 +451,7 @@ function downloadNewResults(){
 		then
 		    found="false"
 		    boincRunnam=`echo $Runnam | sed -e's/%/__/g'`
+		    local __resName=${workspace}_${boincRunnam}_1_sixvf_${taskid}${__suffix}
 		    if test ! -f ${__origPath}/${__resName}
 		    then
 			
@@ -494,7 +494,7 @@ function downloadNewResults(){
 				rm -r $diffs
 				
 #MACRO mymess 1 Results in fort.10 identical to previous run. Ignore and remove it
-				sixdeskmess -1 "Results in fort.10 identical to previous run. Ignore and remove it"
+				sixdeskmess 1 "Results in fort.10 identical to previous run. Ignore and remove it"
 #MACRO mymess
 				
 				ignore="true"
@@ -518,10 +518,8 @@ function downloadNewResults(){
 				    
 				done < $diffs/diffs
 				rm -r $diffs
-				words=`wc -w fort.10`
-				words=`echo $words | sed -e 's? *\([0-9]*\).*?\1?'`
-				lines=`wc -l fort.10`
-				lines=`echo $lines | sed -e 's? *\([0-9]*\).*?\1?'`
+				words=`wc -w fort.10 | awk '{print ($1)}'`
+				lines=`wc -l fort.10 | awk '{print ($1)}'`
 				nwords=`expr $sixdeskpairs \* 60`
 				if test "$words" -ne  $nwords -o "$lines" -ne $sixdeskpairs
 				then
@@ -551,10 +549,8 @@ function downloadNewResults(){
 				    sixdeskmess -1 "fort.10 check $vermess"
 #MACRO mymess
 				    
-				    numdiffs=`grep "DIFF fort.10, line" $tmp | wc -l`
-				    numdiffs=`echo "$numdiffs" | sed -e 's? *\([0-9]*\).*?\1?'`
-				    numok=`egrep "SAME 22|SAME 23" $tmp | wc -l`
-				    numok=`echo "$numok" | sed -e 's? *\([0-9]*\).*?\1?'`
+				    numdiffs=`grep "DIFF fort.10, line" $tmp | wc -l | awk '{print ($1)}'`
+				    numok=`egrep "SAME 22|SAME 23" $tmp | wc -l | awk '{print ($1)}'`
 				    numok=`expr "$numok" / 2`
 				    particles=`expr $sixdeskpairs \* 2`
 				    if test "$numok" -ne "$numdiffs" -a "$numdiffs" -ne 0
@@ -598,10 +594,8 @@ function downloadNewResults(){
 				fi
 			    fi
 			else
-			    words=`wc -w fort.10`
-			    words=`echo $words | sed -e 's? *\([0-9]*\).*?\1?'`
-			    lines=`wc -l fort.10`
-			    lines=`echo $lines | sed -e 's? *\([0-9]*\).*?\1?'`
+			    words=`wc -w fort.10 | awk '{print ($1)}'`
+			    lines=`wc -l fort.10 | awk '{print ($1)}'`
 			    nwords=`expr $sixdeskpairs \* 60`
 			    if test "$words" -ne  $nwords -o "$lines" -ne $sixdeskpairs
 			    then
@@ -620,41 +614,14 @@ function downloadNewResults(){
 				anerror="true"
 			    else 
 				line1=`head -1 fort.10`
-				word1=`echo $line1 | cut -d" " -f1`
-				word2=`echo $line1 | cut -d" " -f2`
-				word3=`echo $line1 | cut -d" " -f3`
-				word4=`echo $line1 | cut -d" " -f4`
-				word7=`echo $line1 | cut -d" " -f7`
-				word8=`echo $line1 | cut -d" " -f8`
-				word9=`echo $line1 | cut -d" " -f9`
-				word10=`echo $line1 | cut -d" " -f10`
-				word11=`echo $line1 | cut -d" " -f11`
-				word22=`echo $line1 | cut -d" " -f22`
-				word23=`echo $line1 | cut -d" " -f23`
-				word26=`echo $line1 | cut -d" " -f26`
-				word27=`echo $line1 | cut -d" " -f27`
-				word59=`echo $line1 | cut -d" " -f59`
-				word60=`echo $line1 | cut -d" " -f60`
-				word52=`echo $line1 | cut -d" " -f52`
-				
-#MACRO mymess 0 Maxturn $word1 Lost $word2 Qx/Qy $word3 $word4
-				sixdeskmess -1 "Maxturn $word1 Lost $word2 Qx/Qy $word3 $word4"
-#MACRO mymess
-				
-				
-#MACRO mymess 0  1st Ampx/y $word7 $word8 2nd $word26 $word27
-				sixdeskmess -1 " 1st Ampx/y $word7 $word8 2nd $word26 $word27"
-#MACRO mymess
-				
-				
-#MACRO mymess 0 DP $word9 Findist $word10 Maxslope $word11 Turns $word22 $word23
-				sixdeskmess -1 "DP $word9 Findist $word10 Maxslope $word11 Turns $word22 $word23"
-#MACRO mymess
-				
-				
-#MACRO mymess 0 CPU $word60 seconds Version $word52
-				sixdeskmess -1 "CPU $word60 seconds Version $word52"
-#MACRO mymess
+				local __messLine1=`echo $line1 | awk '{print ("Maxturn",$1,"Lost",$2,"Qx/Qy",$3,$4)}'`
+				local __messLine2=`echo $line1 | awk '{print (" 1st Ampx/y",$7,$8,"2nd",$26,$27)}'`
+				local __messLine3=`echo $line1 | awk '{print ("DP",$9,"Findist",$10,"Maxslope",$11,"Turns",$22,$23)}'`
+				local __messLine4=`echo $line1 | awk '{print ("CPU",$60,"seconds Version",$52)}'`
+				sixdeskmess 1 "${__messLine1}"
+				sixdeskmess 1 "${__messLine2}"
+				sixdeskmess 1 "${__messLine3}"
+				sixdeskmess 1 "${__messLine4}"
 				
 				gzip -f fort.10
 				ignore="false"
@@ -919,10 +886,8 @@ function downloadNewResults(){
 						mv ../w$taskid.tar.gz ../problems
 					    fi
 					else
-					    words=`wc -w fort.10`
-					    words=`echo $words | sed -e 's? *\([0-9]*\).*?\1?'`
-					    lines=`wc -l fort.10`
-					    lines=`echo $lines | sed -e 's? *\([0-9]*\).*?\1?'`
+					    words=`wc -w fort.10 | awk '{print ($1)}'`
+					    lines=`wc -l fort.10 | awk '{print ($1)}'`
 					    nwords=`expr $sixdeskpairs \* 60`
 					    if test "$words" -ne  $nwords -o "$lines" -ne $sixdeskpairs
 					    then
@@ -1061,8 +1026,7 @@ function downloadNewResults(){
 	    # use to update a parallel mycompleted_cases and myincomplete_cases
 	    echo "$Runnam" >> $sixdeskwork/completed_this_run
 	    touch $sixdeskwork/DEBUG
-	    sed -e'/^'$Runnam'$/d' $sixdeskwork/incomplete_cases > $tmp
-	    cp $tmp $sixdeskwork/incomplete_cases
+	    sed -i -e"/^${Runnam}$/d" $sixdeskwork/incomplete_cases
 	    if test $? -ne 0
 	    then
 		stat $sixdeskwork/incomplete_cases >> $sixdeskwork/DEBUG
@@ -1094,15 +1058,11 @@ function downloadNewResults(){
 		sixdeskexit
 #MACRO myexit
 		
-	    else
-		rm $tmp
 	    fi
-	    dicases=`wc -l $sixdeskwork/incomplete_cases`
-	    dicases=`echo $dicases | sed -e 's? *\([0-9]*\).*?\1?'`
+	    dicases=`wc -l $sixdeskwork/incomplete_cases | awk '{print ($1)}'`
 	    if test -s $sixdeskwork/completed_cases
 	    then
-		sed -e'/^'$Runnam'$/d' $sixdeskwork/completed_cases > $tmp
-		cp $tmp $sixdeskwork/completed_cases
+		sed -i -e"/^${Runnam}$/d" $sixdeskwork/completed_cases
 		if test $? -ne 0
 		then
 		    stat $sixdeskwork/completed_cases >> $sixdeskwork/DEBUG
@@ -1134,16 +1094,12 @@ function downloadNewResults(){
 		    sixdeskexit
 #MACRO myexit
 		    
-		else
-		    rm $tmp
 		fi
 	    fi
 	    echo $Runnam >> $sixdeskwork/completed_cases
-	    dccases=`wc -l $sixdeskwork/completed_cases`
-	    dccases=`echo $dccases | sed -e 's? *\([0-9]*\).*?\1?'`
+	    dccases=`wc -l $sixdeskwork/completed_cases | awk '{print ($1)}'`
 	    tot=`expr $dicases + $dccases`
-	    allcases=`wc -l $sixdeskwork/taskids`
-	    allcases=`echo $allcases | sed -e 's? *\([0-9]*\).*?\1?'`
+	    allcases=`wc -l $sixdeskwork/taskids | awk '{print ($1)}'`
 	    if test "$tot" -ne "$allcases"
 	    then
 		
@@ -1215,13 +1171,9 @@ function downloadNewResults(){
 		###sixdesklock
 #MACRO mylock
 		
-		touch $sixdeskjobs/incomplete_tasks
-		sed -e'/'$Runnam' '$taskid'/d' $sixdeskjobs/incomplete_tasks > $tmp
-		mv $tmp $sixdeskjobs/incomplete_tasks
-		touch $sixdeskjobs/completed_tasks
-		sed -e'/'$Runnam' '$taskid'/d' $sixdeskjobs/completed_tasks > $tmp
-		mv $tmp $sixdeskjobs/completed_tasks
-		echo "$Runnam" "$taskid" >> $sixdeskjobs/completed_tasks
+		sed -i -e"/${Runnam} ${taskid}/d" $sixdeskjobs/incomplete_tasks
+		sed -i -e"/${Runnam} ${taskid}/d" $sixdeskjobs/completed_tasks
+		echo "${Runnam} ${taskid}" >> $sixdeskjobs/completed_tasks
 		
 #MACRO myunlock $sixdeskjobs
 		###sixdesklockdir=$sixdeskjobs
@@ -1313,6 +1265,8 @@ function downloadNewResults(){
     # end of all tasks
     rm -f ${__sixdesktasklist}
 
+    sixdeskmess -1 "In this batch of ${tmpReady} ready results, ${__ok} were downloaded successfully, ${__duplicated} were deleted as duplicate/redundant, and ${__failed} failed."
+
     let ok+=${__ok}
     let duplicated+=${__duplicated}
     let failed+=${__failed}
@@ -1333,10 +1287,11 @@ fi
 # ------------------------------------------------------------------------------
 
 lbackcomp=true
+lreconsiderTrashed=false
 trashbin=/afs/cern.ch/work/b/boinc/download
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hB" opt ; do
+while getopts  ":hBt" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -1345,6 +1300,9 @@ while getopts  ":hB" opt ; do
 	B)
 	    # use whatever breaks backward compatibility
 	    lbackcomp=false
+	    ;;
+	t)
+	    lreconsiderTrashed=true
 	    ;;
 	:)
 	    how_to_use
@@ -1487,20 +1445,17 @@ fi
 
 if test -f $sixdeskwork/taskids
 then
-  cases=`wc -l "$sixdeskwork/taskids"`
-  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+  cases=`wc -l "$sixdeskwork/taskids" | awk '{print ($1)}'`
 fi
 icases=0
 if test -s $sixdeskwork/incomplete_cases
 then
-  icases=`wc -l $sixdeskwork/incomplete_cases`
-  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+  icases=`wc -l $sixdeskwork/incomplete_cases | awk '{print ($1)}'`
 fi
 ccases=0
 if test -s $sixdeskwork/completed_cases
 then
-  ccases=`wc -l $sixdeskwork/completed_cases`
-  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+  ccases=`wc -l $sixdeskwork/completed_cases | awk '{print ($1)}'`
 fi
 
 #MACRO myunlock $sixdeskwork
@@ -1522,6 +1477,9 @@ ok=0
 duplicated=0
 failed=0
 
+echo ""
+sixdeskmess -1 "looking for results in $sixdeskboincdir/results"
+
 # get list of new results originally from CPU resource
 # it produces:
 # - sixdesktasklist: a file with the takslist of results (eg boincXXXX)
@@ -1530,9 +1488,18 @@ getListNewResults $sixdeskboincdir/results
 # download results and save them in track tree
 downloadNewResults $sixdeskboincdir/results $sixdesktasklist ""
 
+# update the my* DB
+update_cases
+
+echo ""
+
 # look into trashbin: in case zipped files are there, then
 #    download all results there contained
-for tmpArchive in `ls -1 ${trashbin}/${workspace}_${currStudy}_*.zip` ; do
+allTrashed=`ls -1 ${trashbin}/${workspace}_${currStudy}_*.zip 2> /dev/null`
+if ${lreconsiderTrashed} ; then
+    allTrashed="${allTrashed} `ls -1 ${trashbin}/${workspace}_${currStudy}_*.zip 2> /dev/null`"
+fi
+for tmpArchive in ${allTrashed} ; do
 
     tmpArchiveName=`basename ${tmpArchive}`
     tmpDirName=/tmp/${tmpArchiveName//.zip/}
@@ -1551,17 +1518,20 @@ for tmpArchive in `ls -1 ${trashbin}/${workspace}_${currStudy}_*.zip` ; do
     # download results and save them in track tree
     downloadNewResults ${tmpDirName} $sixdesktasklist "_0"
 
+    # update the my* DB
+    update_cases
+    
     if [ $? -eq 0 ] ; then
-	rm -f ${tmpArchive}
+	mv ${tmpArchive} ${trashbin}/deleteMe_${tmpArchiveName}
     fi
 
     rm -rf ${tmpDirName}
 
+    echo ""
+
 done
 
-#MACRO mymess 0 Before this download $cases cases, $ccases complete ($icases incomplete)
-sixdeskmess -1 "Before this download $cases cases, $ccases complete ($icases incomplete)"
-#MACRO mymess
+sixdeskmess -1 "Before this run of `basename $0`: $cases total cases, $ccases complete ($icases incomplete)"
 
 if test "$ready" -ne 0
 then
@@ -1593,26 +1563,24 @@ fi
 
 if test -f $sixdeskwork/taskids
 then
-  cases=`wc -l "$sixdeskwork/taskids"`
-  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+  cases=`wc -l "$sixdeskwork/taskids" | awk '{print ($1)}'`
 fi
 icases=0
 if test -s $sixdeskwork/incomplete_cases
 then
-  icases=`wc -l $sixdeskwork/incomplete_cases`
-  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+  icases=`wc -l $sixdeskwork/incomplete_cases | awk '{print ($1)}'`
 fi
 ccases=0
 if test -s $sixdeskwork/completed_cases
 then
-  ccases=`wc -l $sixdeskwork/completed_cases`
-  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+  ccases=`wc -l $sixdeskwork/completed_cases | awk '{print ($1)}'`
 fi
 
 #MACRO mymess 0 After  this download $cases cases, $ccases complete ($icases incomplete)
 sixdeskmess -1 "After  this download $cases cases, $ccases complete ($icases incomplete)"
 #MACRO mymess
 
+# update the my* DB
 update_cases
 rm -f $tmp
 
