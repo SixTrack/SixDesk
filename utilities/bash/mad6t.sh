@@ -333,7 +333,7 @@ while getopts  ":hiso:cd:" opt ; do
 	    lsub=true
 	    ;;
 	o)
-	    # required submission
+	    # output option
 	    check_output_option
 	    ;;	
 	d)
