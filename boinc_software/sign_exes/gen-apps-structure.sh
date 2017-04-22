@@ -21,7 +21,7 @@ dir_unsigned=/afs/cern.ch/user/k/kyrsjo/public/BOINC-release/execs-v6
 VER=46.14
 VS=4614
 commonFlags="libarchive_bignblz_cr_boinc_api_crlibm_fast_tilt_cmake"
-lcheckOnly=true
+lCheck=true
 projXml=../xml/project.xml
 
 signit()
@@ -34,34 +34,34 @@ signit()
     local __lerr=0
     local __platform=`echo $1 | sed 's#__.*##'`
   
-    if [ ! -e ${dir_unsigned}/${__exe} ] ; then
-	echo "unsigned exe ${dir_unsigned}/${__exe} does not exist!"
-	let __lerr+=1
+    if ${lCheck} ; then
+	if [ ! -e ${dir_unsigned}/${__exe} ] ; then
+	    echo "unsigned exe ${dir_unsigned}/${__exe} does not exist!"
+	    let __lerr+=1
+	fi
+	local __BOINCplatform=`grep '\<name\>' ${projXml} | cut -d\< -f2 | cut -d\> -f2 | grep ${__platform} 2> /dev/null`
+	if [ -z "${__BOINCplatform}" ] ; then
+	    echo "unknonw platform in ${1}"
+	    let __lerr+=1
+	fi
+    else
+	echo "signing exe: ${__dir} ${__exe} ${__app}" >> ${__dir}/README
+	[ ! -d ${__dir} ] || mkdir -p ${__dir}
+	cp -u ${dir_unsigned}/${__exe} ${__dir}/${__app}
+        # actually sign:
+	cd ${__dir}
+	echo "GEN SIGN:"
+	$PROJ/bin/sign_executable ${__app} $PROJ/keys/code_sign_private >${__app}.sig
+	ls
+	pwd
+	cd -
+	echo "_____________________________________________"
+	echo ""
     fi
-    local __BOINCplatform=`grep '\<name\>' ${projXml} | cut -d\< -f2 | cut -d\> -f2 | grep ${__platform} 2> /dev/null`
-    if [ -z "${__BOINCplatform}" ] ; then
-	echo "unknonw platform in ${1}"
-	let __lerr+=1
-    fi
-    if ${lcheckOnly} ; then
-	return ${__lerr}
-    fi
-    echo "signing exe: ${__dir} ${__exe} ${__app}" >> ${__dir}/README
-    [ ! -d ${__dir} ] || mkdir -p ${__dir}
-    cp -u ${dir_unsigned}/${__exe} ${__dir}/${__app}
-    # actually sign:
-    cd ${__dir}
-    echo "GEN SIGN:"
-    $PROJ/bin/sign_executable ${__app} $PROJ/keys/code_sign_private >${__app}.sig
-    ls
-    pwd
-    cd -
-    echo "_____________________________________________"
-    echo ""
     return ${__lerr}
 }
 
-if ! ${lcheckOnly} ; then
+if ! ${lCheck} ; then
     echo "running `basename $0` at `date`" > ${__dir}/README
     echo "unsigned exes from: ${dir_unsigned}" >> ${__dir}/README
     echo "version: ${VER} - ${VS}" >> ${__dir}/README
@@ -99,7 +99,7 @@ signit x86_64-pc-netbsd__avx            SixTrack_${VS}_${commonFlags}_NetBSD_gfo
 
 
 #___________________ finalize ________________
-if ! ${lcheckOnly} ; then
+if ! ${lCheck} ; then
     chown -R lhcathom.boinc $VER
 fi
 
