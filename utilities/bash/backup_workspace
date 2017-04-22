@@ -12,8 +12,7 @@ castorb()
 
 #MACRO mymess 0 Backing up $cin to $cout
   sixdeskmesslevel=0
-  sixdeskmess="Backing up $cin to $cout"
-  sixdeskmess
+  sixdeskmess 1 "Backing up $cin to $cout"
 #MACRO mymess
 
   echo echo "YES" | castor_backup -n $cin $cout >> castor_backup.log 2>&1
@@ -22,8 +21,7 @@ castorb()
 
 #MACRO mymess 0 castor_backup failed!! See castor_backup.log.
     sixdeskmesslevel=0
-    sixdeskmess="castor_backup failed!! See castor_backup.log."
-    sixdeskmess
+    sixdeskmess 1 "castor_backup failed!! See castor_backup.log."
 #MACRO mymess
 
 
@@ -91,8 +89,7 @@ then
 
 #MACRO mymess 0 Starting backup of Workspace: $bname at $myt
   sixdeskmesslevel=0
-  sixdeskmess="Starting backup of Workspace: $bname at $myt"
-  sixdeskmess
+  sixdeskmess 1 "Starting backup of Workspace: $bname at $myt"
 #MACRO mymess
 
 
@@ -129,8 +126,7 @@ then
 
 #MACRO mymess 0 All of sixjobs and the following studies will be backed up
   sixdeskmesslevel=0
-  sixdeskmess="All of sixjobs and the following studies will be backed up"
-  sixdeskmess
+  sixdeskmess 1 "All of sixjobs and the following studies will be backed up"
 #MACRO mymess
 
   myss=""
@@ -141,8 +137,7 @@ then
 
 #MACRO mymess 0 $myss
   sixdeskmesslevel=0
-  sixdeskmess="$myss"
-  sixdeskmess
+  sixdeskmess 1 "$myss"
 #MACRO mymess
 
   # and remove any old castor_backup.log
@@ -154,8 +149,7 @@ else
 
 #MACRO mymess 0 Strange: we have a backup_workspace.list but NO backup_workspace.finished!!!
     sixdeskmesslevel=0
-    sixdeskmess="Strange: we have a backup_workspace.list but NO backup_workspace.finished!!!"
-    sixdeskmess
+    sixdeskmess 1 "Strange: we have a backup_workspace.list but NO backup_workspace.finished!!!"
 #MACRO mymess
 
 
@@ -181,8 +175,7 @@ else
 
 #MACRO mymess 0 Restarting backup of $workspace to $bname at `date +%d%m%y`/`date +%T`
   sixdeskmesslevel=0
-  sixdeskmess="Restarting backup of $workspace to $bname at `date +%d%m%y`/`date +%T`"
-  sixdeskmess
+  sixdeskmess 1 "Restarting backup of $workspace to $bname at `date +%d%m%y`/`date +%T`"
 #MACRO mymess
 
 fi
@@ -197,8 +190,7 @@ do
 
 #MACRO mymess 0 Skipping backup of $nextb as it is already completed
     sixdeskmesslevel=0
-    sixdeskmess="Skipping backup of $nextb as it is already completed"
-    sixdeskmess
+    sixdeskmess 1 "Skipping backup of $nextb as it is already completed"
 #MACRO mymess
 
   else
@@ -212,8 +204,7 @@ do
 
 #MACRO mymess 0 Backing up sixjobs for `basename $sixdeskstudy` at `date +%d%m%y`/`date +%T`
       sixdeskmesslevel=0
-      sixdeskmess="Backing up sixjobs for `basename $sixdeskstudy` at `date +%d%m%y`/`date +%T`"
-      sixdeskmess
+      sixdeskmess 1 "Backing up sixjobs for `basename $sixdeskstudy` at `date +%d%m%y`/`date +%T`"
 #MACRO mymess
 
       cin="sixjobs"
@@ -225,8 +216,7 @@ do
 
 #MACRO mymess 0 Skipping DELETED study $nextb
         sixdeskmesslevel=0
-        sixdeskmess="Skipping DELETED study $nextb"
-        sixdeskmess
+        sixdeskmess 1 "Skipping DELETED study $nextb"
 #MACRO mymess
 
       else
@@ -238,8 +228,7 @@ do
 
 #MACRO mymess 0 Switching to study $nextb
           sixdeskmesslevel=0
-          sixdeskmess="Switching to study $nextb"
-          sixdeskmess
+          sixdeskmess 1 "Switching to study $nextb"
 #MACRO mymess
 
           export cronlogdir=""
@@ -251,8 +240,7 @@ do
 
 #MACRO mymess 0 The sixdeskenv/sysenv files for $nextb are missing!!!
             sixdeskmesslevel=0
-            sixdeskmess="The sixdeskenv/sysenv files for $nextb are missing!!!"
-            sixdeskmess
+            sixdeskmess 1 "The sixdeskenv/sysenv files for $nextb are missing!!!"
 #MACRO mymess
 
 
@@ -283,16 +271,14 @@ do
 
 #MACRO mymess 0 Study mismatch: skipping $nextb/ because LHCDescrip is /$LHCDescrip/!!!
             sixdeskmesslevel=0
-            sixdeskmess="Study mismatch: skipping $nextb/ because LHCDescrip is /$LHCDescrip/!!!"
-            sixdeskmess
+            sixdeskmess 1 "Study mismatch: skipping $nextb/ because LHCDescrip is /$LHCDescrip/!!!"
 #MACRO mymess
   
           else 
 
 #MACRO mymess 0 Locking study $nextb
             sixdeskmesslevel=0
-            sixdeskmess="Locking study $nextb"
-            sixdeskmess
+            sixdeskmess 1 "Locking study $nextb"
 #MACRO mymess
 
 
@@ -306,8 +292,7 @@ do
 
 #MACRO mymess 0 Backing up $nextb at `date +%d%m%y`/`date +%T`
             sixdeskmesslevel=0
-            sixdeskmess="Backing up $nextb at `date +%d%m%y`/`date +%T`"
-            sixdeskmess
+            sixdeskmess 1 "Backing up $nextb at `date +%d%m%y`/`date +%T`"
 #MACRO mymess
 
             # First we do the logs if sixdesklogdir is defined
@@ -320,8 +305,7 @@ do
 
 #MACRO mymess 0 Backing up logs
               sixdeskmesslevel=0
-              sixdeskmess="Backing up logs"
-              sixdeskmess
+              sixdeskmess 1 "Backing up logs"
 #MACRO mymess
 
               cin=$mysixdesklogdir
@@ -331,8 +315,7 @@ do
 
 #MACRO mymess 0 Skipping logs
               sixdeskmesslevel=0
-              sixdeskmess="Skipping logs"
-              sixdeskmess
+              sixdeskmess 1 "Skipping logs"
 #MACRO mymess
 
             fi
@@ -341,8 +324,7 @@ do
 
 #MACRO mymess 0 Backing up cronlogs
               sixdeskmesslevel=0
-              sixdeskmess="Backing up cronlogs"
-              sixdeskmess
+              sixdeskmess 1 "Backing up cronlogs"
 #MACRO mymess
 
               touch $cronlogdir/cron_results.log               
@@ -353,8 +335,7 @@ do
 
 #MACRO mymess 0 Skipping cronlogs
               sixdeskmesslevel=0
-              sixdeskmess="Skipping cronlogs"
-              sixdeskmess
+              sixdeskmess 1 "Skipping cronlogs"
 #MACRO mymess
 
             fi
@@ -364,8 +345,7 @@ do
 
 #MACRO mymess 0 Backing up track
               sixdeskmesslevel=0
-              sixdeskmess="Backing up track"
-              sixdeskmess
+              sixdeskmess 1 "Backing up track"
 #MACRO mymess
 
               cin=$sixdesktrack/$LHCDescrip
@@ -375,8 +355,7 @@ do
 
 #MACRO mymess 0 Skipping track $sixdesktrack
               sixdeskmesslevel=0
-              sixdeskmess="Skipping track $sixdesktrack"
-              sixdeskmess
+              sixdeskmess 1 "Skipping track $sixdesktrack"
 #MACRO mymess
 
             fi
@@ -385,8 +364,7 @@ do
 
 #MACRO mymess 0 backing up sixtrack_input
               sixdeskmesslevel=0
-              sixdeskmess="backing up sixtrack_input"
-              sixdeskmess
+              sixdeskmess 1 "backing up sixtrack_input"
 #MACRO mymess
 
               cin=$sixtrack_input
@@ -396,8 +374,7 @@ do
 
 #MACRO mymess 0 Skipping sixtrack_input $sixdesk_input
               sixdeskmesslevel=0
-              sixdeskmess="Skipping sixtrack_input $sixdesk_input"
-              sixdeskmess
+              sixdeskmess 1 "Skipping sixtrack_input $sixdesk_input"
 #MACRO mymess
 
             fi
@@ -406,8 +383,7 @@ do
 
 #MACRO mymess 0 Backing up work
               sixdeskmesslevel=0
-              sixdeskmess="Backing up work"
-              sixdeskmess
+              sixdeskmess 1 "Backing up work"
 #MACRO mymess
 
               cin=$sixdeskwork
@@ -417,8 +393,7 @@ do
 
 #MACRO mymess 0 Skipping work $sixdeskwork
               sixdeskmesslevel=0
-              sixdeskmess="Skipping work $sixdeskwork"
-              sixdeskmess
+              sixdeskmess 1 "Skipping work $sixdeskwork"
 #MACRO mymess
 
             fi
@@ -435,8 +410,7 @@ do
 
 #MACRO mymess 0 $nextb finished `date +%d%m%y` `date +%T`
       sixdeskmesslevel=0
-      sixdeskmess="$nextb finished `date +%d%m%y` `date +%T`"
-      sixdeskmess
+      sixdeskmess 1 "$nextb finished `date +%d%m%y` `date +%T`"
 #MACRO mymess
 
     fi
@@ -449,8 +423,7 @@ rm backup_workspace.list
 
 #MACRO mymess 0 Backup of $workspace to $bname finished
 sixdeskmesslevel=0
-sixdeskmess="Backup of $workspace to $bname finished"
-sixdeskmess
+sixdeskmess 1 "Backup of $workspace to $bname finished"
 #MACRO mymess
 
 

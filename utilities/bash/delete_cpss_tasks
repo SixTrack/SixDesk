@@ -47,8 +47,7 @@ do
 
 #MACRO mymess 2 Deleting task $ntaskid in $mytgid from the server
   sixdeskmesslevel=2
-  sixdeskmess="Deleting task $ntaskid in $mytgid from the server"
-  sixdeskmess
+  sixdeskmess -1 "Deleting task $ntaskid in $mytgid from the server"
 #MACRO mymess
 
   perl ${SCRIPTDIR}/perl/deleteTask.pl $ntaskid $mytgid > $tmp 2>&1
@@ -58,8 +57,7 @@ do
 
 #MACRO mymess 0 deleteTask failed!!! `cat $tmp`
     sixdeskmesslevel=0
-    sixdeskmess="deleteTask failed!!! `cat $tmp`"
-    sixdeskmess
+    sixdeskmess -1 "deleteTask failed!!! `cat $tmp`"
 #MACRO mymess
 
   fi

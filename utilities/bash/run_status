@@ -26,8 +26,7 @@ source ${SCRIPTDIR}/bash/dot_env
 
 #MACRO mymess 0 Checking Study $LHCDescrip
 sixdeskmesslevel=0
-sixdeskmess="Checking Study $LHCDescrip"
-sixdeskmess
+sixdeskmess -1 "Checking Study $LHCDescrip"
 #MACRO mymess
 
 # DON'T LOCK unless we are modifying.....
@@ -65,8 +64,7 @@ fi
 
 #MACRO mymess 0 Found $cases cases, $ccases complete ($icases incomplete)
 sixdeskmesslevel=0
-sixdeskmess="Found $cases cases, $ccases complete ($icases incomplete)"
-sixdeskmess
+sixdeskmess -1 "Found $cases cases, $ccases complete ($icases incomplete)"
 #MACRO mymess
 
 
@@ -79,8 +77,7 @@ then
 
 #MACRO mymess 1 No lsf batch jobs submitted yet
       sixdeskmesslevel=1
-      sixdeskmess="No lsf batch jobs submitted yet"
-      sixdeskmess
+      sixdeskmess -1 "No lsf batch jobs submitted yet"
 #MACRO mymess
 
     else
@@ -118,8 +115,7 @@ then
 
 #MACRO mymess 0 Found $lsfjobs jobs $ijobs incomplete
       sixdeskmesslevel=0
-      sixdeskmess="Found $lsfjobs jobs $ijobs incomplete"
-      sixdeskmess
+      sixdeskmess -1 "Found $lsfjobs jobs $ijobs incomplete"
 #MACRO mymess
 
       if test "$lsfjobs" -ne 0 -a "$ijobs" -ne 0 
@@ -147,8 +143,7 @@ then
 
 #MACRO mymess 0 Found $JOBSW JOB_NOT_YET_STARTED
         sixdeskmesslevel=0
-        sixdeskmess="Found $JOBSW JOB_NOT_YET_STARTED"
-        sixdeskmess
+        sixdeskmess -1 "Found $JOBSW JOB_NOT_YET_STARTED"
 #MACRO mymess
 
         rm -f $tmp
@@ -159,8 +154,7 @@ then
 
 #MACRO mymess 0 Found $JOBSI JOB_NOT_YET_COMPLETED
         sixdeskmesslevel=0
-        sixdeskmess="Found $JOBSI JOB_NOT_YET_COMPLETED"
-        sixdeskmess
+        sixdeskmess -1 "Found $JOBSI JOB_NOT_YET_COMPLETED"
 #MACRO mymess
 
         rm -f $tmp
@@ -171,8 +165,7 @@ then
 
 #MACRO mymess 0 Error return from bjobs!!!
            sixdeskmesslevel=0
-           sixdeskmess="Error return from bjobs!!!"
-           sixdeskmess
+           sixdeskmess -1 "Error return from bjobs!!!"
 #MACRO mymess
 
 
@@ -195,8 +188,7 @@ then
 
 #MACRO mymess 0 End of File error on LSF bjobs query: please try later !!!
           sixdeskmesslevel=0
-          sixdeskmess="End of File error on LSF bjobs query: please try later !!!"
-          sixdeskmess
+          sixdeskmess -1 "End of File error on LSF bjobs query: please try later !!!"
 #MACRO mymess
 
 
@@ -236,8 +228,7 @@ then
 
 #MACRO mymess 0 LSF bjobs found $nlsfjobs batch jobs (running, pending, or suspended)
         sixdeskmesslevel=0
-        sixdeskmess="LSF bjobs found $nlsfjobs batch jobs (running, pending, or suspended)"
-        sixdeskmess
+        sixdeskmess -1 "LSF bjobs found $nlsfjobs batch jobs (running, pending, or suspended)"
 #MACRO mymess
 
 # new test for Massimo
@@ -247,15 +238,13 @@ then
 
 #MACRO mymess 0 There appear to be some UNKNOWN or ZOMBIE LSF jobs.
           sixdeskmesslevel=0
-          sixdeskmess="There appear to be some UNKNOWN or ZOMBIE LSF jobs."
-          sixdeskmess
+          sixdeskmess -1 "There appear to be some UNKNOWN or ZOMBIE LSF jobs."
 #MACRO mymess
 
 
 #MACRO mymess 0 You may want to kill them (list appended).
           sixdeskmesslevel=0
-          sixdeskmess="You may want to kill them (list appended)."
-          sixdeskmess
+          sixdeskmess -1 "You may want to kill them (list appended)."
 #MACRO mymess
 
           while read aline
@@ -263,8 +252,7 @@ then
 
 #MACRO mymess 0 $aline
             sixdeskmesslevel=0
-            sixdeskmess="$aline"
-            sixdeskmess
+            sixdeskmess -1 "$aline"
 #MACRO mymess
 
           done < $tmp
@@ -287,8 +275,7 @@ then
 
 #MACRO mymess 0 The job $taskid / $Runnam can NOT be found in $sixdeskjobs/jobs!!!
             sixdeskmesslevel=0
-            sixdeskmess="The job $taskid / $Runnam can NOT be found in $sixdeskjobs/jobs!!!"
-            sixdeskmess
+            sixdeskmess -1 "The job $taskid / $Runnam can NOT be found in $sixdeskjobs/jobs!!!"
 #MACRO mymess
 
           else
@@ -305,8 +292,7 @@ then
 
 #MACRO mymess 0 Found $ncjobs jobs apparently completed
         sixdeskmesslevel=0
-        sixdeskmess="Found $ncjobs jobs apparently completed"
-        sixdeskmess
+        sixdeskmess -1 "Found $ncjobs jobs apparently completed"
 #MACRO mymess
 
         rm -f blsfjobs
@@ -337,8 +323,7 @@ then
 
 #MACRO mymess 0 $Runnam fort.18.gz is MISSING in $Rundir !!!
               sixdeskmesslevel=0
-              sixdeskmess="$Runnam fort.18.gz is MISSING in $Rundir !!!"
-              sixdeskmess
+              sixdeskmess -1 "$Runnam fort.18.gz is MISSING in $Rundir !!!"
 #MACRO mymess
 
               missing="1"
@@ -351,8 +336,7 @@ then
 
 #MACRO mymess 0 $Runnam fort.10.gz is MISSING for $Runnam !!!
                 sixdeskmesslevel=0
-                sixdeskmess="$Runnam fort.10.gz is MISSING for $Runnam !!!"
-                sixdeskmess
+                sixdeskmess -1 "$Runnam fort.10.gz is MISSING for $Runnam !!!"
 #MACRO mymess
 
                   missing="1"
@@ -363,8 +347,7 @@ then
 
 #MACRO mymess 0 $Runnam beambeam-output.dat.gz is MISSING for $Runnam !!!
                 sixdeskmesslevel=0
-                sixdeskmess="$Runnam beambeam-output.dat.gz is MISSING for $Runnam !!!"
-                sixdeskmess
+                sixdeskmess -1 "$Runnam beambeam-output.dat.gz is MISSING for $Runnam !!!"
 #MACRO mymess
 
                 missing="1"
@@ -380,8 +363,7 @@ then
 
 #MACRO mymess 0 Job $Runnam appears to be missing!!!
               sixdeskmesslevel=0
-              sixdeskmess="Job $Runnam appears to be missing!!!"
-              sixdeskmess
+              sixdeskmess -1 "Job $Runnam appears to be missing!!!"
 #MACRO mymess
 
             fi
@@ -461,8 +443,7 @@ then
 
 #MACRO mymess 0 Checking TaskGroup $mysixdesktgid, Study $LHCDescrip
     sixdeskmesslevel=0
-    sixdeskmess="Checking TaskGroup $mysixdesktgid, Study $LHCDescrip"
-    sixdeskmess
+    sixdeskmess -1 "Checking TaskGroup $mysixdesktgid, Study $LHCDescrip"
 #MACRO mymess
 
 
@@ -488,8 +469,7 @@ then
 
 #MACRO mymess 0 Problem with querying results!!! `cat $tmp`
       sixdeskmesslevel=0
-      sixdeskmess="Problem with querying results!!! `cat $tmp`"
-      sixdeskmess
+      sixdeskmess -1 "Problem with querying results!!! `cat $tmp`"
 #MACRO mymess
 
       rm $tmp
@@ -508,8 +488,7 @@ then
 
 #MACRO mymess 0 For $tot Tasks in CPSS, $ready Results are available
     sixdeskmesslevel=0
-    sixdeskmess="For $tot Tasks in CPSS, $ready Results are available"
-    sixdeskmess
+    sixdeskmess -1 "For $tot Tasks in CPSS, $ready Results are available"
 #MACRO mymess
 
     if test "$ready" -ne 0
@@ -525,8 +504,7 @@ then
 
 #MACRO mymess 1 No CPSS TaskGroup or no tasks submitted
       sixdeskmesslevel=1
-      sixdeskmess="No CPSS TaskGroup or no tasks submitted"
-      sixdeskmess
+      sixdeskmess -1 "No CPSS TaskGroup or no tasks submitted"
 #MACRO mymess
 
     fi
@@ -553,7 +531,7 @@ then
 
 #MACRO mymess 2 For BOINC $ready Results are available
 #     sixdeskmesslevel=2
-#     sixdeskmess="For BOINC $ready Results are available"
+#     sixdeskmess -1 "For BOINC $ready Results are available"
 #     sixdeskmess
 #MACRO mymess
 
@@ -568,8 +546,7 @@ then
 
 #MACRO mymess 0 For BOINC $ready Results are available
       sixdeskmesslevel=0
-      sixdeskmess="For BOINC $ready Results are available"
-      sixdeskmess
+      sixdeskmess -1 "For BOINC $ready Results are available"
 #MACRO mymess
 
       ls -l $sixdeskstudy/LSF > /dev/null 2>&1
@@ -579,8 +556,7 @@ then
 
 #MACRO mymess 0 There are $mylsfjobs LSF jobs running to complete this study
         sixdeskmesslevel=0
-        sixdeskmess="There are $mylsfjobs LSF jobs running to complete this study"
-        sixdeskmess
+        sixdeskmess -1 "There are $mylsfjobs LSF jobs running to complete this study"
 #MACRO mymess
 
       fi
@@ -591,8 +567,7 @@ then
 
 #MACRO mymess 0 GRID not implemented yet!!!
     sixdeskmesslevel=0
-    sixdeskmess="GRID not implemented yet!!!"
-    sixdeskmess
+    sixdeskmess -1 "GRID not implemented yet!!!"
 #MACRO mymess
 
   fi
@@ -642,8 +617,7 @@ then
 
 #MACRO mymess 0 For $myplatform found $lsfjobs $myname, $ijobs incomplete, $cjobs completed, $mjobs missing
       sixdeskmesslevel=0
-      sixdeskmess="For $myplatform found $lsfjobs $myname, $ijobs incomplete, $cjobs completed, $mjobs missing"
-      sixdeskmess
+      sixdeskmess -1 "For $myplatform found $lsfjobs $myname, $ijobs incomplete, $cjobs completed, $mjobs missing"
 #MACRO mymess
 
     fi
@@ -668,8 +642,7 @@ then
 
 #MACRO mymess 0 Found $cases cases, $ccases complete ($icases incomplete)
   sixdeskmesslevel=0
-  sixdeskmess="Found $cases cases, $ccases complete ($icases incomplete)"
-  sixdeskmess
+  sixdeskmess -1 "Found $cases cases, $ccases complete ($icases incomplete)"
 #MACRO mymess
 
   echo ""
@@ -696,8 +669,7 @@ then
 
 #MACRO mymess 1 Backup status $cases cases, $ccases complete ($icases incomplete)
   sixdeskmesslevel=1
-  sixdeskmess="Backup status $cases cases, $ccases complete ($icases incomplete)"
-  sixdeskmess
+  sixdeskmess -1 "Backup status $cases cases, $ccases complete ($icases incomplete)"
 #MACRO mymess
 
 
@@ -738,8 +710,7 @@ else
 
 #MACRO mymess 0 Strange the directory $where for job $taskid does NOT exist!!! We shall ignore this for the moment
       sixdeskmesslevel=0
-      sixdeskmess="Strange the directory $where for job $taskid does NOT exist!!! We shall ignore this for the moment"
-      sixdeskmess
+      sixdeskmess -1 "Strange the directory $where for job $taskid does NOT exist!!! We shall ignore this for the moment"
 #MACRO mymess
 
     else
