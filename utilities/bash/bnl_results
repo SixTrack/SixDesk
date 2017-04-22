@@ -43,22 +43,19 @@ update_cases()
 
 #MACRO mymess 2 Due to an AFS/Linux bug we maintain another database
   sixdeskmesslevel=2
-  sixdeskmess="Due to an AFS/Linux bug we maintain another database"
-  sixdeskmess
+  sixdeskmess -1 "Due to an AFS/Linux bug we maintain another database"
 #MACRO mymess
 
 
 #MACRO mymess 2 with the files myincomplete_cases and mycompleted_cases
   sixdeskmesslevel=2
-  sixdeskmess="with the files myincomplete_cases and mycompleted_cases"
-  sixdeskmess
+  sixdeskmess -1 "with the files myincomplete_cases and mycompleted_cases"
 #MACRO mymess
 
 
 #MACRO mymess 2 to help find the problem
   sixdeskmesslevel=2
-  sixdeskmess="to help find the problem"
-  sixdeskmess
+  sixdeskmess -1 "to help find the problem"
 #MACRO mymess
 
   icases=0
@@ -76,8 +73,7 @@ update_cases()
 
 #MACRO mymess 1 Before/after this download $cases mycases, $ccases complete ($icases incomplete)
   sixdeskmesslevel=1
-  sixdeskmess="Before/after this download $cases mycases, $ccases complete ($icases incomplete)"
-  sixdeskmess
+  sixdeskmess -1 "Before/after this download $cases mycases, $ccases complete ($icases incomplete)"
 #MACRO mymess
 
 }
@@ -122,8 +118,7 @@ then
 
 #MACRO mymess 0 The BNL flag must be set in sixdeskenv!
   sixdeskmesslevel=0
-  sixdeskmess="The BNL flag must be set in sixdeskenv!"
-  sixdeskmess
+  sixdeskmess -1 "The BNL flag must be set in sixdeskenv!"
 #MACRO mymess
 
 
@@ -142,15 +137,13 @@ sixdesklock
 
 #MACRO mymess 0 Starting in Workspace $workspace, Study `basename $sixdeskstudy`, Platform $sixdeskplatform
 sixdeskmesslevel=0
-sixdeskmess="Starting in Workspace $workspace, Study `basename $sixdeskstudy`, Platform $sixdeskplatform"
-sixdeskmess
+sixdeskmess -1 "Starting in Workspace $workspace, Study `basename $sixdeskstudy`, Platform $sixdeskplatform"
 #MACRO mymess
 
 
 #MACRO mymess 0 Using sixdesk.log in $sixdesklogdir
 sixdeskmesslevel=0
-sixdeskmess="Using sixdesk.log in $sixdesklogdir"
-sixdeskmess
+sixdeskmess -1 "Using sixdesk.log in $sixdesklogdir"
 #MACRO mymess
 
 
@@ -222,8 +215,7 @@ fi
 
 #MACRO mymess 0 Running on `hostname`
 sixdeskmesslevel=0
-sixdeskmess="Running on `hostname`"
-sixdeskmess
+sixdeskmess -1 "Running on `hostname`"
 #MACRO mymess
 
 IDS=$sixdeskwork
@@ -253,8 +245,7 @@ then
 
 #MACRO mymess 0 No TaskGroup exists for CPSS.
     sixdeskmesslevel=0
-    sixdeskmess="No TaskGroup exists for CPSS."
-    sixdeskmess
+    sixdeskmess -1 "No TaskGroup exists for CPSS."
 #MACRO mymess
 
 
@@ -275,8 +266,7 @@ then
 
 #MACRO mymess 2 Checking TaskGroup $mytgid for $LHCDescrip
   sixdeskmesslevel=2
-  sixdeskmess="Checking TaskGroup $mytgid for $LHCDescrip"
-  sixdeskmess
+  sixdeskmess -1 "Checking TaskGroup $mytgid for $LHCDescrip"
 #MACRO mymess
 
   perl ${SCRIPTDIR}/perl/queryReadyResults.pl $mytgid > $tmp
@@ -286,8 +276,7 @@ then
 
 #MACRO mymess 0 Problem with query ReadyResults Status $stat `cat $tmp`
     sixdeskmesslevel=0
-    sixdeskmess="Problem with query ReadyResults Status $stat `cat $tmp`"
-    sixdeskmess
+    sixdeskmess -1 "Problem with query ReadyResults Status $stat `cat $tmp`"
 #MACRO mymess
 
     rm $tmp
@@ -321,8 +310,7 @@ then
 
 #MACRO mymess 1 Out of $tot Tasks $ready Results are available
   sixdeskmesslevel=1
-  sixdeskmess="Out of $tot Tasks $ready Results are available"
-  sixdeskmess
+  sixdeskmess -1 "Out of $tot Tasks $ready Results are available"
 #MACRO mymess
 
   cat $sixdeskresults
@@ -357,8 +345,7 @@ then
 
 #MACRO mymess 0 The workspace/LHCDescrip $sixdeskboincdirname are already in use by $sixdeskowner!!!
       sixdeskmesslevel=0
-      sixdeskmess="The workspace/LHCDescrip $sixdeskboincdirname are already in use by $sixdeskowner!!!"
-      sixdeskmess
+      sixdeskmess -1 "The workspace/LHCDescrip $sixdeskboincdirname are already in use by $sixdeskowner!!!"
 #MACRO mymess
 
       rm -f $tmp
@@ -405,8 +392,7 @@ then
 
 #MACRO mymess 1 $ready Results are available
   sixdeskmesslevel=1
-  sixdeskmess="$ready Results are available"
-  sixdeskmess
+  sixdeskmess -1 "$ready Results are available"
 #MACRO mymess
 
   cat $sixdeskresults
@@ -457,8 +443,7 @@ do
 
 #MACRO mymess 2 Now treating TaskID $taskid
   sixdeskmesslevel=2
-  sixdeskmess="Now treating TaskID $taskid"
-  sixdeskmess
+  sixdeskmess -1 "Now treating TaskID $taskid"
 #MACRO mymess
 
   Runnam=""
@@ -478,8 +463,7 @@ do
 
 #MACRO mymess 0 Looking for duplicates TaskId $taskid
         sixdeskmesslevel=0
-        sixdeskmess="Looking for duplicates TaskId $taskid"
-        sixdeskmess
+        sixdeskmess -1 "Looking for duplicates TaskId $taskid"
 #MACRO mymess
 
 
@@ -498,8 +482,7 @@ do
 
 #MACRO mymess 0 FOUND duplicate TaskId  $taskid Times $mytimes
           sixdeskmesslevel=0
-          sixdeskmess="FOUND duplicate TaskId  $taskid Times $mytimes"
-          sixdeskmess
+          sixdeskmess -1 "FOUND duplicate TaskId  $taskid Times $mytimes"
 #MACRO mymess
 
           while read myline
@@ -512,8 +495,7 @@ do
 
 #MACRO mymess 0 Found the duplicated entry $taskid $aRunnam
               sixdeskmesslevel=0
-              sixdeskmess="Found the duplicated entry $taskid $aRunnam"
-              sixdeskmess
+              sixdeskmess -1 "Found the duplicated entry $taskid $aRunnam"
 #MACRO mymess
 
               entry=$myline
@@ -521,8 +503,7 @@ do
 
 #MACRO mymess 0 Using $Runnam for $taskid
               sixdeskmesslevel=0
-              sixdeskmess="Using $Runnam for $taskid"
-              sixdeskmess
+              sixdeskmess -1 "Using $Runnam for $taskid"
 #MACRO mymess
 
               break
@@ -533,15 +514,13 @@ do
 
 #MACRO mymess 0 A very serious problem in matching TaskID/Runnam!!!
           sixdeskmesslevel=0
-          sixdeskmess="A very serious problem in matching TaskID/Runnam!!!"
-          sixdeskmess
+          sixdeskmess -1 "A very serious problem in matching TaskID/Runnam!!!"
 #MACRO mymess
 
 
 #MACRO mymess 0 Could not resolve TaskId $taskid
           sixdeskmesslevel=0
-          sixdeskmess="Could not resolve TaskId $taskid"
-          sixdeskmess
+          sixdeskmess -1 "Could not resolve TaskId $taskid"
 #MACRO mymess
 
         fi
@@ -564,8 +543,7 @@ do
 
 #MACRO mymess 1 Task $taskid for job $Runnam found in $Rundir
     sixdeskmesslevel=1
-    sixdeskmess="Task $taskid for job $Runnam found in $Rundir"
-    sixdeskmess
+    sixdeskmess -1 "Task $taskid for job $Runnam found in $Rundir"
 #MACRO mymess
 
   fi
@@ -574,8 +552,7 @@ do
 
 #MACRO mymess 0 Task $taskid can NOT be found in $sixdeskwork/taskids !!! Deleting result from the server
     sixdeskmesslevel=0
-    sixdeskmess="Task $taskid can NOT be found in $sixdeskwork/taskids !!! Deleting result from the server"
-    sixdeskmess
+    sixdeskmess -1 "Task $taskid can NOT be found in $sixdeskwork/taskids !!! Deleting result from the server"
 #MACRO mymess
 
     delete="true"
@@ -588,8 +565,7 @@ do
 
 #MACRO mymess 0 Strange the directory $where for task $taskid does NOT exist!!! We shall ignore this result for the moment
       sixdeskmesslevel=0
-      sixdeskmess="Strange the directory $where for task $taskid does NOT exist!!! We shall ignore this result for the moment"
-      sixdeskmess
+      sixdeskmess -1 "Strange the directory $where for task $taskid does NOT exist!!! We shall ignore this result for the moment"
 #MACRO mymess
 
       delete="true"
@@ -611,8 +587,7 @@ do
 
 #MACRO mymess 0 CANNOT FIND the result file!!!
           sixdeskmesslevel=0
-          sixdeskmess="CANNOT FIND the result file!!!"
-          sixdeskmess
+          sixdeskmess -1 "CANNOT FIND the result file!!!"
 #MACRO mymess
 
           anerror="true"
@@ -651,8 +626,7 @@ do
 
 #MACRO mymess 2 `cat headmess`
           sixdeskmesslevel=2
-          sixdeskmess="`cat headmess`"
-          sixdeskmess
+          sixdeskmess -1 "`cat headmess`"
 #MACRO mymess
 
           rm headmess
@@ -661,8 +635,7 @@ do
 
 #MACRO mymess 0 Cannot find Runnam $Runnam in title.dat !!!; wrong results???
             sixdeskmesslevel=0
-            sixdeskmess="Cannot find Runnam $Runnam in title.dat !!!; wrong results???"
-            sixdeskmess
+            sixdeskmess -1 "Cannot find Runnam $Runnam in title.dat !!!; wrong results???"
 #MACRO mymess
 
             delete="true"
@@ -678,8 +651,7 @@ do
 
 #MACRO mymess 0 ${bfiles[$i]} appears to be MISSING!!!
                 sixdeskmesslevel=0
-                sixdeskmess="${bfiles[$i]} appears to be MISSING!!!"
-                sixdeskmess
+                sixdeskmess -1 "${bfiles[$i]} appears to be MISSING!!!"
 #MACRO mymess
 
                 anerror="true"
@@ -703,8 +675,7 @@ do
 
 #MACRO mymess 0 Checking Duplicates $Runnam
               sixdeskmesslevel=0
-              sixdeskmess="Checking Duplicates $Runnam"
-              sixdeskmess
+              sixdeskmess -1 "Checking Duplicates $Runnam"
 #MACRO mymess
 
               duplicate="true"
@@ -719,8 +690,7 @@ do
 
 #MACRO mymess 0 BNL DIFF ${bfiles[$i]} $where!!!
                     sixdeskmesslevel=0
-                    sixdeskmess="BNL DIFF ${bfiles[$i]} $where!!!"
-                    sixdeskmess
+                    sixdeskmess -1 "BNL DIFF ${bfiles[$i]} $where!!!"
 #MACRO mymess
 
                     anerror="true"
@@ -735,8 +705,7 @@ do
 
 #MACRO mymess 0 ${bfiles[$i]}.gz is NOT duplicated!
                   sixdeskmesslevel=0
-                  sixdeskmess="${bfiles[$i]}.gz is NOT duplicated!"
-                  sixdeskmess
+                  sixdeskmess -1 "${bfiles[$i]}.gz is NOT duplicated!"
 #MACRO mymess
 
                 fi
@@ -745,8 +714,7 @@ do
 
 #MACRO mymess 0 No duplication of beambeam-output.dat
               sixdeskmesslevel=0
-              sixdeskmess="No duplication of beambeam-output.dat"
-              sixdeskmess
+              sixdeskmess -1 "No duplication of beambeam-output.dat"
 #MACRO mymess
 
             fi
@@ -755,8 +723,7 @@ do
 
 #MACRO mymess 0 Seem to have duplicated result $Runnam
               sixdeskmesslevel=0
-              sixdeskmess="Seem to have duplicated result $Runnam"
-              sixdeskmess
+              sixdeskmess -1 "Seem to have duplicated result $Runnam"
 #MACRO mymess
  
             fi
@@ -786,8 +753,7 @@ do
 
 #MACRO mymess 0 Download of task $taskid FAILED!!! Status $stat Message `cat down` or empty tar file
           sixdeskmesslevel=0
-          sixdeskmess="Download of task $taskid FAILED!!! Status $stat Message `cat down` or empty tar file"
-          sixdeskmess
+          sixdeskmess -1 "Download of task $taskid FAILED!!! Status $stat Message `cat down` or empty tar file"
 #MACRO mymess
 
           rm down
@@ -806,13 +772,11 @@ do
           if test $stat -ne 0
           then
             sixdeskmesslevel=1
-            sixdeskmess="`ls -l sixres.tar.gz`"
-            sixdeskmess
+            sixdeskmess -1 "`ls -l sixres.tar.gz`"
 
 #MACRO mymess 1 gunzip failed!!! `cat mess`
             sixdeskmesslevel=1
-            sixdeskmess="gunzip failed!!! `cat mess`"
-            sixdeskmess
+            sixdeskmess -1 "gunzip failed!!! `cat mess`"
 #MACRO mymess
 
             # now just delete it but log for future reference
@@ -829,22 +793,19 @@ do
 
 #MACRO mymess 0 Untar of sixres.tar failed!!!
               sixdeskmesslevel=0
-              sixdeskmess="Untar of sixres.tar failed!!!"
-              sixdeskmess
+              sixdeskmess -1 "Untar of sixres.tar failed!!!"
 #MACRO mymess
 
 
 #MACRO mymess 0 `ls -l sixres.tar`
               sixdeskmesslevel=0
-              sixdeskmess="`ls -l sixres.tar`"
-              sixdeskmess
+              sixdeskmess -1 "`ls -l sixres.tar`"
 #MACRO mymess
 
 
 #MACRO mymess 0 `cat $where/mess`
               sixdeskmesslevel=0
-              sixdeskmess="`cat $where/mess`"
-              sixdeskmess
+              sixdeskmess -1 "`cat $where/mess`"
 #MACRO mymess
 
               rm mess
@@ -859,22 +820,19 @@ do
 
 #MACRO mymess 0 Sixtrack untar has not produced a sixtrack directory!!!
               sixdeskmesslevel=0
-              sixdeskmess="Sixtrack untar has not produced a sixtrack directory!!!"
-              sixdeskmess
+              sixdeskmess -1 "Sixtrack untar has not produced a sixtrack directory!!!"
 #MACRO mymess
 
 
 #MACRO mymess 0 `ls -l sixres.tar`
               sixdeskmesslevel=0
-              sixdeskmess="`ls -l sixres.tar`"
-              sixdeskmess
+              sixdeskmess -1 "`ls -l sixres.tar`"
 #MACRO mymess
 
 
 #MACRO mymess 0 `cat mess`
               sixdeskmesslevel=0
-              sixdeskmess="`cat mess`"
-              sixdeskmess
+              sixdeskmess -1 "`cat mess`"
 #MACRO mymess
  
               rm mess
@@ -918,8 +876,7 @@ do
 
 #MACRO mymess 1 `cat headmess`
               sixdeskmesslevel=1
-              sixdeskmess="`cat headmess`"
-              sixdeskmess
+              sixdeskmess -1 "`cat headmess`"
 #MACRO mymess
 
               rm headmess
@@ -928,8 +885,7 @@ do
 
 #MACRO mymess 0 Cannot find Runnam $Runnam in fort.6 !!!; wrong results???
                 sixdeskmesslevel=0
-                sixdeskmess="Cannot find Runnam $Runnam in fort.6 !!!; wrong results???"
-                sixdeskmess
+                sixdeskmess -1 "Cannot find Runnam $Runnam in fort.6 !!!; wrong results???"
 #MACRO mymess
 
                 delete="true"
@@ -945,8 +901,7 @@ do
 
 #MACRO mymess 0 ${bforts[$i]} appears to be MISSING!!!
                     sixdeskmesslevel=0
-                    sixdeskmess="${bforts[$i]} appears to be MISSING!!!"
-                    sixdeskmess
+                    sixdeskmess -1 "${bforts[$i]} appears to be MISSING!!!"
 #MACRO mymess
 
                     anerror="true"
@@ -970,8 +925,7 @@ do
 
 #MACRO mymess 0 Checking Duplicates $Runnam
                   sixdeskmesslevel=0
-                  sixdeskmess="Checking Duplicates $Runnam"
-                  sixdeskmess
+                  sixdeskmess -1 "Checking Duplicates $Runnam"
 #MACRO mymess
 
                   duplicate="true"
@@ -986,8 +940,7 @@ do
 
 #MACRO mymess 0 BNL DIFF ${bfiles[$i]} $where!!!
                         sixdeskmesslevel=0
-                        sixdeskmess="BNL DIFF ${bfiles[$i]} $where!!!"
-                        sixdeskmess
+                        sixdeskmess -1 "BNL DIFF ${bfiles[$i]} $where!!!"
 #MACRO mymess
 
                         anerror="true"
@@ -1003,8 +956,7 @@ do
 
 #MACRO mymess 0 ${bfiles[$i]}.gz is NOT duplicated!
                       sixdeskmesslevel=0
-                      sixdeskmess="${bfiles[$i]}.gz is NOT duplicated!"
-                      sixdeskmess
+                      sixdeskmess -1 "${bfiles[$i]}.gz is NOT duplicated!"
 #MACRO mymess
 
                     fi
@@ -1013,8 +965,7 @@ do
 
 #MACRO mymess 0 No duplication of beambeam-output.dat
                   sixdeskmesslevel=0
-                  sixdeskmess="No duplication of beambeam-output.dat"
-                  sixdeskmess
+                  sixdeskmess -1 "No duplication of beambeam-output.dat"
 #MACRO mymess
 
                 fi
@@ -1023,8 +974,7 @@ do
 
 #MACRO mymess 0 Seem to have duplicated result $Runnam
                   sixdeskmesslevel=0
-                  sixdeskmess="Seem to have duplicated result $Runnam"
-                  sixdeskmess
+                  sixdeskmess -1 "Seem to have duplicated result $Runnam"
 #MACRO mymess
  
                 fi
@@ -1056,8 +1006,7 @@ do
 
 #MACRO mymess 1 CASTOR of $Runnam.tar to $CASTOR
                   sixdeskmesslevel=1
-                  sixdeskmess="CASTOR of $Runnam.tar to $CASTOR"
-                  sixdeskmess
+                  sixdeskmess -1 "CASTOR of $Runnam.tar to $CASTOR"
 #MACRO mymess
 
                   nsrm -rf $CASTOR > /dev/null 2>&1
@@ -1079,15 +1028,13 @@ do
 
 #MACRO mymess 0 Tar $Runnam.tar $where/.*.gz failed!!!
                     sixdeskmesslevel=0
-                    sixdeskmess="Tar $Runnam.tar $where/.*.gz failed!!!"
-                    sixdeskmess
+                    sixdeskmess -1 "Tar $Runnam.tar $where/.*.gz failed!!!"
 #MACRO mymess
 
 
 #MACRO mymess 0 `cat $tmp`
                     sixdeskmesslevel=0
-                    sixdeskmess="`cat $tmp`"
-                    sixdeskmess
+                    sixdeskmess -1 "`cat $tmp`"
 #MACRO mymess
 
                     rm $tmp
@@ -1102,15 +1049,13 @@ do
 
 #MACRO mymess 0 Copy to CASTOR failed!!! rfcp $where/sixtrack/$Runnam.tar $CASTOR
                       sixdeskmesslevel=0
-                      sixdeskmess="Copy to CASTOR failed!!! rfcp $where/sixtrack/$Runnam.tar $CASTOR"
-                      sixdeskmess
+                      sixdeskmess -1 "Copy to CASTOR failed!!! rfcp $where/sixtrack/$Runnam.tar $CASTOR"
 #MACRO mymess
 
 
 #MACRO mymess 0 `cat $tmp`
                       sixdeskmesslevel=0
-                      sixdeskmess="`cat $tmp`"
-                      sixdeskmess
+                      sixdeskmess -1 "`cat $tmp`"
 #MACRO mymess
 
                       rm $tmp
@@ -1148,8 +1093,7 @@ do
 
 #MACRO mymess 0 BNL download complete, updating completed jobs etc
     sixdeskmesslevel=0
-    sixdeskmess="BNL download complete, updating completed jobs etc"
-    sixdeskmess
+    sixdeskmess -1 "BNL download complete, updating completed jobs etc"
 #MACRO mymess
 
 
@@ -1179,22 +1123,19 @@ do
 
 #MACRO mymess 0 AFS problem with incomplete_cases
       sixdeskmesslevel=0
-      sixdeskmess="AFS problem with incomplete_cases"
-      sixdeskmess
+      sixdeskmess -1 "AFS problem with incomplete_cases"
 #MACRO mymess
 
 
 #MACRO mymess 0 `stat $sixdeskwork/incomplete_cases`
       sixdeskmesslevel=0
-      sixdeskmess="`stat $sixdeskwork/incomplete_cases`"
-      sixdeskmess
+      sixdeskmess -1 "`stat $sixdeskwork/incomplete_cases`"
 #MACRO mymess
 
 
 #MACRO mymess 0 `stat $tmp`
       sixdeskmesslevel=0
-      sixdeskmess="`stat $tmp`"
-      sixdeskmess
+      sixdeskmess -1 "`stat $tmp`"
 #MACRO mymess
 
 
@@ -1219,22 +1160,19 @@ do
 
 #MACRO mymess 0 AFS problem with completed_cases
         sixdeskmesslevel=0
-        sixdeskmess="AFS problem with completed_cases"
-        sixdeskmess
+        sixdeskmess -1 "AFS problem with completed_cases"
 #MACRO mymess
 
 
 #MACRO mymess 0 `stat $sixdeskwork/completed_cases`
         sixdeskmesslevel=0
-        sixdeskmess="`stat $sixdeskwork/completed_cases`"
-        sixdeskmess
+        sixdeskmess -1 "`stat $sixdeskwork/completed_cases`"
 #MACRO mymess
 
 
 #MACRO mymess 0 `stat $tmp`
         sixdeskmesslevel=0
-        sixdeskmess="`stat $tmp`"
-        sixdeskmess
+        sixdeskmess -1 "`stat $tmp`"
 #MACRO mymess
 
 
@@ -1258,24 +1196,20 @@ do
 
 #MACRO mymess 0 DEBUGZ $tot NOT= $allcases !!!
       sixdeskmesslevel=0
-      sixdeskmess="DEBUGZ $tot NOT= $allcases !!!"
-      sixdeskmess
-#MACRO mymess
+      sixdeskmess -1 "DEBUGZ $tot NOT #MACRO mymess
 
       stat $sixdeskwork/completed_cases >> $sixdeskwork/DEBUG
       stat $sixdeskwork/incomplete_cases >> $sixdeskwork/DEBUG
 
 #MACRO mymess 0 `stat $sixdeskwork/completed_cases`
       sixdeskmesslevel=0
-      sixdeskmess="`stat $sixdeskwork/completed_cases`"
-      sixdeskmess
+      sixdeskmess -1 "`stat $sixdeskwork/completed_cases`"
 #MACRO mymess
 
 
 #MACRO mymess 0 `stat $sixdeskwork/incomplete_cases`
       sixdeskmesslevel=0
-      sixdeskmess="`stat $sixdeskwork/incomplete_cases`"
-      sixdeskmess
+      sixdeskmess -1 "`stat $sixdeskwork/incomplete_cases`"
 #MACRO mymess
 
 
@@ -1302,8 +1236,7 @@ do
 
 #MACRO mymess 2 Removing JOB_NOT_YET_COMPLETED in $where
     sixdeskmesslevel=2
-    sixdeskmess="Removing JOB_NOT_YET_COMPLETED in $where"
-    sixdeskmess
+    sixdeskmess -1 "Removing JOB_NOT_YET_COMPLETED in $where"
 #MACRO mymess
 
     rm -f $where/JOB_NOT_YET_COMPLETED
@@ -1352,8 +1285,7 @@ do
 
 #MACRO mymess 2 Deleting result $ntaskid from the server
       sixdeskmesslevel=2
-      sixdeskmess="Deleting result $ntaskid from the server"
-      sixdeskmess
+      sixdeskmess -1 "Deleting result $ntaskid from the server"
 #MACRO mymess
 
       perl ${SCRIPTDIR}/perl/confirmResultDownload.pl $ntaskid > $tmp 2>&1
@@ -1363,8 +1295,7 @@ do
 
 #MACRO mymess 0 confirmResultDownload failed!!! `cat $tmp`
         sixdeskmesslevel=0
-        sixdeskmess="confirmResultDownload failed!!! `cat $tmp`"
-        sixdeskmess
+        sixdeskmess -1 "confirmResultDownload failed!!! `cat $tmp`"
 #MACRO mymess
 
       fi
@@ -1374,8 +1305,7 @@ do
 
 #MACRO mymess 2 Deleting result $taskid
       sixdeskmesslevel=2
-      sixdeskmess="Deleting result $taskid"
-      sixdeskmess
+      sixdeskmess -1 "Deleting result $taskid"
 #MACRO mymess
 
       if test "$Runnam" != ""
@@ -1393,8 +1323,7 @@ do
 
 #MACRO mymess 0 Download FAILED for $taskid : $where  !!!
       sixdeskmesslevel=0
-      sixdeskmess="Download FAILED for $taskid : $where  !!!"
-      sixdeskmess
+      sixdeskmess -1 "Download FAILED for $taskid : $where  !!!"
 #MACRO mymess
 
       failed=`expr $failed + 1`
@@ -1412,8 +1341,7 @@ do
 
 #MACRO mymess 2 $taskid ignored (duplicate/redundant result)
     sixdeskmesslevel=2
-    sixdeskmess="$taskid ignored (duplicate/redundant result)"
-    sixdeskmess
+    sixdeskmess -1 "$taskid ignored (duplicate/redundant result)"
 #MACRO mymess
 
   elif test "$success" = "true"
@@ -1422,8 +1350,7 @@ do
 
 #MACRO mymess 2 $taskid downloaded successfully to $where
     sixdeskmesslevel=2
-    sixdeskmess="$taskid downloaded successfully to $where"
-    sixdeskmess
+    sixdeskmess -1 "$taskid downloaded successfully to $where"
 #MACRO mymess
 
   fi
@@ -1433,8 +1360,7 @@ rm -f $sixdesktasklist
 
 #MACRO mymess 0 Before this download $cases cases, $ccases complete ($icases incomplete)
 sixdeskmesslevel=0
-sixdeskmess="Before this download $cases cases, $ccases complete ($icases incomplete)"
-sixdeskmess
+sixdeskmess -1 "Before this download $cases cases, $ccases complete ($icases incomplete)"
 #MACRO mymess
 
 if test "$ready" -ne 0
@@ -1442,16 +1368,14 @@ then
 
 #MACRO mymess 0 Of $ready Ready results, $ok were downloaded successfully, $duplicated were deleted as duplicate/redundant, and $failed failed.
   sixdeskmesslevel=0
-  sixdeskmess="Of $ready Ready results, $ok were downloaded successfully, $duplicated were deleted as duplicate/redundant, and $failed failed."
-  sixdeskmess
+  sixdeskmess -1 "Of $ready Ready results, $ok were downloaded successfully, $duplicated were deleted as duplicate/redundant, and $failed failed."
 #MACRO mymess
 
 else
 
 #MACRO mymess 0 There were no results available
   sixdeskmesslevel=0
-  sixdeskmess="There were no results available"
-  sixdeskmess
+  sixdeskmess -1 "There were no results available"
 #MACRO mymess
 
 fi
@@ -1489,8 +1413,7 @@ fi
 
 #MACRO mymess 0 After  this download $cases cases, $ccases complete ($icases incomplete)
 sixdeskmesslevel=0
-sixdeskmess="After  this download $cases cases, $ccases complete ($icases incomplete)"
-sixdeskmess
+sixdeskmess -1 "After  this download $cases cases, $ccases complete ($icases incomplete)"
 #MACRO mymess
 
 update_cases

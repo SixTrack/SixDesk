@@ -39,8 +39,7 @@ fi
 
 #MACRO mymess 0 Found $cases cases, $ccases complete ($icases incomplete)
 sixdeskmesslevel=0
-sixdeskmess="Found $cases cases, $ccases complete ($icases incomplete)"
-sixdeskmess
+sixdeskmess -1 "Found $cases cases, $ccases complete ($icases incomplete)"
 #MACRO mymess
 
 if test $# -lt 3
@@ -78,8 +77,7 @@ then
 
 #MACRO mymess 0 For $myplatform found $lsfjobs $myname, $ijobs incomplete, $cjobs completed, $mjobs missing
       sixdeskmesslevel=0
-      sixdeskmess="For $myplatform found $lsfjobs $myname, $ijobs incomplete, $cjobs completed, $mjobs missing"
-      sixdeskmess
+      sixdeskmess -1 "For $myplatform found $lsfjobs $myname, $ijobs incomplete, $cjobs completed, $mjobs missing"
 #MACRO mymess
 
     fi
@@ -104,8 +102,7 @@ else
 
 #MACRO mymess 0 Case $Runnam with $taskids found in $Rundir
     sixdeskmesslevel=0
-    sixdeskmess="Case $Runnam with $taskids found in $Rundir"
-    sixdeskmess
+    sixdeskmess -1 "Case $Runnam with $taskids found in $Rundir"
 #MACRO mymess
 
     where=$sixdesktrack/$Rundir
@@ -114,8 +111,7 @@ else
 
 #MACRO mymess 0 Strange the directory $where for job $taskid does NOT exist!!! We shall ignore this for the moment
       sixdeskmesslevel=0
-      sixdeskmess="Strange the directory $where for job $taskid does NOT exist!!! We shall ignore this for the moment"
-      sixdeskmess
+      sixdeskmess -1 "Strange the directory $where for job $taskid does NOT exist!!! We shall ignore this for the moment"
 #MACRO mymess
 
     else
@@ -124,16 +120,14 @@ else
 
 #MACRO mymess 0 Case complete $Runnam with taskids $taskids
         sixdeskmesslevel=0
-        sixdeskmess="Case complete $Runnam with taskids $taskids"
-        sixdeskmess
+        sixdeskmess -1 "Case complete $Runnam with taskids $taskids"
 #MACRO mymess
 
       else
 
 #MACRO mymess 0 Case incomplete $Runnam with taskids $taskids
         sixdeskmesslevel=0
-        sixdeskmess="Case incomplete $Runnam with taskids $taskids"
-        sixdeskmess
+        sixdeskmess -1 "Case incomplete $Runnam with taskids $taskids"
 #MACRO mymess
 
       fi
@@ -142,8 +136,7 @@ else
 
 #MACRO mymess 0 Could not find Runnam $3
      sixdeskmesslevel=0
-     sixdeskmess="Could not find Runnam $3"
-     sixdeskmess
+     sixdeskmess -1 "Could not find Runnam $3"
 #MACRO mymess
 
   fi

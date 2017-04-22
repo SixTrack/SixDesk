@@ -18,8 +18,7 @@ then
 
 #MACRO mymess 0 run_missing_tasks can NOT be used with LSF !!!
   sixdeskmesslevel=0
-  sixdeskmess="run_missing_tasks can NOT be used with LSF !!!"
-  sixdeskmess
+  sixdeskmess -1 "run_missing_tasks can NOT be used with LSF !!!"
 #MACRO mymess
 
 

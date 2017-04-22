@@ -18,8 +18,7 @@ fi
 
 #MACRO mymess 0 Uploading the Program $sixdeskFileName to $sixdeskTargetFileName
 sixdeskmesslevel=0
-sixdeskmess="Uploading the Program $sixdeskFileName to $sixdeskTargetFileName"
-sixdeskmess
+sixdeskmess -1 "Uploading the Program $sixdeskFileName to $sixdeskTargetFileName"
 #MACRO mymess
 
 echo "Perl uploadProgram" "$sixdeskProgramName" "$sixdeskFileName" "$sixdeskTargetFileName" "$sixdeskVersion" "$sixdeskAuthor" "$sixdeskDescription"
@@ -41,8 +40,7 @@ then
 
 #MACRO mymess 0 UploadProgram failed with Status $sixdeskstat `cat $sixdeskstudy/ProgramId`
   sixdeskmesslevel=0
-  sixdeskmess="UploadProgram failed with Status $sixdeskstat `cat $sixdeskstudy/ProgramId`"
-  sixdeskmess
+  sixdeskmess -1 "UploadProgram failed with Status $sixdeskstat `cat $sixdeskstudy/ProgramId`"
 #MACRO mymess
 
   rm -f $sixdeskstudy/ProgramId
@@ -60,8 +58,7 @@ else
 
 #MACRO mymess 0 Upload Program has NOT produced a ProgramId!!! `cat $sixdeskstudy/ProgramId`
     sixdeskmesslevel=0
-    sixdeskmess="Upload Program has NOT produced a ProgramId!!! `cat $sixdeskstudy/ProgramId`"
-    sixdeskmess
+    sixdeskmess -1 "Upload Program has NOT produced a ProgramId!!! `cat $sixdeskstudy/ProgramId`"
 #MACRO mymess
 
     rm -f $sixdeskstudy/ProgramId
@@ -79,8 +76,7 @@ else
 
 #MACRO mymess 0 Upload Program has produced a NULL ProgramId!!! `cat $sixdeskstudy/ProgramId`
     sixdeskmesslevel=0
-    sixdeskmess="Upload Program has produced a NULL ProgramId!!! `cat $sixdeskstudy/ProgramId`"
-    sixdeskmess
+    sixdeskmess -1 "Upload Program has produced a NULL ProgramId!!! `cat $sixdeskstudy/ProgramId`"
 #MACRO mymess
 
 
@@ -94,16 +90,14 @@ else
 
 #MACRO mymess 0 The assigned `cat $sixdeskstudy/ProgramId` has been stored in $sixdeskstudy/ProgramId
   sixdeskmesslevel=0
-  sixdeskmess="The assigned `cat $sixdeskstudy/ProgramId` has been stored in $sixdeskstudy/ProgramId"
-  sixdeskmess
+  sixdeskmess -1 "The assigned `cat $sixdeskstudy/ProgramId` has been stored in $sixdeskstudy/ProgramId"
 #MACRO mymess
 
 # and now the TaskGroup
 
 #MACRO mymess 0 Creating the TaskGroup $sixdeskTaskGroupName $sixdeskDescription, using ProgramId:$sixdeskProgramId, Status: $sixdeskStatus, Priority: $sixdeskPriority, Comments: $sixdeskComments
   sixdeskmesslevel=0
-  sixdeskmess="Creating the TaskGroup $sixdeskTaskGroupName $sixdeskDescription, using ProgramId:$sixdeskProgramId, Status: $sixdeskStatus, Priority: $sixdeskPriority, Comments: $sixdeskComments"
-  sixdeskmess
+  sixdeskmess -1 "Creating the TaskGroup $sixdeskTaskGroupName $sixdeskDescription, using ProgramId:$sixdeskProgramId, Status: $sixdeskStatus, Priority: $sixdeskPriority, Comments: $sixdeskComments"
 #MACRO mymess
 
 
@@ -124,8 +118,7 @@ else
 
 #MACRO mymess 0 createTaskGroup failed with Status $sixdeskstat `cat $sixdeskstudy/TaskGroupId`
     sixdeskmesslevel=0
-    sixdeskmess="createTaskGroup failed with Status $sixdeskstat `cat $sixdeskstudy/TaskGroupId`"
-    sixdeskmess
+    sixdeskmess -1 "createTaskGroup failed with Status $sixdeskstat `cat $sixdeskstudy/TaskGroupId`"
 #MACRO mymess
 
     rm -f $tmpg $sixdeskstudy/TaskGroupId $sixdeskstudy/ProgramId
@@ -145,8 +138,7 @@ else
 
 #MACRO mymess 0 createTaskGroup has NOT produced a TaskGroupId!!! `cat $sixdeskstudy/TaskGroupId`
       sixdeskmesslevel=0
-      sixdeskmess="createTaskGroup has NOT produced a TaskGroupId!!! `cat $sixdeskstudy/TaskGroupId`"
-      sixdeskmess
+      sixdeskmess -1 "createTaskGroup has NOT produced a TaskGroupId!!! `cat $sixdeskstudy/TaskGroupId`"
 #MACRO mymess
 
       rm -f $sixdeskstudy/TaskGroupId $sixdeskstudy/ProgramId
@@ -162,8 +154,7 @@ else
     if test "$sixdesktgid" = ""
     then
       sixdeskmesslevel=0
-      sixdeskmess="createTaskGroup.pl has produced a NULL TaskGroupId!!! `cat $sixdeskstudy/TaskGroupId`"
-      sixdeskmess
+      sixdeskmess -1 "createTaskGroup.pl has produced a NULL TaskGroupId!!! `cat $sixdeskstudy/TaskGroupId`"
       rm -f $sixdeskstudy/TaskGroupId $sixdeskstudy/ProgramId
 
 #MACRO myexit 14
@@ -176,16 +167,14 @@ else
 
 #MACRO mymess 0 The TaskGroup with `cat $sixdeskstudy/TaskGroupId` has been created and stored in $sixdeskstudy/TaskGroupId
     sixdeskmesslevel=0
-    sixdeskmess="The TaskGroup with `cat $sixdeskstudy/TaskGroupId` has been created and stored in $sixdeskstudy/TaskGroupId"
-    sixdeskmess
+    sixdeskmess -1 "The TaskGroup with `cat $sixdeskstudy/TaskGroupId` has been created and stored in $sixdeskstudy/TaskGroupId"
 #MACRO mymess
 
     echo "$sixdeskTaskGroupName" "$mytid" "$mypid" >> $sixdeskhome/TaskGroups
 
 #MACRO mymess 0 .....and backup copies in $sixdeskhome/TaskGroups
     sixdeskmesslevel=0
-    sixdeskmess=".....and backup copies in $sixdeskhome/TaskGroups"
-    sixdeskmess
+    sixdeskmess -1 ".....and backup copies in $sixdeskhome/TaskGroups"
 #MACRO mymess
 
   fi

@@ -22,8 +22,7 @@ then
 
 #MACRO mymess 0 The $sixdeskstudy sixdesklock is ON; giving up!
     sixdeskmesslevel=0
-    sixdeskmess="The $sixdeskstudy sixdesklock is ON; giving up!"
-    sixdeskmess
+    sixdeskmess -1 "The $sixdeskstudy sixdesklock is ON; giving up!"
 #MACRO mymess
 
 
@@ -67,8 +66,7 @@ fi
 
 #MACRO mymess 0 Found $cases cases, $ccases complete ($icases incomplete)
 sixdeskmesslevel=0
-sixdeskmess="Found $cases cases, $ccases complete ($icases incomplete)"
-sixdeskmess
+sixdeskmess -1 "Found $cases cases, $ccases complete ($icases incomplete)"
 #MACRO mymess
 
 
@@ -103,8 +101,7 @@ do
 
 #MACRO mymess 0 $Runnam in $sixdesktrack/$Rundir is complete
     sixdeskmesslevel=0
-    sixdeskmess="$Runnam in $sixdesktrack/$Rundir is complete"
-    sixdeskmess
+    sixdeskmess -1 "$Runnam in $sixdesktrack/$Rundir is complete"
 #MACRO mymess
 
     sed -e'/^'$Runnam'$/d' $sixdeskwork/incomplete_cases > $tmp
@@ -118,8 +115,7 @@ do
 
 #MACRO mymess 0 $Runnam added to completed_cases
     sixdeskmesslevel=0
-    sixdeskmess="$Runnam added to completed_cases"
-    sixdeskmess
+    sixdeskmess -1 "$Runnam added to completed_cases"
 #MACRO mymess
 
     rm -f $where/JOB_NOT_YET_COMPLETED
@@ -148,8 +144,7 @@ fi
 
 #MACRO mymess 0 Now   $cases cases, $ccases complete ($icases incomplete)
 sixdeskmesslevel=0
-sixdeskmess="Now   $cases cases, $ccases complete ($icases incomplete)"
-sixdeskmess
+sixdeskmess -1 "Now   $cases cases, $ccases complete ($icases incomplete)"
 #MACRO mymess
 
 

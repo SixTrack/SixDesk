@@ -16,15 +16,13 @@ source ${SCRIPTDIR}/bash/dot_env
 
 #MACRO mymess 0 Checking Study $LHCDescrip in Workspace $workspace
 sixdeskmesslevel=0
-sixdeskmess="Checking Study $LHCDescrip in Workspace $workspace"
-sixdeskmess
+sixdeskmess -1 "Checking Study $LHCDescrip in Workspace $workspace"
 #MACRO mymess
 
 
 #MACRO mymess 0 On `hostname`, Platform $platform
 sixdeskmesslevel=0
-sixdeskmess="On `hostname`, Platform $platform"
-sixdeskmess
+sixdeskmess -1 "On `hostname`, Platform $platform"
 #MACRO mymess
 
 if test "$BNL" != ""

@@ -33,15 +33,13 @@ nickname=${name1}-${name2}
 
 #MACRO mymess 0 Comparing ($name1) $l1 $s1 in $w1
 sixdeskmesslevel=0
-sixdeskmess="Comparing ($name1) $l1 $s1 in $w1"
-sixdeskmess
+sixdeskmess -1 "Comparing ($name1) $l1 $s1 in $w1"
 #MACRO mymess
 
 
 #MACRO mymess 0 with      ($name2) $l2 $s2 in $w2
 sixdeskmesslevel=0
-sixdeskmess="with      ($name2) $l2 $s2 in $w2"
-sixdeskmess
+sixdeskmess -1 "with      ($name2) $l2 $s2 in $w2"
 #MACRO mymess
 
 
@@ -62,8 +60,7 @@ do
 
 #MACRO mymess 0 Processing tunes $sixdesktunes
   sixdeskmesslevel=0
-  sixdeskmess="Processing tunes $sixdesktunes"
-  sixdeskmess
+  sixdeskmess -1 "Processing tunes $sixdesktunes"
 #MACRO mymess
 
   myname1="DAres.${s1}.${sixdesktunes}.${turnse}"
@@ -75,8 +72,7 @@ do
 
 #MACRO mymess 0 Processing angles $kinil to $kendl by $kstep
   sixdeskmesslevel=0
-  sixdeskmess="Processing angles $kinil to $kendl by $kstep"
-  sixdeskmess
+  sixdeskmess -1 "Processing angles $kinil to $kendl by $kstep"
 #MACRO mymess
 
   while test "$j" -le "$kendl"
@@ -85,8 +81,7 @@ do
 
 #MACRO mymess 0 ${myname1}.$j
     sixdeskmesslevel=0
-    sixdeskmess="${myname1}.$j"
-    sixdeskmess
+    sixdeskmess -1 "${myname1}.$j"
 #MACRO mymess
 
     if test -s "$w1/${myname1}.$j"
@@ -98,8 +93,7 @@ do
 
 #MACRO mymess 0 Skipping Angle $j; DAres.${s1}.${sixdesktunes}.${turnse}.$j missing or empty
       sixdeskmesslevel=0
-      sixdeskmess="Skipping Angle $j; DAres.${s1}.${sixdesktunes}.${turnse}.$j missing or empty"
-      sixdeskmess
+      sixdeskmess -1 "Skipping Angle $j; DAres.${s1}.${sixdesktunes}.${turnse}.$j missing or empty"
 #MACRO mymess
 
       skip=1
@@ -107,8 +101,7 @@ do
 
 #MACRO mymess 0 ${myname2}.$j
     sixdeskmesslevel=0
-    sixdeskmess="${myname2}.$j"
-    sixdeskmess
+    sixdeskmess -1 "${myname2}.$j"
 #MACRO mymess
 
     if test -s "$w2/${myname2}.$j"
@@ -120,8 +113,7 @@ do
 
 #MACRO mymess 0 Skipping Angle $j; DAres.${s2}.${sixdesktunes}.${turnse}.$j missing or empty
       sixdeskmesslevel=0
-      sixdeskmess="Skipping Angle $j; DAres.${s2}.${sixdesktunes}.${turnse}.$j missing or empty"
-      sixdeskmess
+      sixdeskmess -1 "Skipping Angle $j; DAres.${s2}.${sixdesktunes}.${turnse}.$j missing or empty"
 #MACRO mymess
 
       skip=1
