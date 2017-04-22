@@ -40,7 +40,7 @@ signit()
     fi
     local __BOINCplatform=`grep '\<name\>' ${projXml} | cut -d\< -f2 | cut -d\> -f2 | grep ${__platform} 2> /dev/null`
     if [ -z "${__BOINCplatform}" ] ; then
-	echo "unknonw platform ${1}"
+	echo "unknonw platform in ${1}"
 	let __lerr+=1
     fi
     if ${lcheckOnly} ; then
@@ -94,8 +94,8 @@ signit x86_64-pc-freebsd__avx           SixTrack_${VS}_${commonFlags}_FreeBSD_gf
 
 
 #__________________________________________________ netBSD 64 bit _______________________________________________
-# signit windows_intelx86__sse2           SixTrack_${VS}_${commonFlags}_FreeBSD_gfortran_static_amd64_64bit               sixtrack_netBSD64_${VS}_sse2.exe
-# signit windows_intelx86__avx            SixTrack_${VS}_${commonFlags}_NetBSD_gfortran_static_avx_x86_64_64bit           sixtrack_netBSD64_${VS}_avx.exe
+signit x86_64-pc-netbsd__sse2           SixTrack_${VS}_${commonFlags}_NetBSD_gfortran_static_x86_64_64bit               sixtrack_netBSD64_${VS}_sse2.exe
+signit x86_64-pc-netbsd__avx            SixTrack_${VS}_${commonFlags}_NetBSD_gfortran_static_avx_x86_64_64bit           sixtrack_netBSD64_${VS}_avx.exe
 
 
 #___________________ finalize ________________
