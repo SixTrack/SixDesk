@@ -69,6 +69,11 @@
        <projected_flops_scale> 1.50         </projected_flops_scale>
    </plan_class>
    <plan_class>
+       <name>                  avx        </name>
+       <cpu_feature>           avx        </cpu_feature>
+       <projected_flops_scale> 1.75         </projected_flops_scale>
+   </plan_class>
+   <plan_class>
        <name>                  opencl_nvidia_101        </name>
        <gpu_type>              nvidia      </gpu_type>
        <opencl/>
