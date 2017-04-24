@@ -5,13 +5,12 @@ function setUpDir(){
     local __OrigRepo=$2
     local __checkOut=$3
     echo ""
-    echo "treating ${__Dir} - origin: ${__OrigRepo} - checkout: ${__checkOut}"
     local __origDir=$PWD
     # clean
     rm -rf ${__Dir}
     mkdir ${__Dir}
     cd ${__Dir}
-    echo "treating ${__Dir} - date: `date` - origin: ${__OrigRepo} - checkout: ${__checkOut}" > .origin.txt
+    echo "treating ${__Dir} - date: `date` - origin: ${__OrigRepo} - checkout: ${__checkOut}"
     # init git repo to use sparse checkout and list dirs
     git init
     git config core.sparseCheckout true
@@ -50,10 +49,10 @@ originRepo=(
     )
 checkout=(
     'includingHTCondor'
+    'isolateScripts'
     '27dc8b0b67783d4553d8b1d243364dd18f3a10f7'
-    '09a5ac07a2e64668d1994e119c973106583433be'
 )
 
 for (( ii=0; ii<3; ii++ )) ; do
-    setUpDir ${SixDeskVer[$ii]} ${originRepo[$ii]} ${checkout[$ii]}
+    setUpDir ${SixDeskVer[$ii]} ${originRepo[$ii]} ${checkout[$ii]} 2>&1 | tee -a `basename $0`.log
 done
