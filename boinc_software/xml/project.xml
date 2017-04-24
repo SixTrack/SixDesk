@@ -32,8 +32,12 @@
         <user_friendly_name>FreeBSD running on an Intel compatible 64bit CPU</user_friendly_name>
     </platform>
     <platform>
-        <name>powerpc-apple-darwin</name>
-        <user_friendly_name>Mac OS X 10.3 or later running on Motorola PowerPC</user_friendly_name>
+        <name>i386-pc-netbsd</name>
+        <user_friendly_name>NetBSD running on an Intel x86-compatible CPU</user_friendly_name>
+    </platform>
+    <platform>
+        <name>x86_64-pc-netbsd</name>
+        <user_friendly_name>NetBSD running on an Intel compatible 64bit CPU</user_friendly_name>
     </platform>
     <platform>
         <name>i686-apple-darwin</name>
