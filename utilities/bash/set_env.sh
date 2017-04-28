@@ -115,12 +115,6 @@ function getInfoFromFort3Local(){
 	local __nLines=`echo "${__activeLines}" | wc -l`
 	sixdeskmess="for a total of ${__nLines} ACTIVE lines."
 	sixdeskmess
-	for tmpActiveBlock in ${__allActiveBlocks[@]} ; do
-	    if [ "${tmpActiveBlock}" == "ZIPF" ] ; then
-		lZIPF=true
-		break
-	    fi
-	done
     fi
 
 function setFurtherEnvs(){
@@ -174,7 +168,6 @@ llocalfort3=false
 currPlatform=""
 currStudy=""
 # variables set based on parsing fort.3.local
-lZIPF=false
 
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":hsvld:ep:n" opt ; do
@@ -396,9 +389,6 @@ else
 	platform=$currPlatform
     fi
     sixdeskSetPlatForm $platform
-
-    # export lZIPF
-    export lZIPF
 
     # - useful output
     PTEXT="[${sixdeskplatform}]"
