@@ -1,0 +1,259 @@
+<?xml version="1.0" ?>
+<boinc>
+  <config>
+    <long_name>
+      LHC@home 1.0
+    </long_name>
+    <master_url>
+      http://lhcathomeclassic.cern.ch/sixtrack/
+    </master_url>
+    <host>
+      boincai08
+    </host>
+    <db_name>
+      sixt_production
+    </db_name>
+    <shmem_key>
+      0x1111a231
+    </shmem_key>
+    <cgi_url>
+      http://lhcathomeclassic.cern.ch/sixtrack_cgi/
+    </cgi_url>
+    <upload_dir>
+      /data/boinc/project/sixtrack/upload
+    </upload_dir>
+    <download_dir>
+      /data/boinc/project/sixtrack/download
+    </download_dir>
+    <download_url>
+      http://lhcathomeclassic.cern.ch/sixtrack/download
+    </download_url>
+    <log_dir>
+      /data/boinc/project/sixtrack/log_boincai08
+    </log_dir>
+    <app_dir>
+      /data/boinc/project/sixtrack/apps
+    </app_dir>
+    <key_dir>
+      /data/boinc/project/sixtrack/keys/
+    </key_dir>
+    <upload_url>
+      http://lhcathomeclassic.cern.ch/sixtrack_cgi/file_upload_handler
+    </upload_url>
+    <db_host>
+      dbod-sixtrack.cern.ch:5513 
+    </db_host>
+    <db_user>
+      admin
+    </db_user>
+    <db_passwd>
+      B01nclhc.
+    </db_passwd>
+    <dont_generate_upload_certificates/>
+    <ignore_upload_certificates/>
+    <recaptcha_public_key>6LfCGdgSAAAAAEuu7J8QCdrc7N_vMsheqPvaES9b</recaptcha_public_key>
+    <recaptcha_private_key>6LfCGdgSAAAAAPZvAVbZjacFHg_oci2wmcEmnXbN</recaptcha_private_key> 
+    <disable_account_creation>
+     0
+    </disable_account_creation>
+
+    <disable_team_creation/>
+    <profile_screening> 0 </profile_screening>
+    <no_forum_rating> 1 </no_forum_rating>
+    <verify_files_on_app_start> 0 </verify_files_on_app_start>
+    <send_result_abort> 1 </send_result_abort>
+    <homogeneous_redundancy> 0 </homogeneous_redundancy>
+    <matchmaker> 0 </matchmaker>
+    <reliable_on_priority> 1 </reliable_on_priority>
+    <reliable_max_avg_turnaround> 230400 </reliable_max_avg_turnaround>
+    <reliable_max_error_rate> 0.100000 </reliable_max_error_rate>
+    <reliable_reduced_delay_bound> 0.5 </reliable_reduced_delay_bound>
+    <reliable_priority_on_over> 0 </reliable_priority_on_over>
+    <reliable_priority_on_over_except_error> 1 </reliable_priority_on_over_except_error>
+    <prefer_primary_platform> 0 </prefer_primary_platform>
+    <locality_scheduling> 0 </locality_scheduling>
+    <sched_debug_level> 2 </sched_debug_level>
+    <debug_version_select> 0 </debug_version_select>
+
+    <debug_assignment>     0 </debug_assignment>
+    <debug_prefs> 0 </debug_prefs>
+    <debug_quota> 0 </debug_quota>
+    <debug_send>  0 </debug_send>
+    <debug_edf_sim_detail> 0 </debug_edf_sim_detail>
+
+    <debug_credit> 0 </debug_credit>
+    <debug_request_details> 0 </debug_request_details>
+    <debug_request_headers> 0 </debug_request_headers>
+    <debug_user_messages>   0 </debug_user_messages>
+
+    <fuh_debug_level> 2 </fuh_debug_level>
+    <disable_account_creation> 0 </disable_account_creation>
+    <uldl_dir_fanout> 1024 </uldl_dir_fanout>
+    <fp_benchmark_weight> 1 </fp_benchmark_weight>
+    <show_results> 1 </show_results>
+    <min_sendwork_interval> 5 </min_sendwork_interval>
+    <daily_result_quota> 250 </daily_result_quota>
+    <ignore_delay_bound> 1 </ignore_delay_bound>
+    <one_result_per_user_per_wu> 1 </one_result_per_user_per_wu>
+    <max_wus_to_send> 14 </max_wus_to_send>
+    <max_wus_in_progress> 14 </max_wus_in_progress>
+    <resend_lost_results> 1 </resend_lost_results>
+    <next_rpc_delay> 18000 </next_rpc_delay>
+    <report_grace_period> 86400 </report_grace_period>
+    <workload_sim> 1 </workload_sim>
+    <shmem_work_items> 200 </shmem_work_items>
+    <feeder_query_size> 400 </feeder_query_size>
+    <default_disk_max_used_gb> 100 </default_disk_max_used_gb> 
+    <default_disk_max_used_pct> 90 </default_disk_max_used_pct> 
+    <default_disk_min_free_gb> 0.2 </default_disk_min_free_gb> 
+    <delete_delay_hours> 28 </delete_delay_hours>
+  </config>
+  <tasks>
+    <task>
+      <cmd>
+        db_dump -d 2 -dump_spec ../db_dump_spec.xml
+      </cmd>
+      <period>
+        24 hours
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        db_dump.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        run_in_ops ./update_uotd.php
+      </cmd>
+      <period>
+        1 days
+      </period>
+      <disabled>
+        1
+      </disabled>
+      <output>
+        update_uotd.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        run_in_ops ./update_forum_activities.php
+      </cmd>
+      <period>
+        1 hour
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        update_forum_activities.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        update_stats -update_users -update_teams -update_hosts
+      </cmd>
+      <period>
+        7 days
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        update_stats.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        run_in_ops ./update_profile_pages.php
+      </cmd>
+      <period>
+        24 hours
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        update_profile_pages.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        run_in_ops ./team_import.php
+      </cmd>
+      <period>
+        24 hours
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        team_import.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        run_in_ops ./notify.php
+      </cmd>
+      <period>
+        24 hours
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        notify.out
+      </output>
+    </task>
+  </tasks>
+  <daemons>
+    <daemon>
+      <cmd>
+        feeder -d 2 
+      </cmd>
+    </daemon>
+    <daemon>
+      <cmd>
+        transitioner -d 2 
+      </cmd>
+    </daemon>
+    <daemon>
+      <cmd>
+        file_deleter -d 2 
+      </cmd>
+    </daemon>
+
+    <daemon>
+      <cmd>
+         sixtrack_assimilator -d 3 -app sixtrack
+      </cmd>
+      <disabled>0</disabled>
+    </daemon>
+    <daemon>
+      <cmd>
+        sixtrack_validator -d 3 -app sixtrack 
+      </cmd>
+      <disabled>0</disabled>
+    </daemon>
+    <daemon>
+      <cmd>
+         sixtrack_assimilator_test -d 3 -app sixtracktest
+      </cmd>
+      <disabled>0</disabled>
+    </daemon>
+    <daemon>
+      <cmd>
+        sixtrack_validator_test -d 3 -app sixtracktest 
+      </cmd>
+      <disabled>0</disabled>
+    </daemon>
+    <daemon>
+      <cmd>
+	db_purge -d 2 -min_age_days 2 -max 500000 -max_wu_per_file 100000 -gzip
+      </cmd>
+      <disabled> 0 </disabled>
+    </daemon>
+  </daemons>
+</boinc>
