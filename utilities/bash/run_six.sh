@@ -818,8 +818,7 @@ function submitCreateFinalInputs(){
 	    #   NB: -j option, to store only the files, and not the source paths
 	    zip -j $RundirFullPath/$workunitName.zip $RundirFullPath/fort.2 $RundirFullPath/fort.3 $RundirFullPath/fort.8 $RundirFullPath/fort.16 >/dev/null 2>&1
 	    # - generate the workunit description file
-	    #   NB: appName from sysenv (+ sanity checks in dot_profile) and
-	    #       lZIPF from set_env.sh
+	    #   NB: appName from sysenv (+ sanity checks in dot_profile)
 	    cat > $RundirFullPath/$workunitName.desc <<EOF
 $workunitName
 $fpopsEstimate 
@@ -833,7 +832,6 @@ $errors
 $numIssues
 $resultsWithoutConcensus
 $appName
-$lZIPF
 EOF
 
 	    # - update MegaZip file:
