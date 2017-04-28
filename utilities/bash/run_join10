@@ -32,8 +32,7 @@ then
 
 #MACRO mymess 0 Exiting as no join10 is necessary for short runs
   sixdeskmesslevel=0
-  sixdeskmess="Exiting as no join10 is necessary for short runs"
-  sixdeskmess
+  sixdeskmess -1 "Exiting as no join10 is necessary for short runs"
 #MACRO mymess
 
 
@@ -113,8 +112,7 @@ cd $tmp
 
 #MACRO mymess 0 Running in $tmp
 sixdeskmesslevel=0
-sixdeskmess="Running in $tmp"
-sixdeskmess
+sixdeskmess -1 "Running in $tmp"
 #MACRO mymess
 
 let i=ista
@@ -122,20 +120,11 @@ while [ $i -le $iend ] ;do
   echo "Processing Seed $i"
   itunexx=$itunex
   ituneyy=$ituney
-  if test "$ideltax" -eq 0 -a "$ideltay" -eq 0
-  then
-    ideltax=1000000
-    ideltay=1000000
-  fi
   while test "$itunexx" -le "$itunex1" -a "$ituneyy" -le "$ituney1"
   do
-    tunexx=`echo "$itunexx" | cut -c1-2`"."`echo "$itunexx" | cut -c3-6`
-    tunexx=`echo "$tunexx" | sed -e's/0*$//'`
-    tunexx=`echo "$tunexx" | sed -e's/^0//'`
-    tuneyy=`echo "$ituneyy" | cut -c1-2`"."`echo "$ituneyy" | cut -c3-6`
-    tuneyy=`echo "$tuneyy" | sed -e's/0*$//'`
-    tuneyy=`echo "$tuneyy" | sed -e's/^0//'`
-    sixdesktunes=$tunexx"_"$tuneyy
+    # returns sixdesktunes and tunexx/tuneyy, computed from itunexx/ituneyy,
+    #    using xlen/ylen
+    sixdeskPrepareTunes
     echo "Processing tunes $sixdesktunes"
   #
     ls -ld ${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl > /dev/null 2>&1
@@ -144,8 +133,7 @@ while [ $i -le $iend ] ;do
 
 #MACRO mymess 0 Removing existing joined results Seed $i
       sixdeskmesslevel=0
-      sixdeskmess="Removing existing joined results Seed $i"
-      sixdeskmess
+      sixdeskmess -1 "Removing existing joined results Seed $i"
 #MACRO mymess
 
       ls -ld ${tree[0]}/$dirs/$i/$mode/$sixdesktunes/$Ampl
@@ -181,8 +169,7 @@ while [ $i -le $iend ] ;do
 
 #MACRO mymess 0 File not found:  ${file[$j]} !!!
               sixdeskmesslevel=0
-              sixdeskmess="File not found:  ${file[$j]} !!!"
-              sixdeskmess
+              sixdeskmess -1 "File not found:  ${file[$j]} !!!"
 #MACRO mymess
 
             fi
@@ -206,8 +193,7 @@ while [ $i -le $iend ] ;do
 
 #MACRO mymess 0 File not found Seed $i ${file[j]} !!!
           sixdeskmesslevel=0
-          sixdeskmess="File not found Seed $i ${file[$j]} !!!"
-          sixdeskmess
+          sixdeskmess -1 "File not found Seed $i ${file[$j]} !!!"
 #MACRO mymess
 
           if [ $jst -lt $jend ] ;then
@@ -252,8 +238,7 @@ while [ $i -le $iend ] ;do
 
 #MACRO mymess 0 Seed $i File not found: ${file[$te]} !!!
               sixdeskmesslevel=0
-              sixdeskmess="Seed $i File not found: ${file[$te]} !!!"
-              sixdeskmess
+              sixdeskmess -1 "Seed $i File not found: ${file[$te]} !!!"
 #MACRO mymess
 
             fi
@@ -279,8 +264,7 @@ while [ $i -le $iend ] ;do
 
 #MACRO mymess 0 Seed $i File not found: ${file[te]} !!!
           sixdeskmesslevel=0
-          sixdeskmess="Seed $i File not found: ${file[$te]} !!!"
-          sixdeskmess
+          sixdeskmess -1 "Seed $i File not found: ${file[$te]} !!!"
 #MACRO mymess
 
         fi
@@ -298,8 +282,7 @@ rm -r $tmp
 
 #MACRO mymess 0 Completed normally
 sixdeskmesslevel=0
-sixdeskmess="Completed normally"
-sixdeskmess
+sixdeskmess -1 "Completed normally"
 #MACRO mymess
 
 

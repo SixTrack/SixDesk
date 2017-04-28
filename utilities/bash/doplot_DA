@@ -33,15 +33,13 @@ mynames="${name1}-${name2}"
 
 #MACRO mymess 0 Plotting    $name1 $l1 $s1 in $w1
 sixdeskmesslevel=0
-sixdeskmess="Plotting    $name1 $l1 $s1 in $w1"
-sixdeskmess
+sixdeskmess -1 "Plotting    $name1 $l1 $s1 in $w1"
 #MACRO mymess
 
 
 #MACRO mymess 0 compared to $name2 $l2 $s2 in $w2
 sixdeskmesslevel=0
-sixdeskmess="compared to $name2 $l2 $s2 in $w2"
-sixdeskmess
+sixdeskmess -1 "compared to $name2 $l2 $s2 in $w2"
 #MACRO mymess
 
 
@@ -51,26 +49,16 @@ sixdesktunes
 
 itunexx=$itunex
 ituneyy=$ituney
-if test "$ideltax" -eq 0 -a "$ideltay" -eq 0
-then
-  ideltax=1000000
-  ideltay=1000000
-fi
 while test "$itunexx" -le "$itunex1" -a "$ituneyy" -le "$ituney1"
 do
-  tunexx=`echo "$itunexx" | cut -c1-2`"."`echo "$itunexx" | cut -c3-6`
-  tunexx=`echo "$tunexx" | sed -e's/0*$//'`
-  tunexx=`echo "$tunexx" | sed -e's/^0//'`
-  tuneyy=`echo "$ituneyy" | cut -c1-2`"."`echo "$ituneyy" | cut -c3-6`
-  tuneyy=`echo "$tuneyy" | sed -e's/0*$//'`
-  tuneyy=`echo "$tuneyy" | sed -e's/^0//'`
-  sixdesktunes=$tunexx"_"$tuneyy
+  # returns sixdesktunes and tunexx/tuneyy, computed from itunexx/ituneyy,
+  #    using xlen/ylen
+  sixdeskPrepareTunes
   echo ""
 
 #MACRO mymess 0 Processing tunes $sixdesktunes
   sixdeskmesslevel=0
-  sixdeskmess="Processing tunes $sixdesktunes"
-  sixdeskmess
+  sixdeskmess -1 "Processing tunes $sixdesktunes"
 #MACRO mymess
 
   myname="DAres.${l1}.${ws1}.${s1}.${sixdesktunes}.${turnse}_${l2}.${ws2}.${s2}"
@@ -78,8 +66,7 @@ do
 
 #MACRO mymess 0 Processing angles $kinil to $kendl by $kstep
   sixdeskmesslevel=0
-  sixdeskmess="Processing angles $kinil to $kendl by $kstep"
-  sixdeskmess
+  sixdeskmess -1 "Processing angles $kinil to $kendl by $kstep"
 #MACRO mymess
 
 # kendl=$kinil
@@ -89,8 +76,7 @@ do
 
 #MACRO mymess 0 Plotting ${myname}.${j}.stable
     sixdeskmesslevel=0
-    sixdeskmess="Plotting ${myname}.${j}.stable"
-    sixdeskmess
+    sixdeskmess -1 "Plotting ${myname}.${j}.stable"
 #MACRO mymess
 
     maxDA=10

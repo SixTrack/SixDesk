@@ -18,8 +18,7 @@ dir16=$sixtrack_input
 
 #MACRO mymess 2 Using sixtrack_input $dir16
 sixdeskmesslevel=2
-sixdeskmess="Using sixtrack_input $dir16"
-sixdeskmess
+sixdeskmess -1 "Using sixtrack_input $dir16"
 #MACRO mymess
 
 if test ! -d "$dir16" 
@@ -27,8 +26,7 @@ then
 
 #MACRO mymess 1 The directory $dir16 does not exist!!!
   sixdeskmesslevel=1
-  sixdeskmess="The directory $dir16 does not exist!!!"
-  sixdeskmess
+  sixdeskmess -1 "The directory $dir16 does not exist!!!"
 #MACRO mymess
  
 
@@ -44,8 +42,7 @@ then
 
 #MACRO mymess 1 sixtrack_input appears incomplete!!!
   sixdeskmesslevel=1
-  sixdeskmess="sixtrack_input appears incomplete!!!"
-  sixdeskmess
+  sixdeskmess -1 "sixtrack_input appears incomplete!!!"
 #MACRO mymess
 
 
@@ -71,8 +68,7 @@ mkdir -p $sixdeskjobs_logs
 
 #MACRO mymess 2 Using $sixdeskjobs_logs
 sixdeskmesslevel=2
-sixdeskmess="Using $sixdeskjobs_logs"
-sixdeskmess
+sixdeskmess -1 "Using $sixdeskjobs_logs"
 #MACRO mymess
 
 #
@@ -101,8 +97,7 @@ if [ $long -eq 1 ] ;then
 
 #MACRO mymess 0 Define Ampl for longterm tracking ...
     sixdeskmesslevel=0
-    sixdeskmess="Define Ampl for longterm tracking ..."
-    sixdeskmess
+    sixdeskmess -1 "Define Ampl for longterm tracking ..."
 #MACRO mymess
 
 
@@ -127,8 +122,7 @@ then
 
 #MACRO mymess 0 Main loop (long) for Study $LHCDescrip, Seeds $ista to $iend
   sixdeskmesslevel=0
-  sixdeskmess="Main loop (long) for Study $LHCDescrip, Seeds $ista to $iend"
-  sixdeskmess
+  sixdeskmess -1 "Main loop (long) for Study $LHCDescrip, Seeds $ista to $iend"
 #MACRO mymess
 
 
@@ -139,8 +133,7 @@ then
 
 #MACRO mymess 0 Amplitudes $ns1l to $ns2l by $nsincl, Angles $kinil, $kendl, $kmaxl by $kstep
   sixdeskmesslevel=0
-  sixdeskmess="Amplitudes $ns1l to $ns2l by $nsincl, Angles $kinil, $kendl, $kmaxl by $kstep"
-  sixdeskmess
+  sixdeskmess -1 "Amplitudes $ns1l to $ns2l by $nsincl, Angles $kinil, $kendl, $kmaxl by $kstep"
 #MACRO mymess
 
 elif test $short -eq 1 -o $da -eq 1
@@ -148,8 +141,7 @@ then
 
 #MACRO mymess 0 Main loop (short/da) for Study $LHCDescrip, Seeds $ista to $iend
   sixdeskmesslevel=0
-  sixdeskmess="Main loop (short/da) for Study $LHCDescrip, Seeds $ista to $iend"
-  sixdeskmess
+  sixdeskmess -1 "Main loop (short/da) for Study $LHCDescrip, Seeds $ista to $iend"
 #MACRO mymess
 
 
@@ -160,8 +152,7 @@ then
 
 #MACRO mymess 0 Amplitudes $ns1s to $ns2s by $nss, Angles $kini, $kend, $kmax by $kstep
   sixdeskmesslevel=0
-  sixdeskmess="Amplitudes $ns1s to $ns2s by $nss, Angles $kini, $kend, $kmax by $kstep"
-  sixdeskmess
+  sixdeskmess -1 "Amplitudes $ns1s to $ns2s by $nss, Angles $kini, $kend, $kmax by $kstep"
 #MACRO mymess
 
 fi
@@ -171,25 +162,15 @@ do
   # And now we have a new loop over the tunescans
   itunexx=$itunex
   ituneyy=$ituney
-  if test "$ideltax" -eq 0 -a "$ideltay" -eq 0
-  then
-    ideltax=1000000
-    ideltay=1000000
-  fi
-  while test "$itunexx" -le "$itunex1" -o "$ituneyy" -le "$ituney1"
+  while test "$itunexx" -le "$itunex1" -a "$ituneyy" -le "$ituney1"
   do
-    tunexx=`echo "$itunexx" | cut -c1-2`"."`echo "$itunexx" | cut -c3-6`
-    tunexx=`echo "$tunexx" | sed -e's/0*$//'`
-    tunexx=`echo "$tunexx" | sed -e's/^0//'`
-    tuneyy=`echo "$ituneyy" | cut -c1-2`"."`echo "$ituneyy" | cut -c3-6`
-    tuneyy=`echo "$tuneyy" | sed -e's/0*$//'`
-    tuneyy=`echo "$tuneyy" | sed -e's/^0//'`
-    sixdesktunes=$tunexx"_"$tuneyy
+    # returns sixdesktunes and tunexx/tuneyy, computed from itunexx/ituneyy,
+    #    using xlen/ylen
+    sixdeskPrepareTunes
 
 #MACRO mymess 0 Tunescan $sixdesktunes
     sixdeskmesslevel=0
-    sixdeskmess="Tunescan $sixdesktunes"
-    sixdeskmess
+    sixdeskmess -1 "Tunescan $sixdesktunes"
 #MACRO mymess
 
     # compute inttunexx and inttuneyy
@@ -215,8 +196,7 @@ do
 
 #MACRO mymess 0 betavalues has only $nobetas words!!! Should be 14!
       sixdeskmesslevel=0
-      sixdeskmess="betavalues has only $nobetas words!!! Should be 14!"
-      sixdeskmess
+      sixdeskmess -1 "betavalues has only $nobetas words!!! Should be 14!"
 #MACRO mymess
 
       rm -f $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues
@@ -256,15 +236,13 @@ do
 
 #MACRO mymess 0 Loop over amplitudes: $Ampl $ns1l $ns2l $nsincl
         sixdeskmesslevel=0
-        sixdeskmess="Loop over amplitudes: $Ampl $ns1l $ns2l $nsincl"
-        sixdeskmess
+        sixdeskmess -1 "Loop over amplitudes: $Ampl $ns1l $ns2l $nsincl"
 #MACRO mymess
 
 
 #MACRO mymess 0 $ampstart $ampfinish $ampincl $fampstart $fampend
         sixdeskmesslevel=0
-        sixdeskmess="$ampstart $ampfinish $ampincl $fampstart $fampend"
-        sixdeskmess
+        sixdeskmess -1 "$ampstart $ampfinish $ampincl $fampstart $fampend"
 #MACRO mymess
 
         k=$kinil
@@ -298,8 +276,7 @@ do
 
 #MACRO mymess 0 No SIXTRACK geometry file (fort.2): Run stopped
             sixdeskmesslevel=0
-            sixdeskmess="No SIXTRACK geometry file (fort.2): Run stopped"
-            sixdeskmess
+            sixdeskmess -1 "No SIXTRACK geometry file (fort.2): Run stopped"
 #MACRO mymess
 
 
@@ -325,8 +302,7 @@ do
 
 #MACRO mymess 0 No SIXTRACK control file (fort.3): Run stopped
             sixdeskmesslevel=0
-            sixdeskmess="No SIXTRACK control file (fort.3): Run stopped"
-            sixdeskmess
+            sixdeskmess -1 "No SIXTRACK control file (fort.3): Run stopped"
 #MACRO mymess
 
 
@@ -352,8 +328,7 @@ do
 
 #MACRO mymess 0 No SIXTRACK misalignment file (fort.8): dummy file created
             sixdeskmesslevel=0
-            sixdeskmess="No SIXTRACK misalignment file (fort.8): dummy file created"
-            sixdeskmess
+            sixdeskmess -1 "No SIXTRACK misalignment file (fort.8): dummy file created"
 #MACRO mymess
 
             touch "$tree"/"$Rundir"/fort.8
@@ -363,8 +338,7 @@ do
 
 #MACRO mymess 0 No SIXTRACK error file (fort.16): dummy file created
             sixdeskmesslevel=0
-            sixdeskmess="No SIXTRACK error file (fort.16): dummy file created"
-            sixdeskmess
+            sixdeskmess -1 "No SIXTRACK error file (fort.16): dummy file created"
 #MACRO mymess
 
             touch "$tree"/"$Rundir"/fort.16
@@ -419,8 +393,7 @@ sixdeskunlock
 
 #MACRO mymess 0 Completed normally
 sixdeskmesslevel=0
-sixdeskmess="Completed normally"
-sixdeskmess
+sixdeskmess -1 "Completed normally"
 #MACRO mymess
 
 

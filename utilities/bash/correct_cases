@@ -18,8 +18,7 @@ source ${SCRIPTDIR}/bash/dot_env
 
 #MACRO mymess 0 Correcting Study $LHCDescrip
 sixdeskmesslevel=0
-sixdeskmess="Correcting Study $LHCDescrip"
-sixdeskmess
+sixdeskmess -1 "Correcting Study $LHCDescrip"
 #MACRO mymess
 
 
@@ -55,8 +54,7 @@ fi
 
 #MACRO mymess 0 Before found $cases cases, $ccases complete ($icases incomplete)
 sixdeskmesslevel=0
-sixdeskmess="Before found $cases cases, $ccases complete ($icases incomplete)"
-sixdeskmess
+sixdeskmess -1 "Before found $cases cases, $ccases complete ($icases incomplete)"
 #MACRO mymess
 
 mkdir -p $sixdeskwork/backup
@@ -67,7 +65,7 @@ touch mycompleted_cases
 touch $sixdeskwork/taskids
 cp $sixdeskwork/completed_cases $sixdeskwork/backup
 cp $sixdeskwork/mycompleted_cases $sixdeskwork/backup
-cp $sixdeskwork/incompleted_case $sixdeskwork/backup
+cp $sixdeskwork/incomplete_case $sixdeskwork/backup
 cp $sixdeskwork/myincomplete_cases $sixdeskwork/backup
 
 #MACRO mymktmpdir tmp /tmp/$LOGNAME
@@ -100,8 +98,7 @@ do
 
 #MACRO mymess 0 $Runnam fort.18.gz is MISSING in $Rundir !!!
       sixdeskmesslevel=0
-      sixdeskmess="$Runnam fort.18.gz is MISSING in $Rundir !!!"
-      sixdeskmess
+      sixdeskmess -1 "$Runnam fort.18.gz is MISSING in $Rundir !!!"
 #MACRO mymess
 
       missing="1"
@@ -114,8 +111,7 @@ do
 
 #MACRO mymess 0 $Runnam fort.10.gz is MISSING for $Runnam !!!
         sixdeskmesslevel=0
-        sixdeskmess="$Runnam fort.10.gz is MISSING for $Runnam !!!"
-        sixdeskmess
+        sixdeskmess -1 "$Runnam fort.10.gz is MISSING for $Runnam !!!"
 #MACRO mymess
 
           missing="1"
@@ -126,8 +122,7 @@ do
 
 #MACRO mymess 0 $Runnam beambeam-output.dat.gz is MISSING for $Runnam !!!
         sixdeskmesslevel=0
-        sixdeskmess="$Runnam beambeam-output.dat.gz is MISSING for $Runnam !!!"
-        sixdeskmess
+        sixdeskmess -1 "$Runnam beambeam-output.dat.gz is MISSING for $Runnam !!!"
 #MACRO mymess
 
         missing="1"
@@ -145,10 +140,17 @@ do
     echo "$Runnam" >> incomplete_cases
   fi
 done < taskids
-cp completed_cases $sixdeskwork/completed_cases
-cp incomplete_cases $sixdeskwork/incomplete_cases
-cp completed_cases $sixdeskwork/mycompleted_cases
-cp incomplete_cases $sixdeskwork/myincomplete_cases
+for tmpFile in completed_cases incomplete_cases ; do
+    if [ -s ${tmpFile} ] ; then
+	cp ${tmpFile} $sixdeskwork/${tmpFile}
+	cp ${tmpFile} $sixdeskwork/my${tmpFile}
+    else
+	rm -f $sixdeskwork/${tmpFile}
+	touch $sixdeskwork/${tmpFile}
+	rm -f $sixdeskwork/my${tmpFile}
+	touch $sixdeskwork/my${tmpFile}
+    fi
+done
 cd $sixdeskhome
 rm -r $tmp
 # and report status after correction
@@ -173,8 +175,7 @@ fi
 
 #MACRO mymess 0 After checking found $cases cases, $ccases complete ($icases incomplete)
 sixdeskmesslevel=0
-sixdeskmess="After checking found $cases cases, $ccases complete ($icases incomplete)"
-sixdeskmess
+sixdeskmess -1 "After checking found $cases cases, $ccases complete ($icases incomplete)"
 #MACRO mymess
 
 

@@ -23,8 +23,7 @@ then
 
 #MACRO mymess 0 Something up!! join_bnl expects BNL $BNL
   sixdeskmesslevel=0
-  sixdeskmess="Something up!! join_bnl expects BNL $BNL"
-  sixdeskmess
+  sixdeskmess -1 "Something up!! join_bnl expects BNL $BNL"
 #MACRO mymess
  to be set
 
@@ -40,15 +39,13 @@ then
 
 #MACRO mymess 0 A negative number of samples requested!!!
   sixdeskmesslevel=0
-  sixdeskmess="A negative number of samples requested!!!"
-  sixdeskmess
+  sixdeskmess -1 "A negative number of samples requested!!!"
 #MACRO mymess
 
 
 #MACRO mymess 0 Please check bnlsamples/bnlsamplee $bnlsamples/$bnlsamplee
   sixdeskmesslevel=0
-  sixdeskmess="Please check bnlsamples/bnlsamplee $bnlsamples/$bnlsamplee"
-  sixdeskmess
+  sixdeskmess -1 "Please check bnlsamples/bnlsamplee $bnlsamples/$bnlsamplee"
 #MACRO mymess
 
 
@@ -63,8 +60,7 @@ if [ ! -d "$tree/$LHCDesHome" ] ;then
 
 #MACRO mymess 0 The directory $tree/$LHCDesHome does NOT exist!
   sixdeskmesslevel=0
-  sixdeskmess="The directory $tree/$LHCDesHome does NOT exist!"
-  sixdeskmess
+  sixdeskmess -1 "The directory $tree/$LHCDesHome does NOT exist!"
 #MACRO mymess
 
 
@@ -84,15 +80,13 @@ sixdesklock
 
 #MACRO mymess 1 Main loop for Study $LHCDescrip, Seeds $bnlseeds to $bnlseede
 sixdeskmesslevel=1
-sixdeskmess="Main loop for Study $LHCDescrip, Seeds $bnlseeds to $bnlseede"
-sixdeskmess
+sixdeskmess -1 "Main loop for Study $LHCDescrip, Seeds $bnlseeds to $bnlseede"
 #MACRO mymess
 
 
 #MACRO mymess 1 and Samples $bnlsamples to $bnlsamplee
 sixdeskmesslevel=1
-sixdeskmess="and Samples $bnlsamples to $bnlsamplee"
-sixdeskmess
+sixdeskmess -1 "and Samples $bnlsamples to $bnlsamplee"
 #MACRO mymess
 
 bnlseed=$bnlseeds
@@ -101,8 +95,7 @@ then
 
 #MACRO mymess 0 The directory $sixtrack_input/$bnlseed does NOT exist!!!
   sixdeskmesslevel=0
-  sixdeskmess="The directory $sixtrack_input/$bnlseed does NOT exist!!!"
-  sixdeskmess
+  sixdeskmess -1 "The directory $sixtrack_input/$bnlseed does NOT exist!!!"
 #MACRO mymess
 
 

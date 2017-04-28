@@ -18,8 +18,7 @@ then
 
 #MACRO mymess 0 run_missing_jobs can be used only with LSF !!!
   sixdeskmesslevel=0
-  sixdeskmess="run_missing_jobs can be used only with LSF !!!"
-  sixdeskmess
+  sixdeskmess -1 "run_missing_jobs can be used only with LSF !!!"
 #MACRO mymess
 
 
@@ -34,8 +33,7 @@ then
 
 #MACRO mymess 0 The file $sixdeskjobs/missing_jobs is empty!!!
   sixdeskmesslevel=0
-  sixdeskmess="The file $sixdeskjobs/missing_jobs is empty!!!"
-  sixdeskmess
+  sixdeskmess -1 "The file $sixdeskjobs/missing_jobs is empty!!!"
 #MACRO mymess
 
 
@@ -76,15 +74,13 @@ do
 
 #MACRO mymess 0 Skipping $sixdeskRunnam sixdeskRundir because of missing files!!!
     sixdeskmesslevel=0
-    sixdeskmess="Skipping $sixdeskRunnam sixdeskRundir because of missing files!!!"
-    sixdeskmess
+    sixdeskmess -1 "Skipping $sixdeskRunnam sixdeskRundir because of missing files!!!"
 #MACRO mymess
 
 
 #MACRO mymess 0 Run check_missing_jobs for details
     sixdeskmesslevel=0
-    sixdeskmess="Run check_missing_jobs for details"
-    sixdeskmess
+    sixdeskmess -1 "Run check_missing_jobs for details"
 #MACRO mymess
 
   else

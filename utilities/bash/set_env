@@ -25,7 +25,7 @@ export sixdeskwhere=`dirname $PWD`
 # Set up some temporary values until we execute sixdeskenv/sysenv
 # Don't issue lock/unlock debug text (use 2 for that)
 export sixdesklogdir=""
-export sixdesklevel=1
+#export sixdesklevel=1
 export sixdeskhome="."
 export sixdeskecho="yes!"
 if test "$sixdeskroot" != "sixjobs"
@@ -52,15 +52,13 @@ then
 
 #MACRO mymess 0 Workspace mismatch /$workspace/$cworkspace/!!!
   sixdeskmesslevel=0
-  sixdeskmess="Workspace mismatch /$workspace/$cworkspace/!!!"
-  sixdeskmess
+  sixdeskmess -1 "Workspace mismatch /$workspace/$cworkspace/!!!"
 #MACRO mymess
 
 
 #MACRO mymess 0 Check the workspace definition in sixdeskenv.
   sixdeskmesslevel=0
-  sixdeskmess="Check the workspace definition in sixdeskenv."
-  sixdeskmess
+  sixdeskmess -1 "Check the workspace definition in sixdeskenv."
 #MACRO mymess
 
 
@@ -92,8 +90,7 @@ then
 
 #MACRO mymess 0 Only one parameter is allowed by set_env, an LHCDescrip!!!
   sixdeskmesslevel=0
-  sixdeskmess="Only one parameter is allowed by set_env, an LHCDescrip!!!"
-  sixdeskmess
+  sixdeskmess -1 "Only one parameter is allowed by set_env, an LHCDescrip!!!"
 #MACRO mymess
 
 
@@ -129,15 +126,13 @@ then
 
 #MACRO mymess 0 The study /$newLHCDescrip/ does not exist!!!
       sixdeskmesslevel=0
-      sixdeskmess="The study /$newLHCDescrip/ does not exist!!!"
-      sixdeskmess
+      sixdeskmess -1 "The study /$newLHCDescrip/ does not exist!!!"
 #MACRO mymess
 
 
 #MACRO mymess 0 The sixdeskenv LHCDescrip /$LHCDescrip/ does not correspond!!!
       sixdeskmesslevel=0
-      sixdeskmess="The sixdeskenv LHCDescrip /$LHCDescrip/ does not correspond!!!"
-      sixdeskmess
+      sixdeskmess -1 "The sixdeskenv LHCDescrip /$LHCDescrip/ does not correspond!!!"
 #MACRO mymess
 
 
@@ -173,8 +168,7 @@ then
 
 #MACRO mymess 0 Switching to study $newLHCDescrip
   sixdeskmesslevel=0
-  sixdeskmess="Switching to study $newLHCDescrip"
-  sixdeskmess
+  sixdeskmess -1 "Switching to study $newLHCDescrip"
 #MACRO mymess
 
   aline=`egrep "^ *export *LHCDescrip=" studies/$newLHCDescrip/sixdeskenv | tail -1`
@@ -184,8 +178,7 @@ then
 
 #MACRO mymess 0 Couldn't find an LHCDescrip in studies/$newLHCDescrip/sixdeskenv!!!
     sixdeskmesslevel=0
-    sixdeskmess="Couldn't find an LHCDescrip in studies/$newLHCDescrip/sixdeskenv!!!"
-    sixdeskmess
+    sixdeskmess -1 "Couldn't find an LHCDescrip in studies/$newLHCDescrip/sixdeskenv!!!"
 #MACRO mymess
 
 
@@ -212,8 +205,7 @@ then
 
 #MACRO mymess 0 BUG!!! Study mismatch for /$newLHCDescrip/$studyLHCDescrip/
     sixdeskmesslevel=0
-    sixdeskmess="BUG!!! Study mismatch for /$newLHCDescrip/$studyLHCDescrip/"
-    sixdeskmess
+    sixdeskmess -1 "BUG!!! Study mismatch for /$newLHCDescrip/$studyLHCDescrip/"
 #MACRO mymess
 
 
@@ -243,8 +235,7 @@ then
   # We are creating a NEW study $newLHCDescrip
  
   sixdeskmesslevel=0
-  sixdeskmess="Creating a NEW study $newLHCDescrip"
-  sixdeskmess
+  sixdeskmess -1 "Creating a NEW study $newLHCDescrip"
 
   mkdir -p studies/$newLHCDescrip
   cp sixdeskenv studies/$newLHCDescrip
@@ -255,8 +246,7 @@ then
 
   # We are updating study $LHCDescrip
   sixdeskmesslevel=0
-  sixdeskmess="Updating sixdeskenv/sysenv for $LHCDescrip"
-  sixdeskmess
+  sixdeskmess -1 "Updating sixdeskenv/sysenv for $LHCDescrip"
   cp sixdeskenv studies/$LHCDescrip
   cp sysenv studies/$LHCDescrip
 
@@ -264,8 +254,7 @@ else
 
   # error
   sixdeskmesslevel=0
-  sixdeskmess="BUG!!! None of NEW/SWITCH/UPDATE is defined!!!"
-  sixdeskmess
+  sixdeskmess -1 "BUG!!! None of NEW/SWITCH/UPDATE is defined!!!"
   sixdesklockdir=studies
   sixdeskunlock
   sixdesklockdir=
