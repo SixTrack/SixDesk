@@ -1,0 +1,435 @@
+#!/bin/bash
+#
+# R.A.Owen 2008-11-03
+# changed I.Zacharov 2011-01-19
+# commented out #mv .problem
+# Updated 13.12.2013 Nils, changed AFS dir ref
+# Updated 06.10.2016 A.Mereghetti, added megaZip functionality
+# Updated 25.03.2017 A.Mereghetti, sixtracktest + SixOut.zip (from .desc) + appname (from .desc)
+set -e
+
+#Set Variables
+boincdir=/data/boinc/project/sixtrack
+host=$(hostname -s)
+
+logdir=$boincdir/log_$host
+[ -d $logdir ] || mkdir $logdir
+LOGFILE="$logdir/$(basename $0).log"
+
+lockdir=$boincdir/pid_$host
+[ -d $lockdir ] || mkdir $lockdir
+lockfile=$lockdir/$(basename $0).lock
+
+spooldir=/afs/cern.ch/work/b/boinc/boinctest
+spooldirUpload=$spooldir/upload
+
+# The relative path of the workunit template file from the config dir.
+# this template will present Sixin.zip as the input file
+WU_template=templates/sixtrack_wu_template.xml 
+
+# The relative path of the result template file from the config dir.
+# this template will bring back the Sixout.zip results
+result_template_SixOutZip_def=templates/sixtrack_res_zip_template.xml
+
+
+#Define finctions
+abort(){
+    exitcode=1
+    if [ $# = 2 ] ; then
+	exitcode=$1
+	shift
+    fi
+    error "$1"
+    log "ABORT exitcode is $exitcode"
+    exit $exitcode	
+}
+	
+log(){ # log_message
+    if [ $# -gt 0 ] ; then 
+	logtofile "$*"
+    else
+	local line
+	while read line ; do 
+	    logtofile "$line"
+	done
+    fi
+}   
+
+logtofile(){ #[opt-file] log_message
+    local logfile
+    logfile="$LOGFILE"
+    if [ $# -gt 1 ] ; then 
+	logfile="$logdir/$1"
+	shift
+    fi
+    echo "$(date -Iseconds) $1" >>"$logfile"
+}
+
+logstudy(){ # log_message 
+    if [ $# -gt 0 ] ; then 
+	logtofile "submit.${studyname}.log" "$*"
+    else
+	local line
+	while read line ; do 
+	    logtofile "submit.${studyname}.log" "$line"
+	done
+    fi
+}
+
+
+error(){
+	echo ERROR: $(basename $0) "$1" 1>&2 
+	log ERROR: "$1"
+}
+
+warn(){
+	echo WARNING: $(basename $0) "$1" 1>&2 
+	log WARNING: "$1"
+}
+
+#Klog(){
+#echo   $boincdir/bin/klogscript boinc $boincdir/keys/.boinc.k
+#}
+
+getlock(){
+    if  ln -s PID:$$ $lockfile >/dev/null 2>&1 ; then
+	trap "rm $lockfile; log Relase lock $lockfile" EXIT
+	log Got lock $lockfile 
+    else 
+	abort 1 "$lockfile already exists. $0 already running? Abort..."
+	#never get here
+	exit 1
+    fi
+}
+
+
+run_spool_megazip(){ # max_jobs_to_submit
+
+    megaZip=1
+    
+    if [ -z "$1" -o "$1" = "0" ] ; then
+	local max_jobs=""
+    else
+	local max_jobs="$1"	
+	local complete=0
+    fi
+
+    find "$spooldirUpload" -mmin +5 -name "*.zip" | (
+	while read workBatch ; do
+	    unzip -t $workBatch  >/dev/null 2>&1
+	    if [ $? -ne 0 ] ; then
+		warn "integrity problem with $workBatch - move it to ${workBatch}.err"
+		mv $workBatch ${workBatch}.err
+		continue
+	    fi
+	    origPath=`mktemp -d -p /tmp/`
+	    warn "$workBatch being processed in $origPath ..."
+	    cp $workBatch $origPath
+	    # remember that you must run in $boincdir
+	    unzip $workBatch -d $origPath >/dev/null 2>&1
+	    # check for unzipped .desc files
+	    find $origPath -maxdepth 1 -type f -name '*.desc' | (
+	        while read descfile ; do
+		    # process the desc files
+		    if submit_descfile "$descfile" ; then
+			logstudy "Submitted $WUname"
+			#stop after max_jobs (0=unlimited)
+			if [ -n "$max_jobs" ] ; then
+			    complete=$(( $complete + 1 ))
+			    if [ $complete -ge $max_jobs ] ; then
+				break 2
+			    fi
+			fi
+		    else
+			logstudy "Problem submitting $WUname"
+		    fi
+	        done
+	    )
+	    warn " ...going on with next MegaZip."
+	    rm -rf $origPath
+	    rm $workBatch
+	done
+    )
+}
+
+run_spool(){ # max_jobs_to_submit 
+
+    megaZip=0
+    
+    if [ -z "$1" -o "$1" = "0" ] ; then
+	local max_jobs=""
+    else
+	local max_jobs="$1"	
+	local complete=0
+    fi
+
+    #find the work dirs 2 levels down
+    find "$spooldir" -maxdepth 2 -type d -name "work" | (
+	while read workdir ; do
+	    origPath=$workdir
+	    #check for desc files in the work dirs
+	    find "$workdir" -maxdepth 1 -type f -name '*.desc' | (
+	        while read descfile ; do
+		    #process the desc files
+		    if submit_descfile "$descfile" ; then
+			logstudy "Submitted $WUname"
+			#stop after max_jobs (0=unlimited)
+			if [ -n "$max_jobs" ] ; then
+			    complete=$(( $complete + 1 ))
+			    if [ $complete -ge $max_jobs ] ; then
+				break 2
+			    fi
+			fi
+		    else
+			logstudy "Problem submitting $WUname"
+		    fi
+	        done
+	    ) 
+	done
+    )
+}
+
+submit_descfile(){ 
+        # variables from outer function:
+        # - megaZip: flag for megaZip;
+        # - origPath: path of the .desc file ($workdir or /tmp/...);
+        # megaZip=0: $1: full path to .desc file
+        # megaZip=1: $1: name of .desc file
+        descfile=`basename $1`
+        WUname="${descfile%.desc}"
+        zipfile="${descfile%.desc}.zip"
+        studyname=`echo "${WUname}" | awk 'BEGIN{FS="__"}{print ($1)}'`
+        studydir=$spooldir/$studyname
+        workdir=$studydir/work
+
+	log "study $studyname - descfile $descfile"
+
+	clearWUvars
+	parse_descfile  < "$origPath/$descfile"
+	if [ "$WUname" != "$WUinputName" ] ; then
+	    error "Problem with $descfile - WUinputName is $WUinputName"
+	    mv "${origPath}/${descfile}" "${workdir}/${descfile}.problem"
+	    if [ $megaZip = 1 ] ; then
+		mv -f "${origPath}/${zipfile}" "${workdir}/${zipfile}"
+	    fi
+	    warn "moved  ${descfile} to ${descfile}.problem"
+	    return 1
+	fi
+
+        #overriding delay bound
+        WUdelayBound=$(cat $boincdir/suggested_deadline)
+	
+
+#copyfiles
+#creatework && delete(move?) desc files
+#log
+	if prepareinputfile ; then
+	    #if [ $keepzip = 1 ] ; then
+	    #    log "$zipfile copied to $downloadpath"
+	    #else
+	    #    log "$zipfile moved to $downloadpath"
+	    #fi
+	    warn " proceed"
+	else
+	    if [ $keepzip = 1 ] ; then
+	        warn "Could not copy input file $zipfile. Skipping"
+	    else
+	        warn "Could not move input file $zipfile. Skipping"
+	    fi
+	    mv "${origPath}/${descfile}" "${workdir}/${descfile}.problem"
+	    if [ $megaZip = 1 ] ; then
+		mv -f "${origPath}/${zipfile}" "${workdir}/${zipfile}"
+	    fi
+	    warn "moved  ${descfile} to ${descfile}.problem"
+	    warn " try later"
+	    return 1
+	fi
+
+
+create_cmd="$boincdir/bin/create_work 		   \
+ -config_dir $boincdir 				   \
+ -appname $WUapplication		           \
+ -wu_name $WUname	      			   \
+ -wu_template $WU_template 			   \
+ -result_template $result_template_SixOutZip_def   \
+ -rsc_fpops_est $WUfpopsEstimate 		   \
+ -rsc_fpops_bound $WUfpopsBound 		   \
+ -rsc_memory_bound $WUmemBound 			   \
+ -rsc_disk_bound $WUdiskBound 			   \
+ -delay_bound $WUdelayBound 			   \
+ -min_quorum $WUredundancy 			   \ 
+ -target_nresults $WUcopies 			   \
+ -max_error_results $WUerrors 			   \
+ -max_total_results $WUnumIssues 		   \
+ -max_success_results $WUresultsWithoutConcensus   \
+ $zipfile"
+
+        echo "Running ${create_cmd}" | sed -e's/[ \t]\+/ /g' | log
+	if ! output=$(${create_cmd} 2>&1) ; then
+	    error "problem with create_work:"
+	    echo "${output}" | log
+	    warn "Skipping $WUname"
+	    log "removing $downloadpath"
+	    rm $downloadpath || error "Problem removing $downloadpath"
+	
+	    mv -f "${origPath}/${descfile}" "${workdir}/${descfile}.problem"
+	    if [ $megaZip = 1 ] && [ $keepzip = 1 ] ; then
+		mv -f "${origPath}/${zipfile}" "${workdir}/${zipfile}"
+	    fi
+	    warn "moved  ${descfile} to ${descfile}.problem"
+	    return 1
+	fi
+
+	log "Workunit $WUname Submitted"
+	if [ $keepzip = 1 ] ; then
+	    mv -f "${origPath}/${descfile}" "${workdir}/${WUname}.done" 
+	    if [ $megaZip = 1 ] ; then
+		cp -f "${origPath}/${zipfile}" "${workdir}/${zipfile}"
+	    fi
+	    log "moved  ${descfile} to ${WUname}.done"
+	else
+	    rm -f "${origPath}/${descfile}" 
+	    log "removed  ${descfile} as processed"
+	fi
+        # in case of megazip, zipfile will be deleted since the
+	#  tmp dir will be deleted
+
+	return 0
+}
+
+
+prepareinputfile(){
+    
+    downloadpath=""
+    if output=$($boincdir/bin/dir_hier_path $zipfile 2>&1) ; then
+	downloadpath=$(echo "$output" | cut -f 2 -d " ")
+    else
+	error "dir_hier_path gave error:"
+	echo "$output" | log
+	abort 10 "downloadpath cannot be set"
+    fi
+    #downloadpath=$($boincdir/bin/dir_hier_path $zipfile 2>>$LOGFILE | cut -f 2 -d " ")
+
+    if [ -z "$downloadpath" ] ; then
+	abort 10  "downloadpath is empty! Bad... "
+    fi
+    downloaddir=$(dirname $downloadpath)
+    [ -d $downloaddir ] || mkdir -p downloaddir
+    
+    if [ -e $downloadpath ] ; then
+	warn "$downloadpath already exists"
+	mv "${origPath}/${descfile}" "${workdir}/${descfile}.problem"
+	warn "#moved  ${descfile} to ${descfile}.problem"
+        if [ $keepzip = 0 ] ; then
+		rm -f ${origPath}/$zipfile;
+		log "removed ${origPath}/$zipfile";
+	fi
+	return 1
+    fi
+    
+    if [ $keepzip = 1 ] ; then
+	CMD="cp -f"
+    else
+	CMD="mv"
+    fi
+
+    #Maybe sleep for a bit or maybe use IONICE to keep things going!
+    $SLEEP # do this before $CMD so exit status is propogated properly
+    if output=$($IONICE $CMD ${origPath}/$zipfile $downloadpath 2>&1) ; then
+	log "$CMD $zipfile $downloadpath"
+	return 0
+    else
+	local retval=$?
+	error "$CMD ${origPath}/$zipfile $downloadpath"
+	echo "$output" | log
+	return $retval
+    fi
+}
+
+parse_descfile(){
+	read WUinputName
+	read WUfpopsEstimate
+	read WUfpopsBound
+	read WUmemBound
+	read WUdiskBound
+	read WUdelayBound
+	read WUredundancy
+	read WUcopies
+	read WUerrors
+	read WUnumIssues
+	read WUresultsWithoutConcensus
+	read WUapplication
+	if read junk ; then 
+		warn "Problem with format of $(basename $1)"
+		return 1
+	fi
+}
+
+clearWUvars(){
+	unset WUinputName
+	unset WUfpopsEstimate
+	unset WUfpopsBound
+	unset WUmemBound
+	unset WUdiskBound
+	unset WUdelayBound
+	unset WUredundancy
+	unset WUcopies
+	unset WUerrors
+	unset WUnumIssues
+	unset WUresultsWithoutConcensus
+	unset WUapplication
+}
+
+printhelp(){
+cat <<EOF
+Usage: $(basename $0) [options]
+
+        Where options are:
+        -h              - print usage and exit
+        -n number       - set max no of jobs to submit this run
+	-k		- Keep .desc.done and .zip contents
+
+EOF
+}
+
+#Main Program
+
+
+IONICE=""
+SLEEP="sleep 0.5"
+
+if [ -x /usr/bin/ionice ] ; then
+    IONICE="/usr/bin/ionice -c2 -n7" #-c2=best effort -n7=low prio
+    SLEEP=""
+fi
+
+maxjobs=0
+keepzip=0
+
+while getopts ":hn:k"  OPT
+do
+  #Debug
+  #echo "OPT is $OPT. OPTIND is $OPTIND. OPTARG is $OPTARG."
+case "$OPT" in
+h) printhelp ; exit 0 ;;
+n) maxjobs="$OPTARG" ;;
+k) keepzip=1 ;;
+:|?) error 'Invalid Argument(s)' ; printhelp; exit 0 ;;
+esac
+done
+
+
+log STARTING
+
+#must be in $boincdir for boinc programs to work properly
+cd $boincdir
+
+getlock
+#Klog
+log run_spool $maxjobs
+run_spool $maxjobs
+
+log run_spool_megazip $maxjobs
+run_spool_megazip $maxjobs
+
+log FINISHING
