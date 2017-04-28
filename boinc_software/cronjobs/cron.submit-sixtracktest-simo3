@@ -28,7 +28,6 @@ spooldirUpload=$spooldir/upload
 WU_template=templates/sixtrack_wu_template.xml 
 
 # The relative path of the result template file from the config dir.
-result_template_def=templates/sixtrack_res_template.xml
 # this template will bring back the Sixout.zip results
 result_template_SixOutZip_def=templates/sixtrack_res_zip_template.xml
 
@@ -217,12 +216,6 @@ submit_descfile(){
 	    return 1
 	fi
 
-	if ${WUlSixOutZip} ; then
-	    local __result_template=${result_template_SixOutZip_def}
-	else
-	    local __result_template=${result_template_def}
-	fi
-
         #overriding delay bound
         WUdelayBound=$(cat $boincdir/suggested_deadline)
 	
@@ -253,22 +246,22 @@ submit_descfile(){
 	fi
 
 
-create_cmd="$boincdir/bin/create_work 		\
- -config_dir $boincdir 				\
- -appname $WUapplication		        \
- -wu_name $WUname	      			\
- -wu_template $WU_template 			\
- -result_template $__result_template 		\
- -rsc_fpops_est $WUfpopsEstimate 		\
- -rsc_fpops_bound $WUfpopsBound 		\
- -rsc_memory_bound $WUmemBound 			\
- -rsc_disk_bound $WUdiskBound 			\
- -delay_bound $WUdelayBound 			\
- -min_quorum $WUredundancy 			\
- -target_nresults $WUcopies 			\
- -max_error_results $WUerrors 			\
- -max_total_results $WUnumIssues 		\
- -max_success_results $WUresultsWithoutConcensus \
+create_cmd="$boincdir/bin/create_work 		   \
+ -config_dir $boincdir 				   \
+ -appname $WUapplication		           \
+ -wu_name $WUname	      			   \
+ -wu_template $WU_template 			   \
+ -result_template $result_template_SixOutZip_def   \
+ -rsc_fpops_est $WUfpopsEstimate 		   \
+ -rsc_fpops_bound $WUfpopsBound 		   \
+ -rsc_memory_bound $WUmemBound 			   \
+ -rsc_disk_bound $WUdiskBound 			   \
+ -delay_bound $WUdelayBound 			   \
+ -min_quorum $WUredundancy 			   \ 
+ -target_nresults $WUcopies 			   \
+ -max_error_results $WUerrors 			   \
+ -max_total_results $WUnumIssues 		   \
+ -max_success_results $WUresultsWithoutConcensus   \
  $zipfile"
 
         echo "Running ${create_cmd}" | sed -e's/[ \t]\+/ /g' | log
@@ -366,7 +359,6 @@ parse_descfile(){
 	read WUnumIssues
 	read WUresultsWithoutConcensus
 	read WUapplication
-	read WUlSixOutZip
 	if read junk ; then 
 		warn "Problem with format of $(basename $1)"
 		return 1
@@ -386,7 +378,6 @@ clearWUvars(){
 	unset WUnumIssues
 	unset WUresultsWithoutConcensus
 	unset WUapplication
-	unset WUlSixOutZip
 }
 
 printhelp(){
