@@ -9,7 +9,7 @@
 # crontab every 12h
 ## Crontab for Sixtrack - append to default BOINC cronjob
 # Puppet Name: worksubmit sixtrack 2
-17,47 * * * * /share/boinc/project/sixtrack/bin/work.submit-ckpr > /dev/null 2>&1
+17,47 * * * * /share/boinc/project/sixtrack/bin/cron.submit-sixtracktest-simo3 > /dev/null 2>&1
 # Puppet Name: worksubmit sixtrack
 11,41 * * * * /share/boinc/project/sixtrack/bin/cron.submit-sixtrack-simo3 > /dev/null 2>&1
 # zip all WUs which were not given back to user
