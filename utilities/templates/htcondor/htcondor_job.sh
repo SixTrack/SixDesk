@@ -40,10 +40,15 @@ else
     cp fort.10.gz ${runDirBaseName}/${WUdir}
 fi
 
-# results for fma analysis
+# (old) results for fma analysis
 if [ -f fma_sixtrack ] ; then
     gzip fma_sixtrack
     cp fma_sixtrack.gz ${runDirBaseName}/${WUdir}
+fi
+
+# sixout.zip
+if [ -f Sixout.zip ] ; then
+    cp Sixout.zip ${runDirBaseName}/${WUdir}
 fi
 
 # for debugging also copy files with particle coordinates
