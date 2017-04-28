@@ -1,0 +1,158 @@
+// This file is part of BOINC.
+// http://boinc.berkeley.edu
+// Copyright (C) 2008 University of California
+//
+// BOINC is free software; you can redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+//
+// BOINC is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with BOINC.  If not, see <http://www.gnu.org/licenses/>.
+
+// A sample assimilator that:
+// 1) if success, copy the output file(s) to a directory
+// 2) if failure, append a message to an error log
+
+#include <stdio.h>
+#include <unistd.h>
+#include <vector>
+#include <string>
+#include <cstdlib>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <time.h>
+#include <stdlib.h>
+
+#include "boinc_db.h"
+#include "error_numbers.h"
+#include "filesys.h"
+#include "sched_msgs.h"
+#include "validate_util.h"
+#include "sched_config.h"
+
+using std::vector;
+using std::string;
+
+#define STR_SIZE 4096
+static char *SPOOLDIR = "/afs/cern.ch/work/b/boinc/boinctest";
+//static char *SPOOLDIR = "/afs/cern.ch/user/b/boinc/scratch0/boinctest";
+//static char *SPOOLDIR = "/afs/cern.ch/user/b/boinc/scratch0/boinc";
+static char *RESULTDIR = "results";
+static char *RESULTDIR_6 = "results";
+//static char *RESULTDIR_6 = "results_6";
+static char *ERRORREPT = "sample_results/errorstest";
+
+int write_error(int n, char* p) {
+    static FILE* f = 0;
+    int errnolast = errno;
+
+    if (!f) {
+        f = fopen(config.project_path(ERRORREPT), "a");
+        if (!f) return ERR_FOPEN;
+    }
+    fprintf(f, "POS=%-2d: %d %s %s\n", n,errnolast,strerror(errnolast),p);
+    fflush(f);
+    return n;
+}
+
+int assimilate_handler( WORKUNIT& wu, vector<RESULT>& /*results*/, RESULT& canonical_result) 
+{
+    int retval;
+    char buf[STR_SIZE];
+    unsigned int i;
+    int err;
+    struct stat sb;
+
+//    retval = boinc_mkdir(config.project_path(RESULTDIR));
+//    if (retval) return retval;
+
+    if (wu.canonical_resultid) {
+        vector<FILE_INFO> output_files;
+        char dire_path[STR_SIZE];
+        char copy_path[STR_SIZE];
+        get_output_file_infos(canonical_result, output_files);
+        unsigned int n = output_files.size();
+        bool file_copied = false;
+	DIR *dirp = NULL;
+
+/* find name of the directory based on the convention SPOOLDIR/dir-name__ */
+	strncpy(buf,wu.name,STR_SIZE);
+	buf[STR_SIZE-1] = '\0';
+        char *dirnul = strstr(buf,"__");
+        *dirnul = '\0';
+
+/* iza debug:  
+	int lenwname = strlen(buf);
+	snprintf(dire_path,STR_SIZE,"check: files=%d len=%d - %s",n,lenwname,buf);
+	write_error(0,dire_path);
+   end debug */
+
+	if( (err=snprintf(dire_path,STR_SIZE,"%s/%s/%s",SPOOLDIR,buf,RESULTDIR)) >= STR_SIZE) return write_error(1,dire_path);
+        if( (dirp = opendir(dire_path)) == NULL) {
+		write_error(2,dire_path);           /* if directory is not there return error
+                                                        typically, we have no permission to create a directory
+                                                    */
+		if(mkdir(dire_path, 0777) < 0) {    // if we cannot create it, just ignore shipping back results
+			return 0;
+		}
+	}
+	else closedir(dirp); // directory exists;
+
+/*iza debug   write_error(0,dire_path); */
+
+        FILE_INFO& fi0 = output_files[0];
+	if( (err=snprintf(copy_path,STR_SIZE,"%s/%s",dire_path,wu.name)) >= STR_SIZE) return write_error(3,copy_path);
+        retval = boinc_copy(fi0.path.c_str() , copy_path);
+        if (!retval) file_copied = true;
+
+/*      write extra files to RESULTS_6 directory:  */
+        if ( n == 1) goto FINISH;
+	if( (err=snprintf(dire_path,STR_SIZE,"%s/%s/%s",SPOOLDIR,buf,RESULTDIR_6)) >= STR_SIZE) {
+		write_error(1,dire_path);
+		goto FINISH;
+	}
+        if( (dirp = opendir(dire_path)) == NULL) goto FINISH;
+	else closedir(dirp); // directory exists;
+        for (i=1; i<n; i++) {
+             FILE_INFO& fi = output_files[i];
+
+             if (stat(fi.path.c_str(), &sb) == -1) { write_error(20,(char *)fi.path.c_str()); continue;}
+
+	     if( (err=snprintf(copy_path,STR_SIZE,"%s/%s_%d",dire_path,wu.name,i)) >= STR_SIZE) return write_error(3,copy_path);
+//                copy_path = config.project_path("%s/%s_%d",RESULTDIR, wu.name, i);
+
+             if( (retval = boinc_copy(fi.path.c_str() , copy_path)) ) {
+			write_error(9,(char *) fi.path.c_str()); 
+			write_error(retval,copy_path); 
+	     }	
+        }
+
+/*iza debug     write_error(9,(char *) fi.path.c_str()); 
+  iza debug     write_error(retval,copy_path); 			*/
+
+	FINISH:
+
+        if (!file_copied) {
+	    if( (err=snprintf(copy_path,STR_SIZE,"%s/%s/%s/%s_%s",SPOOLDIR,buf,RESULTDIR,wu.name,"no_output")) >= STR_SIZE)
+			return write_error(5,copy_path);
+//            copy_path = config.project_path("%s/%s_%s",RESULTDIR, wu.name, "no_output_files");
+
+/*  accept that the error leads to loss of the result; names of results are noted in error file */
+            FILE* f = fopen(copy_path, "w");
+            if (!f) write_error(6,copy_path);
+            else fclose(f);
+        }
+    } 
+    else {
+	snprintf(buf,STR_SIZE,"%s: 0x%x",wu.name,wu.error_mask);
+        write_error(7,buf);
+    }
+    return 0;
+}
