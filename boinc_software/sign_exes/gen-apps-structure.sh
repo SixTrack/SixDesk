@@ -45,8 +45,8 @@ signit()
 	    let __lerr+=1
 	fi
     else
-	echo "signing exe: ${__dir} ${__exe} ${__app}" >> ${__dir}/README
-	[ ! -d ${__dir} ] || mkdir -p ${__dir}
+	echo "signing exe: ${__dir} ${__exe} ${__app}" >> ${VER}/README
+	[ -d ${__dir} ] || mkdir -p ${__dir}
 	cp -u ${dir_unsigned}/${__exe} ${__dir}/${__app}
         # actually sign:
 	cd ${__dir}
@@ -61,10 +61,11 @@ signit()
     return ${__lerr}
 }
 
+[ -d ${VER} ] || mkdir -p ${VER}
 if ! ${lCheck} ; then
-    echo "running `basename $0` at `date`" > ${__dir}/README
-    echo "unsigned exes from: ${dir_unsigned}" >> ${__dir}/README
-    echo "version: ${VER} - ${VS}" >> ${__dir}/README
+    echo "running `basename $0` at `date`" > ${VER}/README
+    echo "unsigned exes from: ${dir_unsigned}" >> ${VER}/README
+    echo "version: ${VER} - ${VS}" >> ${VER}/README
 fi
 
 #__________________________________________________ linux   32 bit ______________________________________________
@@ -99,7 +100,8 @@ signit x86_64-pc-netbsd__avx            SixTrack_${VS}_${commonFlags}_NetBSD_gfo
 
 
 #___________________ finalize ________________
-if ! ${lCheck} ; then
-    chown -R lhcathom.boinc $VER
-fi
+# A.Mereghetti, 2017-05-03 - it seems obsolete...
+# if ! ${lCheck} ; then
+#     chown -R lhcathom:boinc $VER
+# fi
 
