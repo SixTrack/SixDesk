@@ -15,14 +15,23 @@
 #       |    |_ <signed_exe>                       exe           |
 #       |    |_ <signed_exe>.sig                   signature     |
 #       |_ ...                                                  /
+# NB: please make sure that any <signed_exe> has a UNIQUE name
+# NBB:
+# - VER and VS are used for the signed exes;
+# - VSorig is used to identify the exes to be signed;
+# in particular, VS and VSorig should be always identical, but when,
+#   for any reasons, updating the exes requires brand new names (eg because
+#   a previous attempt to update the exes failed);
 
 PROJ=/data/boinc/project/sixtrack
 dir_unsigned=/afs/cern.ch/user/k/kyrsjo/public/BOINC-release/execs-v6
-VER=46.14
-VS=4614
+VER=46.15
+VS=4615
+VSorig=4614
 commonFlags="libarchive_bignblz_cr_boinc_api_crlibm_fast_tilt_cmake"
 lCheck=true
 projXml=../xml/project.xml
+fullAppName=sixtracktest
 
 signit()
 {
@@ -45,8 +54,8 @@ signit()
 	    let __lerr+=1
 	fi
     else
-	echo "signing exe: ${__dir} ${__exe} ${__app}" >> ${__dir}/README
-	[ ! -d ${__dir} ] || mkdir -p ${__dir}
+	echo "signing exe: ${__dir} ${__exe} ${__app}" >> README_${VER}_${rightNow}
+	[ -d ${__dir} ] || mkdir -p ${__dir}
 	cp -u ${dir_unsigned}/${__exe} ${__dir}/${__app}
         # actually sign:
 	cd ${__dir}
@@ -61,45 +70,47 @@ signit()
     return ${__lerr}
 }
 
+rightNow=`date +"%F_%H-%M-%S"`
+[ -d ${VER} ] || mkdir -p ${VER}
 if ! ${lCheck} ; then
-    echo "running `basename $0` at `date`" > ${__dir}/README
-    echo "unsigned exes from: ${dir_unsigned}" >> ${__dir}/README
-    echo "version: ${VER} - ${VS}" >> ${__dir}/README
+    echo "running `basename $0` at ${rightNow}" > README_${VER}_${rightNow}
+    echo "unsigned exes from: ${dir_unsigned}" >> README_${VER}_${rightNow}
+    echo "version: ${VER} - ${VS} - ${VSorig}" >> README_${VER}_${rightNow}
 fi
 
 #__________________________________________________ linux   32 bit ______________________________________________
-signit i686-pc-linux-gnu__sse2          SixTrack_${VS}_${commonFlags}_Linux_gfortran_static_i686_32bit                  sixtrack_lin32_${VS}_sse2.linux
+signit i686-pc-linux-gnu__sse2          SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_i686_32bit                  ${fullAppName}_lin32_${VS}_sse2.linux
 #__________________________________________________ linux   64 bit ______________________________________________
-signit x86_64-pc-linux-gnu__sse2        SixTrack_${VS}_${commonFlags}_Linux_gfortran_static_x86_64_64bit                sixtrack_lin64_${VS}_sse2.linux
-signit x86_64-pc-linux-gnu__avx         SixTrack_${VS}_${commonFlags}_Linux_gfortran_static_avx_x86_64_64bit            sixtrack_lin64_${VS}_avx.linux
+signit x86_64-pc-linux-gnu__sse2        SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_x86_64_64bit                ${fullAppName}_lin64_${VS}_sse2.linux
+signit x86_64-pc-linux-gnu__avx         SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_avx_x86_64_64bit            ${fullAppName}_lin64_${VS}_avx.linux
 #__________________________________________________ linux   AARM64 ______________________________________________
-signit aarch64-android-linux-gnu__sse2  SixTrack_${VS}_${commonFlags}_Linux_gfortran-6_static_aarch64_64bit             sixtrack_lin64_${VS}_sse2.linux
-signit aarch64-unknown-linux-gnu__sse2  SixTrack_${VS}_${commonFlags}_Linux_gfortran-6_static_aarch64_64bit             sixtrack_lin64_${VS}_avx.linux
+signit aarch64-android-linux-gnu__sse2  SixTrack_${VSorig}_${commonFlags}_Linux_gfortran-6_static_aarch64_64bit             ${fullAppName}_aarch_lin64_${VS}_sse2.linux
+signit aarch64-unknown-linux-gnu__sse2  SixTrack_${VSorig}_${commonFlags}_Linux_gfortran-6_static_aarch64_64bit             ${fullAppName}_aarch_lin64_${VS}_avx.linux
 
 
 #__________________________________________________ mac     64 bit ______________________________________________
-signit x86_64-apple-darwin              SixTrack_${VS}_${commonFlags}_Darwin_gfortran_static_x86_64_64bit               sixtrack_darwin_${VS}_gen.exe
-signit x86_64-apple-darwin__avx         SixTrack_${VS}_${commonFlags}_Darwin_gfortran_static_avx_x86_64_64bit           sixtrack_darwin_${VS}_avx.exe
+signit x86_64-apple-darwin              SixTrack_${VSorig}_${commonFlags}_Darwin_gfortran_static_x86_64_64bit               ${fullAppName}_darwin_${VS}_gen.exe
+signit x86_64-apple-darwin__avx         SixTrack_${VSorig}_${commonFlags}_Darwin_gfortran_static_avx_x86_64_64bit           ${fullAppName}_darwin_${VS}_avx.exe
 
 
 #__________________________________________________ win     32 bit ______________________________________________
-signit windows_intelx86__sse2           SixTrack_${VS}_${commonFlags}_Windows_gfortran.exe_static_AMD64_32bit.exe       sixtrack_win32_${VS}_sse2.exe
+signit windows_intelx86__sse2           SixTrack_${VSorig}_${commonFlags}_Windows_gfortran.exe_static_AMD64_32bit.exe       ${fullAppName}_win32_${VS}_sse2.exe
 #__________________________________________________ win     64 bit ______________________________________________
-signit windows_x86_64__sse2             SixTrack_${VS}_${commonFlags}_Windows_gfortran.exe_static_AMD64_64bit.exe       sixtrack_win64_${VS}_sse2.exe
-signit windows_x86_64__avx              SixTrack_${VS}_${commonFlags}_Windows_gfortran.exe_static_avx_AMD64_64bit.exe   sixtrack_win64_${VS}_avx.exe
+signit windows_x86_64__sse2             SixTrack_${VSorig}_${commonFlags}_Windows_gfortran.exe_static_AMD64_64bit.exe       ${fullAppName}_win64_${VS}_sse2.exe
+signit windows_x86_64__avx              SixTrack_${VSorig}_${commonFlags}_Windows_gfortran.exe_static_avx_AMD64_64bit.exe   ${fullAppName}_win64_${VS}_avx.exe
 
 #__________________________________________________ freeBSD 64 bit ______________________________________________
-signit x86_64-pc-freebsd__sse2          SixTrack_${VS}_${commonFlags}_FreeBSD_gfortran_static_amd64_64bit               sixtrack_freeBSD64_${VS}_sse2.exe
-signit x86_64-pc-freebsd__avx           SixTrack_${VS}_${commonFlags}_FreeBSD_gfortran_static_avx_amd64_64bit           sixtrack_freeBSD64_${VS}_avx.exe
+signit x86_64-pc-freebsd__sse2          SixTrack_${VSorig}_${commonFlags}_FreeBSD_gfortran_static_amd64_64bit               ${fullAppName}_freeBSD64_${VS}_sse2.exe
+signit x86_64-pc-freebsd__avx           SixTrack_${VSorig}_${commonFlags}_FreeBSD_gfortran_static_avx_amd64_64bit           ${fullAppName}_freeBSD64_${VS}_avx.exe
 
 
 #__________________________________________________ netBSD 64 bit _______________________________________________
-signit x86_64-pc-netbsd__sse2           SixTrack_${VS}_${commonFlags}_NetBSD_gfortran_static_x86_64_64bit               sixtrack_netBSD64_${VS}_sse2.exe
-signit x86_64-pc-netbsd__avx            SixTrack_${VS}_${commonFlags}_NetBSD_gfortran_static_avx_x86_64_64bit           sixtrack_netBSD64_${VS}_avx.exe
+signit x86_64-pc-netbsd__sse2           SixTrack_${VSorig}_${commonFlags}_NetBSD_gfortran_static_x86_64_64bit               ${fullAppName}_netBSD64_${VS}_sse2.exe
+signit x86_64-pc-netbsd__avx            SixTrack_${VSorig}_${commonFlags}_NetBSD_gfortran_static_avx_x86_64_64bit           ${fullAppName}_netBSD64_${VS}_avx.exe
 
 
 #___________________ finalize ________________
-if ! ${lCheck} ; then
-    chown -R lhcathom.boinc $VER
-fi
+# if ! ${lCheck} ; then
+#     chown -R lhcathom.boinc $VER
+# fi
 
