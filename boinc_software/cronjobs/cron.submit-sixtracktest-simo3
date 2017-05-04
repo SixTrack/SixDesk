@@ -29,7 +29,7 @@ WU_template=templates/sixtrack_wu_template.xml
 
 # The relative path of the result template file from the config dir.
 # this template will bring back the Sixout.zip results
-result_template_SixOutZip_def=templates/sixtrack_res_zip_template.xml
+result_template_SixOutZip=templates/sixtrack_res_zip_template.xml
 
 
 #Define finctions
@@ -251,7 +251,7 @@ create_cmd="$boincdir/bin/create_work 		   \
  -appname $WUapplication		           \
  -wu_name $WUname	      			   \
  -wu_template $WU_template 			   \
- -result_template $result_template_SixOutZip_def   \
+ -result_template $result_template_SixOutZip       \
  -rsc_fpops_est $WUfpopsEstimate 		   \
  -rsc_fpops_bound $WUfpopsBound 		   \
  -rsc_memory_bound $WUmemBound 			   \
