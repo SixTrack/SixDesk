@@ -18,4 +18,6 @@
 0 */12 * * * cd /share/sixtrack/assimilation/all ; ./boinc_software/zip-trashed-WUs/zip-trashed-WUs.sh >> boinc_software/zip-trashed-WUs/zip-trashed-WUs.log 2>&1
 # Restart Sixtrack daemons weekly:
 13 13 * * 3 cd /share/boinc/project/sixtrack ; ./bin/stop ; sleep 3 ; ./bin/start  > /dev/null 2>&1
+# Delete spam:
+02 13 * * * cd /share/boinc/project/sixtrack/html/ops ; ./delete_spammers.php --forums --teams --user_url --profiles   > /dev/null 2>&1
 
