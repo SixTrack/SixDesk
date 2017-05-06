@@ -977,7 +977,7 @@ function dot_bsub(){
     # actually submit
     # typical message returned by bsub:
     #   Job <864248893> is submitted to queue <8nm>.
-    multipleTrials "tmpLines=\"`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.sh 2>&1`\" ; taskno=\"`echo \"${tmpLines}\" | grep submitted | cut -d\< -f2 | cut -d\> -f1`\"" "[ -n \"\${taskno}\" ]" "Problem at bsub"
+    multipleTrials "tmpLines=\"`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job 2>&1`\" ; taskno=\"`echo \"${tmpLines}\" | grep submitted | cut -d\< -f2 | cut -d\> -f1`\"" "[ -n \"\${taskno}\" ]" "Problem at bsub"
     let __lerr+=$?
 
     # verify that submission was successfull
