@@ -116,8 +116,11 @@ function getInfoFromFort3Local(){
 	sixdeskmess="for a total of ${__nLines} ACTIVE lines."
 	sixdeskmess
     fi
+}
 
 function setFurtherEnvs(){
+    # set exes
+    sixdeskSetExes
     # scan angles:
     export totAngle=90
     export ampFactor=0.3

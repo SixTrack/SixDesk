@@ -1,4 +1,7 @@
 #!/bin/bash
+
+export newBuildPathDef=/afs/cern.ch/project/sixtrack/build
+
 # A set of Subroutines called by Macros for the SixDesk environment
 sixdeskmess(){
     # levels:
@@ -1030,24 +1033,37 @@ sixdeskCreateUserTree(){
     fi
 }
 sixdeskSetExes(){
-    # The path to all scripts etc bin,Bin,scripts, exes, dots
-    # NB: actually used only for the listed exes
-    sixdeskpath=/afs/cern.ch/group/si/slap/bin/sixdesk
-    if [ $# -eq 1 ] ; then
-	sixdeskpath=$1
+    local __lerr=0
+    if [ -z "${sixdeskpath}" ] ; then
+	export sixdeskpath=/afs/cern.ch/group/si/slap/bin/sixdesk
     fi
-    export sixdeskpath
-    # The following SixTrack version is used for the one-turn
-    # SixTrack run to get the Beta values and for all LSF tasks (except DA)
-    # and the BNL EXE which is the same I hope
-    export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_pro
-    if test "$BIGNBLZ" != ""
-    then
-	export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_bignblz_pro
+    if [ -z ${SIXTRACKEXE} ] ; then
+	if [ -n "$BIGNBLZ" ] ; then
+	    export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_bignblz_pro
+	else
+	    export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_pro
+	fi
     fi
-    export SIXTRACKBNLEXE=$sixdeskpath/exes/SixTrack_bnl_pro
-    # Latest DA version from
-    export SIXTRACKDAEXE=$sixdeskpath/exes/SixTrack_crlibm_da_lf95v4200
+    if [ -z "${SIXTRACKBNLEXE}" ] ; then
+	export SIXTRACKBNLEXE=$sixdeskpath/exes/SixTrack_bnl_pro
+    fi
+    if [ -z "${SIXTRACKDAEXE}" ] ; then
+	export SIXTRACKDAEXE=$sixdeskpath/exes/SixTrack_crlibm_da_lf95v4200
+    fi
+    if [ -n "${appName}" ] ; then
+	case ${appName} in 
+	    sixtracktest ) 
+		export SIXTRACKEXE=$newBuildPathDef/sixtracktest
+		;;
+	    *)
+		export SIXTRACKEXE=$newBuildPathDef/sixtrack
+		;;
+	esac
+    else
+	sixdeskmess -1 "appName not specified!"
+	let __lerr+=1
+    fi
+    return ${__lerr}
 }
 sixdeskSetPlatForm(){
     local __platform=$1
@@ -1076,32 +1092,32 @@ sixdeskSetPlatForm(){
 sixDeskCheckAppName(){
     local __appname=$1
     local __lerr=1
-    local __recognisedAppNames=( 'sixtrack' 'sixtracktest' )
+    local __recognisedAppNames=( `\ls -p ${newBuildPathDef} | grep -v /` )
     if [ -n "${__appname}" ] ; then
 	# appName defined by user
 	__appname=`echo ${__appname} | tr '[A-Z]' '[a-z]'`
-	for __tmpRecognisedAppName in ${__recognisedAppName[@]} ; do
+	for __tmpRecognisedAppName in ${__recognisedAppNames[@]} ; do
 	    if [ "${__appname}" == "${__tmpRecognisedAppName}" ] ; then
 		__lerr=0
 		break
 	    fi
 	done
 	if [ ${__lerr} -ne 0 ] ; then
-	    sixdeskmess="Un-recognised appName ${appName}!"
-	    sixdeskmess
-	    sixdeskmess="Valid appNames are:"
-	    sixdeskmess
-	    for __tmpRecognisedAppName in ${__recognisedAppName[@]} ; do
-		sixdeskmess=" --> ${__tmpRecognisedAppName}"
-		sixdeskmess
+	    sixdeskmess -1 "Un-recognised appName: \"${__appname}\"!"
+	    sixdeskmess -1 "Valid appNames are:"
+	    for __tmpRecognisedAppName in ${__recognisedAppNames[@]} ; do
+		sixdeskmess -1 " --> ${__tmpRecognisedAppName}"
 	    done
+	fi
+	if [ "${__appname}" == "sixtracktest" ] ; then
+	    export sixdeskboinctest=true
 	fi
     else
 	# appName assigned by default
-	if ${sixdeskboinctest} ; then
-	    appName=sixtracktest
+	if [ -z "${sixdeskboinctest}" ] || ! ${sixdeskboinctest} ; then
+	    export appName=sixtrack
 	else
-	    appName=sixtrack
+	    export appName=sixtracktest
 	fi
 	__lerr=0
     fi
@@ -1112,11 +1128,14 @@ sixDeskSetBOINCVars(){
     # The SixTrack executable is now ????.
     export boincdir=/afs/cern.ch/work/b/boinc
     export sixdeskboincdirname=$workspace"_"$LHCDescrip
-    sixdeskboincdir=$boincdir/boinc/$sixdeskboincdirname
-    if ${sixdeskboinctest} ; then
-	sixdeskboincdir=$boincdir/boinctest/$sixdeskboincdirname
+    if [ -z "${sixdeskboincdir}" ] ; then
+	if [ -z "${sixdeskboinctest}" ] || ! ${sixdeskboinctest} ; then
+	    export sixdeskboincdir=$boincdir/boinc/$sixdeskboincdirname
+	else
+	    export sixdeskboincdir=$boincdir/boinctest/$sixdeskboincdirname
+	fi
     fi
-    export sixdeskboincdir
+    return
     export sixdeskparts=`expr $sixdeskpairs \* 2`
     if [ $short -eq 1 -o $da -eq 1 ] ; then
 	sixdeskturns=$turnss
