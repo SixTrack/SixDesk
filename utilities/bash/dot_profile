@@ -1135,7 +1135,6 @@ sixDeskSetBOINCVars(){
 	    export sixdeskboincdir=$boincdir/boinctest/$sixdeskboincdirname
 	fi
     fi
-    return
     export sixdeskparts=`expr $sixdeskpairs \* 2`
     if [ $short -eq 1 -o $da -eq 1 ] ; then
 	sixdeskturns=$turnss
