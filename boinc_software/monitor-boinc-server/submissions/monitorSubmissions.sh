@@ -14,7 +14,7 @@ fi
 
 #
 echo ""
-echo "new query at: `date`"
+echo "new query at: `date` - requested date: ${rqstDate}"
 
 # get data
 echo " querying data..."

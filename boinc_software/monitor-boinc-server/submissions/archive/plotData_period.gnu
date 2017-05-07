@@ -16,7 +16,7 @@ tMax=rightNow
 tStep=1*3600
 
 # time interval
-tMin='2017-03-01T00:00:00'
+tMin='2017-04-25T00:00:00'
 # AM -> tMax='2017-01-27T00:00:00'
 tStep=12*3600
 
@@ -25,11 +25,11 @@ tStep=12*3600
 # ------------------------------------------------------------------------------
 
 # retrieve data
-system('awk -v "tMin='.tMin.'" -v tMax="'.tMax.'" '."'{if (tMin<$1 && $1<tMax) {print ($0)}}' ".grepFiles.' > '.iFileName)
+system('awk -v "tMin='.tMin.'" -v tMax="'.tMax.'" '."'{if ($1!=\"#\") {if (tMin<$1 && $1<tMax) {print ($0)}}}' ".grepFiles.' > '.iFileName)
 # AM -> system('awk -v "tMin='.tMin.'" '."'{if (tMin<$1) {print ($0)}}' ".grepFiles.' > '.iFileName)
 
 # echo runners
-system( "awk '{print ($6,$4)}' ".iFileName." | sort -k 1 | awk '{tot+=$2; if (NR==1) {oldOwner=$1} else {if ($1!=oldOwner) {print (tot,oldOwner); tot=0; oldOwner=$1;}}}END{print (tot,oldOwner)}'" )
+system( "awk '{if ($1!=\"#\") {print ($6,$4)}}' ".iFileName." | sort -k 1 | awk '{tot+=$2; if (NR==1) {oldOwner=$1} else {if ($1!=oldOwner) {print (tot,oldOwner); tot=0; oldOwner=$1;}}}END{print (tot,oldOwner)}'" )
 
 # AM -> set logscale y
 # AM -> set grid xtics ytics mxtics mytics
@@ -57,4 +57,5 @@ plot \
      "< awk '{if ($6==\"rdemaria\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'yellow'    title 'rdemaria',\
      "< awk '{if ($6==\"jbarranc\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'dark-blue' title 'jbarranc',\
      "< awk '{if ($6==\"giovanno\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'gold'      title 'giovanno',\
-     "< awk '{if ($6==\"mcintosh\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'beige'     title 'mcintosh'
+     "< awk '{if ($6==\"mcintosh\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'beige'     title 'mcintosh',\
+     "< awk '{if ($6==\"-\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName        index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'beige'     title '-'
