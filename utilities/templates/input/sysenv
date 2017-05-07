@@ -3,23 +3,25 @@
 # All the variables the user will not normally want to see!
 # March 25th, 2017
 # synchronising with new scripts + appname
-# The path to all scripts etc bin,Bin,scripts, exes, dots
-export sixdeskpath=/afs/cern.ch/group/si/slap/bin/sixdesk
 #
 # app name, used by any platform
 export appName=sixtrack
 # 
-# The following SixTrack version is used for the one-turn
-# SixTrack run to get the Beta values and for all LSF tasks (except DA)
-# and the BNL EXE which is the same I hope
-export SIXTRACKEXE=$sixdeskpath/exes/$appName
-if test "$BIGNBLZ" != ""
-then
-  export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_bignblz_pro
-fi
-export SIXTRACKBNLEXE=$sixdeskpath/exes/SixTrack_bnl_pro
-# Latest DA version from
-export SIXTRACKDAEXE=$sixdeskpath/exes/SixTrack_crlibm_da_lf95v4200
+
+# # The path to all scripts etc bin,Bin,scripts, exes, dots
+# export sixdeskpath=/afs/cern.ch/group/si/slap/bin/sixdesk
+# # The following SixTrack version is used for the one-turn
+# # SixTrack run to get the Beta values and for all LSF tasks (except DA)
+# # and the BNL EXE which is the same I hope
+# export SIXTRACKEXE=$sixdeskpath/exes/$appName
+# if test "$BIGNBLZ" != ""
+# then
+#   export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_bignblz_pro
+# fi
+# export SIXTRACKBNLEXE=$sixdeskpath/exes/SixTrack_bnl_pro
+# # Latest DA version from
+# export SIXTRACKDAEXE=$sixdeskpath/exes/SixTrack_crlibm_da_lf95v4200
+
 # The following version of mad-X is used by the mad6t jobs.
 # All now call a madx executable so -X is no longer required.
 export MADX_PATH="/afs/cern.ch/user/m/mad/bin"
@@ -78,16 +80,16 @@ export sixdeskstudy=$sixdeskhome/studies/$LHCDescrip
 
 # For BOINC 
 # The SixTrack executable is now ????.
-export sixdeskpts=boinc:users
-export boincdir=/afs/cern.ch/user/b/boinc/scratch0
-export sixdeskboincdirname=$workspace"_"$LHCDescrip
-# and use boinctest (for Igor and new BOINC release)
-export sixdeskboinctest=false
-sixdeskboincdir=$boincdir/boinc/$sixdeskboincdirname
-if ${sixdeskboinctest} ; then
-  sixdeskboincdir=$boincdir/boinctest/$sixdeskboincdirname
-fi
-export sixdeskboincdir
+# export sixdeskpts=boinc:users
+# export boincdir=/afs/cern.ch/user/b/boinc/scratch0
+# export sixdeskboincdirname=$workspace"_"$LHCDescrip
+# # and use boinctest (for Igor and new BOINC release)
+# export sixdeskboinctest=false
+# sixdeskboincdir=$boincdir/boinc/$sixdeskboincdirname
+# if ${sixdeskboinctest} ; then
+#   sixdeskboincdir=$boincdir/boinctest/$sixdeskboincdirname
+# fi
+# export sixdeskboincdir
 export sixdeskparts=`expr $sixdeskpairs \* 2`
 if test "$short" -eq 1 -o "$da" -eq 1
 then
