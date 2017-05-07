@@ -60,6 +60,10 @@ fi
 
 cp fort.10.gz $TRACKDIR/SIXJOBDIR/
 
+if [ -f Sixout.zip ] ; then
+    cp Sixout.zip $TRACKDIR/SIXJOBDIR/
+fi
+
 #
 rm -f $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_COMPLETED
 
