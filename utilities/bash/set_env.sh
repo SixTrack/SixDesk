@@ -8,23 +8,23 @@ function how_to_use() {
 
    actions (mandatory, one of the following):
    -s              set up new study or update existing one according to local
-                       version of input files (sixdeskenv/sysenv/fort.3.local)
-                   NB: the local input files will be parsed, used and
-                       saved in studies/
+                       version of input files (${necessaryInputFiles[@]})
+                   NB: the local input files (${necessaryInputFiles[@]})
+                       will be parsed, used and saved in studies/
    -d <study_name> load existing study.
-                   NB: the input files (sixdeskenv/sysenv/fort.3.local) in
-                       studies/<study_name> will be parsed, used and saved in
-                       sixjobs
-   -n              retrieve input files (sixdeskenv/sysenv/fort.3.local) from
-                       template dir to prepare a brand new study. The template
-                       files will OVERWRITE the local ones. The template dir is:
+                   NB: the input files (${necessaryInputFiles[@]})
+                       in studies/<study_name> will be parsed, used and saved in sixjobs
+   -n              retrieve input files (${necessaryInputFiles[@]}) from template dir
+                       to prepare a brand new study. The template files will
+                       OVERWRITE the local ones. The template dir is:
            ${SCRIPTDIR}/templates/input
 
    options (optional)
    -p      platform name (when running many jobs in parallel)
-   -e      just parse the concerned sixdeskenv/sysenv/fort.3.local files,
+   -e      just parse the concerned input files (${necessaryInputFiles[@]}),
                without overwriting
-   -l      use fort.3.local
+   -l      use fort.3.local. This file will be added to the list of necessary
+               input files only in case this flag will be issued.
    -v      verbose (OFF by default)
 
 EOF
@@ -161,6 +161,9 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
+# - necessary input files
+necessaryInputFiles=( sixdeskenv sysenv )
+
 # actions and options
 lset=false
 lload=false
@@ -254,8 +257,9 @@ if [ -n "${currPlatform}" ] ; then
 fi
 if ${llocalfort3} ; then
     echo ""
-    echo " --> User requested inclusion of fort.3.local"
+    echo "--> User requested inclusion of fort.3.local"
     echo ""
+    necessaryInputFiles=( sixdeskenv sysenv fort.3.local )
 fi
 
 # ------------------------------------------------------------------------------
@@ -314,22 +318,17 @@ if ${lcptemplate} ; then
     sixdeskmess -1 "copying here template files for brand new study"
     sixdeskmess -1 "template input files from ${SCRIPTDIR}/templates/input"
 
-    for tmpFile in sixdeskenv sysenv fort.3.local ; do
-	sixdeskmess 2 "${tmpFile}"
+    for tmpFile in ${necessaryInputFiles[@]} ; do
 	# preserve original time stamps
 	cp -p ${SCRIPTDIR}/templates/input/${tmpFile} .
+	sixdeskmess 2 "${tmpFile}"
     done
 
 else
 
     # - make sure we have sixdeskenv/sysenv/fort.3.local files
-    sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s sixdeskenv sysenv
-    exit_status=$?
-    if ${llocalfort3} ; then
-	sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s fort.3.local
-	let exit_status+=$?
-    fi
-    if [ ${exit_status} -gt 0 ] ; then
+    sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s ${necessaryInputFiles[@]}
+    if [ $? -gt 0 ] ; then
 	sixdeskexit 4
     fi
 
