@@ -8,21 +8,21 @@ function how_to_use() {
 
    actions (mandatory, one of the following):
    -s              set up new study or update existing one according to local
-                       version of input files (sixdeskenv/sysenv)
-                   NB: the local sixdeskenv and sysenv will be parsed, used and
-                       saved in studies/
+                       version of input files (${necessaryInputFiles[@]})
+                   NB: the local input files (${necessaryInputFiles[@]})
+                       will be parsed, used and saved in studies/
    -d <study_name> load existing study.
-                   NB: the sixdeskenv and sysenv in studies/<study_name> will
-                       be parsed, used and saved in sixjobs
-   -n              retrieve input files (sixdeskenv/sysenv) from template dir
+                   NB: the input files (${necessaryInputFiles[@]})
+                       in studies/<study_name> will be parsed, used and saved in sixjobs
+   -n              retrieve input files (${necessaryInputFiles[@]}) from template dir
                        to prepare a brand new study. The template files will
                        OVERWRITE the local ones. The template dir is:
            ${SCRIPTDIR}/templates/input
 
    options (optional)
    -p      platform name (when running many jobs in parallel)
-   -e      just parse the concerned sixdeskenv/sysenv files, without
-               overwriting
+   -e      just parse the concerned input files (${necessaryInputFiles[@]}),
+               without overwriting
    -v      verbose (OFF by default)
 
 EOF
@@ -130,6 +130,9 @@ if [ -z "${SCRIPTDIR}" ] ; then
     export SCRIPTDIR=`dirname ${SCRIPTDIR}`
 fi
 # ------------------------------------------------------------------------------
+
+# - necessary input files
+necessaryInputFiles=( sixdeskenv sysenv )
 
 # actions and options
 lset=false
@@ -273,7 +276,7 @@ if ${lcptemplate} ; then
     sixdeskmess -1 "copying here template files for brand new study"
     sixdeskmess -1 "template input files from ${SCRIPTDIR}/templates/input"
 
-    for tmpFile in sixdeskenv sysenv ; do
+    for tmpFile in ${necessaryInputFiles[@]} ; do
 	# preserve original time stamps
 	cp -p ${SCRIPTDIR}/templates/input/${tmpFile} .
     done
@@ -281,7 +284,7 @@ if ${lcptemplate} ; then
 else
 
     # - make sure we have sixdeskenv/sysenv files
-    sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s sixdeskenv sysenv
+    sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s ${necessaryInputFiles[@]}
     if [ $? -gt 0 ] ; then
 	sixdeskexit 4
     fi
