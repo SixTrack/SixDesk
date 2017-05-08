@@ -8,13 +8,14 @@ set xdata time
 set timefmt '%Y-%m-%d %H:%M:%S'
 set format x '%Y-%m-%d %H:%M'
 ybar=100
-M=10
+M=1
 
 # ------------------------------------------------------------------------------
 # general overview of server status
 # ------------------------------------------------------------------------------
-set term qt 0 
-set multiplot title 'server overview'
+currTitle='server overview'
+set term qt 0 title currTitle font "Times-Roman" size 1900,400
+set multiplot title currTitle
 set key outside horizontal
 set ylabel 'tasks in progress/ready to send [10^3]'
 set ytics nomirror
@@ -41,35 +42,41 @@ replot
 unset multiplot
 
 # credit
+currTitle='credit'
+set term qt 1 title currTitle font "Times-Roman" size 1900,400
+set title currTitle
 set key outside horizontal
-set ylabel 'recent credit [10^3]' tc rgb 'red'
+set ylabel 'recent credit (users/computers) [10^3]' tc rgb 'red'
 set ytics nomirror tc rgb 'red'
-set y2label 'total credit [10^3]' tc rgb 'magenta'
+set y2label 'total credit (users/computers) [10^3]' tc rgb 'magenta'
 set y2tics tc rgb 'magenta'
 set grid xtics ytics lt 0 lw 1 lc rgb 'black'
-set title 'date: '.today
 plot \
-     '< cat 2017-??/server_status_????-??.dat' index 0 using 2:($10/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'users',\
-     ''               index 0 using 2:($13/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'blue' title 'computers',\
-     ''               index 0 using 2:($11/1000) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'magenta' notitle,\
-     ''               index 0 using 2:($14/1000) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'cyan' notitle
+     '< cat 2017-??/server_status_????-??.dat' index 0 using 1:($10/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'users',\
+     ''               index 0 using 1:($13/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'blue' title 'computers',\
+     ''               index 0 using 1:($11/1000) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'magenta' notitle,\
+     ''               index 0 using 1:($14/1000) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'cyan' notitle
 
 # gigaflops
+currTitle='GigaFLOPs'     
+set term qt 2 title currTitle font "Times-Roman" size 1900,400
+set title currTitle
 set key outside horizontal
 set ylabel 'GigaFLOPs [10^3]' tc rgb 'black'
 set ytics mirror tc rgb 'black'
 unset y2label
 unset y2tics
 set grid xtics ytics lt 0 lw 1 lc rgb 'black'
-set title 'date: '.today
 plot \
-     '< cat 2017-??/server_status_????-??.dat' index 0 using 2:($16/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
+     '< cat 2017-??/server_status_????-??.dat' index 0 using 1:($16/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
+unset title
 
 # ------------------------------------------------------------------------------
 # sixtrack
 # ------------------------------------------------------------------------------
-set term qt 1
-set multiplot title 'SixTrack app'
+currTitle='SixTrack app'
+set term qt 3 title currTitle font "Times-Roman" size 1900,400
+set multiplot title currTitle
 set key outside horizontal
 set ylabel 'tasks in progress/unsent [10^3]'
 set ytics nomirror
@@ -92,8 +99,9 @@ unset multiplot
 # ------------------------------------------------------------------------------
 # sixtracktest
 # ------------------------------------------------------------------------------
-set term qt 1
-set multiplot title 'sixtracktest app'
+currTitle='sixtracktest app'
+set term qt 4 title currTitle font "Times-Roman" size 1900,400
+set multiplot title currTitle
 set key outside horizontal
 set ylabel 'tasks in progress/unsent [10^3]'
 set ytics nomirror
