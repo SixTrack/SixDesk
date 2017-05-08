@@ -287,7 +287,7 @@ else
     sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s ${necessaryInputFiles[@]}
     if [ $? -gt 0 ] ; then
         sixdeskmess -1 "not all necessary files are in $envFilesPath dir:"
-        for tmpFile in sixdeskenv sysenv fort.3.local ; do
+        for tmpFile in ${necessaryInputFiles[@]} ; do
             sixdeskmess -1 "file ${tmpFile} : `\ls -ltrh $envFilesPath`"
         done
 	sixdeskexit 4
