@@ -1,5 +1,5 @@
 # today=system("date +%F")
-today='2017-04-01'
+today='2017-05-08'
 iFileName='submitAll_'.today
 
 set terminal postscript enhanced 'Times-Roman, 16'
