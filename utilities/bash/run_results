@@ -248,7 +248,8 @@ function getListNewResults(){
 	    mkdir -p ${__origPath}
 	fi
 	cd ${__origPath}
-	find . -name ${workspace}_${LHCDesName}__\*_1_sixvf_boinc\* > $tmp 2> /dev/null
+	# remove possible *_1 entries (Sixout.zip)
+	find . -name ${workspace}_${LHCDesName}__\*_1_sixvf_boinc\* | sed '/_1$/d'> $tmp 2> /dev/null
 	cd $sixdeskhome
 	
 #MACRO mymktmp sixdeskresults $sixdeskjobs
@@ -629,6 +630,10 @@ function downloadNewResults(){
 				sixdeskmess 1 "${__messLine4}"
 				
 				gzip -f fort.10
+
+#				if ${lretrieveZip} ; then
+#				fi
+
 				ignore="false"
 				success="true"
 				delete="true"
