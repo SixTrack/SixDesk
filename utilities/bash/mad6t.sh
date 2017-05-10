@@ -300,8 +300,14 @@ function check(){
 	tmpSig=`echo "${tmpDimens}" | awk -v "ave=${tmpAve}" '{tot+=($1-ave)**2}END{print (sqrt(tot)/NR)}'`
 	sixdeskmess -1 "   average dimension (uncompressed): `echo ${tmpAve} | awk '{print ($1/1024)}'` kB - sigma: `echo ${tmpSig} | awk '{print ($1/1024)}'` kB"
 	if [ `echo ${tmpAve} | awk '{print ($1==0)}'` -eq 1 ] ; then
-	    sixdeskmess -1 "   --> NULL average file dimension!! Maybe something wrong with MADX runs?"
-	    let __lerr+=1
+	    if [ ${iFort} -eq 8 ] ; then
+		# just a warning
+		sixdeskmess -1 "   --> all fort.${iFort} have a NULL dimension!! I guess you did it on purpose..."
+	    else
+		# actually a potential problem
+		sixdeskmess -1 "   --> NULL average file dimension!! Maybe something wrong with MADX runs?"
+		let __lerr+=1
+	    fi
 	elif [ `echo ${tmpAve} ${tmpSig} ${__factor} | awk '{print ($2<$1*$3/100)}'` -eq 0 ] ; then
 	    sixdeskmess -1 "   --> spread in file dimensions larger than ${__factor} % !! Maybe something wrong with MADX runs?"
 	    let __lerr+=1
