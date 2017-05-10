@@ -234,13 +234,13 @@ def main():
     # strem in output files:
     # - serverStatus
     oFile=open(outServerStatus%(currDate),'a')
-    oFile.write( '%s %s %s \n' % ( currDate, currTime, ' '.join(cleanIntegers(WorkTable.retColumn('#') ) ) ) )
+    oFile.write( '%s %s %s %s %s \n' % ( currDate, currTime, ' '.join(cleanIntegers(WorkTable.retColumn('#') ) ), ' '.join(cleanIntegers(UsersTable.retColumn('#') ) ), ' '.join(cleanIntegers(pcTable.retColumn('#') ) ) ) )
     oFile.close()
     # - apss status:
     for wantedApp in wantedApps:
         oFile=open(outAppStatus%(wantedApp,currDate),'a')
         oFile.write( '%s %s %s \n' % ( currDate, currTime, ' '.join(cleanIntegers(tabApps.retRowName( columnName='application', matchName=wantedApp, columnNames=appDesiredColumns ) ) ) ) )
-    oFile.close()
+        oFile.close()
 
     return 0
 
