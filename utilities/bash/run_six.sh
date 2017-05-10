@@ -952,6 +952,7 @@ function dot_bsub(){
     # temporary variables
     local __lerr=0
     local __taskno=""
+    local __tmpLines=""
 
     touch $RundirFullPath/JOB_NOT_YET_STARTED
     
@@ -961,13 +962,13 @@ function dot_bsub(){
     # actually submit
     # typical message returned by bsub:
     #   Job <864248893> is submitted to queue <8nm>.
-    multipleTrials "tmpLines=\"`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.sh 2>&1`\" ; taskno=\"`echo \"${tmpLines}\" | grep submitted | cut -d\< -f2 | cut -d\> -f1`\"" "[ -n \"\${taskno}\" ]" "Problem at bsub"
+    multipleTrials "__tmpLines=\"\`bsub -q $lsfq -o $RundirFullPath/$Runnam.log $RundirFullPath/$Runnam.job 2>&1\`\" ; __taskno=\`echo \"\${__tmpLines}\" | grep submitted | cut -d\< -f2 | cut -d\> -f1\`;" "[ -n \"\${__taskno}\" ]" "Problem at bsub"
     let __lerr+=$?
 
     # verify that submission was successfull
     if  [ ${__lerr} -eq 0 ] ; then
-	local __taskid="lsf${taskno}"
-	sixdeskmess  1 "`echo \"${tmpLines}\" | grep submitted`"
+	local __taskid="lsf${__taskno}"
+	sixdeskmess  1 "`echo \"${__tmpLines}\" | grep submitted`"
     else
 	sixdeskmess -1 "bsub of $RundirFullPath/$Runnam.job to Queue ${lsfq} failed !!! - going to next WU!"
     fi

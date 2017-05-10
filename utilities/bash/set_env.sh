@@ -8,21 +8,21 @@ function how_to_use() {
 
    actions (mandatory, one of the following):
    -s              set up new study or update existing one according to local
-                       version of input files (sixdeskenv/sysenv)
-                   NB: the local sixdeskenv and sysenv will be parsed, used and
-                       saved in studies/
+                       version of input files (${necessaryInputFiles[@]})
+                   NB: the local input files (${necessaryInputFiles[@]})
+                       will be parsed, used and saved in studies/
    -d <study_name> load existing study.
-                   NB: the sixdeskenv and sysenv in studies/<study_name> will
-                       be parsed, used and saved in sixjobs
-   -n              retrieve input files (sixdeskenv/sysenv) from template dir
+                   NB: the input files (${necessaryInputFiles[@]})
+                       in studies/<study_name> will be parsed, used and saved in sixjobs
+   -n              retrieve input files (${necessaryInputFiles[@]}) from template dir
                        to prepare a brand new study. The template files will
                        OVERWRITE the local ones. The template dir is:
            ${SCRIPTDIR}/templates/input
 
    options (optional)
    -p      platform name (when running many jobs in parallel)
-   -e      just parse the concerned sixdeskenv/sysenv files, without
-               overwriting
+   -e      just parse the concerned input files (${necessaryInputFiles[@]}),
+               without overwriting
    -v      verbose (OFF by default)
 
 EOF
@@ -130,6 +130,9 @@ if [ -z "${SCRIPTDIR}" ] ; then
     export SCRIPTDIR=`dirname ${SCRIPTDIR}`
 fi
 # ------------------------------------------------------------------------------
+
+# - necessary input files
+necessaryInputFiles=( sixdeskenv sysenv )
 
 # actions and options
 lset=false
@@ -273,7 +276,7 @@ if ${lcptemplate} ; then
     sixdeskmess -1 "copying here template files for brand new study"
     sixdeskmess -1 "template input files from ${SCRIPTDIR}/templates/input"
 
-    for tmpFile in sixdeskenv sysenv ; do
+    for tmpFile in ${necessaryInputFiles[@]} ; do
 	# preserve original time stamps
 	cp -p ${SCRIPTDIR}/templates/input/${tmpFile} .
     done
@@ -281,8 +284,12 @@ if ${lcptemplate} ; then
 else
 
     # - make sure we have sixdeskenv/sysenv files
-    sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s sixdeskenv sysenv
+    sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s ${necessaryInputFiles[@]}
     if [ $? -gt 0 ] ; then
+        sixdeskmess -1 "not all necessary files are in $envFilesPath dir:"
+        for tmpFile in ${necessaryInputFiles[@]} ; do
+            sixdeskmess -1 "file ${tmpFile} : `\ls -ltrh $envFilesPath`"
+        done
 	sixdeskexit 4
     fi
 
@@ -369,25 +376,34 @@ for tmpDir in ${lockingDirs[@]} ; do
     sixdeskunlock $tmpDir
 done
 
-# - kinit, to renew kerberos ticket
-sixdeskmess -1 " --> kinit;"
-multipleTrials "kinit -R ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]"
-if [ $? -gt 0 ] ; then
-    sixdeskmess -1 "--> kinit -R failed - AFS/Kerberos credentials expired??? aborting..."
-    exit
-else
-    sixdeskmess -1 " --> klist output after kinit -R:"
-    klist
-fi
+if ! ${lcptemplate} ; then
+    
+    # - kinit, to renew kerberos ticket
+    sixdeskmess -1 " --> kinit;"
+    multipleTrials "kinit -R ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]"
+    if [ $? -gt 0 ] ; then
+	sixdeskmess -1 "--> kinit -R failed - AFS/Kerberos credentials expired??? aborting..."
+	exit
+    else
+	sixdeskmess -1 " --> klist output after kinit -R:"
+	klist
+    fi
+    
+    # - fs listquota
+    echo ""
+    if [ `echo "${sixdesktrack}" | cut -c-4` == "/afs" ] ; then
+	sixdeskmess -1 " --> fs listquota ${sixdesktrack}:"
+	tmpLines=`fs listquota ${sixdesktrack}`
+	echo "${tmpLines}"
+	#   check, and in case raise a warning
+	fraction=`echo "${tmpLines}" | tail -1 | awk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
+	if [ ${fraction} -gt 90 ] ; then
+	    sixdeskmess -1 "WARNING: your quota is above 90%!! pay attention to occupancy of the current study, in case of submission..."
+	fi
+    else
+	sixdeskmess -1 " --> df -Th:"
+	\df -Th
+	sixdeskmess -1 " the above output is at your convenience, for you to check disk space"
+    fi
 
-# - fs listquota
-echo ""
-sixdeskmess -1 " --> fs listquota:"
-tmpLines=`fs listquota`
-echo "${tmpLines}"
-#   check, and in case raise a warning
-fraction=`echo "${tmpLines}" | tail -1 | awk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
-if [ ${fraction} -gt 90 ] ; then
-    sixdeskmess -1 "WARNING: your quota is above 90%!! pay attention to occupancy of the current study, in case of submission..."
 fi
-
