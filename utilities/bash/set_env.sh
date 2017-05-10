@@ -428,25 +428,34 @@ for tmpDir in ${lockingDirs[@]} ; do
     sixdeskunlock $tmpDir
 done
 
-# - kinit, to renew kerberos ticket
-sixdeskmess -1 " --> kinit;"
-multipleTrials "kinit -R ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]"
-if [ $? -gt 0 ] ; then
-    sixdeskmess -1 "--> kinit -R failed - AFS/Kerberos credentials expired??? aborting..."
-    exit
-else
-    sixdeskmess -1 " --> klist output after kinit -R:"
-    klist
-fi
+if ! ${lcptemplate} ; then
+    
+    # - kinit, to renew kerberos ticket
+    sixdeskmess -1 " --> kinit;"
+    multipleTrials "kinit -R ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]"
+    if [ $? -gt 0 ] ; then
+	sixdeskmess -1 "--> kinit -R failed - AFS/Kerberos credentials expired??? aborting..."
+	exit
+    else
+	sixdeskmess -1 " --> klist output after kinit -R:"
+	klist
+    fi
+    
+    # - fs listquota
+    echo ""
+    if [ `echo "${sixdesktrack}" | cut -c-4` == "/afs" ] ; then
+	sixdeskmess -1 " --> fs listquota ${sixdesktrack}:"
+	tmpLines=`fs listquota ${sixdesktrack}`
+	echo "${tmpLines}"
+	#   check, and in case raise a warning
+	fraction=`echo "${tmpLines}" | tail -1 | awk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
+	if [ ${fraction} -gt 90 ] ; then
+	    sixdeskmess -1 "WARNING: your quota is above 90%!! pay attention to occupancy of the current study, in case of submission..."
+	fi
+    else
+	sixdeskmess -1 " --> df -Th:"
+	\df -Th
+	sixdeskmess -1 " the above output is at your convenience, for you to check disk space"
+    fi
 
-# - fs listquota
-echo ""
-sixdeskmess -1 " --> fs listquota:"
-tmpLines=`fs listquota`
-echo "${tmpLines}"
-#   check, and in case raise a warning
-fraction=`echo "${tmpLines}" | tail -1 | awk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
-if [ ${fraction} -gt 90 ] ; then
-    sixdeskmess -1 "WARNING: your quota is above 90%!! pay attention to occupancy of the current study, in case of submission..."
 fi
-
