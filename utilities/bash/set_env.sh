@@ -389,12 +389,16 @@ fi
 
 # - fs listquota
 echo ""
-sixdeskmess -1 " --> fs listquota:"
-tmpLines=`fs listquota`
-echo "${tmpLines}"
-#   check, and in case raise a warning
-fraction=`echo "${tmpLines}" | tail -1 | awk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
-if [ ${fraction} -gt 90 ] ; then
-    sixdeskmess -1 "WARNING: your quota is above 90%!! pay attention to occupancy of the current study, in case of submission..."
+if ( hostname | grep lxplus > /dev/null ) ; then
+    sixdeskmess -1 " --> fs listquota:"
+    tmpLines=`fs listquota`
+    echo "${tmpLines}"
+    #   check, and in case raise a warning
+    fraction=`echo "${tmpLines}" | tail -1 | awk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
+    if [ ${fraction} -gt 90 ] ; then
+	sixdeskmess -1 "WARNING: your quota is above 90%!! pay attention to occupancy of the current study, in case of submission..."
+    fi
+else
+    sixdeskmess -1 " --> df -Th:"
+    \df -Th
 fi
-
