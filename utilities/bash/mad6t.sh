@@ -171,6 +171,9 @@ function check(){
     local __lerr=0
     # accepted discrepancy in file dimensions [%]
     local __factor=1
+    local __currdir=$PWD
+
+    cd $sixtrack_input
     
     # check jobs still running
     nJobs=`bjobs -w | grep ${workspace}_${LHCDescrip}_mad6t | wc -l`
@@ -181,20 +184,20 @@ function check(){
     fi
     
     # check errors/warnings
-    if [ -s $sixtrack_input/ERRORS ] ; then
+    if [ -s ERRORS ] ; then
 	sixdeskmess -1 "There appear to be some MADX errors!"
 	sixdeskmess -1 "If these messages are annoying you and you have checked them carefully then"
 	sixdeskmess -1 "just remove sixtrack_input/ERRORS or rm sixtrack_input/* and rerun `basename $0` -s!"
 	echo "ERRORS"
-	cat $sixtrack_input/ERRORS
+	cat ERRORS
 	let __lerr+=1
-    elif [ -s $sixtrack_input/WARNINGS ] ; then
+    elif [ -s WARNINGS ] ; then
 	sixdeskmess -1 "There appear to be some MADX result warnings!"
 	sixdeskmess -1 "Some files are being changed; details in sixtrack_input/WARNINGS"
 	sixdeskmess -1 "If these messages are annoying you and you have checked them carefully then"
 	sixdeskmess -1 "just remove sixtrack_input/WARNINGS"
 	echo "WARNINGS"
-	cat $sixtrack_input/WARNINGS
+	cat WARNINGS
 	let __lerr+=1
     fi
 
@@ -207,9 +210,13 @@ function check(){
     for iFort in ${iForts} ; do
 	# - the expected number of files have been generated
 	nFort=0
+	local __fileNames=""
 	sixdeskmess 1 "Checking that a fort.${iFort}_??.gz exists for each MADX seed requested..."
 	for (( iMad=${istamad}; iMad<=${iendmad}; iMad++ )) ; do
-	    let nFort+=`ls -1 $sixtrack_input/fort.${iFort}_${iMad}.gz 2> /dev/null | wc -l`
+	    if [ `ls -1 fort.${iFort}_${iMad}.gz 2> /dev/null | wc -l` -eq 1 ] ; then
+		let nFort+=1
+		__fileNames="${__fileNames} fort.${iFort}_${iMad}.gz"
+	    fi
 	done
 	if [ ${nFort} -ne ${njobs} ] ; then
 	    sixdeskmess -1 "Discrepancy!!! Found ${nFort} fort.${iFort}_??.gz (expected $njobs)"
@@ -219,13 +226,13 @@ function check(){
 	    sixdeskmess -1 "...found ${nFort} fort.${iFort}_??.gz (as expected)"
 	fi
         # - files are all of comparable dimensions
-	tmpFilesDimensions=`\ls -l $sixtrack_input/fort.${iFort}_*.gz 2> /dev/null | awk '{print ($5,$9)}'`
+	tmpFilesDimensions=`\gunzip -l ${__fileNames} 2> /dev/null | grep -v -e compressed -e totals | awk '{print ($2,$4)}'`
 	tmpFiles=`echo "${tmpFilesDimensions}" | awk '{print ($2)}'`
 	tmpFiles=( ${tmpFiles} )
 	tmpDimens=`echo "${tmpFilesDimensions}" | awk '{print ($1)}'`
 	tmpAve=`echo "${tmpDimens}" | awk '{tot+=$1}END{print (tot/NR)}'`
 	tmpSig=`echo "${tmpDimens}" | awk -v "ave=${tmpAve}" '{tot+=($1-ave)**2}END{print (sqrt(tot)/NR)}'`
-	sixdeskmess -1 "   average dimension (kB): ${tmpAve} - sigma (kB): ${tmpSig}"
+	sixdeskmess -1 "   average dimension (uncompressed): `echo ${tmpAve} | awk '{print ($1/1024)}'` kB - sigma: `echo ${tmpSig} | awk '{print ($1/1024)}'` kB"
 	if [ `echo ${tmpAve} | awk '{print ($1==0)}'` -eq 1 ] ; then
 	    sixdeskmess -1 "   --> NULL average file dimension!! Maybe something wrong with MADX runs?"
 	    let __lerr+=1
@@ -244,9 +251,7 @@ function check(){
     done
 
     # check mother files
-    if test ! -s $sixtrack_input/fort.3.mother1 \
-	    -o ! -s $sixtrack_input/fort.3.mother2
-    then
+    if [ ! -s fort.3.mother1 ] || [ ! -s fort.3.mother2 ] ; then
 	sixdeskmess -1 "Could not find fort.3.mother1/2 in $sixtrack_input"
 	let __lerr+=1
     else
@@ -254,22 +259,21 @@ function check(){
     fi
 
     # multipole errors
-    if test "$CORR_TEST" -ne 0 -a ! -s "$sixtrack_input/CORR_TEST"
-    then
+    if [ $CORR_TEST -ne 0 ] && [ ! -s CORR_TEST ] ; then
 	sixdeskmiss=0
 	for tmpCorr in MCSSX MCOSX MCOX MCSX MCTX ; do
-	    rm -f $sixtrack_input/${tmpCorr}_errors
+	    rm -f ${tmpCorr}_errors
 	    for (( iMad=$istamad; iMad<=$iendmad; iMad++ )) ; do
-		ls $sixtrack_input/$tmpCorr"_errors_"$iMad
-		if [ -f $sixtrack_input/$tmpCorr"_errors_"$iMad ] ; then
-		    cat  $sixtrack_input/$tmpCorr"_errors_"$iMad >> $sixtrack_input/$tmpCorr"_errors"
+		ls $tmpCorr"_errors_"$iMad
+		if [ -f $tmpCorr"_errors_"$iMad ] ; then
+		    cat  $tmpCorr"_errors_"$iMad >> $tmpCorr"_errors"
 		else
 		    let sixdeskmiss+=1
 		fi
 	    done
 	done
 	if [ $sixdeskmiss -eq 0 ] ; then
-	    echo "CORR_TEST MC_error files copied" > $sixtrack_input/CORR_TEST
+	    echo "CORR_TEST MC_error files copied" > CORR_TEST
 	    sixdeskmess 1 "CORR_TEST MC_error files copied"
 	else
 	    sixdeskmess -1 "$sixdeskmiss MC_error files could not be found!!!"
@@ -287,6 +291,7 @@ function check(){
 	sixdeskmess 1 "Please check the sixtrack_input directory as the mad6t runs may have failed and just produced empty files!!!"
 	sixdeskmess 1 "All jobs/logs/output are in sixtrack_input/mad.mad6t.sh* directories"
     fi
+    cd ${__currdir}
     return $__lerr
 }
 
