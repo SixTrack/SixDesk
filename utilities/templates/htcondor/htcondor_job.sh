@@ -40,24 +40,21 @@ else
     cp fort.10.gz ${runDirBaseName}/${WUdir}
 fi
 
-# (old) results for fma analysis
-if [ -f fma_sixtrack ] ; then
-    gzip fma_sixtrack
-    cp fma_sixtrack.gz ${runDirBaseName}/${WUdir}
-fi
-
 # sixout.zip
 if [ -f Sixout.zip ] ; then
     cp Sixout.zip ${runDirBaseName}/${WUdir}
-fi
-
-# for debugging also copy files with particle coordinates
-dumpFiles=`ls -1 *_DUMP_* 2> /dev/null`
-if [ -n "${dumpFiles}" ] ; then
-    for tmpDumpFile in ${dumpFiles} ; do
-	gzip ${tmpDumpFile}
-	cp ${tmpDumpFile}.gz ${runDirBaseName}/${WUdir}
-    done
+elif [ -f fma_sixtrack ] ; then
+    # (old) results for fma analysis
+    gzip fma_sixtrack
+    cp fma_sixtrack.gz ${runDirBaseName}/${WUdir}
+    # for debugging also copy files with particle coordinates
+    dumpFiles=`ls -1 *_DUMP_* 2> /dev/null`
+    if [ -n "${dumpFiles}" ] ; then
+	for tmpDumpFile in ${dumpFiles} ; do
+	    gzip ${tmpDumpFile}
+	    cp ${tmpDumpFile}.gz ${runDirBaseName}/${WUdir}
+	done
+    fi
 fi
 
 # mark run as finished
