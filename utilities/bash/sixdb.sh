@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # python path
-PYTHONPATH="/afs/cern.ch/work/r/rdemaria/public/anaconda/bin"
+source /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc49-opt/setup.sh
 
 # get path to scripts (normalised)
 if [ -z "${SCRIPTDIR}" ] ; then
@@ -11,4 +11,4 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 
 # actually call sixdb
-${PYTHONPATH}/python ${SCRIPTDIR}/externals/SixDeskDB/sixdb $*
+python ${SCRIPTDIR}/externals/SixDeskDB/sixdb $*
