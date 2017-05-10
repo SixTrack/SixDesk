@@ -389,9 +389,9 @@ fi
 
 # - fs listquota
 echo ""
-if ( hostname | grep lxplus > /dev/null ) ; then
-    sixdeskmess -1 " --> fs listquota:"
-    tmpLines=`fs listquota`
+if ( echo "${sixdesktrack}" | grep afs > /dev/null ) ; then
+    sixdeskmess -1 " --> fs listquota ${sixdesktrack}:"
+    tmpLines=`fs listquota ${sixdesktrack}`
     echo "${tmpLines}"
     #   check, and in case raise a warning
     fraction=`echo "${tmpLines}" | tail -1 | awk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
@@ -401,4 +401,5 @@ if ( hostname | grep lxplus > /dev/null ) ; then
 else
     sixdeskmess -1 " --> df -Th:"
     \df -Th
+    sixdeskmess -1 " the above output is at your convenience, for you to check disk space"
 fi
