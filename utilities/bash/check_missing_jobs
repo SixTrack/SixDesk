@@ -82,11 +82,11 @@ do
 #MACRO mymess
 
   else
-    if test ! -s $sixdesktrack/$sixdeskRundir/$sixdeskRunnam.lsf
+    if test ! -s $sixdesktrack/$sixdeskRundir/$sixdeskRunnam.sh
     then
 
-#MACRO mymess 0 The .lsf job is missing for $sixdeskRunnam in sixdeskRundir!!!
-      sixdeskmess -1 "The .lsf job is missing for $sixdeskRunnam in sixdeskRundir!!!"
+#MACRO mymess 0 The .sh job is missing for $sixdeskRunnam in sixdeskRundir!!!
+      sixdeskmess -1 "The .sh job is missing for $sixdeskRunnam in sixdeskRundir!!!"
 #MACRO mymess
 
     fi

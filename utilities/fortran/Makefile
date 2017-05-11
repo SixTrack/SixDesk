@@ -6,8 +6,14 @@
 # FC=lf95
 # FFLAGS=--o1 --tp -Wa,--32 -o verify1059 -static -m32 -L/usr/lib/ -lc -L/usr/lib/gcc/x86_64-redhat-linux/3.4.6/32 -lgcc_eh
 
-FC=f95
-FFLAGS=-Wa,--32 -static -m32 -L/usr/lib/ -lc -L/usr/lib/gcc/x86_64-redhat-linux/3.4.6/32 -lgcc_eh
+HOST=$(shell hostname)
+
+ifneq (,$(findstring lxplus, ${HOST}))
+	FC=f95
+	FFLAGS=-Wa,--32 -static -m32 -L/usr/lib/ -lc -L/usr/lib/gcc/x86_64-redhat-linux/3.4.6/32 -lgcc_eh
+else
+	FC=gfortran
+endif
 
 #############  RULES  #############
 
@@ -19,6 +25,7 @@ FFLAGS=-Wa,--32 -static -m32 -L/usr/lib/ -lc -L/usr/lib/gcc/x86_64-redhat-linux/
 default: all
 
 all: clean verify10.exe
+#	@echo $(HOST)
 
 clean:
 	rm -f *.o *~ *.exe

@@ -239,7 +239,7 @@ then
 
 #MACRO mymess 0 ${sixdeskTaskName}.sh submitted
         sixdeskmesslevel=0
-        sixdeskmess -1 "${sixdeskTaskName}.lsf submitted"
+        sixdeskmess -1 "${sixdeskTaskName}.sh submitted"
 #MACRO mymess
 
 
@@ -262,7 +262,7 @@ then
 
 #MACRO mymess 0 bsub of ${sixdeskTaskName}.sh to Queue ${qpref}${longlsfq} failed !!!
         sixdeskmesslevel=0
-        sixdeskmess -1 "bsub of ${sixdeskTaskName}.lsf to Queue ${qpref}${longlsfq} failed !!!"
+        sixdeskmess -1 "bsub of ${sixdeskTaskName}.sh to Queue ${qpref}${longlsfq} failed !!!"
 #MACRO mymess
 
 
