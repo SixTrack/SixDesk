@@ -167,7 +167,7 @@ else
   fi
   if test "$jobslogs" = "y"
   then
-    echo "TRACK LSF jobs and logs: $sixdesktrack/$LHCDescrip/..../.lsf and .log"
+    echo "TRACK LSF jobs and logs: $sixdesktrack/$LHCDescrip/..../.sh and .log"
   fi
   if test "$track10" = "y"
   then
@@ -291,8 +291,8 @@ then
   sixdeskmess -1 "Deleting the LSF Jobs and logs"
 #MACRO mymess
 
-  echo find $sixdesktrack/$LHCDescrip -name \*.lsf -exec rm {} \;
-  find $sixdesktrack/$LHCDescrip -name \*.lsf -exec rm {} \;
+  echo find $sixdesktrack/$LHCDescrip -name \*.sh -exec rm {} \;
+  find $sixdesktrack/$LHCDescrip -name \*.sh -exec rm {} \;
   echo find $sixdesktrack/$LHCDescrip -name \*.log -exec rm {} \;
   find $sixdesktrack/$LHCDescrip -name \*.log -exec rm {} \;
 elif test "$track10" = "y"

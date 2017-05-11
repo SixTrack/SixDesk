@@ -106,7 +106,7 @@ do
 ###  sixdeskunlock
 #MACRO myunlock
 
-    cp $sixdesktrack/$sixdeskRundir/$sixdeskRunnam.lsf $sixdeskjobs_logs
+    cp $sixdesktrack/$sixdeskRundir/$sixdeskRunnam.sh $sixdeskjobs_logs
     sixdeskforce=2
     source ${SCRIPTDIR}/bash/dot_bsub
   fi

@@ -373,9 +373,9 @@ do
             -e 's?SIXTRACKBNLEXE?'$SIXTRACKBNLEXE'?g' \
             -e 's?SIXBNLIN?'$sixdeskbnlin'?g' \
             -e 's?SIXCASTOR?'$sixdeskcastor'?g' \
-            -e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' ${SCRIPTDIR}/templates/lsf/bnl.job > \
-                $sixdeskjobs_logs/"$Runnam".lsf
-        chmod 755 $sixdeskjobs_logs/"$Runnam".lsf
+            -e 's?SIXJUNKTMP?'$sixdeskjobs_logs'?g' ${SCRIPTDIR}/templates/lsf/bnl.sh > \
+                $sixdeskjobs_logs/"$Runnam".sh
+        chmod 755 $sixdeskjobs_logs/"$Runnam".sh
         sixdeskRunnam="$Runnam"
         sixdeskRundir="$Rundir"
         source ${SCRIPTDIR}/bash/dot_bsub $Runnam $Rundir
