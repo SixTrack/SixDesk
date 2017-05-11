@@ -5,8 +5,28 @@
 iNLT=200
 boincDownloadDir="/afs/cern.ch/work/b/boinc/download"
 
+boincdir=/data/boinc/project/sixtrack
+host=$(hostname -s)
+lockdir=$boincdir/pid_$host
+[ -d $lockdir ] || mkdir $lockdir
+lockfile=$lockdir/$(basename $0).lock
+
+getlock(){
+    if  ln -s PID:$$ $lockfile >/dev/null 2>&1 ; then
+	trap "rm $lockfile; echo \"Relase lock $lockfile\"" EXIT
+	echo "Got lock $lockfile"
+    else 
+	echo "$lockfile already exists. $PWD/$0 already running? Abort..."
+	#never get here
+	exit 1
+    fi
+}
+
 echo ""
 echo " starting `basename $0` at `date` ..."
+
+# adding lock mechanism
+getlock
 
 # get new WUs (grep -v is redundant, but it is kept for security)
 WUs2bZipped=`find -mmin +5 -name "*__*" | grep -v '.zip'`

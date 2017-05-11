@@ -103,7 +103,7 @@ function submit(){
     cp $maskFilesPath/$filejob.mask .
 
     # Loop over seeds
-    mad6tjob=$lsfFilesPath/mad6t1.lsf
+    mad6tjob=$lsfFilesPath/mad6t1.sh
     for (( iMad=$istamad ; iMad<=$iendmad ; iMad++ )) ; do
 	
 	# clean away any existing results for this seed
@@ -122,21 +122,21 @@ function submit(){
 	    -e 's?%FORT_34%?'$fort_34'?g' \
 	    -e 's?%MADX_PATH%?'$MADX_PATH'?g' \
 	    -e 's?%MADX%?'$MADX'?g' \
-	    -e 's?%SIXTRACK_INPUT%?'$sixtrack_input'?g' $mad6tjob > mad6t_"$iMad".lsf
-	chmod 755 mad6t_"$iMad".lsf
+	    -e 's?%SIXTRACK_INPUT%?'$sixtrack_input'?g' $mad6tjob > mad6t_"$iMad".sh
+	chmod 755 mad6t_"$iMad".sh
 
 	if ${linter} ; then
 	    sixdeskmktmpdir batch ""
 	    cd $sixdesktmpdir
-	    ../mad6t_"$iMad".lsf | tee $junktmp/"${LHCDescrip}_mad6t_$iMad".log 2>&1
+	    ../mad6t_"$iMad".sh | tee $junktmp/"${LHCDescrip}_mad6t_$iMad".log 2>&1
 	    cd ../
 	    rm -rf $sixdesktmpdir
 	else
-	    read BSUBOUT <<< $(bsub -q $madlsfq -o $junktmp/"${LHCDescrip}_mad6t_$iMad".log -J ${workspace}_${LHCDescrip}_mad6t_$iMad mad6t_"$iMad".lsf)
+	    read BSUBOUT <<< $(bsub -q $madlsfq -o $junktmp/"${LHCDescrip}_mad6t_$iMad".log -J ${workspace}_${LHCDescrip}_mad6t_$iMad mad6t_"$iMad".sh)
 	    tmpString=$(printf "Seed %2i        %40s\n" ${iMad} "${BSUBOUT}")
 	    sixdeskmess -1 "${tmpString}"
 	fi
-	mad6tjob=$lsfFilesPath/mad6t.lsf
+	mad6tjob=$lsfFilesPath/mad6t.sh
     done
 
     # End loop over seeds
