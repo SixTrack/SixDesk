@@ -47,12 +47,12 @@ plot \
 
 # gigaflops
 set key outside horizontal
-set ylabel 'GigaFLOPs [10^3]' tc rgb 'black'
+set ylabel 'TeraFLOPs []' tc rgb 'black'
 set ytics mirror tc rgb 'black'
 unset y2label
 unset y2tics
 set grid xtics ytics lt 0 lw 1 lc rgb 'black'
-set title 'GigaFLOPs - period: '.period
+set title 'TeraFLOPs - period: '.period
 plot \
      iFileName.'.dat' index 0 using 1:($16/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
 unset title

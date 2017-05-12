@@ -1,6 +1,7 @@
 # today=system("date +%F")
-today='2017-05-08'
+today='2017-05-12'
 iFileName='submitAll_'.today
+iFileNameAssimilated='assimilateAll_'.today
 
 set terminal postscript enhanced 'Times-Roman, 16'
 set output iFileName.'.ps'
@@ -17,7 +18,6 @@ set grid
 set key outside horizontal
 set ylabel 'submitted WUs [10^3]'
 set title 'date: '.today
-
 plot \
      "< awk '{if ($6==\"mcrouch\") {tot+=$4; print ($1,$3,tot)}}'  ".iFileName.'.dat' index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'black'     title 'mcrouch',\
      "< awk '{if ($6==\"ynosochk\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName.'.dat' index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'red'       title 'ynosochk',\
@@ -32,3 +32,8 @@ plot \
      "< awk '{if ($6==\"jbarranc\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName.'.dat' index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'dark-blue' title 'jbarranc',\
      "< awk '{if ($6==\"giovanno\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName.'.dat' index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'gold'      title 'giovanno',\
      "< awk '{if ($6==\"mcintosh\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName.'.dat' index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'beige'     title 'mcintosh'
+
+set ylabel 'WUs [10^3]'
+plot \
+     "< awk '{tot+=$4; print ($1,tot)}'  ".iFileName.'.dat' index 0 using 1:($2/1000) with steps lt 1 lw 3 lc rgb 'red' title 'submitted',\
+     "< awk '{tot+=$4; print ($1\"T\"$2,tot)}'  ".iFileNameAssimilated.'.dat' index 0 using 1:($2/1000) with steps lt 1 lw 3 lc rgb 'blue' title 'assimilated'
