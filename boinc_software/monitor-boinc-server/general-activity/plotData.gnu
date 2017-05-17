@@ -49,12 +49,12 @@ plot \
 
 # gigaflops
 set key outside horizontal
-set ylabel 'GigaFLOPs [10^3]' tc rgb 'black'
+set ylabel 'TeraFLOPs []' tc rgb 'black'
 set ytics mirror tc rgb 'black'
 unset y2label
 unset y2tics
 set grid xtics ytics lt 0 lw 1 lc rgb 'black'
-set title 'GigaFLOPs - date: '.today
+set title 'TeraFLOPs - date: '.today
 plot \
      iFileName.'.dat' index 0 using 2:($16/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
 unset title

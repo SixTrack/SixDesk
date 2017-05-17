@@ -27,6 +27,9 @@ if ${lretrieve} ; then
     # $1 is really the study name (from the submit.*.log file)
     # awk '{if ($1!=lastStudy) {print (tStart,lastLine,Ntot); tStart=$2; Ntot=0;} Ntot=Ntot+1; lastLine=$0; lastStudy=$1;}END{print (tStart,$0,Ntot)}' submitAll_${tmpDate}.txt > submitAll_${tmpDate}.dat
     awk '{if ($1!=lastStudy) {if (NR>1) {print (tStart,lastStudy,tStop,Ntot);} tStart=$2; Ntot=0;} Ntot=Ntot+1; lastStudy=$1; tStop=$2;}END{print (tStart,lastStudy,tStop,Ntot)}' submitAll_${tmpDate}.txt > submitAll_${tmpDate}.dat
+    # WUs being assimilated
+    echo " retrieving assimilated WUs - date: ${tmpDate}"
+    ssh amereghe@${boincServer} "cd ${sixtrackProjPath}/log_boincai08 ; grep Assimilated sixtrack_assimilator.log | grep $tmpDate > ${where}/assimilateAll_${tmpDate}.dat"
 fi
 
 if ${lgetOwners} ; then
