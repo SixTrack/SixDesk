@@ -1772,6 +1772,9 @@ fi
 #   NB: workaround to get getopts working properly in sourced script
 OPTIND=1
 source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${verbose} -e
+# - python path
+source ${SCRIPTDIR}/bash/dot_profile
+sixdeskDefinePythonPath
 # - settings for sixdeskmessages
 if ${loutform} ; then
     sixdesklevel=${sixdesklevel_option}
