@@ -9,7 +9,7 @@ function how_to_use() {
    actions (mandatory, one of the following):
    -c      check
    -s      submit
-              in this case, madx jobs are submitted to lsf
+              in this case, madx jobs are submitted to lsf/htcondor
    -w      submit wrong seeds
               NB: the list of wrong seeds must be generated beforehand,
                   by a `basename $0` -c run
