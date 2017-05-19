@@ -15,6 +15,7 @@ function how_to_use() {
                for submission on the required platform
            NB: this is done by default after preparation and before submission,
                but this action can be triggered on its own
+   -a      equivalent to -g -c -s
    -f      fix compromised directory structure
            similar to -g, but it fixes folders which miss any of the input files
               (i.e. the fort.*.gz) - BOINC .zip/.desc files are not re-generated;
