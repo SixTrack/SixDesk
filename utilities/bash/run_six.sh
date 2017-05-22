@@ -35,7 +35,9 @@ function how_to_use() {
               directories that will be submitted (see previous point)
            in case of submission, submit those directories requiring actual submission
               (see previous point)
-           NB: this option is NOT active in case of -c only!
+           NB: 
+           - this option is NOT active in case of -c only!
+           - this option is NOT compatible with -i action!
    -R      restart action from a specific point in scan:
            - e.g. -R lhc_coll%1%s%65_64%3_4%5%37.5, for starting from the specified
              point;
@@ -1771,6 +1773,10 @@ if ${lincomplete} ; then
     optArgCurrPlatForm="-p ${sixdeskplatformDefIncomplete}"
     echo "-i action forces platform to ${sixdeskplatformDefIncomplete}"
 fi
+if ${lincomplete} && ${lselected} ; then
+    echo "-S option and -i action are incompatible!"
+    exit
+fi
 
 # ------------------------------------------------------------------------------
 # preparatory steps
@@ -2302,46 +2308,53 @@ fi
 # HTCondor: run the actual command
 if ${lsubmit} ; then
     if [ "$sixdeskplatform" == "htcondor" ] ; then
-	cd ${sixdesktrack}
-	sixdeskmess -1 "Submitting jobs to $sixdeskplatform from dir $PWD"
-	sixdeskmess  1 "Depending on the number of points in the scan, this operation can take up to few minutes."
-	allCases=`cat ${sixdeskjobs}/${LHCDesName}.list`
-	allCases=( ${allCases} )
-	multipleTrials "terseString=\"\`condor_submit -terse ${sixdeskjobs}/htcondor_run_six.sub\`\" " "[ -n \"\${terseString}\" ]" "Problem at condor_submit"
-	let __lerr+=$?
-	if [ ${__lerr} -ne 0 ] ; then
-	    sixdeskmess -1 "Something wrong with htcondor submission: submission didn't work properly - exit status: ${__lerr}"
-	    jobIDmax=${#allCases[@]}
-	    # clean
-	    for (( ii=0; ii<${jobIDmax}; ii++ )) ; do
-		rm -f ${allCases[$ii]}/JOB_NOT_YET_STARTED 
-	    done
-	else
-	    sixdeskmess -1 "Submission was successful"
-	    # parse terse output (example: "23548.0 - 23548.4")
-	    clusterID=`echo "${terseString}" | head -1 | cut -d\- -f2 | cut -d\. -f1`
-	    clusterID=${clusterID//\ /}
-	    jobIDmax=`echo "${terseString}" | head -1 | cut -d\- -f2 | cut -d\. -f2`
-	    let jobIDmax+=1
-	    if [ ${jobIDmax} -ne ${#allCases[@]} ] ; then
-		sixdeskmess -1 "Something wrong with htcondor submission: I requested ${#allCases[@]} to be submitted, and only ${jobIDmax} actually made it!"
-		if [ ${#allCases[@]} -lt ${jobIDmax} ] ; then
-		    jobIDmax=${#allCases[@]}
-		fi
-	    fi
-	    # save taskIDs
-	    sixdeskmess -1 "Updating DB..."
-	    sixdeskmess  1 "Depending on the number of points in the scan, this operation can take up to few minutes."
-	    for (( ii=0; ii<${jobIDmax}; ii++ )) ; do
-		let jj=$ii-1
-		taskid="htcondor${clusterID}.${ii}"
-		Runnam=$(sixdeskFromJobDirToJobName ${allCases[$ii]} ${lbackcomp})
-		updateTaskIdsCases $sixdeskjobs/jobs $sixdeskjobs/incomplete_jobs $taskid $Runnam
-		let NsuccessSub+=1
-	    done
+	if [ ! -e ${sixdeskjobs}/${LHCDesName}.list ] ; then
+	    sixdeskmess -1 "List of tasks not there: ${sixdeskjobs}/${LHCDesName}.list"
+	elif [ `wc -l ${sixdeskjobs}/${LHCDesName}.list 2> /dev/null | awk '{print ($1)}'` ] ; then
+	    sixdeskmess -1 "Empty list of tasks: ${sixdeskjobs}/${LHCDesName}.list"
 	    rm -f ${sixdeskjobs}/${LHCDesName}.list
+	else
+	    cd ${sixdesktrack}
+	    sixdeskmess -1 "Submitting jobs to $sixdeskplatform from dir $PWD"
+	    sixdeskmess  1 "Depending on the number of points in the scan, this operation can take up to few minutes."
+	    allCases=`cat ${sixdeskjobs}/${LHCDesName}.list`
+	    allCases=( ${allCases} )
+	    multipleTrials "terseString=\"\`condor_submit -terse ${sixdeskjobs}/htcondor_run_six.sub\`\" " "[ -n \"\${terseString}\" ]" "Problem at condor_submit"
+	    let __lerr+=$?
+	    if [ ${__lerr} -ne 0 ] ; then
+		sixdeskmess -1 "Something wrong with htcondor submission: submission didn't work properly - exit status: ${__lerr}"
+		jobIDmax=${#allCases[@]}
+		# clean
+		for (( ii=0; ii<${jobIDmax}; ii++ )) ; do
+		    rm -f ${allCases[$ii]}/JOB_NOT_YET_STARTED 
+		done
+	    else
+		sixdeskmess -1 "Submission was successful"
+		# parse terse output (example: "23548.0 - 23548.4")
+		clusterID=`echo "${terseString}" | head -1 | cut -d\- -f2 | cut -d\. -f1`
+		clusterID=${clusterID//\ /}
+		jobIDmax=`echo "${terseString}" | head -1 | cut -d\- -f2 | cut -d\. -f2`
+		let jobIDmax+=1
+		if [ ${jobIDmax} -ne ${#allCases[@]} ] ; then
+		    sixdeskmess -1 "Something wrong with htcondor submission: I requested ${#allCases[@]} to be submitted, and only ${jobIDmax} actually made it!"
+		    if [ ${#allCases[@]} -lt ${jobIDmax} ] ; then
+			jobIDmax=${#allCases[@]}
+		    fi
+		fi
+		# save taskIDs
+		sixdeskmess -1 "Updating DB..."
+		sixdeskmess  1 "Depending on the number of points in the scan, this operation can take up to few minutes."
+		for (( ii=0; ii<${jobIDmax}; ii++ )) ; do
+		    let jj=$ii-1
+		    taskid="htcondor${clusterID}.${ii}"
+		    Runnam=$(sixdeskFromJobDirToJobName ${allCases[$ii]} ${lbackcomp})
+		    updateTaskIdsCases $sixdeskjobs/jobs $sixdeskjobs/incomplete_jobs $taskid $Runnam
+		    let NsuccessSub+=1
+		done
+		rm -f ${sixdeskjobs}/${LHCDesName}.list
+	    fi
+	    cd - > /dev/null 2>&1
 	fi
-	cd - > /dev/null 2>&1
     fi
 fi
 
