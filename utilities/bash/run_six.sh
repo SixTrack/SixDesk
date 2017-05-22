@@ -38,7 +38,7 @@ function how_to_use() {
            NB: 
            - this option is NOT active in case of -c only!
            - this option is NOT compatible with -i action!
-   -R      restart action from a specific point in scan:
+   -R      restart action from a specific point in scan (point is not treated again):
            - e.g. -R lhc_coll%1%s%65_64%3_4%5%37.5, for starting from the specified
              point;
            - -R last, for starting from the last point present in taskids;
@@ -1351,9 +1351,8 @@ function treatLong(){
 	    if ${lrestart} && ${lrestartAngle} ; then
 		if [ "${angleFromName}" == "${Angle}" ] ; then
 		    lrestartAngle=false
-		else
-		    continue
 		fi
+		continue
 	    fi
 
 	    let nConsidered+=1
