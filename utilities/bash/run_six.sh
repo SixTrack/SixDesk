@@ -2047,7 +2047,7 @@ fi
 # - restart action
 if ${lrestart} ; then
     if [ `echo "${restartPoint}" | tr [a-z] [A-Z]` == "LAST" ] ; then
-	restartPoint=`tail -1 $sixdeskwork/taskids | awk '{print ($1)}' 2> /dev/null`
+	restartPoint=`tail -1 $sixdeskwork/taskids 2> /dev/null | awk '{print ($1)}'`
 	if [ -z "${restartPoint}" ] ; then
 	    sixdeskmess -1 "file $sixdeskwork/taskids not present or empty"
 	fi
