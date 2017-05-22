@@ -34,9 +34,13 @@ function how_to_use() {
            in case of submission, submit those directories requiring actual submission
               (see previous point)
            NB: this option is NOT active in case of -c only!
-   -R      restart action from the specified point in scan (e.g.
-           -R lhc_coll%1%s%65_64%3_4%5%37.5)
-           NB: cannot be used with -S!
+   -R      restart action from a specific point in scan:
+           - e.g. -R lhc_coll%1%s%65_64%3_4%5%37.5, for starting from the specified
+             point;
+           - -R last, for starting from the last point present in taskids;
+           NB: when used with -S option, it is your responsibility to make sure that
+               there are no points in the scan that should be submitted but they are
+               actually skipped as they come 'after' the job you provided
    -M      MegaZip: in case of boinc, WUs all zipped in one file.
               (.zip/.desc files of each WU will be put in a big .zip)
            this option shall be used with both -g and -s actions, and in case
@@ -1880,25 +1884,9 @@ if ! ${lbackcomp} ; then
     sixdeskmess  2 " --> flag for backward compatibility de-activated, as requested by user!"
 fi
 #   . restart action
-if ${lrestart} ; then
-    if ${lselected} ; then
-	sixdeskmess -1 "flags -R and -S are incompatible!"
-	exit
-    fi
-    sixdeskCheckNFieldsFromJobName "${restartPoint}"
-    if [ $? -ne 0 ] ; then
-	exit
-    fi
-    # get infos of starting point
-    sixdeskSmashJobName "${restartPoint}"
-    lrestartTune=true
-    lrestartAmpli=true
-    lrestartAngle=true
-else
-    lrestartTune=false
-    lrestartAmpli=false
-    lrestartAngle=false
-fi
+lrestartTune=false
+lrestartAmpli=false
+lrestartAngle=false
 
 # - define user tree
 sixdeskDefineUserTree $basedir $scratchdir $workspace
@@ -2080,6 +2068,24 @@ fi
 if ${lmegazip} ; then
     # get name of zip as from initialisation
     megaZipName=`cat ${sixdeskjobs_logs}/megaZipName.txt`
+fi
+# - restart action
+if ${lrestart} ; then
+    if [ `echo "${restartPoint}" | tr [a-z] [A-Z]` == "LAST" ] ; then
+	restartPoint=`tail -1 $sixdeskwork/taskids 2> /dev/null | awk '{print ($1)}'`
+	if [ -z "${restartPoint}" ] ; then
+	    sixdeskmess -1 "file $sixdeskwork/taskids not present or empty"
+	fi
+    fi
+    sixdeskCheckNFieldsFromJobName "${restartPoint}"
+    if [ $? -ne 0 ] ; then
+	exit
+    fi
+    # get infos of starting point
+    sixdeskSmashJobName "${restartPoint}"
+    lrestartTune=true
+    lrestartAmpli=true
+    lrestartAngle=true
 fi
 
 # - final set-ups and echo
@@ -2277,6 +2283,10 @@ if ${lrestart} ; then
 	if ${lrestartAngle} ; then
 	    sixdeskmess -1 "Starting angle ${angleFromName} was not properly recognised!"
 	fi
+    fi
+    if ${lselected} ; then
+	sixdeskmess -1 "This might be due to the fact that, with -S option, all jobs have been recognised"
+	sixdeskmess -1 "  as not being in the need of submission."
     fi
 fi
 

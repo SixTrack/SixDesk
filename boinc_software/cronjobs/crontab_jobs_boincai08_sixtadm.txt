@@ -15,7 +15,7 @@
 # zip all WUs which were not given back to user
 # crontab every 12h
 # Puppet Name: assimilation zip
-0 */4 * * * cd /share/sixtrack/assimilation/all ; ./boinc_software/zip-trashed-WUs/zip-trashed-WUs.sh >> boinc_software/zip-trashed-WUs/zip-trashed-WUs.log 2>&1
+0 */8 * * * cd /share/sixtrack/assimilation/all ; ./boinc_software/zip-trashed-WUs/zip-trashed-WUs.sh >> boinc_software/zip-trashed-WUs/zip-trashed-WUs.log 2>&1
 # Restart Sixtrack daemons weekly:
 13 13 * * 3 cd /share/boinc/project/sixtrack ; ./bin/stop ; sleep 3 ; ./bin/start  > /dev/null 2>&1
 # Delete spam:
