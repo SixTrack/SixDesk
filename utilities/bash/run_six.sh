@@ -1368,8 +1368,13 @@ function treatLong(){
 	    if ${lrestart} && ${lrestartAngle} ; then
 		if [ "${angleFromName}" == "${Angle}" ] ; then
 		    lrestartAngle=false
+		    if ${lrestartLast} ; then
+			# -R LAST
+			continue
+		    fi
+		else
+		    continue
 		fi
-		continue
 	    fi
 
 	    let nConsidered+=1
@@ -1652,6 +1657,7 @@ loutform=false
 lbackcomp=true
 lverbose=false
 lrestart=false
+lrestartLast=false
 restartPoint=""
 currPlatform=""
 currStudy=""
@@ -2050,6 +2056,9 @@ if ${lrestart} ; then
 	if [ -z "${restartPoint}" ] ; then
 	    sixdeskmess -1 "file $sixdeskwork/taskids not present or empty"
 	fi
+	lrestartLast=true
+	sixdeskmess 1 "Last point with successful submission: ${restartPoint}"
+	sixdeskmess 1 " as from $sixdeskwork/taskids"
     fi
     sixdeskCheckNFieldsFromJobName "${restartPoint}"
     if [ $? -ne 0 ] ; then
