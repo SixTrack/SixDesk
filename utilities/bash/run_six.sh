@@ -2306,10 +2306,10 @@ if ${lrestart} ; then
 	if ${lrestartAngle} ; then
 	    sixdeskmess -1 "Starting angle ${angleFromName} was not properly recognised!"
 	fi
-    fi
-    if ${lselected} ; then
-	sixdeskmess -1 "This might be due to the fact that, with -S option, all jobs have been recognised"
-	sixdeskmess -1 "  as not being in the need of submission."
+	if ${lselected} ; then
+	    sixdeskmess -1 "This might be due to the fact that, with -S option, all jobs have been recognised"
+	    sixdeskmess -1 "  as not being in the need of submission."
+	fi
     fi
 fi
 
