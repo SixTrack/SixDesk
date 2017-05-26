@@ -12,7 +12,7 @@ function how_to_use() {
    options (optional)
    -B      break backward-compatibility
            for the moment, this sticks only to job names
-   -t      reprocess old archives of trashed WUs already parsed
+   -t      reprocess old archives of results already parsed
    -z      do not retrieve only fort.10, but also Sixout.zip
    -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
                0: only error messages and basic output 
@@ -1318,10 +1318,10 @@ fi
 # ------------------------------------------------------------------------------
 
 lbackcomp=true
-lreconsiderTrashed=false
+lreconsiderDelete=false
 loutform=false
 lretrieveZip=false
-trashbin=/afs/cern.ch/work/b/boinc/download
+downloadDir=/afs/cern.ch/work/b/boinc/download
 
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":hBtzo:" opt ; do
@@ -1335,7 +1335,7 @@ while getopts  ":hBtzo:" opt ; do
 	    lbackcomp=false
 	    ;;
 	t)
-	    lreconsiderTrashed=true
+	    lreconsiderDelete=true
 	    ;;
 	z)
 	    lretrieveZip=true
@@ -1537,42 +1537,48 @@ update_cases
 
 echo ""
 
-# look into trashbin: in case zipped files are there, then
+# look into downloadDir: in case zipped files are there, then
 #    download all results there contained
-allTrashed=`ls -1 ${trashbin}/${workspace}_${currStudy}_*.zip 2> /dev/null`
-if ${lreconsiderTrashed} ; then
-    allTrashed="${allTrashed} `ls -1 ${trashbin}/deleteMe_${workspace}_${currStudy}_*.zip 2> /dev/null`"
+allArchives=`ls -1 ${downloadDir}/*/${workspace}_${currStudy}_*.zip 2> /dev/null`
+if ${lreconsiderDelete} ; then
+    allArchives="${allArchives} `ls -1 ${downloadDir}/*/delete/${workspace}_${currStudy}_*.zip 2> /dev/null`"
 fi
-for tmpArchive in ${allTrashed} ; do
+for tmpArchive in ${allArchives} ; do
 
     tmpArchiveName=`basename ${tmpArchive}`
-    tmpDirName=/tmp/${tmpArchiveName//.zip/}
+    tmpArchiveDir=`dirname ${tmpArchive}`
+    tmpExtractDir=/tmp/${tmpArchiveName//.zip/}
 
     echo ""
-    sixdeskmess -1 "You have results in trashbin ${trashbin} archived in ${tmpArchiveName}!!"
+    sixdeskmess -1 "You have results in ${downloadDir} archived in ${tmpArchiveName}!!"
     sixdeskmess -1 "I will download them as well!!"
 
-    unzip ${tmpArchive} -d ${tmpDirName}
+    # set trap
+    trap "rm -rf ${tmpExtractDir}" 0
+
+    unzip ${tmpArchive} -d ${tmpExtractDir}
 
     # get list of new results originally from CPU resource
     # it produces:
     # - sixdesktasklist: a file with the takslist of results (eg boincXXXX)
-    getListNewResults ${tmpDirName}
+    getListNewResults ${tmpExtractDir}
 
     # download results and save them in track tree
-    downloadNewResults ${tmpDirName} $sixdesktasklist "_0"
+    downloadNewResults ${tmpExtractDir} $sixdesktasklist "_0"
 
     # update the my* DB
     update_cases
     
     if [ $? -eq 0 ] ; then
-	# do not pile up deleteMe_ prefixes
-	if [[ "${tmpArchiveName}" != "deleteMe_"* ]] ; then
-	    mv ${tmpArchive} ${trashbin}/deleteMe_${tmpArchiveName}
+	# mv in delete only brand new results
+	if [[ "${tmpArchiveDir}" != *"delete"* ]] ; then
+	    mv ${tmpArchive} ${downloadDir}/delete/${tmpArchiveName}
 	fi
     fi
 
-    rm -rf ${tmpDirName}
+    rm -rf ${tmpExtractDir}
+    # reset trap
+    trap - 0
 
     echo ""
 
