@@ -2318,7 +2318,7 @@ if ${lsubmit} ; then
     if [ "$sixdeskplatform" == "htcondor" ] ; then
 	if [ ! -e ${sixdeskjobs}/${LHCDesName}.list ] ; then
 	    sixdeskmess -1 "List of tasks not there: ${sixdeskjobs}/${LHCDesName}.list"
-	elif [ `wc -l ${sixdeskjobs}/${LHCDesName}.list 2> /dev/null | awk '{print ($1)}'` ] ; then
+	elif [ `wc -l ${sixdeskjobs}/${LHCDesName}.list 2> /dev/null | awk '{print ($1)}'` -eq 0 ] ; then
 	    sixdeskmess -1 "Empty list of tasks: ${sixdeskjobs}/${LHCDesName}.list"
 	    rm -f ${sixdeskjobs}/${LHCDesName}.list
 	else
