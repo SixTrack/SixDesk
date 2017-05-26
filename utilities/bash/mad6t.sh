@@ -172,6 +172,7 @@ function check(){
     # accepted discrepancy in file dimensions [%]
     local __factor=1
     local __currdir=$PWD
+    local __lwarn=false
 
     cd $sixtrack_input
     
@@ -237,6 +238,7 @@ function check(){
 	    if [ ${iFort} -eq 8 ] || [ ${iFort} -eq 16 ] ; then
 		# just a warning
 		sixdeskmess -1 "   --> all fort.${iFort} have a NULL dimension!! I guess you did it on purpose..."
+		__lwarn=true
 	    else
 		# actually a potential problem
 		sixdeskmess -1 "   --> NULL average file dimension!! Maybe something wrong with MADX runs?"
@@ -296,6 +298,9 @@ function check(){
 	sixdeskmess 1 "All the mad6t jobs appear to have completed successfully using madx -X Version $MADX in $MADX_PATH"
 	sixdeskmess 1 "Please check the sixtrack_input directory as the mad6t runs may have failed and just produced empty files!!!"
 	sixdeskmess 1 "All jobs/logs/output are in sixtrack_input/mad.mad6t.sh* directories"
+	if ${__lwarn} ; then
+	    sixdeskmess -1 "please check warnings about fort.8 / fort.16"
+	fi
     fi
     cd ${__currdir}
     return $__lerr
