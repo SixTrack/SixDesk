@@ -234,7 +234,7 @@ function check(){
 	tmpSig=`echo "${tmpDimens}" | awk -v "ave=${tmpAve}" '{tot+=($1-ave)**2}END{print (sqrt(tot)/NR)}'`
 	sixdeskmess -1 "   average dimension (uncompressed): `echo ${tmpAve} | awk '{print ($1/1024)}'` kB - sigma: `echo ${tmpSig} | awk '{print ($1/1024)}'` kB"
 	if [ `echo ${tmpAve} | awk '{print ($1==0)}'` -eq 1 ] ; then
-	    if [ ${iFort} -eq 8 ] ; then
+	    if [ ${iFort} -eq 8 ] || [ ${iFort} -eq 16 ] ; then
 		# just a warning
 		sixdeskmess -1 "   --> all fort.${iFort} have a NULL dimension!! I guess you did it on purpose..."
 	    else
