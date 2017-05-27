@@ -53,6 +53,7 @@ static char *SPOOLDEP[] = {"boinc", "boinczip", "boinctest", "boincai08", "boinc
 //static char *SPOOLDIR = "/afs/cern.ch/user/b/boinc/scratch0/boinctest";
 //static char *SPOOLDIR = "/afs/cern.ch/user/b/boinc/scratch0/boinc";
 static char *RESULTDIR = "results";
+static char *RESULTALL = "all";
 static char *RESULTDIR_6 = "results";
 //static char *RESULTDIR_6 = "results_6";
 static char *ERRORREPT = "sample_results/errors";
@@ -95,7 +96,8 @@ int assimilate_handler( WORKUNIT& wu, vector<RESULT>& /*results*/, RESULT& canon
     int retval;
     char buf[STR_SIZE];
     unsigned int i;
-    int err, nstr;
+    int err = 1;    // assume error occured; set to zero if error cleared
+    int nstr = 0;
     struct stat sb;
 
 //    retval = boinc_mkdir(config.project_path(RESULTDIR));
@@ -131,7 +133,7 @@ int assimilate_handler( WORKUNIT& wu, vector<RESULT>& /*results*/, RESULT& canon
     } 
     else {
         scope_messages.printf("[%s] Handler: No canonical result\n", wu.name);
-	snprintf(buf,STR_SIZE,"%s: 0x%x",wu.name,wu.error_mask);
+	snprintf(buf,STR_SIZE,"%s %s: 0x%x","No canonical result, file: ",wu.name,wu.error_mask);
         write_error(7,buf);
     
         if (wu.error_mask&WU_ERROR_COULDNT_SEND_RESULT) {
@@ -164,7 +166,8 @@ int assimilate_handler( WORKUNIT& wu, vector<RESULT>& /*results*/, RESULT& canon
 	buf[STR_SIZE-1] = '\0';
         char *dirnul = strstr(buf,"__");           // convention: buf contains the first part of the name = directory name
         char *dirres = (char *) (dirnul + 2);      // convention: dirres contains the second (unique) part of the name
-        //*dirnul = '\0';
+        *dirnul = '\0';                            // VERY IMPORTANT SETTING to separate the directory name in the buffer
+	err = 1;                                   // to let results be written to SPOOLERR directory if AFS directory not found
  
 /* iza debug:  
 	int lenwname = strlen(buf);
@@ -173,7 +176,8 @@ int assimilate_handler( WORKUNIT& wu, vector<RESULT>& /*results*/, RESULT& canon
    end debug */
 
 /* iza 22/01/2014: search for directory where to copy the results:
-*/
+// iza 25/05/2017: remove the search and ALWAYS dump the result in the SPOOLERR directory 
+//
 	for( err=1, i=0; i < NSEARCH; i++) {
 		if( (nstr=snprintf(dire_path,STR_SIZE,"%s/%s/%s/%s",SPOOLDIR,SPOOLDEP[i],buf,RESULTDIR)) >= STR_SIZE) return write_error(1,dire_path);
         	if( (dirp = opendir(dire_path)) != NULL) { 
@@ -187,8 +191,8 @@ int assimilate_handler( WORKUNIT& wu, vector<RESULT>& /*results*/, RESULT& canon
 	if ( err == 1 ){                 // directory not found or file cannot be written - write to SPOOLERR directory
           	write_error(2,buf);      // report error: spooldir does not exist!
 	}
-/* iza 27/02/2015: error condition added:
- */
+// iza 27/02/2015: error condition added:
+//
 	if( err = 0 ) {   // check that the file can be written to
 		snprintf(copy_path,STR_SIZE,"%s/%s",dire_path,wu.name);
 		FILE* f = fopen(copy_path, "w");
@@ -198,16 +202,21 @@ int assimilate_handler( WORKUNIT& wu, vector<RESULT>& /*results*/, RESULT& canon
 		}
 		else fclose(f);
 	} 
+//  iza 25/05/2017: end commented out section to dump results unconditionaly to the SPOOLERR directory 
+*/
 	if ( err == 1 ){                 // directory not found or file cannot be written - write to SPOOLERR directory
-		if( (nstr=snprintf(dire_path,STR_SIZE,"%s/%s/%s",SPOOLERR,buf,RESULTDIR)) >= STR_SIZE) return write_error(1,dire_path);
+		if( (nstr=snprintf(dire_path,STR_SIZE,"%s/%s",SPOOLERR,buf)) >= STR_SIZE) return write_error(1,dire_path);
+                                         // note: the directory name contains the study name above (25/05/2017)
+// to all	if( (nstr=snprintf(dire_path,STR_SIZE,"%s/%s",SPOOLERR,RESULTALL)) >= STR_SIZE) return write_error(1,dire_path);
         	if( (dirp = opendir(dire_path)) != NULL) { 
 
 			closedir(dirp);		// directory exists;
 		} 
 		else {
-			if( (err = mkdir(dire_path, 0777)) < 0) {   // if we cannot create it, just ignore shipping back results
-				write_error(9,dire_path);
-				return write_error(9,": cannot create emmergency directory"); 
+			if( (err = mkdir(dire_path, 0777)) < 0) {   // if we cannot create it, write to RESULTALL (should always exist) 
+				if( (nstr=snprintf(dire_path,STR_SIZE,"%s/%s",SPOOLERR,RESULTALL)) >= STR_SIZE) return write_error(1,dire_path);
+//				write_error(9,dire_path);
+//				return write_error(9,": cannot create emmergency directory"); 
 			}
 		}
 		errno = 0;
@@ -234,8 +243,7 @@ int assimilate_handler( WORKUNIT& wu, vector<RESULT>& /*results*/, RESULT& canon
 
 		if (stat(fi.path.c_str(), &sb) == -1) { write_error(20,(char *)fi.path.c_str()); continue;}
 
-		if(i == 0) nstr=snprintf(copy_path,STR_SIZE,"%s/%s",dire_path,wu.name);
-	     	else       nstr=snprintf(copy_path,STR_SIZE,"%s/%s_%d",dire_path,wu.name,i);
+	     	nstr=snprintf(copy_path,STR_SIZE,"%s/%s_%d",dire_path,wu.name,i);
 		if( nstr >= STR_SIZE) return write_error(1,copy_path);
 /*
 		FILE* f = fopen(copy_path, "w");
@@ -247,14 +255,16 @@ int assimilate_handler( WORKUNIT& wu, vector<RESULT>& /*results*/, RESULT& canon
 		else fclose(f);
 */
 		if( (retval = boinc_copy(fi.path.c_str() , copy_path)) ) {
-/* iza 27/02/2015 changed error condition:  write to local (NFS) directory in "all"
+/* iza 27/02/2015 changed error condition:  write to local (NFS) directory in RESULTALL 
  */
                         write_error(5,copy_path);
 
 			int errnolast = errno;
 			int retval2 = 0;
 
-			snprintf(copy_path,STR_SIZE,"%s/all/%s_%d",SPOOLERR,wu.name,i);
+			snprintf(copy_path,STR_SIZE,"%s/%s/%s_%d",SPOOLERR,RESULTALL,wu.name,i); 
+			if( nstr >= STR_SIZE) return write_error(1,copy_path);
+
 		        if( (retval2 = boinc_copy(fi.path.c_str() , copy_path)) ) {
 				write_error(8,(char *) copy_path); 
 			}
