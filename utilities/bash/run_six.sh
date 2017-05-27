@@ -790,10 +790,12 @@ function submitCreateFinalInputs(){
 	sixdeskmess  1 "sixdesktaskid: $sixdesktaskid - $sixdeskTaskId"
 	# - return sixdeskTaskName and workunitName
 	sixdeskDefineWorkUnitName $workspace $Runnam $sixdesktaskid
-	# - generate zip file
-	multipleTrials "zip -j $RundirFullPath/$workunitName.zip $sixdeskjobs_logs/fort.3 $sixtrack_input/fort.2 $sixtrack_input/fort.8 $sixtrack_input/fort.16 > $RundirFullPath/zip.log 2>&1; local __zip_exit_status=\$? ; grep warning $RundirFullPath/zip.log >/dev/null 2>&1 ; local __zip_warnings=\$? ; rm -f $RundirFullPath/zip.log" "[ \${__zip_exit_status} -eq 0 ] && [ \${__zip_warnings} -eq 1 ]" "Failing to generate .zip file for WU ${workunitName}"
 	let __lerr+=$?
 	if [ ${__lerr} -eq 0 ] ; then
+	    # - generate zip file
+	    #   NB: -j option, to store only the files, and not the source paths
+	    multipleTrials "zip -j $RundirFullPath/$workunitName.zip $sixdeskjobs_logs/fort.3 $sixtrack_input/fort.2 $sixtrack_input/fort.8 $sixtrack_input/fort.16 > $RundirFullPath/zip.log 2>&1; local __zip_exit_status=\$? ; grep warning $RundirFullPath/zip.log >/dev/null 2>&1 ; local __zip_warnings=\$? ; rm -f $RundirFullPath/zip.log" "[ \${__zip_exit_status} -eq 0 ] && [ \${__zip_warnings} -eq 1 ]" "Failing to generate .zip file for WU ${workunitName}"
+	    let __lerr+=$?
 	    # - generate the workunit description file
 	    cat > $RundirFullPath/$workunitName.desc <<EOF
 $workunitName
@@ -808,7 +810,7 @@ $errors
 $numIssues
 $resultsWithoutConcensus
 EOF
-
+	    let __lerr+=$?
   	    # - update MegaZip file:
 	    if ${lmegazip} ; then
 		echo "$RundirFullPath/$workunitName.desc" >> ${sixdeskjobs_logs}/megaZipList.txt
@@ -1604,7 +1606,9 @@ function printSummary(){
     if ${lstatus} ; then
 	sixdeskmess -1 "STATUS LISTED  ${NsuccessSts} jobs"			
     fi
-    if [ $1 -ne 0 ] ; then
+    if [ $1 -eq 0 ] ; then
+	sixdeskmess -1 "Completed normally."
+    else
 	sixdeskmess -1 "Premature end."
 	if [ $1 -eq 11 ] ; then
 	    sixdeskEchoEnvVars /tmp/envs_SIGSEGV.txt
