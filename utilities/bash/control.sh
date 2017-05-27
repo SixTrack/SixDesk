@@ -7,14 +7,15 @@ function how_to_use() {
    script for controlling calls to sixdesk scripts.
       STDERR and STDOUT are redirected to log files like (always
       in append mode):
-                                          studies/<study_name>/runAll.log
+                                          logs/<study_name>.log
       in the workspace of the current study.
       (un-)gzipping of log files is performed (before/)after by default.
 
    actions [mandatory]
-   -M      -> mad6t.sh -s -d <study_name>
-   -S      -> run_six.sh -a -d <study_name>
-   -R      -> run_results <study_name>
+   -M      -> ${defaultMadCommand}
+   -S      -> ${defaultRunSixCommand}
+   -R      -> ${defaultRunResults}
+   -B      -> ${defaultBackUp} (default settings are used)
    -U      -> user-defined operation
               in this case, it is user's responsibility to provide the command line between
                  SINGLE QUOTEs, with the correct name of the script with its fullpath, e.g.:
@@ -22,7 +23,6 @@ function how_to_use() {
               NB: the variable \${SCRIPTDIR}:
                      ${SCRIPTDIR}
                   is available to the user.
-   -B      -> backUp.sh <study_name> (default settings are used)
    for the time being, only one action at a time can be requested
 
    options
@@ -39,7 +39,7 @@ function how_to_use() {
            N: a brand new kerberos token is generated (password requested!)
            R: the exising kerberos token is renewed (no password needed, but
               pay attention to max renewal date of token)
-   -L      do not gunzip/gzip log file before/after running command
+   -L      skip gunzip/gzip log file before/after running command
    -P      split operations on a given number of CPUs (parallel operations). Alternative
               to specifying the number of CPUs, special keys are available:
               - ALL: a call to `basename $0` will be performed for each study;
@@ -57,8 +57,6 @@ function how_to_use() {
            Please, do not exagereate with this option, as parallel operations may
               dramatically overload your storage volume, with counter-productive
               effects.
-
-   All the calls are logged in ${commandsLog}
 
    example:
    `basename $0` -k N -R -f ./checkList.txt -P 4 \\
@@ -165,28 +163,35 @@ delayTime=60 # [s]
 nCPUsDef=4
 nParalMax=10
 
-commandsLog="$HOME/.`basename $0`.log"
 allARGs="$0"
-calledMe="$0 $*"
 commandLine=""
+
+defaultMadCommand="mad6t.sh -s"
+defaultRunSixCommand="run_six.sh -a"
+defaultRunResults="run_results"
+defaultBackUp="backUp.sh"
 
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":MSRBLU:hf:w:s:k:P:" opt ; do
     case $opt in
 	M)
 	    lmad=true
+	    tmpCommand="${SCRIPTDIR}/bash/${defaultMadCommand}"
 	    allARGs="${allARGs} -M"
 	    ;;
 	S)
 	    lrunsix=true
+	    tmpCommand="${SCRIPTDIR}/bash/${defaultRunSixCommand}"
 	    allARGs="${allARGs} -S"
 	    ;;
 	R)
 	    lrunres=true
+	    tmpCommand="${SCRIPTDIR}/bash/${defaultRunResults}"
 	    allARGs="${allARGs} -R"
 	    ;;
 	B)
 	    lbackup=true
+	    tmpCommand="${SCRIPTDIR}/bash/${defaultBackUp}"
 	    allARGs="${allARGs} -B"
 	    ;;
 	U)
@@ -197,6 +202,7 @@ while getopts  ":MSRBLU:hf:w:s:k:P:" opt ; do
 		echo " empty user command!"
 		exit 1
 	    fi
+	    tmpCommand="eval ${commandLine}"
 	    ;;
 	L)
 	    lZipLog=false
@@ -308,9 +314,6 @@ fi
 # actual script
 # ------------------------------------------------------------------------------
 
-# echo command in log of commands
-echo "[`date +"%F %T"`] $PWD - ${calledMe}" >> ${commandsLog}
-
 if ${lParallel} ; then
 
     # parallel jobs
@@ -396,28 +399,25 @@ else
     # loop through studies one by one
     for (( ii=0 ; ii<${#studies[@]} ; ii++ )) ; do
 	cd ${workspaces[$ii]}
-	__logFile=studies/${studies[$ii]}/runAll.log
+	if [ -d logs ] || mkdir logs
+	__logFile=logs/${studies[$ii]}.log
 	if ${lZipLog} ; then
    	    if [ -e ${__logFile}.gz ] ; then
    		gunzip ${__logFile}.gz
    	    fi
 	fi
-	if ${lmad} ; then
-   	    echo " producing fort.?? input files to study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-   	    ${SCRIPTDIR}/bash/mad6t.sh -s -d ${studies[$ii]} 2>&1 | tee -a ${__logFile}
-	elif ${lrunsix} ; then
-   	    echo " submitting study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-   	    ${SCRIPTDIR}/bash/run_six.sh -a -d ${studies[$ii]} 2>&1 | tee -a ${__logFile}
-	elif ${lrunres} ; then
-   	    echo " retrieving BOINC results of study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-   	    ${SCRIPTDIR}/bash/run_results ${studies[$ii]} boinc 2>&1 | tee -a ${__logFile}
-	elif ${lbackup} ; then
-   	    echo " backing up study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-   	    ${SCRIPTDIR}/bash/backUp.sh -d ${studies[$ii]} | tee -a ${__logFile}
-	elif ${luser} ; then
-   	    echo " executing user-defined command ${commandLine} on study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-   	    eval ${commandLine} -d ${studies[$ii]} 2>&1 | tee -a ${__logFile}
-	fi
+	
+	# actually run the command and make reasonable log file
+	echo -e "\n\n" >> ${__logFile}
+	printf "=%.0s" {1..80} >> ${__logFile}
+	echo "" >> ${__logFile}
+	echo " [START] - `date` - workspace: ${workspaces[$ii]} - study: ${studies[$ii]} - command: ${tmpCommand}" >> ${__logFile}
+	STARTTIME=$(date +%s)
+	eval ${tmpCommand} -d ${studies[$ii]} 2>&1 | tee -a ${__logFile}
+	ENDTIME=$(date +%s)
+	TIMEDELTA=$(($ENDTIME - $STARTTIME))
+	echo " [END]   - `date` - it took ${TIMEDELTA} seconds" >> ${__logFile}
+	
 	if ${lZipLog} ; then
    	    gzip ${__logFile}
 	fi
