@@ -978,6 +978,7 @@ function dot_htcondor(){
 
 function dot_boinc(){
 
+    # temporary variables
     local __lerr=0
     
     # actually submit
@@ -1002,6 +1003,9 @@ function dot_boinc(){
 	updateTaskIdsCases $sixdeskjobs/tasks $sixdeskjobs/incomplete_tasks $sixdesktaskid $Runnam
     fi
 
+    # in case of LSF, this operation is done either by:
+    # - dot_bsub, in case of un-successful submission;
+    # - the job at statup, in case of successful submission;
     rm -f $RundirFullPath/JOB_NOT_YET_STARTED
 
     return $__lerr
