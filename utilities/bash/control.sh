@@ -4,17 +4,17 @@ function how_to_use() {
     cat <<EOF
 
    `basename $0` [option]
-   script for controlling sequential calls to sixdesk scripts.
+   script for controlling calls to sixdesk scripts.
       STDERR and STDOUT are redirected to log files like (always
       in append mode):
-                                          <study_name>.log
+                                          studies/<study_name>/runAll.log
       in the workspace of the current study.
-      Gzipping of log files is performed by default.
+      (un-)gzipping of log files is performed (before/)after by default.
 
    actions [mandatory]
    -M      -> mad6t.sh -s -d <study_name>
    -S      -> run_six.sh -a -d <study_name>
-   -R      -> run_results <study_name> BOINC
+   -R      -> run_results <study_name>
    -U      -> user-defined operation
               in this case, it is user's responsibility to provide the command line between
                  SINGLE QUOTEs, with the correct name of the script with its fullpath, e.g.:
@@ -396,29 +396,30 @@ else
     # loop through studies one by one
     for (( ii=0 ; ii<${#studies[@]} ; ii++ )) ; do
 	cd ${workspaces[$ii]}
+	__logFile=studies/${studies[$ii]}/runAll.log
 	if ${lZipLog} ; then
-   	    if [ -e ${studies[$ii]}.log.gz ] ; then
-   		gunzip ${studies[$ii]}.log.gz
+   	    if [ -e ${__logFile}.gz ] ; then
+   		gunzip ${__logFile}.gz
    	    fi
 	fi
 	if ${lmad} ; then
    	    echo " producing fort.?? input files to study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-   	    ${SCRIPTDIR}/bash/mad6t.sh -s -d ${studies[$ii]} 2>&1 | tee -a ${studies[$ii]}.log
+   	    ${SCRIPTDIR}/bash/mad6t.sh -s -d ${studies[$ii]} 2>&1 | tee -a ${__logFile}
 	elif ${lrunsix} ; then
    	    echo " submitting study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-   	    ${SCRIPTDIR}/bash/run_six.sh -a -d ${studies[$ii]} 2>&1 | tee -a ${studies[$ii]}.log
+   	    ${SCRIPTDIR}/bash/run_six.sh -a -d ${studies[$ii]} 2>&1 | tee -a ${__logFile}
 	elif ${lrunres} ; then
    	    echo " retrieving BOINC results of study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-   	    ${SCRIPTDIR}/bash/run_results ${studies[$ii]} boinc 2>&1 | tee -a ${studies[$ii]}.log
+   	    ${SCRIPTDIR}/bash/run_results ${studies[$ii]} boinc 2>&1 | tee -a ${__logFile}
 	elif ${lbackup} ; then
    	    echo " backing up study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-   	    ${SCRIPTDIR}/bash/backUp.sh -d ${studies[$ii]} | tee -a ${studies[$ii]}.log
+   	    ${SCRIPTDIR}/bash/backUp.sh -d ${studies[$ii]} | tee -a ${__logFile}
 	elif ${luser} ; then
    	    echo " executing user-defined command ${commandLine} on study ${studies[$ii]} in workspace ${workspaces[$ii]} ..."
-   	    eval ${commandLine} -d ${studies[$ii]} 2>&1 | tee -a ${studies[$ii]}.log
+   	    eval ${commandLine} -d ${studies[$ii]} 2>&1 | tee -a ${__logFile}
 	fi
 	if ${lZipLog} ; then
-   	    gzip ${studies[$ii]}.log
+   	    gzip ${__logFile}
 	fi
 	if [ ${#studies[@]} -gt 1 ] ; then
 	    echo " getting ready for new study..."
