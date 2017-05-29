@@ -1540,7 +1540,7 @@ for tmpArchive in ${allArchives} ; do
     tmpExtractDir=/tmp/${tmpArchiveName//.zip/}
 
     echo ""
-    sixdeskmess -1 "You have results in ${downloadDir} archived in ${tmpArchiveName}!!"
+    sixdeskmess -1 "You have results in ${tmpArchiveDir} archived in ${tmpArchiveName}!!"
     sixdeskmess -1 "I will download them as well!!"
 
     # set trap
@@ -1561,8 +1561,8 @@ for tmpArchive in ${allArchives} ; do
     
     if [ $? -eq 0 ] ; then
 	# mv in delete only brand new results
-	if [[ "${tmpArchiveDir}" != *"delete"* ]] ; then
-	    mv ${tmpArchive} ${downloadDir}/delete/${tmpArchiveName}
+	if [[ "${tmpArchiveDir}" != *"/delete/"* ]] ; then
+	    mv ${tmpArchive} ${tmpArchiveDir}/delete/${tmpArchiveName}
 	fi
     fi
 
