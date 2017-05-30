@@ -2074,7 +2074,7 @@ if ${lsubmit} ; then
 	chmod +x ${sixdeskjobs}/htcondor_job.sh
 	sed -i "s#^executable = .*#executable = ${sixdeskjobs}/htcondor_job.sh#g" ${sixdeskjobs}/htcondor_run_six.sub
 	sed -i "s#^queue dirname from.*#queue dirname from ${sixdeskjobs}/${LHCDesName}.list#g" ${sixdeskjobs}/htcondor_run_six.sub
-	sed -i "s#^+JobFlavour =.*#+JobFlavour = ${HTCq}#g" ${sixdeskjobs}/htcondor_run_six.sub
+	sed -i "s#^+JobFlavour =.*#+JobFlavour = '${HTCq}'#g" ${sixdeskjobs}/htcondor_run_six.sub
     fi
 fi
 # - MegaZip: get file name
