@@ -1507,6 +1507,20 @@ function treatLong(){
 		    fi
 	        fi
 
+	        # ------------------------------------------------------------------
+	        # renew kerberos ticket (long submissions)
+	        # ------------------------------------------------------------------
+		if [ $((${NsuccessSub}%${NrenewKerberos})) -eq 0 ] ; then
+		    sixdeskmess -1 " --> kinit;"
+		    multipleTrials "kinit -R ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]"
+		    if [ $? -gt 0 ] ; then
+			sixdeskmess -1 "--> kinit -R failed - AFS/Kerberos credentials expired??? let's try to continue anyway..."
+		    else
+			sixdeskmess -1 " --> klist output after kinit -R:"
+			klist
+		    fi
+		fi
+		
 	    # ----------------------------------------------------------------------
 	    fi
 	    # ----------------------------------------------------------------------
@@ -1662,6 +1676,7 @@ optArgCurrPlatForm=""
 doNotOverwrite=""
 verbose=""
 sixdeskplatformDefIncomplete="htcondor"
+NrenewKerberos=10000
 
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":hgo:sctakfvBSCMid:p:R:" opt ; do
