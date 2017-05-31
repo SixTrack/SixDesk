@@ -481,6 +481,7 @@ function preProcessBoinc(){
 function submitChromaJobs(){
 
     local __destination=$1
+    local __GLOBIGNORE='fort.[2,8]:fort.16:fort*.3.*:fort.10*:sixdesklock'
     
     # --------------------------------------------------------------------------
     # generate appropriate fort.3 files as: fort.3.tx + fort.3.mad + fort.3.m2
@@ -559,6 +560,10 @@ function submitChromaJobs(){
 	exit
     fi
     mv fort.10 fort.10_first_oneturn
+    # clean dir
+    export GLOBIGNORE=${__GLOBIGNORE}
+    rm -f *
+    export GLOBIGNORE=
 
     # - second job
     sixdeskmess  1 "Running the second one turn job for chromaticity"
@@ -572,6 +577,10 @@ function submitChromaJobs(){
 	exit
     fi
     mv fort.10 fort.10_second_oneturn
+    # clean dir
+    export GLOBIGNORE=${__GLOBIGNORE}
+    rm -f *
+    export GLOBIGNORE=
 
     # --------------------------------------------------------------------------
     # a bit of arithmetic
@@ -587,6 +596,7 @@ function submitChromaJobs(){
 function submitBetaJob(){
     
     local __destination=$1
+    local __GLOBIGNORE='fort.[2,8]:fort.16:fort*.3.*:fort.10*:sixdesklock:lin*'
     
     # --------------------------------------------------------------------------
     # generate appropriate fort.3 files as: fort.3.m1 + fort.3.mad + fort.3.m2
@@ -643,6 +653,10 @@ function submitBetaJob(){
     fi
     mv lin lin_old
     cp fort.10 fort.10_old
+    # clean dir
+    export GLOBIGNORE=${__GLOBIGNORE}
+    rm -f *
+    export GLOBIGNORE=
 
     # --------------------------------------------------------------------------
     # regenerate betavalues file
