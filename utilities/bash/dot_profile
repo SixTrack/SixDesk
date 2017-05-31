@@ -139,25 +139,13 @@ sixdeskexit()
   if [ $# -eq 1 ] ; then
       sixdeskexitparam=$1
   fi
-  if test "$SIXDESKLOCKED" != ""
-  then
-
-#MACRO mymess 0 sixdeskexit: Freeing lock(s) $SIXDESKLOCKED!!!
-    sixdeskmess 1 "sixdeskexit: Freeing lock(s) $SIXDESKLOCKED!!!"
-#MACRO mymess
-
-    while test "$SIXDESKLOCKED" != ""
-    do
-      sixdesklockeddir=`echo "$SIXDESKLOCKED" | cut -d " " -f1`
-
-#MACRO myunlock $sixdesklockeddir
-      sixdesklockdir=$sixdesklockeddir
-      sixdeskunlock
-#MACRO myunlock
-
-    done
+  if [ -n "$SIXDESKLOCKED" ] ; then
+      sixdeskmess 1 "sixdeskexit: Freeing lock(s) $SIXDESKLOCKED!!!"
   fi
-  exit "$sixdeskexitparam"
+  for tmpDir in "$SIXDESKLOCKED" ; do
+      sixdeskunlock $tmpDir
+  done
+  \exit "$sixdeskexitparam"
 }
 sixdeskunlock()
 {
@@ -200,7 +188,6 @@ sixdeskunlock()
     fi    
 #MACRO mymess
 
-    SIXDESKLOCKED=`echo "$SIXDESKLOCKED" | sed -e's?'"$sixdesklockdir "'??'`
   else
 
 #MACRO mymess 0 sixdeskunlock: The lock $sixdesklockdir does NOT exist!!!
@@ -208,6 +195,7 @@ sixdeskunlock()
 #MACRO mymess
 
   fi
+  SIXDESKLOCKED=`echo "$SIXDESKLOCKED" | sed -e's?'"$sixdesklockdir "'??'`
 }
 sixdesklock()
 {
@@ -367,18 +355,18 @@ sixdesklock()
 sixdeskchecklock()
 {
     # $1: dir where to check
-    dirToCheck=$1
-    if [ ! -d ${dirToCheck} ] ; then
-	sixdeskmess -1 "The directory ${dirToCheck} does not exist!!!"
-    elif [ ! -f ${dirToCheck}/sixdesklock ] ; then
-	sixdeskmess -1 "The lockfile ${dirToCheck}/sixdesklock does not exist!!!"
-    elif [ ! -w ${dirToCheck}/sixdesklock ] ; then
-	sixdeskmess -1 "The directory ${dirToCheck} is currently locked by"
-        sixdeskmess -1 "script `cat ${dirToCheck}/sixdesklock`"
+    local __dirToCheck=$1
+    if [ ! -d ${__dirToCheck} ] ; then
+	sixdeskmess -1 "The directory ${__dirToCheck} does not exist!!!"
+    elif [ ! -f ${__dirToCheck}/sixdesklock ] ; then
+	sixdeskmess -1 "The lockfile ${__dirToCheck}/sixdesklock does not exist!!!"
+    elif [ ! -w ${__dirToCheck}/sixdesklock ] ; then
+	sixdeskmess -1 "The directory ${__dirToCheck} is currently locked by"
+        sixdeskmess -1 "script `cat ${__dirToCheck}/sixdesklock`"
     else
-	sixdeskmess -1 "The directory ${dirToCheck} is currently unlocked"
-	sixdeskmess -1 "last lock: `ls -l ${dirToCheck}/sixdesklock`"
-	sixdeskmess -1 "`cat ${dirToCheck}/sixdesklock`"
+	sixdeskmess -1 "The directory ${__dirToCheck} is currently unlocked"
+	sixdeskmess -1 "last lock: `ls -l ${__dirToCheck}/sixdesklock`"
+	sixdeskmess -1 "`cat ${__dirToCheck}/sixdesklock`"
     fi
 }
 sixdesktunes(){
@@ -1255,10 +1243,6 @@ sixdeskCleanExit(){
     if [ $# -eq 1 ] ; then
 	__exitLevel=$1
     fi
-    for tmpDir in ${lockingDirs[@]} ; do
-	sixdesklockdir=$tmpDir
-	sixdeskunlock
-    done
     sixdeskexit $__exitLevel
 }
 function __inspectPrerequisite(){
