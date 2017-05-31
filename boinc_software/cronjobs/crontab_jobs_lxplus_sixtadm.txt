@@ -1,6 +1,6 @@
 # remove old zip files from /afs/cern.ch/work/b/boinc/download
 # m h  dom mon dow   command
-0 3 * * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/download ; echo "" >> clean.log ; echo "--> cleaning at `date`" >> clean.log ; find . -mtime +40 -name "*.zip" -print -exec rm {} \; >> clean.log
+0 3 * * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/download ; echo "" >> clean.log ; echo "--> cleaning at `date`" >> clean.log ; find . -mtime +60 -name "*.zip" -print -exec rm {} \; >> clean.log
 #
 # actually delete old studies
 20 3 * * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinc ; /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.sh >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
