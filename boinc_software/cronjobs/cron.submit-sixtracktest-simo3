@@ -5,7 +5,7 @@
 # commented out #mv .problem
 # Updated 13.12.2013 Nils, changed AFS dir ref
 # Updated 06.10.2016 A.Mereghetti, added megaZip functionality
-# Updated 25.03.2017 A.Mereghetti, sixtracktest + SixOut.zip (from .desc) + appname (from .desc)
+# Updated 25.03.2017 A.Mereghetti, SixOut.zip + appname (from .desc)
 set -e
 
 #Set Variables
@@ -25,11 +25,11 @@ spooldirUpload=$spooldir/upload
 
 # The relative path of the workunit template file from the config dir.
 # this template will present Sixin.zip as the input file
-WU_template=templates/sixtrack_wu_template.xml 
+WU_template=templates/sixtracktest_wu_template.xml
 
 # The relative path of the result template file from the config dir.
-# this template will bring back the Sixout.zip results
-result_template_SixOutZip=templates/sixtrack_res_zip_template.xml
+# this template will bring back also the Sixout.zip results
+result_template_SixOutZip=templates/sixtrack_zip_res_template.xml
 
 
 #Define finctions
@@ -257,7 +257,7 @@ create_cmd="$boincdir/bin/create_work 		   \
  -rsc_memory_bound $WUmemBound 			   \
  -rsc_disk_bound $WUdiskBound 			   \
  -delay_bound $WUdelayBound 			   \
- -min_quorum $WUredundancy 			   \ 
+ -min_quorum $WUredundancy                         \
  -target_nresults $WUcopies 			   \
  -max_error_results $WUerrors 			   \
  -max_total_results $WUnumIssues 		   \
