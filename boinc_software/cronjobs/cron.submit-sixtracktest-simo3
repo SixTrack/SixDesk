@@ -25,7 +25,7 @@ spooldirUpload=$spooldir/upload
 
 # The relative path of the workunit template file from the config dir.
 # this template will present Sixin.zip as the input file
-WU_template=templates/sixtrack_4.01_wu_template_zip.xml
+WU_template=templates/sixtracktest_wu_template.xml
 
 # The relative path of the result template file from the config dir.
 # this template will bring back also the Sixout.zip results
