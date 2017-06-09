@@ -11,7 +11,7 @@ while getopts "h?n:i:sv" opt; do
   h|\?)
     echo "Usage: $0 [-n batch name] [-i interval in seconds] [-s[s really] silent] [-v verbose]"
     echo
-    echo "The batch name when given filters the condor_q output. Example:"
+    echo "The batch name (when given) filters the condor_q output. Example:"
     echo " $0 -n mad/MY_WORKSPACE/ -i 60"
     exit 0
     ;;
