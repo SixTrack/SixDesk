@@ -1191,6 +1191,9 @@ sixdeskCleanExit(){
     if [ $# -eq 1 ] ; then
 	__exitLevel=$1
     fi
+    for tmpDir in ${lockingDirs[@]} ; do
+	sixdeskunlock $tmpDir
+    done
     sixdeskexit $__exitLevel
 }
 function __inspectPrerequisite(){
