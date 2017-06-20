@@ -2360,11 +2360,12 @@ if ${lsubmit} ; then
 	    rm -f ${sixdeskjobs}/${LHCDesName}.list
 	else
 	    cd ${sixdesktrack}
-	    sixdeskmess -1 "Submitting jobs to $sixdeskplatform from dir $PWD"
+            batch_name="run_six/$workspace/$LHCDescrip"
+	    sixdeskmess -1 "Submitting jobs to $sixdeskplatform from dir $PWD \"$batch_name\""
 	    sixdeskmess  1 "Depending on the number of points in the scan, this operation can take up to few minutes."
 	    allCases=`cat ${sixdeskjobs}/${LHCDesName}.list`
 	    allCases=( ${allCases} )
-	    multipleTrials "terseString=\"\`condor_submit -terse ${sixdeskjobs}/htcondor_run_six.sub\`\" " "[ -n \"\${terseString}\" ]" "Problem at condor_submit"
+	    multipleTrials "terseString=\"\`condor_submit -batch-name ${batch_name} -terse ${sixdeskjobs}/htcondor_run_six.sub\`\" " "[ -n \"\${terseString}\" ]" "Problem at condor_submit"
 	    let __lerr+=$?
 	    if [ ${__lerr} -ne 0 ] ; then
 		sixdeskmess -1 "Something wrong with htcondor submission: submission didn't work properly - exit status: ${__lerr}"
