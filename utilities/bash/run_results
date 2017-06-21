@@ -13,6 +13,7 @@ function how_to_use() {
    -B      break backward-compatibility
            for the moment, this sticks only to job names
    -t      reprocess old archives of results already parsed
+   -n      renew kerberos token every n jobs (default: ${NrenewKerberosDef})
    -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
                0: only error messages and basic output 
                1: full output
@@ -1264,6 +1265,11 @@ function downloadNewResults(){
 	    
 	fi
 	#Eric
+	let ${iTreated}+=1
+	if [ $((${iTreated}%${NrenewKerberos})) -eq 0 ] ; then
+	    sixdeskmess 2 "renewing kerberos token: ${iTreated} vs ${NrenewKerberos}"
+	    sixdeskRenewKerberosToken
+	fi
     done  
     # end of all tasks
     rm -f ${__sixdesktasklist}
@@ -1315,9 +1321,11 @@ lbackcomp=true
 lreconsiderDelete=false
 loutform=false
 downloadDir=/afs/cern.ch/work/b/boinc/download
+NrenewKerberosDef=2000
+NrenewKerberos=${NrenewKerberosDef}
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hBto:" opt ; do
+while getopts  ":hBto:n:" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -1329,6 +1337,17 @@ while getopts  ":hBto:" opt ; do
 	    ;;
 	t)
 	    lreconsiderDelete=true
+	    ;;
+	n)
+	    # renew kerberos token every N jobs
+	    NrenewKerberos=${OPTARG}
+	    # check it is actually a number
+	    let NrenewKerberos+=0
+	    if [ $? -ne 0 ] 2>/dev/null; then
+		how_to_use
+		echo "-n argument option is not a number!"
+		exit 1
+	    fi
 	    ;;
 	o)
 	    # output option
@@ -1359,6 +1378,9 @@ source ${SCRIPTDIR}/bash/dot_env
 if ${loutform} ; then
     sixdesklevel=${sixdesklevel_option}
 fi
+
+# - kinit, to renew kerberos ticket
+sixdeskRenewKerberosToken
 
 # current study
 currStudy=`basename $sixdeskstudy`
@@ -1510,6 +1532,7 @@ ready=0
 ok=0
 duplicated=0
 failed=0
+iTreated=0
 
 echo ""
 sixdeskmess -1 "looking for results in $sixdeskboincdir/results"
