@@ -48,6 +48,7 @@ function how_to_use() {
    -B      break backward-compatibility
            for the moment, this sticks only to expressions affecting ratio of
               emittances, amplitude scans and job names in fort.3
+   -P      python path
    -v      verbose (OFF by default)
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
@@ -1696,10 +1697,11 @@ currStudy=""
 optArgCurrStudy="-s"
 optArgCurrPlatForm=""
 verbose=""
+currPythonPath=""
 NrenewKerberos=10000
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgo:sctakfvBSCMd:p:R:" opt ; do
+while getopts  ":hgo:sctakfvBSCMd:p:R:P:" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1772,6 +1774,10 @@ while getopts  ":hgo:sctakfvBSCMd:p:R:" opt ; do
 	    # status
 	    lstatus=true
 	    ;;
+	P)
+	    # the user is requesting a specific path to python
+	    currPythonPath="-P ${OPTARG}"
+	    ;;
 	v) 
 	    # verbose
 	    lverbose=true
@@ -1814,7 +1820,7 @@ fi
 # - load environment
 #   NB: workaround to get getopts working properly in sourced script
 OPTIND=1
-source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${verbose} -e
+source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${verbose} ${currPythonPath} -e
 # - python path
 source ${SCRIPTDIR}/bash/dot_profile
 sixdeskDefinePythonPath

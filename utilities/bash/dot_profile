@@ -772,9 +772,15 @@ sixdeskrundir()
     rundirname=$(sixdeskFromJobNameToJobDir ${runnamename} ${__lbackcomp})
 }
 sixdeskDefinePythonPath(){
-    local __sourceEnv=/cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc49-opt/setup.sh
-    sixdeskmess 2 "Loading python as defined in ${__sourceEnv}"
-    source ${__sourceEnv}
+    if [ $# -eq 1 ] ; then
+	export PATH=${1}:${PATH}
+	sixdeskmess 2 "Setting python to ${1} in PATH env var"
+    else
+	local __sourceEnv=/cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc49-opt/setup.sh
+	sixdeskmess 2 "Loading python as defined in ${__sourceEnv}"
+	source ${__sourceEnv}
+    fi
+    sixdeskmess -1 "--> python set to: `which python`"
 }
 sixdeskDefineUserTree(){
     # define the tree in the userspace

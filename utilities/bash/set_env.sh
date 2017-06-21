@@ -23,6 +23,7 @@ function how_to_use() {
    -p      platform name (when running many jobs in parallel)
    -e      just parse the concerned input files (${necessaryInputFiles[@]}),
                without overwriting
+   -P      python path
    -v      verbose (OFF by default)
 
 EOF
@@ -142,9 +143,10 @@ loverwrite=true
 lverbose=false
 currPlatform=""
 currStudy=""
+currPythonPath=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hsvd:ep:n" opt ; do
+while getopts  ":hsvd:ep:P:n" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -170,6 +172,10 @@ while getopts  ":hsvd:ep:n" opt ; do
 	p)
 	    # the user is requesting a specific platform
 	    currPlatform="${OPTARG}"
+	    ;;
+	P)
+	    # the user is requesting a specific path to python
+	    currPythonPath="${OPTARG}"
 	    ;;
 	v)
 	    # verbose
@@ -343,6 +349,13 @@ else
 	platform=$currPlatform
     fi
     sixdeskSetPlatForm $platform
+
+    # - set python path
+    if [ -n "${currPythonPath}" ] ; then
+	# overwrite what was stated in sixdeskenv/sysenv
+	pythonPath=${currPythonPath}
+    fi
+    sixdeskDefinePythonPath ${pythonPath}
 
     # - useful output
     PTEXT="[${sixdeskplatform}]"

@@ -16,6 +16,7 @@ function how_to_use() {
               connected to, no submission to lsf at all)
            option available only for submission, not for checking
    -d      study name (when running many jobs in parallel)
+   -P      python path
    -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
                0: only error messages and basic output 
                1: full output
@@ -327,10 +328,11 @@ lsub=false
 lcheck=false
 loutform=false
 currStudy=""
+currPythonPath=""
 optArgCurrStudy="-s"
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hiso:cd:" opt ; do
+while getopts  ":hiso:cd:P:" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -355,6 +357,10 @@ while getopts  ":hiso:cd:" opt ; do
 	d)
 	    # the user is requesting a specific study
 	    currStudy="${OPTARG}"
+	    ;;
+	P)
+	    # the user is requesting a specific path to python
+	    currPythonPath="-P ${OPTARG}"
 	    ;;
 	:)
 	    how_to_use
@@ -391,7 +397,7 @@ fi
 # load environment
 # NB: workaround to get getopts working properly in sourced script
 OPTIND=1
-source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} -e
+source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${currPythonPath} -e
 if ${loutform} ; then
     sixdesklevel=${sixdesklevel_option}
 fi
