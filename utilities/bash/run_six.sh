@@ -756,10 +756,15 @@ function submitCreateFinalFort3Short(){
 
 function submitCreateFinalFort3Long(){
 
+    local __lerr=0
+
     # returns ratio
     sixdeskRatio $kang $lbackcomp
+    [ -n "${ratio}" ] || let __lerr+=1
     # returns ax0 and ax1
     sixdeskax0 $factor $beta_x $beta_x2 $beta_y $beta_y2 $ratio $kang $square $fampstart $fampend $lbackcomp
+    [ -n "${ax0}" ] || let __lerr+=1
+    [ -n "${ax1}" ] || let __lerr+=1
     #
     sed -e 's/%turnsl/'$turnsl'/g' \
 	-e 's/%ax0l/'$ax0'/g' \
@@ -771,6 +776,8 @@ function submitCreateFinalFort3Long(){
 	-e 's/%inttuney/'$inttuneyy'/g' \
 	-e 's/%Runnam/'$Runnam'/g' \
 	-e 's/%writebinl/'$writebinl'/g' $sixdeskjobs_logs/fortl.3.mask > $sixdeskjobs_logs/fort.3
+    let __lerr+=${PIPESTATUS[0]}
+    return ${__lerr}
 }
 
 function submitCreateFinalFort3DA(){
@@ -1444,7 +1451,11 @@ function treatLong(){
 	        	submitCreateRundir $RundirFullPath $actualDirNameFullPath
 			
 	        	# finalise generation of fort.3
-	        	submitCreateFinalFort3Long
+			multipleTrials "submitCreateFinalFort3Long; local __exit_status=\$?" "[ \${__exit_status} -eq 0 ]" "Failing to generate a proper fort.3"
+			if [ $? -ne 0 ] ; then
+			    sixdeskmess  1 "Carrying on with next WU"
+			    continue
+			fi
 			
 	        	# final preparation of all SIXTRACK files
 	        	# NB: for boinc, it returns workunitName
@@ -1528,14 +1539,19 @@ function treatLong(){
 	        # renew kerberos ticket (long submissions)
 	        # ------------------------------------------------------------------
 		if ${lfix} && [ $((${NsuccessGen}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessGen} -ne 0 ] ; then
+		    sixdeskmess 2 "renewing kerberos token: ${NsuccessGen} vs ${NrenewKerberos}"
 		    sixdeskRenewKerberosToken
 		elif ${lstatus} && [ $((${NsuccessSts}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessSts} -ne 0 ] ; then
+		    sixdeskmess 2 "renewing kerberos token: ${NsuccessSts} vs ${NrenewKerberos}"
 		    sixdeskRenewKerberosToken
 		elif ${lgenerate} && [ $((${NsuccessFix}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessFix} -ne 0 ] ; then
+		    sixdeskmess 2 "renewing kerberos token: ${NsuccessFix} vs ${NrenewKerberos}"
 		    sixdeskRenewKerberosToken
 		elif ${lcheck} && [ $((${NsuccessChk}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessChk} -ne 0 ] ; then
+		    sixdeskmess 2 "renewing kerberos token: ${NsuccessChk} vs ${NrenewKerberos}"
 		    sixdeskRenewKerberosToken
 		elif ${lsubmit} && [ $((${NsuccessSub}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessSub} -ne 0 ] ; then
+		    sixdeskmess 2 "renewing kerberos token: ${NsuccessSub} vs ${NrenewKerberos}"
 		    sixdeskRenewKerberosToken
 		fi
 		
@@ -2406,6 +2422,7 @@ if ${lsubmit} ; then
 	    allCases=`cat ${sixdeskjobs}/${LHCDesName}.list`
 	    allCases=( ${allCases} )
 	    # let's renew the kerberos token just before submitting
+	    sixdeskmess 2 "renewing kerberos token before submission to HTCondor"
 	    sixdeskRenewKerberosToken
 	    multipleTrials "terseString=\"\`condor_submit -batch-name ${batch_name} -terse ${sixdeskjobs}/htcondor_run_six.sub\`\" " "[ -n \"\${terseString}\" ]" "Problem at condor_submit"
 	    let __lerr+=$?
