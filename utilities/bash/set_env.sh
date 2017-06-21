@@ -390,15 +390,7 @@ done
 if ! ${lcptemplate} ; then
     
     # - kinit, to renew kerberos ticket
-    sixdeskmess -1 " --> kinit;"
-    multipleTrials "kinit -R ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]"
-    if [ $? -gt 0 ] ; then
-	sixdeskmess -1 "--> kinit -R failed - AFS/Kerberos credentials expired??? aborting..."
-	exit
-    else
-	sixdeskmess -1 " --> klist output after kinit -R:"
-	klist
-    fi
+    sixdeskRenewKerberosToken
     
     # - fs listquota
     echo ""

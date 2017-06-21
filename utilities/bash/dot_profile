@@ -1405,3 +1405,21 @@ function multipleTrials(){
     fi
     return $__lerr
 }
+function sixdeskRenewKerberosToken(){
+    if [ $# -eq 1 ] ; then
+	local __lKlist=$1
+    else
+	local __lKlist=true
+    fi
+    sixdeskmess -1 " --> kinit;"
+    multipleTrials "kinit -R ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]"
+    if [ $? -gt 0 ] ; then
+	sixdeskmess -1 "--> kinit -R failed - AFS/Kerberos credentials expired??? aborting..."
+	exit
+    else
+	if ${__lKlist} ; then
+	    sixdeskmess -1 " --> klist output after kinit -R:"
+	    klist
+	fi
+    fi
+}

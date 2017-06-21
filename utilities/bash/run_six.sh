@@ -56,10 +56,12 @@ function how_to_use() {
    -v      verbose (OFF by default)
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
+   -n      renew kerberos token every n jobs (default: ${NrenewKerberosDef})
    -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
                0: only error messages and basic output 
                1: full output
                2: extended output for debugging
+
 EOF
 }
 
@@ -1525,15 +1527,16 @@ function treatLong(){
 	        # ------------------------------------------------------------------
 	        # renew kerberos ticket (long submissions)
 	        # ------------------------------------------------------------------
-		if [ $((${NsuccessSub}%${NrenewKerberos})) -eq 0 ] ; then
-		    sixdeskmess -1 " --> kinit;"
-		    multipleTrials "kinit -R ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]"
-		    if [ $? -gt 0 ] ; then
-			sixdeskmess -1 " --> kinit -R failed - AFS/Kerberos credentials expired??? let's try to continue anyway..."
-		    else
-			sixdeskmess -1 " --> klist output after kinit -R:"
-			klist
-		    fi
+		if ${lfix} && [ $((${NsuccessGen}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessGen} -ne 0 ] ; then
+		    sixdeskRenewKerberosToken
+		elif ${lstatus} && [ $((${NsuccessSts}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessSts} -ne 0 ] ; then
+		    sixdeskRenewKerberosToken
+		elif ${lgenerate} && [ $((${NsuccessFix}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessFix} -ne 0 ] ; then
+		    sixdeskRenewKerberosToken
+		elif ${lcheck} && [ $((${NsuccessChk}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessChk} -ne 0 ] ; then
+		    sixdeskRenewKerberosToken
+		elif ${lsubmit} && [ $((${NsuccessSub}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessSub} -ne 0 ] ; then
+		    sixdeskRenewKerberosToken
 		fi
 		
 	    # ----------------------------------------------------------------------
@@ -1694,10 +1697,11 @@ doNotOverwrite=""
 verbose=""
 sixdeskplatformDefIncomplete="htcondor"
 currPythonPath=""
-NrenewKerberos=10000
+NrenewKerberosDef=10000
+NrenewKerberos=${NrenewKerberosDef}
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgo:sctakfvBSCMid:p:R:P:" opt ; do
+while getopts  ":hgo:sctakfvBSCMid:p:R:P:n:" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1784,6 +1788,17 @@ while getopts  ":hgo:sctakfvBSCMid:p:R:P:" opt ; do
 	    # the user is requesting a specific path to python
 	    currPythonPath="-P ${OPTARG}"
 	    ;;
+	n)
+	    # renew kerberos token every N jobs
+	    NrenewKerberos=${OPTARG}
+	    # check it is actually a number
+	    let NrenewKerberos+=0
+	    if [ $? -ne 0 ] 2>/dev/null; then
+		how_to_use
+		echo "-n argument option is not a number!"
+		exit 1
+	    fi
+	    ;;
 	v) 
 	    # verbose
 	    lverbose=true
@@ -1840,6 +1855,7 @@ printf "=%.0s" {1..80}
 echo ""
 echo "--> local set_env.sh run"
 printf '.%.0s' {1..80}
+echo ""
 source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${verbose} ${currPythonPath} ${doNotOverwrite}
 printf "=%.0s" {1..80}
 echo ""
@@ -2389,6 +2405,8 @@ if ${lsubmit} ; then
 	    sixdeskmess  1 "Depending on the number of points in the scan, this operation can take up to few minutes."
 	    allCases=`cat ${sixdeskjobs}/${LHCDesName}.list`
 	    allCases=( ${allCases} )
+	    # let's renew the kerberos token just before submitting
+	    sixdeskRenewKerberosToken
 	    multipleTrials "terseString=\"\`condor_submit -batch-name ${batch_name} -terse ${sixdeskjobs}/htcondor_run_six.sub\`\" " "[ -n \"\${terseString}\" ]" "Problem at condor_submit"
 	    let __lerr+=$?
 	    if [ ${__lerr} -ne 0 ] ; then
