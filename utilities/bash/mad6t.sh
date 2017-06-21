@@ -458,7 +458,8 @@ while getopts  ":hiwseo:cd:P:" opt ; do
 	    lcheck=false
 	    ;;
 	e)
-	    # skip set_env.sh (only when called from scripts)
+	    # skip set_env.sh (only when called from scripts;
+	    #   users should not be made aware of this option!)
 	    lSetEnv=false
 	    ;;
 	P)
