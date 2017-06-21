@@ -1088,11 +1088,12 @@ sixdeskSetQueue(){
     else
 	case ${!1} in
             8nm | 1nh | 8nh | 1nd | 2nd | 1nw | 2nw )
-		sixdeskmess 2 "LSF queue in sixdeskenv: ${!1}"
+		sixdeskmess 2 "LSF queue (sixdeskenv): ${!1}"
 		;;
 	    *)
 		# set default queue
 		eval "${1}=8nh"
+		sixdeskmess 2 "LSF queue (default): ${!1}"
 		;;
 	esac
     fi
@@ -1100,7 +1101,7 @@ sixdeskSetQueue(){
     if [ -n "${!2}" ] ; then
 	case ${!2} in
             espresso | microcentury | workday | tomorrow | testmatch | 1nextweek )
-		sixdeskmess 2 "HTCONDOR queue in sixdeskenv: ${!2}"
+		sixdeskmess 2 "HTCONDOR queue (sixdeskenv): ${!2}"
 		;;
 	    *)
 		# set default queue
@@ -1133,6 +1134,7 @@ sixdeskSetQueue(){
 		eval "${2}=nextweek"
 		;;
 	esac
+	sixdeskmess 2 "HTCONDOR queue (sixdeskenv - from LSF-equivalent): ${!2}"
     fi
     export ${1}
     export ${2}
