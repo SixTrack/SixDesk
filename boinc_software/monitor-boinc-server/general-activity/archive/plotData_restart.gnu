@@ -7,11 +7,12 @@ restaFile='../assimilatorRestart.txt'
 set xdata time
 set timefmt '%Y-%m-%d %H:%M:%S'
 set format x '%Y-%m-%d %H:%M'
-ybar=200
+ybar=500
 M=1
 # typical enlarged window size: 1900,400
 # trigger use of png or interactive windows: 0: png, 1: interactive
 linteractive=1
+rightNowPNG=system('date +"%F_%H-%M-%S"')
 
 # ------------------------------------------------------------------------------
 # general overview of server status
@@ -19,7 +20,7 @@ linteractive=1
 currTitle='server overview'
 if ( linteractive==0 ) {
 set term png font "Times-Roman" size 1200,400 notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/serverOverview.png'
+set output '/home/amereghe/Downloads/boincStatus/serverOverview_'.rightNowPNG.'.png'
 } else {
 set term qt 0 title currTitle font "Times-Roman" size 1000,400
 }
@@ -29,9 +30,9 @@ set ylabel 'tasks in progress/ready to send [10^3]'
 set ytics nomirror
 set y2label 'tasks waiting for assimilation' tc rgb 'blue'
 set y2tics tc rgb 'blue'
-set xtics 3600*6 rotate by 90 right
+set xtics 3600*24 rotate by 90 right
 set grid xtics lt 0 lw 1
-tMin=strptime("%Y-%m-%d %H:%M:%S","2017-05-07 00:00:00")
+tMin=strptime("%Y-%m-%d %H:%M:%S","2017-05-05 00:00:00")
 set xrange [tMin:*]
 nLines=system("wc -l ".restaFile." | awk '{print ($1)}'")
 plot \
@@ -53,7 +54,7 @@ unset multiplot
 currTitle='credit'
 if ( linteractive==0 ) {
 set term png font "Times-Roman" size 1200,400 notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/creditOverview.png'
+set output '/home/amereghe/Downloads/boincStatus/creditOverview_'.rightNowPNG.'.png'
 } else {
 set term qt 1 title currTitle font "Times-Roman" size 1000,400
 }
@@ -74,7 +75,7 @@ plot \
 currTitle='TeraFLOPs'     
 if ( linteractive==0 ) {
 set term png font "Times-Roman" size 1200,400 notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/teraFLOPsOverview.png'
+set output '/home/amereghe/Downloads/boincStatus/teraFLOPsOverview_'.rightNowPNG.'.png'
 } else {
 set term qt 2 title currTitle font "Times-Roman" size 1000,400
 }
@@ -89,15 +90,34 @@ plot \
      '< cat 2017-??/server_status_????-??.dat' index 0 using 1:($16/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
 unset title
 
+# WUs waiting for validation
+currTitle='Validation'     
+if ( linteractive==0 ) {
+set term png font "Times-Roman" size 1200,400 notransparent enhanced
+set output '/home/amereghe/Downloads/boincStatus/validationOverview_'.rightNowPNG.'.png'
+} else {
+set term qt 3 title currTitle font "Times-Roman" size 1000,400
+}
+set title currTitle
+set key outside horizontal
+set ylabel 'WUs waiting for validation []' tc rgb 'black'
+set ytics mirror tc rgb 'black'
+unset y2label
+unset y2tics
+set grid xtics ytics lt 0 lw 1 lc rgb 'black'
+plot \
+     '< cat 2017-??/server_status_????-??.dat' index 0 using 1:5 with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
+unset title
+
 # ------------------------------------------------------------------------------
 # sixtrack
 # ------------------------------------------------------------------------------
 currTitle='SixTrack app'
 if ( linteractive==0 ) {
 set term png font "Times-Roman" size 1200,400 notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/sixtrackOverview.png'
+set output '/home/amereghe/Downloads/boincStatus/sixtrackOverview_'.rightNowPNG.'.png'
 } else {
-set term qt 3 title currTitle font "Times-Roman" size 1000,400
+set term qt 4 title currTitle font "Times-Roman" size 1000,400
 }
 set multiplot title currTitle
 set key outside horizontal
@@ -125,9 +145,9 @@ unset multiplot
 currTitle='sixtracktest app'
 if ( linteractive==0 ) {
 set term png font "Times-Roman" size 1200,400 notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/sixtracktestOverview.png'
+set output '/home/amereghe/Downloads/boincStatus/sixtracktestOverview_'.rightNowPNG.'.png'
 } else {
-set term qt 4 title currTitle font "Times-Roman" size 1000,400
+set term qt 5 title currTitle font "Times-Roman" size 1000,400
 }
 set multiplot title currTitle
 set key outside horizontal

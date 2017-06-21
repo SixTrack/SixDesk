@@ -3,6 +3,7 @@
 boincServer=boincai08.cern.ch
 sixtrackProjPath=/share/boinc/project/sixtrack
 spoolDirPath=/afs/cern.ch/work/b/boinc/boinc
+spoolDirTestPath=/afs/cern.ch/work/b/boinc/boinctest
 where=$PWD
 lretrieve=true
 lgetOwners=true
@@ -43,14 +44,27 @@ if ${lgetOwners} ; then
     owners=""
     dirOwners=""
     for uniqueStudyName in ${uniqueStudyNames[@]} ; do
-	ownerFile=${spoolDirPath}/${uniqueStudyName}/owner
-	if [ -e ${ownerFile} ] ; then
-	    owner=`cat ${ownerFile}`
-	else
+	spoolDir=''
+	for tmpDir in ${spoolDirPath} ${spoolDirTestPath} ; do
+	    if [ -d ${spoolDirPath}/${uniqueStudyName} ] ; then
+		spoolDir=${spoolDirPath}/${uniqueStudyName}
+		break
+	    fi
+	done
+	if [ "${spoolDir}" == "" ] ; then
+	    # the spooldir is not there
 	    owner="-"
+	    dirOwner="-"
+	else
+	    dirOwner=`ls -ld ${spoolDirPath}/${uniqueStudyName} | awk '{print ($3)}'`
+	    ownerFile=${spoolDirPath}/${uniqueStudyName}/owner
+	    if [ -e ${ownerFile} ] ; then
+		owner=`cat ${ownerFile}`
+	    else
+		owner="-"
+	    fi
 	fi
 	owners="${owners} ${owner}"
-	dirOwner=`ls -ld ${spoolDirPath}/${uniqueStudyName} | awk '{print ($3)}'`
 	dirOwners="${dirOwners} ${dirOwner}"
     done
     owners=( ${owners} )

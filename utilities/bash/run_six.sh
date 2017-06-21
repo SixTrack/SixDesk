@@ -52,6 +52,7 @@ function how_to_use() {
    -B      break backward-compatibility
            for the moment, this sticks only to expressions affecting ratio of
               emittances, amplitude scans and job names in fort.3
+   -P      python path
    -v      verbose (OFF by default)
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
@@ -1528,7 +1529,7 @@ function treatLong(){
 		    sixdeskmess -1 " --> kinit;"
 		    multipleTrials "kinit -R ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]"
 		    if [ $? -gt 0 ] ; then
-			sixdeskmess -1 "--> kinit -R failed - AFS/Kerberos credentials expired??? let's try to continue anyway..."
+			sixdeskmess -1 " --> kinit -R failed - AFS/Kerberos credentials expired??? let's try to continue anyway..."
 		    else
 			sixdeskmess -1 " --> klist output after kinit -R:"
 			klist
@@ -1690,10 +1691,11 @@ optArgCurrPlatForm=""
 doNotOverwrite=""
 verbose=""
 sixdeskplatformDefIncomplete="htcondor"
+currPythonPath=""
 NrenewKerberos=10000
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgo:sctakfvBSCMid:p:R:" opt ; do
+while getopts  ":hgo:sctakfvBSCMid:p:R:P:" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1776,6 +1778,10 @@ while getopts  ":hgo:sctakfvBSCMid:p:R:" opt ; do
 	    # status
 	    lstatus=true
 	    ;;
+	P)
+	    # the user is requesting a specific path to python
+	    currPythonPath="-P ${OPTARG}"
+	    ;;
 	v) 
 	    # verbose
 	    lverbose=true
@@ -1827,7 +1833,7 @@ fi
 # - load environment
 #   NB: workaround to get getopts working properly in sourced script
 OPTIND=1
-source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${verbose} ${doNotOverwrite}
+source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${verbose} ${currPythonPath} ${doNotOverwrite}
 # - python path
 source ${SCRIPTDIR}/bash/dot_profile
 sixdeskDefinePythonPath

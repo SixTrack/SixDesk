@@ -49,6 +49,7 @@ using std::vector;
 #define VERSPOS 51
 #define TUR1POS 21
 #define TUR2POS 22
+#define TUR3POS 23 // iza 26/05/2017
 #define TOTTURN 58 // obsolete
 #define DNMSPOS 58
 #define CPUTIME 59
@@ -84,12 +85,25 @@ bool files_match(RESULT &r1, FILE_CKSUM_LIST& f1, const RESULT &r2, FILE_CKSUM_L
     double fracturn = 1.0;
     int outlier = 0;
     char crl1, crl2;
+    struct stat fileprop;
 		
 
 //    printf("start files_match: %d %d\n",f1.fp.size(),f2.fp.size());
     for (int i=0; i<f1.fp.size(); i++){
+	fstat(fileno(f1.fp[i]), &fileprop);
+	if( fileprop.st_size == 0 ) {
+// IZA 20170610 add print of the WU and invalidate the file immediately
+                log_messages.printf(MSG_DEBUG, "[RESULT#%d %d] WU#%d HOST[%d %d] EMPTY-1\n", r1id,r2id,wrkunit,h1id,h2id);
+		return false;
+	}
 	rewind(f1.fp[i]);
 	for(int j=0; j<f2.fp.size(); j++){
+	   fstat(fileno(f2.fp[j]), &fileprop);
+	   if( fileprop.st_size == 0 ) {
+// IZA 20170610 add print of the WU and invalidate the file immediately
+                log_messages.printf(MSG_DEBUG, "[RESULT#%d %d] WU#%d HOST[%d %d] EMPTY-2\n", r1id,r2id,wrkunit,h1id,h2id);
+		return false;
+ 	   }
 	   rewind(f2.fp[j]);
 	   n = 0;
 	   turnx = 0.0;
@@ -97,7 +111,7 @@ bool files_match(RESULT &r1, FILE_CKSUM_LIST& f1, const RESULT &r2, FILE_CKSUM_L
 		ns1 = ns2 = 0;
 		for(w1=0; w1<NUMITEM; w1++) { indx1[w1] = indx2[w1] = 0; }
 		if(fgets(s1,ROWSIZE-1,f1.fp[i]) != NULL) ns1 = strlen(s1);
-		if(fgets(s2,ROWSIZE-1,f2.fp[i]) != NULL) ns2 = strlen(s2);
+		if(fgets(s2,ROWSIZE-1,f2.fp[j]) != NULL) ns2 = strlen(s2);
 		if((ns1 <= 0) && (ns2 <= 0)) break;
 		turn1 = turn2 = 0.0;
 		vers1 = vers2 = 0.0;
