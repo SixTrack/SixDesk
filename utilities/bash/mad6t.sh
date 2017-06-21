@@ -455,6 +455,7 @@ while getopts  ":hiwso:cd:P:" opt ; do
 	    lsub=true
 	    # disable checking
 	    lcheck=false
+	    ;;
 	P)
 	    # the user is requesting a specific path to python
 	    currPythonPath="-P ${OPTARG}"
