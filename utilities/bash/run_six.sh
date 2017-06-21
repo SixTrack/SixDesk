@@ -1641,8 +1641,10 @@ function printSummary(){
     fi
     if [ $1 -eq 0 ] ; then
 	sixdeskmess -1 "Completed normally."
+	sixdeskCleanExit 0
     else
 	sixdeskmess -1 "Premature end."
+	sixdeskCleanExit 1
 	if [ $1 -eq 11 ] ; then
 	    sixdeskEchoEnvVars /tmp/envs_SIGSEGV.txt
 	    sixdeskSendNotifMail "FATAL - SIGSEGV"
@@ -1833,10 +1835,15 @@ fi
 # - load environment
 #   NB: workaround to get getopts working properly in sourced script
 OPTIND=1
+echo ""
+printf "=%.0s" {1..80}
+echo ""
+echo "--> local set_env.sh run"
+printf '.%.0s' {1..80}
 source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${verbose} ${currPythonPath} ${doNotOverwrite}
-# - python path
-source ${SCRIPTDIR}/bash/dot_profile
-sixdeskDefinePythonPath
+printf "=%.0s" {1..80}
+echo ""
+echo ""
 # - settings for sixdeskmessages
 if ${loutform} ; then
     sixdesklevel=${sixdesklevel_option}
@@ -1951,18 +1958,29 @@ for tmpDir in ${lockingDirs[@]} ; do
 done
 
 # actual traps
-trap "printSummary  1 ; sixdeskCleanExit 1" EXIT SIGINT SIGQUIT
-trap "printSummary 11 ; sixdeskCleanExit 1" SIGSEGV
-trap "printSummary  8 ; sixdeskCleanExit 1" SIGFPE
+trap "" EXIT
+trap "printSummary  1" SIGINT
+trap "printSummary  2" SIGQUIT
+trap "printSummary 11" SIGSEGV
+trap "printSummary  8" SIGFPE
 
 # preparation to main loop
 if ${lgenerate} || ${lfix} ; then
     # - check that all the necessary MadX input is ready
+    #   NB: -e option, to skip set_env.sh another time
+    echo ""
+    printf "=%.0s" {1..80}
+    echo ""
+    echo "--> local mad6t.sh run"
+    printf '.%.0s' {1..80}
+    echo ""
     if [ -n "${currStudy}" ] ; then
-	${SCRIPTDIR}/bash/mad6t.sh -c ${optArgCurrStudy}
+	${SCRIPTDIR}/bash/mad6t.sh -c -e ${currPythonPath} ${optArgCurrStudy}
     else
-	${SCRIPTDIR}/bash/mad6t.sh -c
+	${SCRIPTDIR}/bash/mad6t.sh -c -e ${currPythonPath} 
     fi
+    printf "=%.0s" {1..80}
+    echo ""
     let __lerr+=$?
     # - these dirs should already exist...
     for tmpDir in $sixdesktrack $sixdeskjobs $sixdeskjobs_logs $sixdesktrackStudy ; do
@@ -2552,9 +2570,7 @@ fi
 # ------------------------------------------------------------------------------
 
 # redefine traps
-trap "printSummary 0 ; sixdeskCleanExit 0" EXIT SIGINT SIGQUIT
-trap "" SIGSEGV
-trap "" SIGFPE
+trap "" SIGINT SIGQUIT SIGSEGV SIGFPE
 
 # echo that everything went fine
 echo ""

@@ -417,12 +417,13 @@ lsub=false
 lcheck=false
 loutform=false
 lwrong=false
+lSetEnv=true
 currStudy=""
 currPythonPath=""
 optArgCurrStudy="-s"
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hiwso:cd:P:" opt ; do
+while getopts  ":hiwseo:cd:P:" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -456,6 +457,10 @@ while getopts  ":hiwso:cd:P:" opt ; do
 	    # disable checking
 	    lcheck=false
 	    ;;
+	e)
+	    # skip set_env.sh (only when called from scripts)
+	    lSetEnv=false
+	    ;;
 	P)
 	    # the user is requesting a specific path to python
 	    currPythonPath="-P ${OPTARG}"
@@ -486,6 +491,9 @@ elif ${lcheck} && ${lsub} ; then
 elif ${lcheck} && ${linter} ; then
     echo "Interactive mode valid only for running. Switching it off!!!"
     linter=false
+elif ${lsub} && ! ${lSetEnv} ; then
+    echo "Submission requires to run set_env.sh, but you requested to skip this step - aborting!!"
+    exit 1
 fi
 # - options
 if [ -n "${currStudy}" ] ; then
@@ -495,7 +503,12 @@ fi
 # load environment
 # NB: workaround to get getopts working properly in sourced script
 OPTIND=1
-source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${currPythonPath} -e
+
+if ${lSetEnv} ; then
+    source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${currPythonPath} -e
+else
+    source ${SCRIPTDIR}/bash/dot_profile
+fi
 if ${loutform} ; then
     sixdesklevel=${sixdesklevel_option}
 fi
@@ -503,7 +516,7 @@ fi
 sixDeskDefineMADXTree ${SCRIPTDIR}
 
 # define trap
-trap "sixdeskexit 1" EXIT
+trap "sixdeskexit 1" EXIT SIGINT SIGQUIT
 
 # don't use this script in case of BNL
 if test "$BNL" != "" ; then
@@ -512,9 +525,11 @@ if test "$BNL" != "" ; then
 fi
 
 # platform
-if [ "$sixdeskplatform" != "lsf" ] && [ "$sixdeskplatform" != "htcondor" ]; then
-    # set the platform to the default value
-    sixdeskSetPlatForm ""
+if ${lSetEnv} ; then
+    if [ "$sixdeskplatform" != "lsf" ] && [ "$sixdeskplatform" != "htcondor" ]; then
+	# set the platform to the default value
+	sixdeskSetPlatForm ""
+    fi
 fi
 
 if ${lsub} ; then
@@ -545,22 +560,20 @@ if ${lsub} ; then
     done
     
     # - define trap
-    trap "sixdeskCleanExit 1" EXIT
+    trap "sixdeskCleanExit 1" EXIT SIGINT SIGQUIT
 
     submit
 
-    # - redefine trap
-    trap "sixdeskCleanExit 0" EXIT
-
 else
     check
-    # - redefine trap
-    trap "sixdeskexit 0" EXIT
 fi
 
-# echo that everything went fine
+# - redefine traps
+trap "sixdeskexit 0" EXIT SIGINT SIGQUIT
 
+# echo that everything went fine
 sixdeskmess -1 "               Appears to have completed normally"
-echo 
+echo
+
 # bye bye
 exit 0

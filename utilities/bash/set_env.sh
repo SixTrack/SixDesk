@@ -144,7 +144,7 @@ loverwrite=true
 lverbose=false
 currPlatform=""
 currStudy=""
-currPythonPath=""
+tmpPythonPath=""
 
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":hsvd:ep:P:n" opt ; do
@@ -176,7 +176,7 @@ while getopts  ":hsvd:ep:P:n" opt ; do
 	    ;;
 	P)
 	    # the user is requesting a specific path to python
-	    currPythonPath="${OPTARG}"
+	    tmpPythonPath="${OPTARG}"
 	    ;;
 	v)
 	    # verbose
@@ -209,22 +209,16 @@ fi
 # - clean options in case of brand new study
 if ${lcptemplate} ; then
     if [ -n "${currPlatform}" ] ; then
-	echo ""
 	echo "--> brand new study: -p option with argument ${currPlatform} is switched off."
-	echo ""
 	currPlatform=""
     fi
 fi
 # - options
 if [ -n "${currStudy}" ] ; then
-    echo ""
     echo "--> User required a specific study: ${currStudy}"
-    echo ""
 fi
 if [ -n "${currPlatform}" ] ; then
-    echo ""
     echo "--> User required a specific platform: ${currPlatform}"
-    echo ""
 fi
 
 # ------------------------------------------------------------------------------
@@ -355,9 +349,9 @@ else
     fi
 
     # - set python path
-    if [ -n "${currPythonPath}" ] ; then
+    if [ -n "${tmpPythonPath}" ] ; then
 	# overwrite what was stated in sixdeskenv/sysenv
-	pythonPath=${currPythonPath}
+	pythonPath=${tmpPythonPath}
     fi
     sixdeskDefinePythonPath ${pythonPath}
 
