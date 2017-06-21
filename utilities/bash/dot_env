@@ -185,7 +185,7 @@ then
     # and a platform
     export newplatform=`echo "$2" | tr '[A-Z]' '[a-z]'`
     if test "$newplatform" != "boinc" -a "$newplatform" != "cpss"\
-         -a "$newplatform" != "lsf"
+         -a "$newplatform" != "lsf" -a "$newplatform" != "htcondor"
     then
 
 #MACRO mymess 0 UNKNOWN sixdeskplatform $newplatform requested!!!

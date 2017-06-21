@@ -1,0 +1,16 @@
+# HTCondor .sub template for MADX-to-SixTrack runs (ie generation of
+#   fort.2/8/16 files)
+# condor_submit is issued in the junk dir in sixtrack_input, where the
+#   .list and the .sh files are created
+# jobs.list contains the list of mad6t_<iMad>.sh files to be submitted,
+#   the list is automatically deleted after a successful submission
+universe = vanilla
+executable = $(filename)
+output = $Fn(filename).out
+error = $Fn(filename).err
+log = $Fn(filename).log
+# do not ask htcondor to take care of input/output files
+# the bash script used as exe will take care of that
+transfer_output_files = ""
++JobFlavour = "microcentury"
+queue filename from jobs.list

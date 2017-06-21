@@ -9,7 +9,7 @@ export fort_34=%FORT_34%
 export MADX_PATH=%MADX_PATH%
 export MADX=%MADX%
 waitTime=60
- 
+
 echo "sleeping ${waitTime} s..."
 sleep ${waitTime}
 echo "Calling madx version $MADX in $MADX_PATH"

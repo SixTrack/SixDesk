@@ -21,6 +21,7 @@ function how_to_use() {
 
    options (optional)
    -p      platform name (when running many jobs in parallel)
+           recognised platforms: LSF, BOINC, HTCONDOR
    -e      just parse the concerned input files (${necessaryInputFiles[@]}),
                without overwriting
    -P      python path
@@ -264,7 +265,7 @@ fi
 # - basic checks (i.e. dir structure)
 basicChecks
 if [ $? -gt 0 ] ; then
-    sixdeskexit 1
+    sixdeskexit 4
 fi
 
 # ------------------------------------------------------------------------------
@@ -349,6 +350,9 @@ else
 	platform=$currPlatform
     fi
     sixdeskSetPlatForm $platform
+    if [ $? -ne 0 ] ; then
+	sixdeskexit 10
+    fi
 
     # - set python path
     if [ -n "${currPythonPath}" ] ; then
