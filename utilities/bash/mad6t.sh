@@ -520,7 +520,7 @@ if ${lSetEnv} ; then
     echo ""
     printf "=%.0s" {1..80}
     echo ""
-    echo "--> local set_env.sh run"
+    echo "--> sourcing set_env.sh"
     printf '.%.0s' {1..80}
     echo ""
     source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${currPythonPath} ${unlockSetEnv} -e
@@ -531,7 +531,7 @@ else
     echo ""
     printf "=%.0s" {1..80}
     echo ""
-    echo "--> local dot_profile run"
+    echo "--> sourcing dot_profile"
     printf '.%.0s' {1..80}
     echo ""
     source ${SCRIPTDIR}/bash/dot_profile

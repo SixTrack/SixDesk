@@ -1884,7 +1884,7 @@ OPTIND=1
 echo ""
 printf "=%.0s" {1..80}
 echo ""
-echo "--> local set_env.sh run"
+echo "--> sourcing set_env.sh"
 printf '.%.0s' {1..80}
 echo ""
 source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${verbose} ${currPythonPath} ${unlockSetEnv} ${doNotOverwrite}
