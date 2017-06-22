@@ -1399,7 +1399,7 @@ fi
 
 # unlock
 if ${lunlockRunRes} ; then
-    sixdeskunlock $sixdeskstudy/sixdesklock
+    sixdeskunlock $sixdeskstudy
 fi
 
 # - kinit, to renew kerberos ticket
