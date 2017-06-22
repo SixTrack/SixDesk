@@ -10,6 +10,10 @@ function how_to_use() {
    to retrieve boinc results
 
    options (optional)
+   -U      unlock dirs necessary to the script to run
+           PAY ATTENTION when using this option, as no check whether the lock
+              belongs to this script or not is performed, and you may screw up
+              processing of another script
    -B      break backward-compatibility
            for the moment, this sticks only to job names
    -t      reprocess old archives of results already parsed
@@ -1321,11 +1325,12 @@ lbackcomp=true
 lreconsiderDelete=false
 loutform=false
 downloadDir=/afs/cern.ch/work/b/boinc/download
+lunlockRunRes=false
 NrenewKerberosDef=2000
 NrenewKerberos=${NrenewKerberosDef}
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hBto:n:" opt ; do
+while getopts  ":hBto:n:U" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -1353,6 +1358,10 @@ while getopts  ":hBto:n:" opt ; do
 	    # output option
 	    check_output_option
 	    ;;	
+	U)
+	    # unlock currently locked folder
+	    lunlockRunRes=true
+	    ;;
 	:)
 	    how_to_use
 	    echo "Option -$OPTARG requires an argument."
@@ -1373,10 +1382,24 @@ OPTIND=1
 
 # Even if called with a Study ($1) and a Platform ($2)
 # we can now use dot_env
+echo ""
+printf "=%.0s" {1..80}
+echo ""
+echo "--> sourcing dot_env"
+printf '.%.0s' {1..80}
+echo ""
 source ${SCRIPTDIR}/bash/dot_env
+printf "=%.0s" {1..80}
+echo ""
+echo ""
 
 if ${loutform} ; then
     sixdesklevel=${sixdesklevel_option}
+fi
+
+# unlock
+if ${lunlockRunRes} ; then
+    sixdeskunlock $sixdeskstudy/sixdesklock
 fi
 
 # - kinit, to renew kerberos ticket
