@@ -264,10 +264,10 @@ if ${lunlock} ; then
     for tmpDir in ${lockingDirs[@]} ; do
 	sixdeskunlock $tmpDir
     done
-fi
-if ! ${lset} && ! ${lload} && ! ${lcptemplate} ; then
-   sixdeskmess -1 "requested only unlocking. Exiting..."
-   exit 0
+    if ! ${lset} && ! ${lload} && ! ${lcptemplate} ; then
+	sixdeskmess -1 "requested only unlocking. Exiting..."
+	exit 0
+    fi
 fi
    
 # - path to active sixdeskenv/sysenv
