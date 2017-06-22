@@ -12,6 +12,9 @@ function how_to_use() {
    options (optional):
    -P      python path
 
+   NB: in case you want yo use an option, please leave the actual arguments to
+       sixdb to the end of the terminal-line command;
+
 EOF
 }
 # get path to scripts (normalised)
