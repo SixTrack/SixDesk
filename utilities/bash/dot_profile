@@ -775,9 +775,15 @@ sixdeskrundir()
     rundirname=$(sixdeskFromJobNameToJobDir ${runnamename} ${__lbackcomp})
 }
 sixdeskDefinePythonPath(){
-    local __sourceEnv=/cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc49-opt/setup.sh
-    sixdeskmess 2 "Loading python as defined in ${__sourceEnv}"
-    source ${__sourceEnv}
+    if [ $# -eq 1 ] ; then
+	export PATH=${1}:${PATH}
+	sixdeskmess 2 "Setting python to ${1} in PATH env var"
+    else
+	local __sourceEnv=/cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc49-opt/setup.sh
+	sixdeskmess 2 "Loading python as defined in ${__sourceEnv}"
+	source ${__sourceEnv}
+    fi
+    sixdeskmess -1 "--> python set to: `which python`"
 }
 sixdeskDefineUserTree(){
     # define the tree in the userspace
@@ -1060,10 +1066,16 @@ sixdeskSetExes(){
 }
 sixdeskSetPlatForm(){
     local __platform=$1
-    export sixdeskplatform=`echo "$__platform" | tr '[A-Z]' '[a-z]'`
-    if [ "$sixdeskplatform" != "boinc" ] && [ "$sixdeskplatform" != "cpss" ] && [ "$sixdeskplatform" != "lsf" ]  && [ "$sixdeskplatform" != "htcondor" ] ; then
-	sixdeskmess -1 "unknown platform: ${sixdeskplatform}"
-	return 1
+    if [ -n "${__platform}" ] ; then
+	# platform as requested by user (no matter if in sixdeskenv or via terminal line option)
+	export sixdeskplatform=`echo "$__platform" | tr '[A-Z]' '[a-z]'`
+	if [ "$sixdeskplatform" != "boinc" ] && [ "$sixdeskplatform" != "lsf" ] && [ "$sixdeskplatform" != "htcondor" ] ; then
+	    sixdeskmess -1 "unknown platform: ${sixdeskplatform}"
+	    return 1
+	fi
+    else
+	# set default platform
+	export sixdeskplatform="htcondor"
     fi
     export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
     export sixdeskjobs_logs=$sixdeskjobs/jobs_logs
@@ -1115,6 +1127,69 @@ sixDeskCheckAppName(){
 	__lerr=0
     fi
     return ${__lerr}
+}
+
+sixdeskSetQueue(){
+    # check that a proper queue has been chosen:
+    # . LSF: test 8nm 1nh 8nh 1nd 2nd 1nw 2nw (see http://lsf-rrd.cern.ch/lrf-lsf/)
+    # . HTCONDOR: espresso (20min) microcentury (1h) longlunch (2h) workday (8h) tomorrow (1d) testmatch (3d) nextweek (1w) (see http://batchdocs.web.cern.ch/batchdocs/local/lsfmigratepractical.html)
+    # verify lsf var is properly set
+    if [ -z "${!1}" ] ; then
+	# assign a default value
+	eval "${1}=8nh"
+    else
+	case ${!1} in
+            8nm | 1nh | 8nh | 1nd | 2nd | 1nw | 2nw )
+		sixdeskmess 2 "LSF queue (sixdeskenv): ${!1}"
+		;;
+	    *)
+		# set default queue
+		eval "${1}=8nh"
+		sixdeskmess 2 "LSF queue (default): ${!1}"
+		;;
+	esac
+    fi
+    # verify htcondor var is set:
+    if [ -n "${!2}" ] ; then
+	case ${!2} in
+            espresso | microcentury | workday | tomorrow | testmatch | 1nextweek )
+		sixdeskmess 2 "HTCONDOR queue (sixdeskenv): ${!2}"
+		;;
+	    *)
+		# set default queue
+		eval "${2}=''"
+		;;
+	esac
+    fi
+    if [ -z "${!2}" ] ; then
+	# assign a default value based on the lsf value
+	case ${!1} in
+            8nm )
+		eval "${2}=espresso"
+		;;
+	    1nh )
+		eval "${2}=microcentury"
+		;;
+	    8nh )
+		eval "${2}=workday"
+		;;
+	    1nd )
+		eval "${2}=tomorrow"
+		;;
+	    2nd )
+    		eval "${2}=testmatch"
+		;;
+	    1nw )
+    		eval "${2}=nextweek"
+		;;
+	    2nw )
+		eval "${2}=nextweek"
+		;;
+	esac
+	sixdeskmess 2 "HTCONDOR queue (sixdeskenv - from LSF-equivalent): ${!2}"
+    fi
+    export ${1}
+    export ${2}
 }
 
 sixDeskSetBOINCVars(){
@@ -1243,6 +1318,9 @@ sixdeskCleanExit(){
     if [ $# -eq 1 ] ; then
 	__exitLevel=$1
     fi
+    for tmpDir in ${lockingDirs[@]} ; do
+	sixdeskunlock $tmpDir
+    done
     sixdeskexit $__exitLevel
 }
 function __inspectPrerequisite(){
@@ -1379,4 +1457,22 @@ function multipleTrials(){
 	sixdeskmess 1 "success!"
     fi
     return $__lerr
+}
+function sixdeskRenewKerberosToken(){
+    if [ $# -eq 1 ] ; then
+	local __lKlist=$1
+    else
+	local __lKlist=true
+    fi
+    sixdeskmess -1 " --> kinit;"
+    multipleTrials "kinit -R ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]"
+    if [ $? -gt 0 ] ; then
+	sixdeskmess -1 "--> kinit -R failed - AFS/Kerberos credentials expired??? aborting..."
+	exit
+    else
+	if ${__lKlist} ; then
+	    sixdeskmess -1 " --> klist output after kinit -R:"
+	    klist
+	fi
+    fi
 }

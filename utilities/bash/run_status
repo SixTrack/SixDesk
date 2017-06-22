@@ -70,14 +70,14 @@ sixdeskmess -1 "Found $cases cases, $ccases complete ($icases incomplete)"
 
 if test $# -le 2
 then
-  if test $sixdeskplatform = "lsf"
+  if test $sixdeskplatform = "lsf" -o $sixdeskplatform = "htcondor" 
   then
     if test ! -d "$sixdeskjobs"
     then
 
 #MACRO mymess 1 No lsf batch jobs submitted yet
       sixdeskmesslevel=1
-      sixdeskmess -1 "No lsf batch jobs submitted yet"
+      sixdeskmess -1 "No batch jobs submitted yet"
 #MACRO mymess
 
     else
@@ -99,7 +99,6 @@ then
       sixdesklockdir=$sixdeskstudy
       sixdesklock
 #MACRO mylock
-
       lsfjobs=0
       if test -s "$sixdeskjobs/jobs"
       then
@@ -575,7 +574,7 @@ then
   for myplatform in lsf boinc cpss grid
   do
     myname=tasks
-    if test "$myplatform" = "lsf"
+    if test "$myplatform" = "lsf" -o "$myplatform" = "htcondor"
     then
       myname=jobs
     fi

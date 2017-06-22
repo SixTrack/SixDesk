@@ -1,4 +1,4 @@
-period='2017-05'
+period='2017-06'
 iFileName='server_status_'.period
 
 set terminal postscript enhanced color 'Times-Roman, 11'

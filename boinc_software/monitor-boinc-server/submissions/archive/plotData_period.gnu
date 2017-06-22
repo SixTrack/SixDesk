@@ -18,13 +18,15 @@ tMax=rightNow
 tStep=1*3600
 
 # time interval
-tMin='2017-05-07T00:00:00'
+# AM -> tMin='2017-05-23T00:00:00'
+tMin='2017-05-05T00:00:00'
 # AM -> tMax='2017-01-27T00:00:00'
-tStep=3600*6
+tStep=3600*24
 
 # typical enlarged window size: 1900,400
 # trigger use of png or interactive windows: 0: png, 1: interactive
 linteractive=1
+rightNowPNG=system('date +"%F_%H-%M-%S"')
 
 # ------------------------------------------------------------------------------
 # actual script
@@ -36,7 +38,7 @@ system('awk -v "tMin='.tMin.'" -v tMax="'.tMax.'" '."'{if ($1!=\"#\") {tStamp=$1
 # AM -> system('awk -v "tMin='.tMin.'" '."'{if (tMin<$1) {print ($0)}}' ".grepFiles.' > '.iFileName)
 
 # echo runners
-system( "awk '{if ($1!=\"#\") {print ($6,$4)}}' ".iFileName." | sort -k 1 | awk '{tot+=$2; if (NR==1) {oldOwner=$1} else {if ($1!=oldOwner) {print (tot,oldOwner); totot+=tot; tot=0; oldOwner=$1;}}}END{print (tot,oldOwner); totot+=tot; print(\"total:\",totot)}'" )
+system( "awk '{if ($1!=\"#\") {print ($6,$4)}}' ".iFileName." | sort -k 1 | awk '{if (NR==1) {oldOwner=$1} else {if ($1!=oldOwner) {print (tot,oldOwner); totot+=tot; tot=0; oldOwner=$1;}} tot+=$2}END{print (tot,oldOwner); totot+=tot; print(\"total:\",totot)}'" )
 
 # AM -> set logscale y
 # AM -> set grid xtics ytics mxtics mytics
@@ -54,7 +56,7 @@ set grid
 currTitle='submitted WUs'
 if ( linteractive==0 ) {
 set term png font "Times-Roman" size 1200,400 notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/submissionCumulative.png'
+set output '/home/amereghe/Downloads/boincStatus/submissionCumulative_'.rightNowPNG.'.png'
 } else {
 set term qt 10 title currTitle font "Times-Roman" size 1000,400
 }
@@ -73,12 +75,13 @@ plot \
      "< awk '{if ($6==\"jbarranc\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'dark-blue'  title 'jbarranc',\
      "< awk '{if ($6==\"giovanno\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'gold'       title 'giovanno',\
      "< awk '{if ($6==\"mcintosh\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'violet'     title 'mcintosh',\
+     "< awk '{if ($6==\"skostogl\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'dark-red'   title 'skostogl',\
      "< awk '{if ($6==\"-\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName        index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'red'        title '-'
 
 currTitle='overview'
 if ( linteractive==0 ) {
 set term png font "Times-Roman" size 1200,400 notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/overviewCumulative.png'
+set output '/home/amereghe/Downloads/boincStatus/overviewCumulative_'.rightNowPNG.'.png'
 } else {
 set term qt 11 title currTitle font "Times-Roman" size 1000,400
 }
