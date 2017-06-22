@@ -18,6 +18,10 @@ function how_to_use() {
                        to prepare a brand new study. The template files will
                        OVERWRITE the local ones. The template dir is:
            ${SCRIPTDIR}/templates/input
+   -U      unlock dirs necessary to the script to run
+           PAY ATTENTION when using this option, as no check whether the lock
+              belongs to this script or not is performed, and you may screw up
+              processing of another script
 
    options (optional)
    -p      platform name (when running many jobs in parallel)
@@ -142,12 +146,13 @@ lload=false
 lcptemplate=false
 loverwrite=true
 lverbose=false
+lunlock=false
 currPlatform=""
 currStudy=""
 tmpPythonPath=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hsvd:ep:P:n" opt ; do
+while getopts  ":hsvd:ep:P:nU" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -178,6 +183,10 @@ while getopts  ":hsvd:ep:P:n" opt ; do
 	    # the user is requesting a specific path to python
 	    tmpPythonPath="${OPTARG}"
 	    ;;
+	U)
+	    # unlock currently locked folder
+	    lunlock=true
+	    ;;
 	v)
 	    # verbose
 	    lverbose=true
@@ -197,7 +206,7 @@ done
 shift "$(($OPTIND - 1))"
 # user's request
 # - actions
-if ! ${lset} && ! ${lload} && ! ${lcptemplate} ; then
+if ! ${lset} && ! ${lload} && ! ${lcptemplate} && ! ${lunlock} ; then
     how_to_use
     echo "No action specified!!! aborting..."
     exit
@@ -249,6 +258,18 @@ if ${lcptemplate} ; then
 else
     lockingDirs=( . studies )
 fi
+
+# - unlocking
+if ${lunlock} ; then
+    for tmpDir in ${lockingDirs[@]} ; do
+	sixdeskunlock $tmpDir
+    done
+fi
+if ! ${lset} && ! ${lload} && ! ${lcptemplate} ; then
+   sixdeskmess -1 "requested only unlocking. Exiting..."
+   exit 0
+fi
+   
 # - path to active sixdeskenv/sysenv
 if ${lset} ; then
     envFilesPath="."
