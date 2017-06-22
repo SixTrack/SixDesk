@@ -25,6 +25,10 @@ function how_to_use() {
            for the time being, it reports the number of input and output files
    -i      submit only incomplete cases. The platform of submission is forced to ${sixdeskplatformDefIncomplete}
            NB: no check at all of concerned directories / inputs is performed
+   -U      unlock dirs necessary to the script to run
+           PAY ATTENTION when using this option, as no check whether the lock
+              belongs to this script or not is performed, and you may screw up
+              processing of another script
 
    options (optional)
    -S      selected points of scan only
@@ -1704,6 +1708,8 @@ lverbose=false
 lrestart=false
 lrestartLast=false
 lincomplete=false
+lunlockRun6T=false
+unlockSetEnv=""
 restartPoint=""
 currPlatform=""
 currStudy=""
@@ -1717,7 +1723,7 @@ NrenewKerberosDef=10000
 NrenewKerberos=${NrenewKerberosDef}
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgo:sctakfvBSCMid:p:R:P:n:" opt ; do
+while getopts  ":hgo:sctakfvBSCMid:p:R:P:n:U" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1819,6 +1825,11 @@ while getopts  ":hgo:sctakfvBSCMid:p:R:P:n:" opt ; do
 	    # verbose
 	    lverbose=true
 	    ;;
+	U)
+	    # unlock currently locked folder
+	    lunlockRun6T=true
+	    unlockSetEnv="-U"
+	    ;;
 	:)
 	    how_to_use
 	    echo "Option -$OPTARG requires an argument."
@@ -1834,10 +1845,14 @@ done
 shift "$(($OPTIND - 1))"
 # user's request
 # - actions
-if ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete}; then
+if ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} && ! ${lunlockRun6T} ; then
     how_to_use
     echo "No action specified!!! aborting..."
     exit 1
+fi
+if ${lunlockRun6T} && ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} ; then
+    # only unlocking -> set_env.sh should not overwrite sixdeskenv/sysenv anyway
+    doNotOverwrite="-e"
 fi
 # - options
 if [ -n "${currStudy}" ] ; then
@@ -1872,7 +1887,7 @@ echo ""
 echo "--> local set_env.sh run"
 printf '.%.0s' {1..80}
 echo ""
-source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${verbose} ${currPythonPath} ${doNotOverwrite}
+source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${verbose} ${currPythonPath} ${unlockSetEnv} ${doNotOverwrite}
 printf "=%.0s" {1..80}
 echo ""
 echo ""
@@ -1880,8 +1895,6 @@ echo ""
 if ${loutform} ; then
     sixdesklevel=${sixdesklevel_option}
 fi
-# - temporary trap
-trap "sixdeskexit 1" EXIT
 
 # - action-dependent stuff
 echo ""
@@ -1935,6 +1948,18 @@ if ${lstatus} ; then
     nFound=( 0 0 0 0 0 0 )
     foundNames=( 'dirs' 'fort.2.gz' 'fort.3.gz' 'fort.8.gz' 'fort.16.gz' 'fort.10.gz' )
 fi
+
+# - unlocking
+if ${lunlockRun6T} ; then
+    for tmpDir in ${lockingDirs[@]} ; do
+	sixdeskunlock $tmpDir
+    done
+    if ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} ; then
+	sixdeskmess -1 "requested only unlocking. Exiting..."
+	exit 0
+    fi
+fi
+
 nConsidered=0
 NsuccessFix=0
 NsuccessGen=0
@@ -1942,6 +1967,9 @@ NsuccessChk=0
 NsuccessSub=0
 NsuccessSts=0
 echo ""
+
+# - temporary trap
+trap "sixdeskexit 1" EXIT
 
 # - option specific stuff
 #   . megaZip available only in case of boinc:
