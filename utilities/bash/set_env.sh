@@ -99,27 +99,27 @@ function consistencyChecks(){
 function setFurtherEnvs(){
     # scan angles:
     export totAngle=90
-    export ampFactor=0.3
     lReduceAngsWithAmplitude=false
+    local __ampFactorDef=0.3
+    ampFactor=1
     # - reduce angles with amplitude
     if [ -n "${reduce_angs_with_aplitude}" ] ; then
-	if [ ${reduce_angs_with_aplitude} -eq 1 ] ; then
-	    if [ ${long} -eq 1 ] ; then
-		lReduceAngsWithAmplitude=true
-	    else
-		sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
-	    fi
+	if [ ${long} -eq 1 ] ; then
+	    lReduceAngsWithAmplitude=true
+	    ampFactor=`echo "${reduce_angs_with_aplitude}" | awk -v "ampFactorDef=${__ampFactorDef}" '{if ($1<0) {print (ampFactorDef)}else{print($1)}}'`
+	else
+	    sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
 	fi
     elif [ -n "${reduce_angs_with_amplitude}" ] ; then
-	if [ ${reduce_angs_with_amplitude} -eq 1 ] ; then
-	    if [ ${long} -eq 1 ] ; then
-		lReduceAngsWithAmplitude=true
-	    else
-		sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
-	    fi
+	if [ ${long} -eq 1 ] ; then
+	    lReduceAngsWithAmplitude=true
+	    ampFactor=`echo "${reduce_angs_with_amplitude}" | awk -v "ampFactorDef=${__ampFactorDef}" '{if ($1<0) {print (ampFactorDef)}else{print($1)}}'`
+	else
+	    sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
 	fi
     fi
-    export ${lReduceAngsWithAmplitude}
+    export lReduceAngsWithAmplitude
+    export ampFactor
 }
 
 # ==============================================================================
