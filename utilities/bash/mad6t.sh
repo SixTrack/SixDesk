@@ -13,6 +13,10 @@ function how_to_use() {
    -w      submit wrong seeds
               NB: the list of wrong seeds must be generated beforehand,
                   by a `basename $0` -c run
+   -U      unlock dirs necessary to the script to run
+           PAY ATTENTION when using this option, as no check whether the lock
+              belongs to this script or not is performed, and you may screw up
+              processing of another script
 
    options (optional):
    -i      madx is run interactively (ie on the node you are locally
@@ -418,12 +422,14 @@ lcheck=false
 loutform=false
 lwrong=false
 lSetEnv=true
+lunlockMad6T=false
+unlockSetEnv=""
 currStudy=""
 currPythonPath=""
 optArgCurrStudy="-s"
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hiwseo:cd:P:" opt ; do
+while getopts  ":hiwseo:cd:P:U" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -466,6 +472,11 @@ while getopts  ":hiwseo:cd:P:" opt ; do
 	    # the user is requesting a specific path to python
 	    currPythonPath="-P ${OPTARG}"
 	    ;;
+	U)
+	    # unlock currently locked folder
+	    lunlockMad6T=true
+	    unlockSetEnv="-U"
+	    ;;
 	:)
 	    how_to_use
 	    echo "Option -$OPTARG requires an argument."
@@ -481,7 +492,7 @@ done
 shift "$(($OPTIND - 1))"
 # user's requests:
 # - actions
-if ! ${lcheck} && ! ${lsub} ; then
+if ! ${lcheck} && ! ${lsub} && ! ${lunlockMad6T} ; then
     how_to_use
     echo "No action specified!!! aborting..."
     exit 1
@@ -506,15 +517,47 @@ fi
 OPTIND=1
 
 if ${lSetEnv} ; then
-    source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${currPythonPath} -e
+    echo ""
+    printf "=%.0s" {1..80}
+    echo ""
+    echo "--> local set_env.sh run"
+    printf '.%.0s' {1..80}
+    echo ""
+    source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${currPythonPath} ${unlockSetEnv} -e
+    printf "=%.0s" {1..80}
+    echo ""
+    echo ""
 else
+    echo ""
+    printf "=%.0s" {1..80}
+    echo ""
+    echo "--> local dot_profile run"
+    printf '.%.0s' {1..80}
+    echo ""
     source ${SCRIPTDIR}/bash/dot_profile
+    printf "=%.0s" {1..80}
+    echo ""
+    echo ""
 fi
 if ${loutform} ; then
     sixdesklevel=${sixdesklevel_option}
 fi
 # build paths
 sixDeskDefineMADXTree ${SCRIPTDIR}
+
+# - define locking dirs
+lockingDirs=( "$sixdeskstudy" "$sixtrack_input" )
+
+# - unlocking
+if ${lunlockMad6T} ; then
+    for tmpDir in ${lockingDirs[@]} ; do
+	sixdeskunlock $tmpDir
+    done
+    if ! ${lcheck} && ! ${lsub} ; then
+	sixdeskmess -1 "requested only unlocking. Exiting..."
+	exit 0
+    fi
+fi
 
 # define trap
 trap "sixdeskexit 1" EXIT SIGINT SIGQUIT
@@ -552,9 +595,6 @@ if ${lsub} ; then
     # - queue
     sixdeskSetQueue madlsfq madHTCq
     
-    # - define locking dirs
-    lockingDirs=( "$sixdeskstudy" "$sixtrack_input" )
-
     # - lock dirs before doing any action
     for tmpDir in ${lockingDirs[@]} ; do
 	sixdesklock $tmpDir
