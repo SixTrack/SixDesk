@@ -103,6 +103,9 @@ function submit(){
 	sed -i -e 's?%xing?'$xing_rad'?g' \
   	    -e 's?/ bb_ho5b1_0?bb_ho5b1_0?g' \
 	    -e 's?/ bb_ho1b1_0?bb_ho5b1_0?g' $sixtrack_input/fort.3.mother1.tmp
+    else
+	sed -i -e 's?^bb_ho5b1_0?/ bb_ho5b1_0?g' \
+	       -e 's?^bb_ho1b1_0?/ bb_ho5b1_0?g' $sixtrack_input/fort.3.mother1.tmp
     fi
      
     # Clear flags for checking
