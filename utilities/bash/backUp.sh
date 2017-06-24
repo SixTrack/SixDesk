@@ -313,7 +313,7 @@ function prepareDest(){
     fi
 }
 
-function backUpCleanExit(){
+function backUpExit(){
     local __lerr=$1
 
     # remove zip files
@@ -331,7 +331,7 @@ function backUpCleanExit(){
 	done
     fi
 
-    sixdeskCleanExit $__lerr
+    sixdeskexit $__lerr
 }
 
 # ==============================================================================
@@ -534,20 +534,17 @@ fi
 
 # - free locked dirs (user request)
 if ${lFree} ; then
-    sixdeskCleanExit 0
+    sixdeskexit 0
 fi
 
 # - temporary trap
 trap "sixdeskexit 1" EXIT
 
 # lock dirs
-for tmpDir in ${lockingDirs[@]} ; do
-    [ -d $tmpDir ] || mkdir -p $tmpDir
-    sixdesklock $tmpDir
-done
+sixdesklockAll
 
 # - actual trap
-trap "backUpCleanExit 1" EXIT
+trap "backUpExit 1" EXIT
 
 # ------------------------------------------------------------------------------
 # actual operations
@@ -712,7 +709,7 @@ fi
 # ------------------------------------------------------------------------------
 
 # redefine trap
-trap "backUpCleanExit 0" EXIT
+trap "backUpExit 0" EXIT
 
 # echo that everything went fine
 echo ""

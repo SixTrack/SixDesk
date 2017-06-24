@@ -265,9 +265,7 @@ fi
 
 # - unlocking
 if ${lunlock} ; then
-    for tmpDir in ${lockingDirs[@]} ; do
-	sixdeskunlock $tmpDir
-    done
+    sixdeskunlockAll
     if ! ${lset} && ! ${lload} && ! ${lcptemplate} ; then
 	sixdeskmess -1 "requested only unlocking. Exiting..."
 	exit 0
@@ -292,10 +290,7 @@ fi
 # ------------------------------------------------------------------------------
 
 # - lock dirs
-for tmpDir in ${lockingDirs[@]} ; do
-    [ -d $tmpDir ] || mkdir -p $tmpDir
-    sixdesklock $tmpDir
-done
+sixdesklockAll
 
 if ${lcptemplate} ; then
 
@@ -408,9 +403,7 @@ else
 fi
 
 # - unlock dirs
-for tmpDir in ${lockingDirs[@]} ; do
-    sixdeskunlock $tmpDir
-done
+sixdeskunlockAll
 
 if ! ${lcptemplate} ; then
     
