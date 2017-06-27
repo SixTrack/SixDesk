@@ -553,9 +553,7 @@ lockingDirs=( "$sixdeskstudy" "$sixtrack_input" )
 
 # - unlocking
 if ${lunlockMad6T} ; then
-    for tmpDir in ${lockingDirs[@]} ; do
-	sixdeskunlock $tmpDir
-    done
+    sixdeskunlockAll
     if ! ${lcheck} && ! ${lsub} ; then
 	sixdeskmess -1 "requested only unlocking. Exiting..."
 	exit 0
@@ -599,12 +597,10 @@ if ${lsub} ; then
     sixdeskSetQueue madlsfq madHTCq
     
     # - lock dirs before doing any action
-    for tmpDir in ${lockingDirs[@]} ; do
-	sixdesklock $tmpDir
-    done
+    sixdesklockAll
     
     # - define trap
-    trap "sixdeskCleanExit 1" EXIT SIGINT SIGQUIT
+    trap "sixdeskexit 1" EXIT SIGINT SIGQUIT
 
     submit
 

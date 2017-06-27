@@ -1680,10 +1680,10 @@ function printSummary(){
     fi
     if [ $1 -eq 0 ] ; then
 	sixdeskmess -1 "Completed normally."
-	sixdeskCleanExit 0
+	sixdeskexit 0
     else
 	sixdeskmess -1 "Premature end."
-	sixdeskCleanExit 1
+	sixdeskexit 1
 	if [ $1 -eq 11 ] ; then
 	    sixdeskEchoEnvVars /tmp/envs_SIGSEGV.txt
 	    sixdeskSendNotifMail "FATAL - SIGSEGV"
@@ -1976,9 +1976,7 @@ fi
 
 # - unlocking
 if ${lunlockRun6T} ; then
-    for tmpDir in ${lockingDirs[@]} ; do
-	sixdeskunlock $tmpDir
-    done
+    sixdeskunlockAll
     if ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} ; then
 	sixdeskmess -1 "requested only unlocking. Exiting..."
 	exit 0
@@ -2037,10 +2035,7 @@ __lerr=0
 # ------------------------------------------------------------------------------
 
 # lock dirs
-for tmpDir in ${lockingDirs[@]} ; do
-    [ -d $tmpDir ] || mkdir -p $tmpDir
-    sixdesklock $tmpDir
-done
+sixdesklockAll
 
 # actual traps
 trap "" EXIT

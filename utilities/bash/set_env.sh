@@ -128,26 +128,30 @@ function setFurtherEnvs(){
     # set exes
     sixdeskSetExes
     # scan angles:
-    export totAngle=90
     lReduceAngsWithAmplitude=false
-    local __ampFactorDef=0.3
     ampFactor=1
+    local __ampFactorDef=0.3
     # - reduce angles with amplitude
     if [ -n "${reduce_angs_with_aplitude}" ] ; then
 	if [ ${long} -eq 1 ] ; then
-	    lReduceAngsWithAmplitude=true
-	    ampFactor=`echo "${reduce_angs_with_aplitude}" | awk -v "ampFactorDef=${__ampFactorDef}" '{if ($1<0) {print (ampFactorDef)}else{print($1)}}'`
+	    local __tmpValues=`echo "${reduce_angs_with_aplitude}" | awk -v "ampFactorDef=${__ampFactorDef}" '{if ($1<0) {print (ampFactorDef,"true") } else if ($1==0||$1==1) { print(1,"false") } else { print($1,"true") } } '`
+	    __tmpValues=(${__tmpValues})
+	    ampFactor=${__tmpValues[0]}
+	    lReduceAngsWithAmplitude=${__tmpValues[1]}
 	else
 	    sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
 	fi
     elif [ -n "${reduce_angs_with_amplitude}" ] ; then
 	if [ ${long} -eq 1 ] ; then
-	    lReduceAngsWithAmplitude=true
-	    ampFactor=`echo "${reduce_angs_with_amplitude}" | awk -v "ampFactorDef=${__ampFactorDef}" '{if ($1<0) {print (ampFactorDef)}else{print($1)}}'`
+	    local __tmpValues=`echo "${reduce_angs_with_amplitude}" | awk -v "ampFactorDef=${__ampFactorDef}" '{if ($1<0) {print (ampFactorDef,"true") } else if ($1==0||$1==1) { print(1,"false") } else { print($1,"true") } } '`
+	    __tmpValues=(${__tmpValues})
+	    ampFactor=${__tmpValues[0]}
+	    lReduceAngsWithAmplitude=${__tmpValues[1]}
 	else
 	    sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
 	fi
     fi
+    export totAngle=90
     export lReduceAngsWithAmplitude
     export ampFactor
 }
@@ -303,9 +307,7 @@ fi
 
 # - unlocking
 if ${lunlock} ; then
-    for tmpDir in ${lockingDirs[@]} ; do
-	sixdeskunlock $tmpDir
-    done
+    sixdeskunlockAll
     if ! ${lset} && ! ${lload} && ! ${lcptemplate} ; then
 	sixdeskmess -1 "requested only unlocking. Exiting..."
 	exit 0
@@ -330,10 +332,7 @@ fi
 # ------------------------------------------------------------------------------
 
 # - lock dirs
-for tmpDir in ${lockingDirs[@]} ; do
-    [ -d $tmpDir ] || mkdir -p $tmpDir
-    sixdesklock $tmpDir
-done
+sixdesklockAll
 
 if ${lcptemplate} ; then
 
@@ -456,9 +455,7 @@ else
 fi
 
 # - unlock dirs
-for tmpDir in ${lockingDirs[@]} ; do
-    sixdeskunlock $tmpDir
-done
+sixdeskunlockAll
 
 if ! ${lcptemplate} ; then
     

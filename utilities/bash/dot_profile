@@ -136,16 +136,24 @@ sixdeskmktmpdir()
 }
 sixdeskexit()
 {
+  sixdeskunlockAll
   if [ $# -eq 1 ] ; then
       sixdeskexitparam=$1
   fi
+  \exit "$sixdeskexitparam"
+}
+function sixdeskunlockAll(){
+  # list of locked dirs is in $SIXDESKLOCKED (string)
   if [ -n "$SIXDESKLOCKED" ] ; then
       sixdeskmess 1 "sixdeskexit: Freeing lock(s) $SIXDESKLOCKED!!!"
   fi
   for tmpDir in "$SIXDESKLOCKED" ; do
       sixdeskunlock $tmpDir
   done
-  \exit "$sixdeskexitparam"
+  # list of locked dirs is in $lockingDirs (array)
+  for tmpDir in ${lockingDirs[@]} ; do
+      sixdeskunlock $tmpDir
+  done
 }
 sixdeskunlock()
 {
@@ -196,6 +204,13 @@ sixdeskunlock()
 
   fi
   SIXDESKLOCKED=`echo "$SIXDESKLOCKED" | sed -e's?'"$sixdesklockdir "'??'`
+}
+function sixdesklockAll(){
+  # list of locked dirs is in $lockingDirs (array)
+  for tmpDir in ${lockingDirs[@]} ; do
+      [ -d $tmpDir ] || mkdir -p $tmpDir
+      sixdesklock $tmpDir
+  done
 }
 sixdesklock()
 {
@@ -1312,16 +1327,6 @@ sixdeskGetFileName(){
     __fileName=$(basename "$1")
     __fileName="${__fileName%.*}"
     eval "$2=$__fileName"
-}
-sixdeskCleanExit(){
-    local __exitLevel=0
-    if [ $# -eq 1 ] ; then
-	__exitLevel=$1
-    fi
-    for tmpDir in ${lockingDirs[@]} ; do
-	sixdeskunlock $tmpDir
-    done
-    sixdeskexit $__exitLevel
 }
 function __inspectPrerequisite(){
     local __lverbose=$1
