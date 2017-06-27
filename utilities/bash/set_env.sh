@@ -219,6 +219,7 @@ while getopts  ":hsvld:ep:P:nU" opt ; do
 	l)
 	    # use fort.3.local
 	    llocalfort3=true
+	    ;;
 	P)
 	    # the user is requesting a specific path to python
 	    tmpPythonPath="${OPTARG}"
