@@ -1352,6 +1352,7 @@ while getopts  ":hBtzo:n:U" opt ; do
 	    ;;
 	z)
 	    lretrieveZip=true
+	    ;;
 	n)
 	    # renew kerberos token every N jobs
 	    NrenewKerberos=${OPTARG}
