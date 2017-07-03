@@ -1269,7 +1269,7 @@ function downloadNewResults(){
 	    
 	fi
 	#Eric
-	let ${iTreated}+=1
+	let iTreated+=1
 	if [ $((${iTreated}%${NrenewKerberos})) -eq 0 ] ; then
 	    sixdeskmess 2 "renewing kerberos token: ${iTreated} vs ${NrenewKerberos}"
 	    sixdeskRenewKerberosToken
@@ -1328,6 +1328,10 @@ downloadDir=/afs/cern.ch/work/b/boinc/download
 lunlockRunRes=false
 NrenewKerberosDef=2000
 NrenewKerberos=${NrenewKerberosDef}
+optArgCurrStudy=""
+doNotOverwrite=""
+optArgCurrPlatForm=""
+unlockSetEnv=""
 
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":hBto:n:U" opt ; do
@@ -1361,6 +1365,7 @@ while getopts  ":hBto:n:U" opt ; do
 	U)
 	    # unlock currently locked folder
 	    lunlockRunRes=true
+	    unlockSetEnv="-U"
 	    ;;
 	:)
 	    how_to_use
@@ -1380,15 +1385,25 @@ shift "$(($OPTIND - 1))"
 #   NB: workaround to get getopts working properly in sourced script
 OPTIND=1
 
+# optional arguments
+if [ -n "$1" ] ; then
+    optArgCurrStudy="-d $1"
+    doNotOverwrite="-e"
+fi
+if [ -n "$2" ] ; then
+    optArgCurrPlatForm="-p $2"
+fi
+
+
 # Even if called with a Study ($1) and a Platform ($2)
 # we can now use dot_env
 echo ""
 printf "=%.0s" {1..80}
 echo ""
-echo "--> sourcing dot_env"
+echo "--> sourcing set_env.sh"
 printf '.%.0s' {1..80}
 echo ""
-source ${SCRIPTDIR}/bash/dot_env
+source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${unlockSetEnv} ${doNotOverwrite}
 printf "=%.0s" {1..80}
 echo ""
 echo ""
@@ -1402,8 +1417,8 @@ if ${lunlockRunRes} ; then
     sixdeskunlock $sixdeskstudy
 fi
 
-# - kinit, to renew kerberos ticket
-sixdeskRenewKerberosToken
+# set boinc vars
+sixDeskSetBOINCVars
 
 # current study
 currStudy=`basename $sixdeskstudy`
@@ -1575,7 +1590,7 @@ echo ""
 
 # look into downloadDir: in case zipped files are there, then
 #    download all results there contained
-allArchives=`ls -1 ${downloadDir}/*/${workspace}_${currStudy}_*.zip 2> /dev/null`
+allArchives=`ls -1 ${downloadDir}/????-??-??/${workspace}_${currStudy}_*.zip 2> /dev/null`
 if ${lreconsiderDelete} ; then
     allArchives="${allArchives} `ls -1 ${downloadDir}/*/delete/${workspace}_${currStudy}_*.zip 2> /dev/null`"
 fi
@@ -1607,7 +1622,7 @@ for tmpArchive in ${allArchives} ; do
     
     if [ $? -eq 0 ] ; then
 	# mv in delete only brand new results
-	if [[ "${tmpArchiveDir}" != *"/delete/"* ]] ; then
+	if [[ "${tmpArchive}" != *"/delete/"* ]] ; then
 	    mv ${tmpArchive} ${tmpArchiveDir}/delete/${tmpArchiveName}
 	fi
     fi
