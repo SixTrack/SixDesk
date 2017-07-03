@@ -904,6 +904,7 @@ function checkDirStatus(){
 
 function checkDirReadyForSubmission(){
     local __lerr=0
+    local __llerr=0
     
     sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -d
     let __lerr+=$?
@@ -923,6 +924,7 @@ function checkDirReadyForSubmission(){
 	    if [ -z "${tmpFileName}" ] ; then
 		sixdeskmess -1 "no ${extension} file in $RundirFullPath!!!"
 		let __lerr+=1
+		let __llerr+=1
 	    else
 		sixdeskGetFileName "${tmpFileName}" tmpName
 		fileNames="${fileNames} ${tmpName}"
@@ -933,7 +935,7 @@ function checkDirReadyForSubmission(){
 	if [ "${fileNames[0]}" != "${fileNames[1]}" ] ; then
 	    sixdeskmess -1 "mismatch between .desc and .zip file names in $RundirFullPath: ${fileNames[0]} and ${fileNames[1]}!"
 	    let __lerr+=$?
-	else
+	elif [ ${__llerr} -eq 0 ] ; then
 	    workunitName="${fileNames[0]}"
 	    sixdeskmess  1 ".desc and .zip files present in $RundirFullPath!"
 	fi
@@ -2014,10 +2016,10 @@ sixdesklockAll
 
 # actual traps
 trap "" EXIT
-trap "printSummary  1" SIGINT
-trap "printSummary  2" SIGQUIT
-trap "printSummary 11" SIGSEGV
-trap "printSummary  8" SIGFPE
+trap "printSummary  1; sixdeskexit 1" SIGINT
+trap "printSummary  2; sixdeskexit 2" SIGQUIT
+trap "printSummary 11; sixdeskexit 3" SIGSEGV
+trap "printSummary  8; sixdeskexit 4" SIGFPE
 
 # preparation to main loop
 if ${lgenerate} || ${lfix} ; then
@@ -2629,6 +2631,7 @@ fi
 
 # redefine traps
 trap "" SIGINT SIGQUIT SIGSEGV SIGFPE
+trap "printSummary  0; sixdeskexit 0" EXIT
 
 # echo that everything went fine
 echo ""
