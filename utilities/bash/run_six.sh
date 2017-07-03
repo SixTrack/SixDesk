@@ -123,7 +123,7 @@ function check_output_option(){
 	echo "    0: only error messages and basic output [default]"
 	echo "    1: full output"
 	echo "    2: extended output for debugging"
-	exit
+	exit 1
     else
 	loutform=true
 	sixdesklevel_option=${OPTARG}
@@ -1664,20 +1664,6 @@ function printSummary(){
     if ${lstatus} ; then
 	sixdeskmess -1 "STATUS LISTED  ${NsuccessSts} jobs"			
     fi
-    if [ $1 -eq 0 ] ; then
-	sixdeskmess -1 "Completed normally."
-	sixdeskexit 0
-    else
-	sixdeskmess -1 "Premature end."
-	sixdeskexit 1
-	if [ $1 -eq 11 ] ; then
-	    sixdeskEchoEnvVars /tmp/envs_SIGSEGV.txt
-	    sixdeskSendNotifMail "FATAL - SIGSEGV"
-	elif [ $1 -eq 8 ] ; then
-	    sixdeskEchoEnvVars /tmp/envs_SIGFPE.txt
-	    sixdeskSendNotifMail "FATAL - SIGFPE"
-	fi
-    fi
 }
 
 # ==============================================================================
@@ -1873,7 +1859,7 @@ if ${lincomplete} ; then
 fi
 if ${lincomplete} && ${lselected} ; then
     echo "-S option and -i action are incompatible!"
-    exit
+    exit 1
 fi
 
 # ------------------------------------------------------------------------------
@@ -1969,7 +1955,7 @@ NsuccessSts=0
 echo ""
 
 # - temporary trap
-trap "sixdeskexit 1" EXIT
+trap "sixdeskexit 199" EXIT
 
 # - option specific stuff
 #   . megaZip available only in case of boinc:
@@ -2015,11 +2001,11 @@ __lerr=0
 sixdesklockAll
 
 # actual traps
-trap "" EXIT
-trap "printSummary  1; sixdeskexit 1" SIGINT
-trap "printSummary  2; sixdeskexit 2" SIGQUIT
-trap "printSummary 11; sixdeskexit 3" SIGSEGV
-trap "printSummary  8; sixdeskexit 4" SIGFPE
+trap "printSummary; sixdeskexit  199" EXIT
+trap "printSummary; sixdeskexit  1" SIGINT
+trap "printSummary; sixdeskexit  2" SIGQUIT
+trap "printSummary; sixdeskexit 11" SIGSEGV
+trap "printSummary; sixdeskexit  8" SIGFPE
 
 # preparation to main loop
 if ${lgenerate} || ${lfix} ; then
@@ -2084,8 +2070,8 @@ if ${lgenerate} || ${lfix} ; then
     fi
     # - in case of errors, interrupt execution
     if [ $__lerr -gt 0 ] ; then
-        sixdeskmess -1 "Preparatory step failed."
-	exit $__lerr
+        sixdeskmess -1 "Preparatory step failed - error: ${__lerr}."
+	exit
     fi
 fi
 if ${lcheck} ; then
@@ -2150,8 +2136,8 @@ if ${lcheck} ; then
 	fi
     fi
     if [ ${__lerr} -gt 0 ] ; then
-        sixdeskmess -1 "Preparation incomplete."
-	exit ${__lerr}
+        sixdeskmess -1 "Preparation incomplete - error:  ${__lerr}."
+	exit
     fi
 fi
 # - echo emittance and dimsus
@@ -2204,7 +2190,9 @@ if ${lrestart} ; then
 	sixdeskmess 1 " as from $sixdeskwork/taskids"
     fi
     sixdeskCheckNFieldsFromJobName "${restartPoint}"
-    if [ $? -ne 0 ] ; then
+    exitStatus=$?
+    if [ ${exitStatus} -ne 0 ] ; then
+	sixdeskmess 1 "error: ${exitStatus}"
 	exit
     fi
     # get infos of starting point
@@ -2368,8 +2356,8 @@ else
     	    		sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s betavalues
     	    		let __lerr+=$?
     	    		if [ ${__lerr} -gt 0 ] ; then
-    	    		    sixdeskmess -1 "Failure in preparation."
-    	    		    exit ${__lerr}
+    	    		    sixdeskmess -1 "Failure in preparation - error: ${__lerr}}."
+    	    		    exit
     	    		fi
     	            fi
     	            parseBetaValues $RundirFullPath
@@ -2494,8 +2482,8 @@ if ${lmegazip} ; then
     sixdeskInspectPrerequisites ${lverbose} ${sixdeskjobs_logs} -s megaZipList.txt
     let __lerr+=$?
     if [ $__lerr -ne 0 ] ; then
-	sixdeskmess -1 "${sixdeskjobs_logs}/megaZipList.txt not generated!"
-	exit ${__lerr}
+	sixdeskmess -1 "${sixdeskjobs_logs}/megaZipList.txt not generated - error: ${__lerr}."
+	exit
     fi
 	
     # loop: in case of generation and checking, be nice, and re-generate megaZip file,
@@ -2564,7 +2552,7 @@ if ${lmegazip} ; then
 	if ${lgenerate} && ${lcheck} ; then
 	    if ! ${gotit} ; then
 		sixdeskmess -1 "failed to regenerate MegaZip file ${megaZipName} ${mytries} times!!!"
-		exit ${mytries}
+		exit
 	    fi
 	fi
     fi
@@ -2573,8 +2561,8 @@ if ${lmegazip} ; then
     sixdeskInspectPrerequisites ${lverbose} . -s ${megaZipName}
     let __lerr+=$?
     if [ $__lerr -ne 0 ] ; then
-	sixdeskmess -1 "./${megaZipName} not generated!"
-	exit ${__lerr}
+	sixdeskmess -1 "./${megaZipName} not generated! - error: ${__lerr}"
+	exit
     fi
 
     # - upload megaZip file
@@ -2583,7 +2571,7 @@ if ${lmegazip} ; then
 	multipleTrials "cp ${megaZipName} ${megaZipPath} ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "MegaZip - problem at upload"
 	if [ $? -ne 0 ] ; then
 	    sixdeskmess -1 "failed to submit ${megaZipName} !!!"
-	    exit 10
+	    exit
 	fi
 	tmpZipFiles=`cat ${sixdeskjobs_logs}/megaZipList.txt | grep 'zip$'`
 	tmpZipFiles=( ${tmpZipFiles} )
@@ -2631,7 +2619,7 @@ fi
 
 # redefine traps
 trap "" SIGINT SIGQUIT SIGSEGV SIGFPE
-trap "printSummary  0; sixdeskexit 0" EXIT
+trap "printSummary; sixdeskexit 0" EXIT
 
 # echo that everything went fine
 echo ""
