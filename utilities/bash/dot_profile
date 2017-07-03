@@ -140,7 +140,13 @@ sixdeskexit()
   if [ $# -eq 1 ] ; then
       sixdeskexitparam=$1
   fi
-  \exit "$sixdeskexitparam"
+  if [ $sixdeskexitparam -eq 0 ] ; then
+      sixdeskmess -1 "Completed normally."
+  else
+      sixdeskmess -1 "Premature end."
+  fi
+  trap "" EXIT
+  exit "$sixdeskexitparam"
 }
 function sixdeskunlockAll(){
   # list of locked dirs is in $SIXDESKLOCKED (string)

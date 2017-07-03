@@ -56,7 +56,8 @@ function preliminaryChecksM6T(){
 	let __lerr+=1
     fi
     if [ ${__lerr} -gt 0 ] ; then
-	exit ${__lerr}
+	sixdeskmess -1 "error in preliminaryChecksM6T - error: ${__lerr}"
+	exit
     fi
     
     return $__lerr
@@ -211,7 +212,7 @@ function check_output_option(){
 	echo "    0: only error messages and basic output [default]"
 	echo "    1: full output"
 	echo "    2: extended output for debugging"
-	exit
+	exit 1
     else
 	loutform=true
 	sixdesklevel_option=${OPTARG}
@@ -388,8 +389,8 @@ function check(){
 
     if [ ${__lerr} -gt 0 ] ; then
 	# final remarks
-	sixdeskmess 1 "Problems with MADX runs!"
-	exit ${__lerr}
+	sixdeskmess 1 "Problems with MADX runs! - error: ${__lerr}"
+	exit
     else
 	# final remarks
 	sixdeskmess 1 "All the mad6t jobs appear to have completed successfully using madx -X Version $MADX in $MADX_PATH"
@@ -599,9 +600,6 @@ if ${lsub} ; then
     # - lock dirs before doing any action
     sixdesklockAll
     
-    # - define trap
-    trap "sixdeskexit 1" EXIT SIGINT SIGQUIT
-
     submit
 
 else

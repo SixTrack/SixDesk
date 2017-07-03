@@ -195,9 +195,10 @@ bool files_match(RESULT &r1, FILE_CKSUM_LIST& f1, const RESULT &r2, FILE_CKSUM_L
 	   }
 	   fracturn = turnx/(mturn*n*2.0);
 	   outlier = 0;
-	   if(fracturn <= 0.1) { 
+// Eric added OR if turnx is 0, also an outlier
+	   if(fracturn <= 0.1 || turnx <= 0.1) { 
 		r1.runtime_outlier = 1;
-//		r2.runtime_outlier = 1;
+//              r2.runtime_outlier = 1;
 		outlier = 1;
 	   }
 //    printf("files match  %.0f %d %.0f %.0f v: %s %s\n",mturn,n,turn1,turn2,&s1[indx1[VERSPOS]],&s2[indx2[VERSPOS]]);
