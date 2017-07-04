@@ -25,8 +25,16 @@ tStep=3600*24
 
 # typical enlarged window size: 1900,400
 # trigger use of png or interactive windows: 0: png, 1: interactive
-linteractive=1
-rightNowPNG=system('date +"%F_%H-%M-%S"')
+linteractive=0
+lprintDate=0 # 0: no date/time in png name; 1: date/time in png name
+xSizeWdw=1400#regular: 1000
+ySizeWdw=400#regular: 400
+
+if ( lprintDate==0 ) {
+rightNowPNG=''
+} else {
+rightNowPNG=system('date +"_%F_%H-%M-%S"')
+}
 
 # ------------------------------------------------------------------------------
 # actual script
@@ -55,10 +63,10 @@ set grid
 
 currTitle='submitted WUs'
 if ( linteractive==0 ) {
-set term png font "Times-Roman" size 1200,400 notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/submissionCumulative_'.rightNowPNG.'.png'
+set term png font "Times-Roman" size xSizeWdw,ySizeWdw notransparent enhanced
+set output '/home/amereghe/Downloads/boincStatus/submissionCumulative'.rightNowPNG.'.png'
 } else {
-set term qt 10 title currTitle font "Times-Roman" size 1000,400
+set term qt 10 title currTitle font "Times-Roman" size xSizeWdw,ySizeWdw
 }
 set ylabel 'submitted WUs [10^3]'
 plot \
@@ -80,10 +88,10 @@ plot \
 
 currTitle='overview'
 if ( linteractive==0 ) {
-set term png font "Times-Roman" size 1200,400 notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/overviewCumulative_'.rightNowPNG.'.png'
+set term png font "Times-Roman" size xSizeWdw,ySizeWdw notransparent enhanced
+set output '/home/amereghe/Downloads/boincStatus/overviewCumulative'.rightNowPNG.'.png'
 } else {
-set term qt 11 title currTitle font "Times-Roman" size 1000,400
+set term qt 11 title currTitle font "Times-Roman" size xSizeWdw,ySizeWdw
 }
 set ylabel 'WUs [10^3]'
 plot \
