@@ -49,7 +49,7 @@ using std::vector;
 #define VERSPOS 51
 #define TUR1POS 21
 #define TUR2POS 22
-#define TUR3POS 23 // iza 26/05/2017
+#define RANDSED 23 // iza 26/05/2017
 #define TOTTURN 58 // obsolete
 #define DNMSPOS 58
 #define CPUTIME 59
@@ -72,7 +72,8 @@ bool files_match(RESULT &r1, FILE_CKSUM_LIST& f1, const RESULT &r2, FILE_CKSUM_L
     unsigned int n = 0;
 
     char s1[ROWSIZE], s2[ROWSIZE];
-    double mturn, tturn, turn1, turn2, turnx, credit, stab, vers1, vers2, cput1, cput2;
+    double mturn, turn1, turn2, turnx, credit, stab, vers1, vers2, cput1, cput2;
+    double runtime1 = 0, runtime2 = 0;
     int indx1[NUMITEM], indx2[NUMITEM];
     int ns1 = 0, ns2 = 0;
     int w1 = 0, w2 = 0;
@@ -90,20 +91,8 @@ bool files_match(RESULT &r1, FILE_CKSUM_LIST& f1, const RESULT &r2, FILE_CKSUM_L
 
 //    printf("start files_match: %d %d\n",f1.fp.size(),f2.fp.size());
     for (int i=0; i<f1.fp.size(); i++){
-	fstat(fileno(f1.fp[i]), &fileprop);
-	if( fileprop.st_size == 0 ) {
-// IZA 20170610 add print of the WU and invalidate the file immediately
-                log_messages.printf(MSG_DEBUG, "[RESULT#%d %d] WU#%d HOST[%d %d] EMPTY-1\n", r1id,r2id,wrkunit,h1id,h2id);
-		return false;
-	}
 	rewind(f1.fp[i]);
 	for(int j=0; j<f2.fp.size(); j++){
-	   fstat(fileno(f2.fp[j]), &fileprop);
-	   if( fileprop.st_size == 0 ) {
-// IZA 20170610 add print of the WU and invalidate the file immediately
-                log_messages.printf(MSG_DEBUG, "[RESULT#%d %d] WU#%d HOST[%d %d] EMPTY-2\n", r1id,r2id,wrkunit,h1id,h2id);
-		return false;
- 	   }
 	   rewind(f2.fp[j]);
 	   n = 0;
 	   turnx = 0.0;
@@ -145,14 +134,14 @@ bool files_match(RESULT &r1, FILE_CKSUM_LIST& f1, const RESULT &r2, FILE_CKSUM_L
 		   }
 //exit(1);
 		   if( (turn1 == turn2) && (turn2 == 0) )  {
-                        log_messages.printf(MSG_DEBUG,
-		       "[RESULT#%d %d] case of zero file: %d %d %d %d turns: %.0f %.0f version: %.0f %.0f\n",
+                        log_messages.printf(MSG_CRITICAL,
+		       "[RESULT#%d %d] compare_results: case of zero turns pos= %d %d %d %d turns: %.0f %.0f version: %.0f %.0f\n",
 			r1id,r2id,ns1,ns2,w1,w2,turn1,turn2,vers1,vers2);
 
-			return true;
+			return true;   // COMPARE TRUE for now, may need to change this !!!
 		   }
                    log_messages.printf(MSG_DEBUG,
-		       "[RESULT#%d %d] differ in #doubles: %d %d %d %d turns: %.0f %.0f version: %.0f %.0f\n",
+		       "[RESULT#%d %d] compare_results: differ in #doubles pos= %d %d %d %d turns: %.0f %.0f version: %.0f %.0f\n",
 			r1id,r2id,ns1,ns2,w1,w2,turn1,turn2,vers1,vers2);
 
 		   return false;
@@ -167,9 +156,15 @@ bool files_match(RESULT &r1, FILE_CKSUM_LIST& f1, const RESULT &r2, FILE_CKSUM_L
 		        while(!isdigit(c1 = s1[ipos++]) && (c1 != 0)) ;
 		        while(!isdigit(c2 = s2[jpos++]) && (c2 != 0)) ;
 			if(c1 != c2) {
-                   		log_messages.printf(MSG_DEBUG,
-			               "[RESULT#%d %d] WU#%d HOST[%d %d] differ: %d %s %s p=%d V: %s %s\n",
-					r1id,r2id,wrkunit,h1id,h2id,k+1,&s1[indx1[k]],&s2[indx2[k]],n,&s1[indx1[VERSPOS]],&s2[indx2[VERSPOS]]);
+       				mturn = strtod(&s1[indx1[MTURPOS]], NULL);
+       				vers1 = strtod(&s1[indx1[VERSPOS]], NULL);
+		       		vers2 = strtod(&s2[indx2[VERSPOS]], NULL);
+       				cput1 = strtod(&s1[indx1[CPUTIME]], NULL);
+		       		cput2 = strtod(&s2[indx2[CPUTIME]], NULL);
+                   		log_messages.printf(MSG_NORMAL,
+			               "RES[%-9d %9d] WU=%-9d HST[%-9d %9d] comp: DIFFER %d %s %s m=%.0g p=%d T: %9.1f %9.1f V: %.0f %.0f\n",
+					
+					r1id,r2id,wrkunit,h1id,h2id,k+1,&s1[indx1[k]],&s2[indx2[k]],mturn,n,cput1, cput2, vers1,vers2);
 //exit(1);
 		   		return false;
                 	}
@@ -183,27 +178,24 @@ bool files_match(RESULT &r1, FILE_CKSUM_LIST& f1, const RESULT &r2, FILE_CKSUM_L
        		vers2 = strtod(&s2[indx2[VERSPOS]], NULL);
        		cput1 = strtod(&s1[indx1[CPUTIME]], NULL);
        		cput2 = strtod(&s2[indx2[CPUTIME]], NULL);
-//       		tturn = strtod(&s1[indx1[TOTTURN]], NULL);
-		tturn = 0;
 		n++;
            } while ((ns1 > 0) || (ns2 > 0));
     	   credit = turnx * SIXCREDIT;
 	   crl1 = crl2 = 'K';
-	   if(claimed_credit1 > 10.0 || claimed_credit2 > 10.0) {
-	   	if(claimed_credit1 > 1.3*credit) { r1.claimed_credit = credit; crl1='F'; } else crl1='K';
-//	   	if(claimed_credit2 > 1.3*credit) { r2.claimed_credit = credit; crl2='F'; } else crl2='K';
-	   }
+	   if(claimed_credit1 > 1.3*credit)  crl1='F'; 
+	   if(claimed_credit2 > 1.3*credit)  crl2='F';
 	   fracturn = turnx/(mturn*n*2.0);
 	   outlier = 0;
-// Eric added OR if turnx is 0, also an outlier
-	   if(fracturn <= 0.1 || turnx <= 0.1) { 
+	   if(fracturn <= 0.1) { 
 		r1.runtime_outlier = 1;
-//              r2.runtime_outlier = 1;
+//              r2.runtime_outlier = 1;   // const
 		outlier = 1;
 	   }
+	   runtime1 = r1.elapsed_time;
+	   runtime2 = r2.elapsed_time;
 //    printf("files match  %.0f %d %.0f %.0f v: %s %s\n",mturn,n,turn1,turn2,&s1[indx1[VERSPOS]],&s2[indx2[VERSPOS]]);
-           log_messages.printf(MSG_DEBUG,"RES[%-d %-d] WU=%-d HST[%-d %-d] match: m=%.0g %.0g p=%d turnx=%10.0f cred=%8.2f T1=%10.1f claim=%.2f %c T2=%10.1f %.2f %c %-1d v: %.0f %.0f\n",
-		r1id,r2id,wrkunit,h1id,h2id,mturn,tturn,n,turnx,credit,cput1,claimed_credit1,crl1,cput2,claimed_credit2,crl2,outlier,vers1,vers2);
+           log_messages.printf(MSG_NORMAL,"RES[%-9d %9d] WU=%-9d HST[%-9d %9d] comp: MATCH m=%.0g p=%d turnx=%10.0f cred=%6.1f T1=%9.1f %9.1f %c T2=%9.1f %9.1f %c outlier %-1d v: %.0f %.0f\n",
+		r1id,r2id,wrkunit,h1id,h2id,mturn,n,turnx,credit,cput1,runtime1,crl1,cput2,runtime2,crl2,outlier,vers1,vers2);
         }
     }
 
@@ -216,13 +208,15 @@ int init_result(RESULT& result, void*& data) {
     FILE_CKSUM_LIST* fcl = new FILE_CKSUM_LIST;
     vector<OUTPUT_FILE_INFO> files;
     struct stat file_status;
-    double nbytes;
+    off_t  nbytes;
+    time_t modtime;
+    double runtime = result.elapsed_time;
 	int ii;
 
     retval = get_output_file_infos(result, files);
     if (retval) {
         log_messages.printf(MSG_CRITICAL,
-            "[RESULT#%d %s] check_set: can't get output filenames\n",
+            "[RESULT#%d %s] init_result: can not get output filenames\n",
             result.id, result.name
         );
         return retval;
@@ -238,26 +232,34 @@ int init_result(RESULT& result, void*& data) {
 //        fpx = fopen(fi.path.c_str(),"r");
 //        while( ((fpx = fopen(fi.path.c_str(),"r")) == NULL) & (ii < 10)) { sleep(TSLEEP); ii++; }
 //        if((fpx = fopen(fi.path.c_str(),"r")) == NULL) {
+//
 	retval = try_fopen(fi.path.c_str(), fpx, "r");
         if(retval) {
-
             log_messages.printf(MSG_CRITICAL,
-		"[RESULT#%d %s] Couldn't open %s file %d out of %d errno=%d %s\n",
-                    result.id, result.name, fi.path.c_str(),i,files.size(),errno,strerror(errno));
+		"[RESULT#%d %s] init_result: cannot try_open file %s retval=%d\n",
+                    result.id, result.name, fi.path.c_str(),retval);
 
             return retval;
         }
-	retval = stat(fi.path.c_str(), &file_status);
-	if(retval) return retval;
+//	retval = stat(fi.path.c_str(), &file_status);
+	retval = fstat(fileno(fpx), &file_status);
+	if(retval) {
+            log_messages.printf(MSG_CRITICAL,
+		"[RESULT#%d %s] init_result: cannot obtain file status path: %s err=%d %s\n",
+                    result.id, result.name, fi.path.c_str(),retval,strerror(retval));
+	    fclose(fpx); // liberate file pointer 
+	    return ERR_STAT;
+	}
 
 	nbytes = file_status.st_size;
 
 	if(nbytes <= 0) {
 
-            log_messages.printf(MSG_DEBUG,
-		"[RESULT#%d %s] Invalid %s file %d out of %d filesize=%d\n",
-                    result.id, result.name, fi.path.c_str(),i,files.size(),nbytes);
-	    return -1;   // invalid result if file zero length	
+            log_messages.printf(MSG_CRITICAL,
+			    "[RESULT#%d %s] init_result: zero length file (%ld) T=%9.1f modtime: %24s path: %s\n",
+                    result.id, result.name, (long int) nbytes, runtime, ctime(&file_status.st_mtime), fi.path.c_str());
+	    fclose(fpx); // liberate file pointer 
+	    return ERR_FILE_TOO_BIG;   // permanent failure if file zero length	
 	}
 	fcl->fp.push_back(fpx);
 
