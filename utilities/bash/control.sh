@@ -399,7 +399,7 @@ else
     # loop through studies one by one
     for (( ii=0 ; ii<${#studies[@]} ; ii++ )) ; do
 	cd ${workspaces[$ii]}
-	if [ -d logs ] || mkdir logs
+	[ -d logs ] || mkdir logs
 	__logFile=logs/${studies[$ii]}.log
 	if ${lZipLog} ; then
    	    if [ -e ${__logFile}.gz ] ; then
