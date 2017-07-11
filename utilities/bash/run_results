@@ -6,10 +6,20 @@
 function how_to_use() {
     cat <<EOF
 
-   `basename $0` [option]
+   `basename $0` [option] [<study_name>] [<platform>]
    to retrieve boinc results
 
    options (optional)
+   -d      study name (when running many jobs in parallel)
+           NB: this option has been implemented to keep the same
+               interface as for other main scripts. In case the
+               first optional argument is given, that one will
+               overwrite the value of this option;
+   -p      platform name (when running many jobs in parallel)
+           NB: this option has been implemented to keep the same
+               interface as for other main scripts. In case the
+               second optional argument is given, that one will
+               overwrite the value of this option;
    -U      unlock dirs necessary to the script to run
            PAY ATTENTION when using this option, as no check whether the lock
               belongs to this script or not is performed, and you may screw up
@@ -1334,7 +1344,7 @@ optArgCurrPlatForm=""
 unlockSetEnv=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hBto:n:U" opt ; do
+while getopts  ":hBto:n:d:p:U" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -1362,6 +1372,15 @@ while getopts  ":hBto:n:U" opt ; do
 	    # output option
 	    check_output_option
 	    ;;	
+	d)
+	    # the user is requesting a specific study
+	    optArgCurrStudy="-d ${OPTARG}"
+	    doNotOverwrite="-e"
+	    ;;
+	p)
+	    # the user is requesting a specific platform
+	    optArgCurrPlatForm="-p ${OPTARG}"
+	    ;;
 	U)
 	    # unlock currently locked folder
 	    lunlockRunRes=true
