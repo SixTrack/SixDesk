@@ -29,6 +29,8 @@ function how_to_use() {
            PAY ATTENTION when using this option, as no check whether the lock
               belongs to this script or not is performed, and you may screw up
               processing of another script
+   -w      before doing any operation, submit any HTCondor cluster of jobs left
+              from a previous (failing attempt)
 
    options (optional)
    -S      selected points of scan only
@@ -1051,9 +1053,11 @@ function condor_sub(){
     echo ""
     if [ ! -e ${sixdeskjobs}/${LHCDesName}.list ] ; then
 	sixdeskmess -1 "List of tasks not there: ${sixdeskjobs}/${LHCDesName}.list"
+	let __lerr+=1
     elif [ `wc -l ${sixdeskjobs}/${LHCDesName}.list 2> /dev/null | awk '{print ($1)}'` -eq 0 ] ; then
 	sixdeskmess -1 "Empty list of tasks: ${sixdeskjobs}/${LHCDesName}.list"
 	rm -f ${sixdeskjobs}/${LHCDesName}.list
+	let __lerr+=1
     else
 	cd ${sixdesktrack}
 	iBatch=$((${nQueued}/${nMaxJobsSubmitHTCondor}))
@@ -1768,6 +1772,7 @@ lrestart=false
 lrestartLast=false
 lincomplete=false
 lunlockRun6T=false
+lFinaliseHTCondor=false
 unlockSetEnv=""
 restartPoint=""
 currPlatform=""
@@ -1784,7 +1789,7 @@ nMaxJobsSubmitHTCondorDef=15000
 nMaxJobsSubmitHTCondor=${nMaxJobsSubmitHTCondorDef}
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgo:sctakfvBSCMid:p:R:P:n:N:U" opt ; do
+while getopts  ":hgo:sctakfvBSCMid:p:R:P:n:N:wU" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1897,6 +1902,10 @@ while getopts  ":hgo:sctakfvBSCMid:p:R:P:n:N:U" opt ; do
 	    # verbose
 	    lverbose=true
 	    ;;
+	w)
+	    # submit any .list left behind
+	    lFinaliseHTCondor=true
+	    ;;
 	U)
 	    # unlock currently locked folder
 	    lunlockRun6T=true
@@ -1917,12 +1926,12 @@ done
 shift "$(($OPTIND - 1))"
 # user's request
 # - actions
-if ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} && ! ${lunlockRun6T} ; then
+if ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} && ! ${lunlockRun6T} && ! ${lFinaliseHTCondor} ; then
     how_to_use
     echo "No action specified!!! aborting..."
     exit 1
 fi
-if ${lunlockRun6T} && ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} ; then
+if ${lunlockRun6T} && ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} && ! ${lFinaliseHTCondor} ; then
     # only unlocking -> set_env.sh should not overwrite sixdeskenv/sysenv anyway
     doNotOverwrite="-e"
 fi
@@ -2091,6 +2100,11 @@ trap "printSummary; sixdeskexit  1" SIGINT
 trap "printSummary; sixdeskexit  2" SIGQUIT
 trap "printSummary; sixdeskexit 11" SIGSEGV
 trap "printSummary; sixdeskexit  8" SIGFPE
+
+# submit any .list left behind
+if ${lFinaliseHTCondor} ; then
+    condor_sub
+fi
 
 # preparation to main loop
 if ${lgenerate} || ${lfix} ; then
