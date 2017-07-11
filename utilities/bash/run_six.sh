@@ -1045,6 +1045,9 @@ function dot_boinc(){
 }
 
 function condor_sub(){
+    echo ""
+    printf "=%.0s" {1..80}
+    echo ""
     if [ ! -e ${sixdeskjobs}/${LHCDesName}.list ] ; then
 	sixdeskmess -1 "List of tasks not there: ${sixdeskjobs}/${LHCDesName}.list"
     elif [ `wc -l ${sixdeskjobs}/${LHCDesName}.list 2> /dev/null | awk '{print ($1)}'` -eq 0 ] ; then
@@ -1053,12 +1056,13 @@ function condor_sub(){
     else
 	cd ${sixdesktrack}
 	iBatch=$((${nQueued}/${nMaxJobsSubmitHTCondor}))
-	if [ ${iBatch} -eq 0 ] ; then
+	let iBatch+=1
+	if [ ${iBatch} -eq 1 ] ; then
             batch_name="run_six/$workspace/$LHCDescrip"
 	else
             batch_name="run_six/$workspace/${LHCDescrip}/${iBatch}"
 	fi
-	sixdeskmess -1 "Submitting jobs to $sixdeskplatform from dir $PWD \"$batch_name\""
+	sixdeskmess -1 "Submitting jobs to $sixdeskplatform from dir $PWD - batch name: \"$batch_name\""
 	sixdeskmess  1 "Depending on the number of points in the scan, this operation can take up to few minutes."
 	# let's renew the kerberos token just before submitting
 	sixdeskmess 2 "renewing kerberos token before submission to HTCondor"
@@ -1097,6 +1101,10 @@ function condor_sub(){
 	fi
 	cd - > /dev/null 2>&1
     fi
+    echo ""
+    printf "=%.0s" {1..80}
+    echo ""
+    echo ""
 }
 
 function dot_megaZip(){
