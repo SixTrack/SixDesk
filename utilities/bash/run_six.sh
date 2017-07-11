@@ -63,6 +63,7 @@ function how_to_use() {
    -n      renew kerberos token every n jobs (default: ${NrenewKerberosDef})
    -N      an HTCondor cluster of jobs should be composed of at most
               N jobs (active only in case of HTCondor - default: ${nMaxJobsSubmitHTCondorDef}).
+           this option can be used also for submitting incomplete_cases
    -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
                0: only error messages and basic output 
                1: full output
