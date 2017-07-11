@@ -62,6 +62,9 @@ function how_to_use() {
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
    -n      renew kerberos token every n jobs (default: ${NrenewKerberosDef})
+   -N      an HTCondor cluster of jobs should be composed of at most
+              N jobs (active only in case of HTCondor - default: ${nMaxJobsSubmitHTCondorDef}).
+           this option can be used also for submitting incomplete_cases
    -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
                0: only error messages and basic output 
                1: full output
@@ -1057,6 +1060,61 @@ function dot_boinc(){
     return $__lerr
 }
 
+function condor_sub(){
+    if [ ! -e ${sixdeskjobs}/${LHCDesName}.list ] ; then
+	sixdeskmess -1 "List of tasks not there: ${sixdeskjobs}/${LHCDesName}.list"
+    elif [ `wc -l ${sixdeskjobs}/${LHCDesName}.list 2> /dev/null | awk '{print ($1)}'` -eq 0 ] ; then
+	sixdeskmess -1 "Empty list of tasks: ${sixdeskjobs}/${LHCDesName}.list"
+	rm -f ${sixdeskjobs}/${LHCDesName}.list
+    else
+	cd ${sixdesktrack}
+	iBatch=$((${nQueued}/${nMaxJobsSubmitHTCondor}))
+	if [ ${iBatch} -eq 0 ] ; then
+            batch_name="run_six/$workspace/$LHCDescrip"
+	else
+            batch_name="run_six/$workspace/${LHCDescrip}/${iBatch}"
+	fi
+	sixdeskmess -1 "Submitting jobs to $sixdeskplatform from dir $PWD \"$batch_name\""
+	sixdeskmess  1 "Depending on the number of points in the scan, this operation can take up to few minutes."
+	# let's renew the kerberos token just before submitting
+	sixdeskmess 2 "renewing kerberos token before submission to HTCondor"
+	sixdeskRenewKerberosToken
+	multipleTrials "terseString=\"\`condor_submit -batch-name ${batch_name} -terse ${sixdeskjobs}/htcondor_run_six.sub\`\" " "[ -n \"\${terseString}\" ]" "Problem at condor_submit"
+	let __lerr+=$?
+	if [ ${__lerr} -ne 0 ] ; then
+	    sixdeskmess -1 "Something wrong with htcondor submission: submission didn't work properly - exit status: ${__lerr}"
+	    # clean
+	    while read tmpDir ; do
+		rm -f ${tmpDir}/JOB_NOT_YET_STARTED 
+	    done < ${sixdeskjobs}/${LHCDesName}.list
+	else
+	    sixdeskmess -1 "Submission was successful"
+	    # parse terse output (example: "23548.0 - 23548.4")
+	    clusterID=`echo "${terseString}" | head -1 | cut -d\- -f2 | cut -d\. -f1`
+	    clusterID=${clusterID//\ /}
+	    jobIDmax=`echo "${terseString}" | head -1 | cut -d\- -f2 | cut -d\. -f2`
+	    let jobIDmax+=1
+	    nCases=`wc -l ${sixdeskjobs}/${LHCDesName}.list | awk '{print ($1)}'`
+	    if [ ${jobIDmax} -ne ${nCases} ] ; then
+		sixdeskmess -1 "Something wrong with htcondor submission: I requested ${nCases} to be submitted, and only ${jobIDmax} actually made it!"
+	    fi
+	    # save taskIDs
+	    sixdeskmess -1 "Updating DB..."
+	    sixdeskmess  1 "Depending on the number of points in the scan, this operation can take up to few minutes."
+	    ii=0
+	    while read tmpDir ; do
+		taskid="htcondor${clusterID}.${ii}"
+		Runnam=$(sixdeskFromJobDirToJobName ${tmpDir} ${lbackcomp})
+		updateTaskIdsCases $sixdeskjobs/jobs $sixdeskjobs/incomplete_jobs $taskid $Runnam
+		let NsuccessSub+=1
+		let ii+=1
+	    done < ${sixdeskjobs}/${LHCDesName}.list
+	    rm -f ${sixdeskjobs}/${LHCDesName}.list
+	fi
+	cd - > /dev/null 2>&1
+    fi
+}
+
 function dot_megaZip(){
 
     local __megaZipFileName=$1
@@ -1535,8 +1593,11 @@ function treatLong(){
 			    local __subSuccess=$?
 	        	elif [ "$sixdeskplatform" == "htcondor" ] ; then
 	        	    dot_htcondor
-			    # actual submission has not taken place
 			    local __subSuccess=1
+			    let nQueued+=1
+			    if  [ $((${nQueued}%${nMaxJobsSubmitHTCondor})) -eq 0 ] ; then
+				condor_sub
+			    fi
 	        	elif [ "$sixdeskplatform" == "boinc" ] ; then
 	        	    dot_boinc
 			    local __subSuccess=$?
@@ -1727,9 +1788,11 @@ sixdeskplatformDefIncomplete="htcondor"
 currPythonPath=""
 NrenewKerberosDef=10000
 NrenewKerberos=${NrenewKerberosDef}
+nMaxJobsSubmitHTCondorDef=15000
+nMaxJobsSubmitHTCondor=${nMaxJobsSubmitHTCondorDef}
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgo:sctakfvBlSCMid:p:R:P:n:U" opt ; do
+while getopts  ":hgo:sctakfvBlSCMid:p:R:P:n:N:U" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1828,6 +1891,17 @@ while getopts  ":hgo:sctakfvBlSCMid:p:R:P:n:U" opt ; do
 	    if [ $? -ne 0 ] 2>/dev/null; then
 		how_to_use
 		echo "-n argument option is not a number!"
+		exit 1
+	    fi
+	    ;;
+	N)
+	    # max number of jobs per HTCondor cluster
+	    nMaxJobsSubmitHTCondor=${OPTARG}
+	    # check it is actually a number
+	    let nMaxJobsSubmitHTCondor+=0
+	    if [ $? -ne 0 ] 2>/dev/null; then
+		how_to_use
+		echo "-N argument option is not a number!"
 		exit 1
 	    fi
 	    ;;
@@ -1971,6 +2045,7 @@ if ${lunlockRun6T} ; then
     fi
 fi
 
+nQueued=0 # for limiting number of jobs in HTCondor cluster
 nConsidered=0
 NsuccessFix=0
 NsuccessGen=0
@@ -2283,14 +2358,16 @@ fi
 # main loop
 if ${lincomplete} ; then
     # fill in the list of points to be submitted from $sixdeskwork/incomplete_cases
-    allCases=`cat $sixdeskwork/incomplete_cases`
-    allCases=( ${allCases} )
-    for runnamename in ${allCases[@]} ; do
+    while read runnamename ; do
 	sixdeskrundir true
 	sixdeskSanitizeString "${rundirname}" Rundir
 	echo ${Rundir} >> ${sixdeskjobs}/${LHCDesName}.list
 	let nConsidered+=1
-    done
+	let nQueued+=1
+	if  [ $((${nQueued}%${nMaxJobsSubmitHTCondor})) -eq 0 ] ; then
+	    condor_sub
+	fi
+    done < $sixdeskwork/incomplete_cases
 else
     if ${lrestart} ; then
         iMadStart=${MADseedFromName}
@@ -2445,60 +2522,9 @@ if ${lrestart} ; then
 fi
 
 # HTCondor: run the actual command
-if ${lsubmit} ; then
-    if [ "$sixdeskplatform" == "htcondor" ] ; then
-	if [ ! -e ${sixdeskjobs}/${LHCDesName}.list ] ; then
-	    sixdeskmess -1 "List of tasks not there: ${sixdeskjobs}/${LHCDesName}.list"
-	elif [ `wc -l ${sixdeskjobs}/${LHCDesName}.list 2> /dev/null | awk '{print ($1)}'` -eq 0 ] ; then
-	    sixdeskmess -1 "Empty list of tasks: ${sixdeskjobs}/${LHCDesName}.list"
-	    rm -f ${sixdeskjobs}/${LHCDesName}.list
-	else
-	    cd ${sixdesktrack}
-            batch_name="run_six/$workspace/$LHCDescrip"
-	    sixdeskmess -1 "Submitting jobs to $sixdeskplatform from dir $PWD \"$batch_name\""
-	    sixdeskmess  1 "Depending on the number of points in the scan, this operation can take up to few minutes."
-	    allCases=`cat ${sixdeskjobs}/${LHCDesName}.list`
-	    allCases=( ${allCases} )
-	    # let's renew the kerberos token just before submitting
-	    sixdeskmess 2 "renewing kerberos token before submission to HTCondor"
-	    sixdeskRenewKerberosToken
-	    multipleTrials "terseString=\"\`condor_submit -batch-name ${batch_name} -terse ${sixdeskjobs}/htcondor_run_six.sub\`\" " "[ -n \"\${terseString}\" ]" "Problem at condor_submit"
-	    let __lerr+=$?
-	    if [ ${__lerr} -ne 0 ] ; then
-		sixdeskmess -1 "Something wrong with htcondor submission: submission didn't work properly - exit status: ${__lerr}"
-		jobIDmax=${#allCases[@]}
-		# clean
-		for (( ii=0; ii<${jobIDmax}; ii++ )) ; do
-		    rm -f ${allCases[$ii]}/JOB_NOT_YET_STARTED 
-		done
-	    else
-		sixdeskmess -1 "Submission was successful"
-		# parse terse output (example: "23548.0 - 23548.4")
-		clusterID=`echo "${terseString}" | head -1 | cut -d\- -f2 | cut -d\. -f1`
-		clusterID=${clusterID//\ /}
-		jobIDmax=`echo "${terseString}" | head -1 | cut -d\- -f2 | cut -d\. -f2`
-		let jobIDmax+=1
-		if [ ${jobIDmax} -ne ${#allCases[@]} ] ; then
-		    sixdeskmess -1 "Something wrong with htcondor submission: I requested ${#allCases[@]} to be submitted, and only ${jobIDmax} actually made it!"
-		    if [ ${#allCases[@]} -lt ${jobIDmax} ] ; then
-			jobIDmax=${#allCases[@]}
-		    fi
-		fi
-		# save taskIDs
-		sixdeskmess -1 "Updating DB..."
-		sixdeskmess  1 "Depending on the number of points in the scan, this operation can take up to few minutes."
-		for (( ii=0; ii<${jobIDmax}; ii++ )) ; do
-		    let jj=$ii-1
-		    taskid="htcondor${clusterID}.${ii}"
-		    Runnam=$(sixdeskFromJobDirToJobName ${allCases[$ii]} ${lbackcomp})
-		    updateTaskIdsCases $sixdeskjobs/jobs $sixdeskjobs/incomplete_jobs $taskid $Runnam
-		    let NsuccessSub+=1
-		done
-		rm -f ${sixdeskjobs}/${LHCDesName}.list
-	    fi
-	    cd - > /dev/null 2>&1
-	fi
-    fi
+if ${lsubmit} && [ "$sixdeskplatform" == "htcondor" ] && [ $((${nQueued}%${nMaxJobsSubmitHTCondor})) -ne 0 ] ; then
+    # submit the remaining jobs
+    condor_sub
 fi
 
 # megaZip, in case of boinc
