@@ -6,10 +6,20 @@
 function how_to_use() {
     cat <<EOF
 
-   `basename $0` [option]
+   `basename $0` [option] [<study_name>] [<platform>]
    to retrieve boinc results
 
    options (optional)
+   -d      study name (when running many jobs in parallel)
+           NB: this option has been implemented to keep the same
+               interface as for other main scripts. In case the
+               first optional argument is given, that one will
+               overwrite the value of this option;
+   -p      platform name (when running many jobs in parallel)
+           NB: this option has been implemented to keep the same
+               interface as for other main scripts. In case the
+               second optional argument is given, that one will
+               overwrite the value of this option;
    -U      unlock dirs necessary to the script to run
            PAY ATTENTION when using this option, as no check whether the lock
               belongs to this script or not is performed, and you may screw up
@@ -336,6 +346,9 @@ function downloadNewResults(){
 	unknown="false"
 	
 #MACRO mymess 1 Now treating TaskID $taskid
+	echo ""
+	printf '.%.0s' {1..80}
+	echo ""
 	sixdeskmess -1 "Now treating TaskID $taskid"
 #MACRO mymess
 	
@@ -1248,7 +1261,7 @@ function downloadNewResults(){
 		sixdeskmess 1 "Download FAILED for $taskid : $where  !!!"
 #MACRO mymess
 		
-		let failed+=1
+		let __failed+=1
 		touch $sixdesklogdir/sixdeskerror.log
 		grep "^$taskid " $sixdesklogdir/sixdeskerror.log > /dev/null 2>&1
 		if test $? -ne 0
@@ -1259,7 +1272,7 @@ function downloadNewResults(){
 	fi
 	if test "$duplicate" = "true" 
 	then
-	    let duplicated+=1
+	    let __duplicated+=1
 	    
 #MACRO mymess 1 $taskid ignored (duplicate/redundant result)
 	    sixdeskmess 1 "$taskid ignored (duplicate/redundant result)"
@@ -1284,6 +1297,9 @@ function downloadNewResults(){
     # end of all tasks
     rm -f ${__sixdesktasklist}
 
+    echo ""
+    printf '.%.0s' {1..80}
+    echo ""
     sixdeskmess -1 "In this batch of ${tmpReady} ready results, ${__ok} were downloaded successfully, ${__duplicated} were deleted as duplicate/redundant, and ${__failed} failed."
 
     let ok+=${__ok}
@@ -1341,7 +1357,7 @@ optArgCurrPlatForm=""
 unlockSetEnv=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hBtzo:n:U" opt ; do
+while getopts  ":hBtxo:n:d:p:U" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -1372,6 +1388,15 @@ while getopts  ":hBtzo:n:U" opt ; do
 	    # output option
 	    check_output_option
 	    ;;	
+	d)
+	    # the user is requesting a specific study
+	    optArgCurrStudy="-d ${OPTARG}"
+	    doNotOverwrite="-e"
+	    ;;
+	p)
+	    # the user is requesting a specific platform
+	    optArgCurrPlatForm="-p ${OPTARG}"
+	    ;;
 	U)
 	    # unlock currently locked folder
 	    lunlockRunRes=true
@@ -1583,6 +1608,9 @@ failed=0
 iTreated=0
 
 echo ""
+printf '=%.0s' {1..80}
+echo ""
+echo ""
 sixdeskmess -1 "looking for results in $sixdeskboincdir/results"
 
 # get list of new results originally from CPU resource
@@ -1597,6 +1625,9 @@ downloadNewResults $sixdeskboincdir/results $sixdesktasklist ""
 update_cases
 
 echo ""
+printf '=%.0s' {1..80}
+echo ""
+echo ""
 
 # look into downloadDir: in case zipped files are there, then
 #    download all results there contained
@@ -1610,6 +1641,9 @@ for tmpArchive in ${allArchives} ; do
     tmpArchiveDir=`dirname ${tmpArchive}`
     tmpExtractDir=/tmp/${tmpArchiveName//.zip/}
 
+    echo ""
+    printf '=%.0s' {1..80}
+    echo ""
     echo ""
     sixdeskmess -1 "You have results in ${tmpArchiveDir} archived in ${tmpArchiveName}!!"
     sixdeskmess -1 "I will download them as well!!"
@@ -1641,6 +1675,9 @@ for tmpArchive in ${allArchives} ; do
     # reset trap
     trap - 0
 
+    echo ""
+    printf '=%.0s' {1..80}
+    echo ""
     echo ""
 
 done

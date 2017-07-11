@@ -23,6 +23,7 @@
         <file_name><OUTFILE_1/></file_name>
         <open_name>Sixout.zip</open_name>
         <no_validate>1</no_validate>
+        <optional>1</optional> 
 	<copy_file/>
     </file_ref>
     <report_immediately/>

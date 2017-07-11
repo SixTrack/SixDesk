@@ -7,22 +7,34 @@ restaFile='../assimilatorRestart.txt'
 set xdata time
 set timefmt '%Y-%m-%d %H:%M:%S'
 set format x '%Y-%m-%d %H:%M'
+set xtics 3600*24 rotate by 90 right
+set grid xtics lt 0 lw 1
+tMin=strptime("%Y-%m-%d %H:%M:%S","2017-06-15 00:00:00")
+set xrange [tMin:*]
 ybar=500
-M=1
+M=0.1
 # typical enlarged window size: 1900,400
 # trigger use of png or interactive windows: 0: png, 1: interactive
 linteractive=1
-rightNowPNG=system('date +"%F_%H-%M-%S"')
+lprintDate=0 # 0: no date/time in png name; 1: date/time in png name
+xSizeWdw=1200#regular: 1000
+ySizeWdw=400#regular: 400
+
+if ( lprintDate==0 ) {
+rightNowPNG=''
+} else {
+rightNowPNG=system('date +"_%F_%H-%M-%S"')
+}
 
 # ------------------------------------------------------------------------------
 # general overview of server status
 # ------------------------------------------------------------------------------
 currTitle='server overview'
 if ( linteractive==0 ) {
-set term png font "Times-Roman" size 1200,400 notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/serverOverview_'.rightNowPNG.'.png'
+set term png font "Times-Roman" size xSizeWdw,ySizeWdw notransparent enhanced
+set output '/home/amereghe/Downloads/boincStatus/serverOverview'.rightNowPNG.'.png'
 } else {
-set term qt 0 title currTitle font "Times-Roman" size 1000,400
+set term qt 0 title currTitle font "Times-Roman" size xSizeWdw,ySizeWdw
 }
 set multiplot title currTitle
 set key outside horizontal
@@ -30,15 +42,11 @@ set ylabel 'tasks in progress/ready to send [10^3]'
 set ytics nomirror
 set y2label 'tasks waiting for assimilation' tc rgb 'blue'
 set y2tics tc rgb 'blue'
-set xtics 3600*24 rotate by 90 right
-set grid xtics lt 0 lw 1
-tMin=strptime("%Y-%m-%d %H:%M:%S","2017-05-05 00:00:00")
-set xrange [tMin:*]
 nLines=system("wc -l ".restaFile." | awk '{print ($1)}'")
 plot \
      '< cat 2017-??/server_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
-     ''               index 0 using 1:6 with linespoints axis x1y2 pt 7 ps 1 lt 2 lw 1 lc rgb 'blue' notitle,\
      ''               index 0 using 1:($3/1000*M) with linespoints pt 7 ps 1 lt 2 lw 1 lc rgb 'green' title 'ready to send '.gprintf('(x1/%.1f)',M),\
+     ''               index 0 using 1:6 with linespoints axis x1y2 pt 7 ps 1 lt 2 lw 1 lc rgb 'blue' notitle,\
      restartFile index 0 using 1:(ybar) with impulses lt -1 lw 2 notitle,\
      '< paste '.stuckFile.' '.restaFile.' | head -n'.nLines index 0 using 1:(0.5*ybar):1:3 with xerrorbars lt -1 lw 1 notitle
      
@@ -53,10 +61,10 @@ unset multiplot
 # credit
 currTitle='credit'
 if ( linteractive==0 ) {
-set term png font "Times-Roman" size 1200,400 notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/creditOverview_'.rightNowPNG.'.png'
+set term png font "Times-Roman" size xSizeWdw,ySizeWdw notransparent enhanced
+set output '/home/amereghe/Downloads/boincStatus/creditOverview'.rightNowPNG.'.png'
 } else {
-set term qt 1 title currTitle font "Times-Roman" size 1000,400
+set term qt 1 title currTitle font "Times-Roman" size xSizeWdw,ySizeWdw
 }
 set title currTitle
 set key outside horizontal
@@ -74,10 +82,10 @@ plot \
 # gigaflops
 currTitle='TeraFLOPs'     
 if ( linteractive==0 ) {
-set term png font "Times-Roman" size 1200,400 notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/teraFLOPsOverview_'.rightNowPNG.'.png'
+set term png font "Times-Roman" size xSizeWdw,ySizeWdw notransparent enhanced
+set output '/home/amereghe/Downloads/boincStatus/teraFLOPsOverview'.rightNowPNG.'.png'
 } else {
-set term qt 2 title currTitle font "Times-Roman" size 1000,400
+set term qt 2 title currTitle font "Times-Roman" size xSizeWdw,ySizeWdw
 }
 set title currTitle
 set key outside horizontal
@@ -93,10 +101,10 @@ unset title
 # WUs waiting for validation
 currTitle='Validation'     
 if ( linteractive==0 ) {
-set term png font "Times-Roman" size 1200,400 notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/validationOverview_'.rightNowPNG.'.png'
+set term png font "Times-Roman" size xSizeWdw,ySizeWdw notransparent enhanced
+set output '/home/amereghe/Downloads/boincStatus/validationOverview'.rightNowPNG.'.png'
 } else {
-set term qt 3 title currTitle font "Times-Roman" size 1000,400
+set term qt 3 title currTitle font "Times-Roman" size xSizeWdw,ySizeWdw
 }
 set title currTitle
 set key outside horizontal
@@ -114,10 +122,10 @@ unset title
 # ------------------------------------------------------------------------------
 currTitle='SixTrack app'
 if ( linteractive==0 ) {
-set term png font "Times-Roman" size 1200,400 notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/sixtrackOverview_'.rightNowPNG.'.png'
+set term png font "Times-Roman" size xSizeWdw,ySizeWdw notransparent enhanced
+set output '/home/amereghe/Downloads/boincStatus/sixtrackOverview'.rightNowPNG.'.png'
 } else {
-set term qt 4 title currTitle font "Times-Roman" size 1000,400
+set term qt 4 title currTitle font "Times-Roman" size xSizeWdw,ySizeWdw
 }
 set multiplot title currTitle
 set key outside horizontal
@@ -129,8 +137,8 @@ set xtics rotate by 90 right
 set grid xtics lt 0 lw 1
 plot \
      '< cat 2017-??/SixTrack_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
-     ''               index 0 using 1:5 with linespoints axis x1y2 pt 7 ps 1 lt 2 lw 1 lc rgb 'blue' notitle,\
-     ''               index 0 using 1:($3/1000*M) with linespoints pt 7 ps 1 lt 2 lw 1 lc rgb 'green' title 'ready to send '.gprintf('(x1/%.1f)',M)
+     ''               index 0 using 1:($3/1000*M) with linespoints pt 7 ps 1 lt 2 lw 1 lc rgb 'green' title 'ready to send '.gprintf('(x1/%.1f)',M),\
+     ''               index 0 using 1:5 with linespoints axis x1y2 pt 7 ps 1 lt 2 lw 1 lc rgb 'blue' notitle
 unset grid
 set grid ytics lt 0 lw 1
 replot
@@ -144,10 +152,10 @@ unset multiplot
 # ------------------------------------------------------------------------------
 currTitle='sixtracktest app'
 if ( linteractive==0 ) {
-set term png font "Times-Roman" size 1200,400 notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/sixtracktestOverview_'.rightNowPNG.'.png'
+set term png font "Times-Roman" size xSizeWdw,ySizeWdw notransparent enhanced
+set output '/home/amereghe/Downloads/boincStatus/sixtracktestOverview'.rightNowPNG.'.png'
 } else {
-set term qt 5 title currTitle font "Times-Roman" size 1000,400
+set term qt 5 title currTitle font "Times-Roman" size xSizeWdw,ySizeWdw
 }
 set multiplot title currTitle
 set key outside horizontal
@@ -159,8 +167,8 @@ set xtics rotate by 90 right
 set grid xtics lt 0 lw 1
 plot \
      '< cat 2017-??/sixtracktest_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
-     ''               index 0 using 1:5 with linespoints axis x1y2 pt 7 ps 1 lt 2 lw 1 lc rgb 'blue' notitle,\
-     ''               index 0 using 1:($3/1000*M) with linespoints pt 7 ps 1 lt 2 lw 1 lc rgb 'green' title 'ready to send '.gprintf('(x1/%.1f)',M)
+     ''               index 0 using 1:($3/1000*M) with linespoints pt 7 ps 1 lt 2 lw 1 lc rgb 'green' title 'ready to send '.gprintf('(x1/%.1f)',M),\
+     ''               index 0 using 1:5 with linespoints axis x1y2 pt 7 ps 1 lt 2 lw 1 lc rgb 'blue' notitle
 unset grid
 set grid ytics lt 0 lw 1
 replot
