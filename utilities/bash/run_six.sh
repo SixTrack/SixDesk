@@ -1045,6 +1045,7 @@ function dot_boinc(){
 }
 
 function condor_sub(){
+    local __lerr=0
     echo ""
     printf "=%.0s" {1..80}
     echo ""
@@ -1105,6 +1106,7 @@ function condor_sub(){
     printf "=%.0s" {1..80}
     echo ""
     echo ""
+    return ${__lerr}
 }
 
 function dot_megaZip(){
