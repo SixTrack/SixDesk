@@ -1621,57 +1621,69 @@ echo ""
 
 # look into downloadDir: in case zipped files are there, then
 #    download all results there contained
-allArchives=`ls -1 ${downloadDir}/????-??-??/${workspace}_${currStudy}_*.zip 2> /dev/null`
+allArchives=`ls -1 ${downloadDir}/????-??-??/${workspace}_${currStudy}__*.zip 2> /dev/null`
 if ${lreconsiderDelete} ; then
-    allArchives="${allArchives} `ls -1 ${downloadDir}/*/delete/${workspace}_${currStudy}_*.zip 2> /dev/null`"
+    allArchives="${allArchives} `ls -1 ${downloadDir}/*/delete/${workspace}_${currStudy}__*.zip 2> /dev/null`"
 fi
-for tmpArchive in ${allArchives} ; do
-
-    tmpArchiveName=`basename ${tmpArchive}`
-    tmpArchiveDir=`dirname ${tmpArchive}`
-    tmpExtractDir=/tmp/${tmpArchiveName//.zip/}
-
+if [ -z "${allArchives}" ] ; then
     echo ""
     printf '=%.0s' {1..80}
     echo ""
     echo ""
-    sixdeskmess -1 "You have results in ${tmpArchiveDir} archived in ${tmpArchiveName}!!"
-    sixdeskmess -1 "I will download them as well!!"
-
-    # set trap
-    trap "rm -rf ${tmpExtractDir}" 0
-
-    unzip ${tmpArchive} -d ${tmpExtractDir}
-
-    # get list of new results originally from CPU resource
-    # it produces:
-    # - sixdesktasklist: a file with the takslist of results (eg boincXXXX)
-    getListNewResults ${tmpExtractDir}
-
-    # download results and save them in track tree
-    downloadNewResults ${tmpExtractDir} $sixdesktasklist "_0"
-
-    # update the my* DB
-    update_cases
-    
-    if [ $? -eq 0 ] ; then
+    sixdeskmess -1 "No results for the time being in ${downloadDir}"
+    echo ""
+    printf '=%.0s' {1..80}
+    echo ""
+    echo ""
+else
+    for tmpArchive in ${allArchives} ; do
+	
+	tmpArchiveName=`basename ${tmpArchive}`
+	tmpArchiveDir=`dirname ${tmpArchive}`
+	tmpExtractDir=/tmp/${tmpArchiveName//.zip/}
+	
+	echo ""
+	printf '=%.0s' {1..80}
+	echo ""
+	echo ""
+	sixdeskmess -1 "You have results in ${tmpArchiveDir} archived in ${tmpArchiveName}!!"
+	sixdeskmess -1 "I will download them as well!!"
+	
+	# set trap
+	trap "rm -rf ${tmpExtractDir}" 0
+	
+	unzip ${tmpArchive} -d ${tmpExtractDir}
+	
+	# get list of new results originally from CPU resource
+	# it produces:
+	# - sixdesktasklist: a file with the takslist of results (eg boincXXXX)
+	getListNewResults ${tmpExtractDir}
+	
+	# download results and save them in track tree
+	downloadNewResults ${tmpExtractDir} $sixdesktasklist "_0"
+	
+	# update the my* DB
+	update_cases
+	
+	if [ $? -eq 0 ] ; then
 	# mv in delete only brand new results
-	if [[ "${tmpArchive}" != *"/delete/"* ]] ; then
+	    if [[ "${tmpArchive}" != *"/delete/"* ]] ; then
 	    mv ${tmpArchive} ${tmpArchiveDir}/delete/${tmpArchiveName}
+	    fi
 	fi
-    fi
-
-    rm -rf ${tmpExtractDir}
-    # reset trap
-    trap - 0
-
-    echo ""
-    printf '=%.0s' {1..80}
-    echo ""
-    echo ""
-
-done
-
+	
+	rm -rf ${tmpExtractDir}
+	# reset trap
+	trap - 0
+	
+	echo ""
+	printf '=%.0s' {1..80}
+	echo ""
+	echo ""
+    
+    done
+fi
+    
 sixdeskmess -1 "Before this run of `basename $0`: $cases total cases, $ccases complete ($icases incomplete)"
 
 if test "$ready" -ne 0
