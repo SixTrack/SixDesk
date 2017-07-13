@@ -272,7 +272,7 @@ do
 
           fi
           #
-          if [ ! -a "$dir16"/fort.2_"$i".gz ] ;then
+          if [ ! -e "$dir16"/fort.2_"$i".gz ] ;then
 
 #MACRO mymess 0 No SIXTRACK geometry file (fort.2): Run stopped
             sixdeskmesslevel=0
@@ -298,7 +298,7 @@ do
 #MACRO myexit
 
           fi
-          if [ ! -a $sixdeskjobs_logs/fort.3 ] ;then
+          if [ ! -e $sixdeskjobs_logs/fort.3 ] ;then
 
 #MACRO mymess 0 No SIXTRACK control file (fort.3): Run stopped
             sixdeskmesslevel=0
@@ -324,7 +324,7 @@ do
 #MACRO myexit
 
           fi
-          if [ ! -a "$dir16"/fort.8_"$i".gz ] ;then
+          if [ ! -e "$dir16"/fort.8_"$i".gz ] ;then
 
 #MACRO mymess 0 No SIXTRACK misalignment file (fort.8): dummy file created
             sixdeskmesslevel=0
@@ -334,7 +334,7 @@ do
             touch "$tree"/"$Rundir"/fort.8
             gzip "$tree"/"$Rundir"/fort.8
           fi
-          if [ ! -a "$dir16"/fort.16_"$i".gz ] ;then
+          if [ ! -e "$dir16"/fort.16_"$i".gz ] ;then
 
 #MACRO mymess 0 No SIXTRACK error file (fort.16): dummy file created
             sixdeskmesslevel=0
