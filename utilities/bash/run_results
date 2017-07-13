@@ -1344,8 +1344,8 @@ downloadDir=/afs/cern.ch/work/b/boinc/download
 lunlockRunRes=false
 NrenewKerberosDef=2000
 NrenewKerberos=${NrenewKerberosDef}
-optArgCurrStudy=""
-doNotOverwrite=""
+optArgCurrStudy="-s"
+doNotOverwrite="-e"
 optArgCurrPlatForm=""
 unlockSetEnv=""
 
@@ -1381,7 +1381,6 @@ while getopts  ":hBto:n:d:p:U" opt ; do
 	d)
 	    # the user is requesting a specific study
 	    optArgCurrStudy="-d ${OPTARG}"
-	    doNotOverwrite="-e"
 	    ;;
 	p)
 	    # the user is requesting a specific platform
@@ -1413,7 +1412,6 @@ OPTIND=1
 # optional arguments
 if [ -n "$1" ] ; then
     optArgCurrStudy="-d $1"
-    doNotOverwrite="-e"
 fi
 if [ -n "$2" ] ; then
     optArgCurrPlatForm="-p $2"
@@ -1433,14 +1431,20 @@ printf "=%.0s" {1..80}
 echo ""
 echo ""
 
+# locking dirs
+lockingDirs=( $sixdeskstudy )
+
 if ${loutform} ; then
     sixdesklevel=${sixdesklevel_option}
 fi
 
 # unlock
 if ${lunlockRunRes} ; then
-    sixdeskunlock $sixdeskstudy
+    sixdeskunlockAll
 fi
+
+# setting traps
+trap "sixdeskexit  199" EXIT
 
 # set boinc vars
 sixDeskSetBOINCVars
@@ -1483,8 +1487,8 @@ then
 fi
 
 #MACRO mylock $sixdeskstudy
-sixdesklockdir=$sixdeskstudy
-sixdesklock
+#sixdesklockdir=$sixdeskstudy
+#sixdesklock
 #MACRO mylock
 
 
@@ -1748,6 +1752,8 @@ sixdesklockdir=$sixdeskstudy
 sixdeskunlock
 #MACRO myunlock
 
+# resetting trap
+trap - EXIT
 
 #MACRO myexit 0
 sixdeskexitparam=0
