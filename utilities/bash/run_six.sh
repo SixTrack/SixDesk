@@ -685,45 +685,6 @@ function submitBetaJob(){
     
 }
 
-function parseBetaValues(){
-
-    local __betaWhere=$1
-
-    # check that the betavalues file contains all the necessary values
-    nBetas=`cat $__betaWhere/betavalues | wc -w`
-    if [ $nBetas -ne 14 ] ; then
-        sixdeskmess -1 "betavalues has $nBetas words!!! Should be 14!"
-	exit
-    fi
-
-    # check that the beta values are not NULL and notify user
-    beta_x=`gawk '{print $1}' $__betaWhere/betavalues`
-    beta_x2=`gawk '{print $2}' $__betaWhere/betavalues`
-    beta_y=`gawk '{print $3}' $__betaWhere/betavalues`
-    beta_y2=`gawk '{print $4}' $__betaWhere/betavalues`
-    if test "$beta_x" = "" -o "$beta_y" = "" -o "$beta_x2" = "" -o "beta_y2" = "" ; then
-        # clean up for a retry by removing old betavalues
-	# anyway, this run was not ok...
-        sixdeskmess -1 "One or more betavalues are NULL !!!"
-        sixdeskmess -1 "Look in $sixdeskjobs_logs to see SixTrack input and output."
-        sixdeskmess -1 "Check the file lin_old which contains the SixTrack fort.6 output."
-	exit
-    fi
-    sixdeskmess  1 "Betavalues:"
-    sixdeskmess  1 "beta_x[2] $beta_x $beta_x2 - beta_y[2] $beta_y $beta_y2"
-
-    # notify user other variables
-    fhtune=`gawk '{print $5}' $__betaWhere/betavalues`
-    fvtune=`gawk '{print $6}' $__betaWhere/betavalues`
-    fchromx=`gawk '{print $7}' $__betaWhere/betavalues`
-    fchromy=`gawk '{print $8}' $__betaWhere/betavalues`
-    fclosed_orbit=`gawk '{print $9" "$10" "$11" "$12" "$13" "$14}' $__betaWhere/betavalues`
-    sixdeskmess  1 "Chromaticity: $fchromx $fchromy"
-    sixdeskmess  1 "Tunes: $fhtune $fvtune"
-    sixdeskmess  1 "Closed orbit: $fclosed_orbit"
-
-}
-
 function submitCreateRundir(){
     # this function is called after a sixdeskDefinePointTree, with the check
     #    that RunDirFullPath and actualDirNameFullPath are non-zero length strings
