@@ -1023,6 +1023,13 @@ function condor_sub(){
     else
 	cd ${sixdesktrack}
 	iBatch=$((${nQueued}/${nMaxJobsSubmitHTCondor}))
+	if [ ${iBatch} -eq 0 ] ; then
+	    sixdeskmess 1 "checking if there are already some condor clusters from the same workspace/study ..."
+	    i0Batch=`condor_q -wide | grep run_six/$workspace/$LHCDescrip | awk '{print ($2)}' | cut -d\/ -f4 | sort | tail -1`
+	    if [ -n "${i0Batch}" ] ; then
+		iBatch=${i0Batch}
+	    fi
+	fi
 	let iBatch+=1
 	if [ ${iBatch} -eq 1 ] ; then
             batch_name="run_six/$workspace/$LHCDescrip"
