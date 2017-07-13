@@ -29,6 +29,9 @@ function how_to_use() {
            PAY ATTENTION when using this option, as no check whether the lock
               belongs to this script or not is performed, and you may screw up
               processing of another script
+   -w      before doing any operation, submit any HTCondor cluster of jobs left
+              from a previous (failing attempt).
+           The platform of submission is forced to ${sixdeskplatformDefIncomplete}
 
    options (optional)
    -S      selected points of scan only
@@ -697,45 +700,6 @@ function submitBetaJob(){
     
 }
 
-function parseBetaValues(){
-
-    local __betaWhere=$1
-
-    # check that the betavalues file contains all the necessary values
-    nBetas=`cat $__betaWhere/betavalues | wc -w`
-    if [ $nBetas -ne 14 ] ; then
-        sixdeskmess -1 "betavalues has $nBetas words!!! Should be 14!"
-	exit
-    fi
-
-    # check that the beta values are not NULL and notify user
-    beta_x=`gawk '{print $1}' $__betaWhere/betavalues`
-    beta_x2=`gawk '{print $2}' $__betaWhere/betavalues`
-    beta_y=`gawk '{print $3}' $__betaWhere/betavalues`
-    beta_y2=`gawk '{print $4}' $__betaWhere/betavalues`
-    if test "$beta_x" = "" -o "$beta_y" = "" -o "$beta_x2" = "" -o "beta_y2" = "" ; then
-        # clean up for a retry by removing old betavalues
-	# anyway, this run was not ok...
-        sixdeskmess -1 "One or more betavalues are NULL !!!"
-        sixdeskmess -1 "Look in $sixdeskjobs_logs to see SixTrack input and output."
-        sixdeskmess -1 "Check the file lin_old which contains the SixTrack fort.6 output."
-	exit
-    fi
-    sixdeskmess  1 "Betavalues:"
-    sixdeskmess  1 "beta_x[2] $beta_x $beta_x2 - beta_y[2] $beta_y $beta_y2"
-
-    # notify user other variables
-    fhtune=`gawk '{print $5}' $__betaWhere/betavalues`
-    fvtune=`gawk '{print $6}' $__betaWhere/betavalues`
-    fchromx=`gawk '{print $7}' $__betaWhere/betavalues`
-    fchromy=`gawk '{print $8}' $__betaWhere/betavalues`
-    fclosed_orbit=`gawk '{print $9" "$10" "$11" "$12" "$13" "$14}' $__betaWhere/betavalues`
-    sixdeskmess  1 "Chromaticity: $fchromx $fchromy"
-    sixdeskmess  1 "Tunes: $fhtune $fvtune"
-    sixdeskmess  1 "Closed orbit: $fclosed_orbit"
-
-}
-
 function submitCreateRundir(){
     # this function is called after a sixdeskDefinePointTree, with the check
     #    that RunDirFullPath and actualDirNameFullPath are non-zero length strings
@@ -1061,20 +1025,34 @@ function dot_boinc(){
 }
 
 function condor_sub(){
+    local __lerr=0
+    echo ""
+    printf "=%.0s" {1..80}
+    echo ""
     if [ ! -e ${sixdeskjobs}/${LHCDesName}.list ] ; then
 	sixdeskmess -1 "List of tasks not there: ${sixdeskjobs}/${LHCDesName}.list"
+	let __lerr+=1
     elif [ `wc -l ${sixdeskjobs}/${LHCDesName}.list 2> /dev/null | awk '{print ($1)}'` -eq 0 ] ; then
 	sixdeskmess -1 "Empty list of tasks: ${sixdeskjobs}/${LHCDesName}.list"
 	rm -f ${sixdeskjobs}/${LHCDesName}.list
+	let __lerr+=1
     else
 	cd ${sixdesktrack}
 	iBatch=$((${nQueued}/${nMaxJobsSubmitHTCondor}))
 	if [ ${iBatch} -eq 0 ] ; then
+	    sixdeskmess 1 "checking if there are already some condor clusters from the same workspace/study ..."
+	    i0Batch=`condor_q -wide | grep run_six/$workspace/$LHCDescrip | awk '{print ($2)}' | cut -d\/ -f4 | sort | tail -1`
+	    if [ -n "${i0Batch}" ] ; then
+		iBatch=${i0Batch}
+	    fi
+	fi
+	let iBatch+=1
+	if [ ${iBatch} -eq 1 ] ; then
             batch_name="run_six/$workspace/$LHCDescrip"
 	else
             batch_name="run_six/$workspace/${LHCDescrip}/${iBatch}"
 	fi
-	sixdeskmess -1 "Submitting jobs to $sixdeskplatform from dir $PWD \"$batch_name\""
+	sixdeskmess -1 "Submitting jobs to $sixdeskplatform from dir $PWD - batch name: \"$batch_name\""
 	sixdeskmess  1 "Depending on the number of points in the scan, this operation can take up to few minutes."
 	# let's renew the kerberos token just before submitting
 	sixdeskmess 2 "renewing kerberos token before submission to HTCondor"
@@ -1113,6 +1091,11 @@ function condor_sub(){
 	fi
 	cd - > /dev/null 2>&1
     fi
+    echo ""
+    printf "=%.0s" {1..80}
+    echo ""
+    echo ""
+    return ${__lerr}
 }
 
 function dot_megaZip(){
@@ -1775,6 +1758,7 @@ lrestart=false
 lrestartLast=false
 lincomplete=false
 lunlockRun6T=false
+lFinaliseHTCondor=false
 unlockSetEnv=""
 restartPoint=""
 currPlatform=""
@@ -1792,7 +1776,7 @@ nMaxJobsSubmitHTCondorDef=15000
 nMaxJobsSubmitHTCondor=${nMaxJobsSubmitHTCondorDef}
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgo:sctakfvBlSCMid:p:R:P:n:N:U" opt ; do
+while getopts  ":hgo:sctakfvBlSCMid:p:R:P:n:N:wU" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1909,6 +1893,10 @@ while getopts  ":hgo:sctakfvBlSCMid:p:R:P:n:N:U" opt ; do
 	    # verbose
 	    lverbose=true
 	    ;;
+	w)
+	    # submit any .list left behind
+	    lFinaliseHTCondor=true
+	    ;;
 	U)
 	    # unlock currently locked folder
 	    lunlockRun6T=true
@@ -1929,12 +1917,12 @@ done
 shift "$(($OPTIND - 1))"
 # user's request
 # - actions
-if ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} && ! ${lunlockRun6T} ; then
+if ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} && ! ${lunlockRun6T} && ! ${lFinaliseHTCondor} ; then
     how_to_use
     echo "No action specified!!! aborting..."
     exit 1
 fi
-if ${lunlockRun6T} && ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} ; then
+if ${lunlockRun6T} && ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} && ! ${lFinaliseHTCondor} ; then
     # only unlocking -> set_env.sh should not overwrite sixdeskenv/sysenv anyway
     doNotOverwrite="-e"
 fi
@@ -1955,6 +1943,10 @@ fi
 if ${lincomplete} ; then
     optArgCurrPlatForm="-p ${sixdeskplatformDefIncomplete}"
     echo "-i action forces platform to ${sixdeskplatformDefIncomplete}"
+fi
+if ${lFinaliseHTCondor} ; then
+    optArgCurrPlatForm="-p ${sixdeskplatformDefIncomplete}"
+    echo "-w action forces platform to ${sixdeskplatformDefIncomplete}"
 fi
 if ${lincomplete} && ${lselected} ; then
     echo "-S option and -i action are incompatible!"
@@ -2039,7 +2031,7 @@ fi
 # - unlocking
 if ${lunlockRun6T} ; then
     sixdeskunlockAll
-    if ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} ; then
+    if ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} && ! ${lFinaliseHTCondor} ; then
 	sixdeskmess -1 "requested only unlocking. Exiting..."
 	exit 0
     fi
@@ -2106,6 +2098,18 @@ trap "printSummary; sixdeskexit  1" SIGINT
 trap "printSummary; sixdeskexit  2" SIGQUIT
 trap "printSummary; sixdeskexit 11" SIGSEGV
 trap "printSummary; sixdeskexit  8" SIGFPE
+
+# submit any .list left behind
+if ${lFinaliseHTCondor} ; then
+    condor_sub
+    if ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} ; then
+	# only finalise submission
+	sixdeskmess -1 "only finalisation of submission"
+	trap "" SIGINT SIGQUIT SIGSEGV SIGFPE
+	trap "printSummary; sixdeskexit 0" EXIT
+	exit
+    fi
+fi
 
 # preparation to main loop
 if ${lgenerate} || ${lfix} ; then
@@ -2361,7 +2365,7 @@ if ${lincomplete} ; then
     while read runnamename ; do
 	sixdeskrundir true
 	sixdeskSanitizeString "${rundirname}" Rundir
-	echo ${Rundir} >> ${sixdeskjobs}/${LHCDesName}.list
+	dot_htcondor
 	let nConsidered+=1
 	let nQueued+=1
 	if  [ $((${nQueued}%${nMaxJobsSubmitHTCondor})) -eq 0 ] ; then
