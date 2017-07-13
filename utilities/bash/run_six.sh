@@ -30,7 +30,8 @@ function how_to_use() {
               belongs to this script or not is performed, and you may screw up
               processing of another script
    -w      before doing any operation, submit any HTCondor cluster of jobs left
-              from a previous (failing attempt)
+              from a previous (failing attempt).
+           The platform of submission is forced to ${sixdeskplatformDefIncomplete}
 
    options (optional)
    -S      selected points of scan only
@@ -1911,6 +1912,10 @@ if ${lincomplete} ; then
     optArgCurrPlatForm="-p ${sixdeskplatformDefIncomplete}"
     echo "-i action forces platform to ${sixdeskplatformDefIncomplete}"
 fi
+if ${lFinaliseHTCondor} ; then
+    optArgCurrPlatForm="-p ${sixdeskplatformDefIncomplete}"
+    echo "-w action forces platform to ${sixdeskplatformDefIncomplete}"
+fi
 if ${lincomplete} && ${lselected} ; then
     echo "-S option and -i action are incompatible!"
     exit 1
@@ -1994,7 +1999,7 @@ fi
 # - unlocking
 if ${lunlockRun6T} ; then
     sixdeskunlockAll
-    if ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} ; then
+    if ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} && ! ${lFinaliseHTCondor} ; then
 	sixdeskmess -1 "requested only unlocking. Exiting..."
 	exit 0
     fi
@@ -2065,6 +2070,13 @@ trap "printSummary; sixdeskexit  8" SIGFPE
 # submit any .list left behind
 if ${lFinaliseHTCondor} ; then
     condor_sub
+    if ! ${lgenerate} && ! ${lsubmit} && ! ${lcheck} && ! ${lstatus} && ! ${lcleanzip} && ! ${lfix} && ! ${lincomplete} ; then
+	# only finalise submission
+	sixdeskmess -1 "only finalisation of submission"
+	trap "" SIGINT SIGQUIT SIGSEGV SIGFPE
+	trap "printSummary; sixdeskexit 0" EXIT
+	exit
+    fi
 fi
 
 # preparation to main loop
@@ -2321,7 +2333,7 @@ if ${lincomplete} ; then
     while read runnamename ; do
 	sixdeskrundir true
 	sixdeskSanitizeString "${rundirname}" Rundir
-	echo ${Rundir} >> ${sixdeskjobs}/${LHCDesName}.list
+	dot_htcondor
 	let nConsidered+=1
 	let nQueued+=1
 	if  [ $((${nQueued}%${nMaxJobsSubmitHTCondor})) -eq 0 ] ; then
