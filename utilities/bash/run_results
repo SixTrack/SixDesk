@@ -344,9 +344,11 @@ function downloadNewResults(){
 	unknown="false"
 	
 #MACRO mymess 1 Now treating TaskID $taskid
-	echo ""
-	printf '.%.0s' {1..80}
-	echo ""
+	if [ ${sixdesklevel} -gt 0 ] ; then
+	    echo ""
+	    printf '.%.0s' {1..80}
+	    echo ""
+	fi
 	sixdeskmess -1 "Now treating TaskID $taskid"
 #MACRO mymess
 	
@@ -1291,9 +1293,11 @@ function downloadNewResults(){
     # end of all tasks
     rm -f ${__sixdesktasklist}
 
-    echo ""
-    printf '.%.0s' {1..80}
-    echo ""
+    if [ ${sixdesklevel} -gt 0 ] ; then
+	echo ""
+	printf '.%.0s' {1..80}
+	echo ""
+    fi
     sixdeskmess -1 "In this batch of ${tmpReady} ready results, ${__ok} were downloaded successfully, ${__duplicated} were deleted as duplicate/redundant, and ${__failed} failed."
 
     let ok+=${__ok}
