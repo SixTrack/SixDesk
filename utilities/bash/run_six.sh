@@ -568,6 +568,10 @@ function submitChromaJobs(){
         sixdeskmess -1 "Check the file first_oneturn which contains the SixTrack fort.6 output."
 	exit
     fi
+    # save all interesting files from first job
+    [ -d chromaJob01 ] || mkdir chromaJob01
+    cp fort.2 fort.3 fort.8 fort.16 fort.10 first_oneturn chromaJob01
+    gzip chromaJob01/*
     mv fort.10 fort.10_first_oneturn
     # clean dir
     export GLOBIGNORE=${__GLOBIGNORE}
@@ -585,6 +589,10 @@ function submitChromaJobs(){
         sixdeskmess -1 "Check the file second_oneturn which contains the SixTrack fort.6 output."
 	exit
     fi
+    # save all interesting files from second job
+    [ -d chromaJob02 ] || mkdir chromaJob02
+    cp fort.2 fort.3 fort.8 fort.16 fort.10 second_oneturn chromaJob02
+    gzip chromaJob02/*
     mv fort.10 fort.10_second_oneturn
     # clean dir
     export GLOBIGNORE=${__GLOBIGNORE}
@@ -660,6 +668,10 @@ function submitBetaJob(){
         sixdeskmess -1 "Check the file lin which contains the SixTrack fort.6 output."
 	exit
     fi
+    # save all interesting files from beta job
+    [ -d betaJob ] || mkdir betaJob
+    cp fort.2 fort.3 fort.8 fort.16 fort.10 lin betaJob
+    gzip betaJob/*
     mv lin lin_old
     cp fort.10 fort.10_old
     # clean dir
