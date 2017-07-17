@@ -133,11 +133,18 @@ else
 #MACRO myexit
 
 fi
-xing_rad=$(echo $xing*.000001 | bc)
 sed -e 's?%pmass?'$pmass'?g' \
     -e 's?%emit_beam?'$emit_beam'?g' \
-    -e 's?%xing?'$xing_rad'?g' \
     $sixdeskhome/control_files/fort.3.mother1_${runtype} > $sixtrack_input/fort.3.mother1.tmp
+xing_rad=0
+if [ -n "${xing}" ] ; then 
+    # variable is defined
+    xing_rad=`echo "$xing" | awk '{print ($1*1E-06)}'`
+    echo " --> crossing defined: $xing ${xing_rad}"
+    sed -i -e 's?%xing?'$xing_rad'?g' \
+  	   -e 's?/ bb_ho5b1_0?bb_ho5b1_0?g' \
+	   -e 's?/ bb_ho1b1_0?bb_ho5b1_0?g' $sixtrack_input/fort.3.mother1.tmp
+fi
 
 cp $sixdeskhome/control_files/fort.3.mother2_${runtype}${appendbeam} $sixtrack_input/fort.3.mother2.tmp
 # Clear the flag for check_mad6t
