@@ -23,6 +23,7 @@ function how_to_use() {
               connected to, no submission to lsf at all)
            option available only for submission, not for checking
    -d      study name (when running many jobs in parallel)
+   -p      platform name (when running many jobs in parallel)
    -P      python path
    -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
                0: only error messages and basic output 
@@ -431,9 +432,10 @@ unlockSetEnv=""
 currStudy=""
 currPythonPath=""
 optArgCurrStudy="-s"
+optArgCurrPlatForm=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hiwseo:cd:P:U" opt ; do
+while getopts  ":hiwseo:cd:p:P:U" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -458,6 +460,10 @@ while getopts  ":hiwseo:cd:P:U" opt ; do
 	d)
 	    # the user is requesting a specific study
 	    currStudy="${OPTARG}"
+	    ;;
+	p)
+	    # the user is requesting a specific platform
+	    currPlatform="${OPTARG}"
 	    ;;
 	w)
 	    # re-submit wrong seeds
@@ -515,6 +521,9 @@ fi
 if [ -n "${currStudy}" ] ; then
     optArgCurrStudy="-d ${currStudy}"
 fi
+if [ -n "${currPlatform}" ] ; then
+    optArgCurrPlatForm="-p ${currPlatform}"
+fi
 
 # load environment
 # NB: workaround to get getopts working properly in sourced script
@@ -527,7 +536,7 @@ if ${lSetEnv} ; then
     echo "--> sourcing set_env.sh"
     printf '.%.0s' {1..80}
     echo ""
-    source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${currPythonPath} ${unlockSetEnv} -e
+    source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${currPythonPath} ${unlockSetEnv} -e
     printf "=%.0s" {1..80}
     echo ""
     echo ""
