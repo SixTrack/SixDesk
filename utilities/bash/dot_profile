@@ -1,6 +1,7 @@
 #!/bin/bash
 
-export newBuildPathDef=/afs/cern.ch/project/sixtrack/build
+newBuildPathDef=/afs/cern.ch/project/sixtrack/build
+appNameDef=sixtrack
 
 # A set of Subroutines called by Macros for the SixDesk environment
 sixdeskmess(){
@@ -1094,35 +1095,10 @@ sixdeskCreateUserTree(){
 }
 sixdeskSetExes(){
     local __lerr=0
-    if [ -z "${sixdeskpath}" ] ; then
-	export sixdeskpath=/afs/cern.ch/group/si/slap/bin/sixdesk
-    fi
-    if [ -z ${SIXTRACKEXE} ] ; then
-	if [ -n "$BIGNBLZ" ] ; then
-	    export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_bignblz_pro
-	else
-	    export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_pro
-	fi
-    fi
-    if [ -z "${SIXTRACKBNLEXE}" ] ; then
-	export SIXTRACKBNLEXE=$sixdeskpath/exes/SixTrack_bnl_pro
-    fi
-    if [ -z "${SIXTRACKDAEXE}" ] ; then
-	export SIXTRACKDAEXE=$sixdeskpath/exes/SixTrack_crlibm_da_lf95v4200
-    fi
-    if [ -n "${appName}" ] ; then
-	case ${appName} in 
-	    sixtracktest ) 
-		export SIXTRACKEXE=$newBuildPathDef/sixtracktest
-		;;
-	    *)
-		export SIXTRACKEXE=$newBuildPathDef/sixtrack
-		;;
-	esac
-    else
-	sixdeskmess -1 "appName not specified!"
-	let __lerr+=1
-    fi
+    [ -n "${sixdeskpath}" ] || export sixdeskpath=/afs/cern.ch/group/si/slap/bin/sixdesk
+    [ -n "${SIXTRACKEXE}" ] || export SIXTRACKEXE=$newBuildPathDef/${appName}
+    [ -n "${SIXTRACKBNLEXE}" ] || export SIXTRACKBNLEXE=$sixdeskpath/exes/SixTrack_bnl_pro
+    [ -n "${SIXTRACKDAEXE}" ] || export SIXTRACKDAEXE=$sixdeskpath/exes/SixTrack_crlibm_da_lf95v4200
     return ${__lerr}
 }
 sixdeskSetPlatForm(){
@@ -1174,6 +1150,8 @@ sixDeskCheckAppName(){
 	    for __tmpRecognisedAppName in ${__recognisedAppNames[@]} ; do
 		sixdeskmess -1 " --> ${__tmpRecognisedAppName}"
 	    done
+	    sixdeskmess -1 "setting appName to default ${appNameDef}"
+	    export appName=${appNameDef}
 	fi
 	if [ "${__appname}" == "sixtracktest" ] ; then
 	    export sixdeskboinctest=true
@@ -1255,8 +1233,9 @@ sixdeskSetQueue(){
 
 sixDeskSetBOINCVars(){
     # The SixTrack executable is now ????.
-    export boincdir=/afs/cern.ch/work/b/boinc
-    export sixdeskboincdirname=$workspace"_"$LHCDescrip
+    [ -n "$sixdeskpts" ] || export sixdeskpts=boinc:users
+    [ -n "${boincdir}" ] || export boincdir=/afs/cern.ch/work/b/boinc
+    [ -n "${sixdeskboincdirname}" || export sixdeskboincdirname=$workspace"_"$LHCDescrip
     if [ -z "${sixdeskboincdir}" ] ; then
 	if [ -z "${sixdeskboinctest}" ] || ! ${sixdeskboinctest} ; then
 	    export sixdeskboincdir=$boincdir/boinc/$sixdeskboincdirname
@@ -1264,22 +1243,25 @@ sixDeskSetBOINCVars(){
 	    export sixdeskboincdir=$boincdir/boinctest/$sixdeskboincdirname
 	fi
     fi
-    export sixdeskparts=`expr $sixdeskpairs \* 2`
-    if [ $short -eq 1 -o $da -eq 1 ] ; then
-	sixdeskturns=$turnss
-    elif [ $long -eq 1 ] ; then
-	sixdeskturns=$turnsl
+    [ -n "${sixdeskparts}" ] || export sixdeskparts=`expr $sixdeskpairs \* 2`
+    if [ -z "${sixdeskturns}" ] ; then
+	if [ $short -eq 1 -o $da -eq 1 ] ; then
+	    export  sixdeskturns=$turnss
+	elif [ $long -eq 1 ] ; then
+	    export sixdeskturns=$turnsl
+	fi
+	if [ "$BNL" != "" ] ; then
+	    export sixdeskturns=$bnlturns
+	fi
     fi
-    if [ "$BNL" != "" ] ; then
-	sixdeskturns=$bnlturns
+    if [ -z "${sixdeskfpopse}" ] ; then
+	sixdeskfpopse=`expr $sixdeskturns \* $sixdeskparts`
+	#sixdeskfpopse=`expr $sixdeskfpopse \* 2`
+	#sixdeskfpopse=`expr $sixdeskfpopse / 3`
+	sixdeskfpopse=`expr $sixdeskfpopse / 2`
+	#sixdeskfpopse=`expr $sixdeskfpopse \* 3`
+	sixdeskfpopse=$sixdeskfpopse"000000"
     fi
-    export sixdeskturns
-    sixdeskfpopse=`expr $sixdeskturns \* $sixdeskparts`
-    #sixdeskfpopse=`expr $sixdeskfpopse \* 2`
-    #sixdeskfpopse=`expr $sixdeskfpopse / 3`
-    sixdeskfpopse=`expr $sixdeskfpopse / 2`
-    #sixdeskfpopse=`expr $sixdeskfpopse \* 3`
-    sixdeskfpopse=$sixdeskfpopse"000000"
 
     # --------------------------------------------------------------------------
     # from uploadWorkunit
@@ -1288,14 +1270,14 @@ sixDeskSetBOINCVars(){
     # The workunit will only be sent to clients with at least this much
     # available RAM. If exceeded the workunit will be aborted.
     # Measured in bytes.
-    export memBound=100000000
+    [ -n "${memBound}" ] || export memBound=100000000
     
     # An upper bound on the amount of disk space required to process the
     # workunit. The workunit will only be sent to clients with at least this
     # much available disk space. If exceeded the workunit will be aborted.
     # Measured in bytes.
     # diskBound=200,000,000  ~200MB
-    export diskBound=200000000
+    [ -n "${diskBound}" ] || export diskBound=200000000
     
     # An upper bound on the time (in seconds) between sending a result to a
     # client and receiving a reply. If the client doesn't respond within this
@@ -1303,38 +1285,38 @@ sixDeskSetBOINCVars(){
     # to be assigned to another client. Don't set this too low. 
     # 20 times the "normal" execution time will probably be a good value.
     # about 30 days
-    export delayBound=2400000
+    [ -n "${delayBound}" ] || export delayBound=2400000
     
     # The number of redundant calculations. Set to two or more to achieve
     # redudancy.
-    export redundancy=2
+    [ -n "${redundancy}" ] || export redundancy=2
     
     # The number of copies of the workunit to issue to clients. Must be at
     # least the number of redundant calculations or higher if a loss of results
     # is expected or if the result should to be obtained fast.
-    export copies=2
+    [ -n "${copies}" ] || export copies=2
     
     # The number of errors from clients before the workunit is declared to have
     # an error.
-    export errors=5
+    [ -n "${errors}" ] || export errors=5
     
     # The total number of clients to issue the workunit to before it is declared
     # to have an error.
-    export numIssues=5
+    [ -n "${numIssues}" ] || export numIssues=5
 
     # The total number of returned results without a concensus is found before
     # the workunit is declared to have an error.
-    export resultsWithoutConcensus=3
+    [ -n "${resultsWithoutConcensus}" ] || export resultsWithoutConcensus=3
 
     # Getting the fpops estimate and multiplying it with 10 to get the bound.
     # Multiply by 4 for the moment but watch for complaints!
     # Try 6 for pentium 4
-    export fpopsEstimate=`expr $sixdeskfpopse \* 6`
-    export fpopsBound=`expr $fpopsEstimate \* 1000`
+    [ -n "${fpopsEstimate}" ] || export fpopsEstimate=`expr $sixdeskfpopse \* 6`
+    [ -n "${fpopsBound}" ] || export fpopsBound=`expr $fpopsEstimate \* 1000`
     
     # --------------------------------------------------------------------------
     # for megaZip
-    export megaZipPath=$boincdir/boinc/upload
+    [ -n "${megaZipPath}" ] || export megaZipPath=$boincdir/boinc/upload
 }
 sixdeskSetCPSSVars(){
     # sixdeskprog/uploadProgram Variables
