@@ -436,13 +436,16 @@ else
     if [ "$BNL" != "" ] ; then
 	BTEXT="BNL flag active"
     fi
-    NTEXT="["$sixdeskhostname"]"
+    NTEXT="[$sixdeskhostname]"
+    ETEXT="[$appName - ${SIXTRACKEXE}]"
 
     echo
     sixdeskmess -1 "STUDY          ${STEXT}"
     sixdeskmess -1 "WSPACE         ${WTEXT}"
     sixdeskmess -1 "PLATFORM       ${PTEXT}"
-    sixdeskmess -1 "HOSTNAME       ${NTEXT} - ${BTEXT}"
+    sixdeskmess -1 "HOSTNAME       ${NTEXT}"
+    sixdeskmess -1 "${BTEXT}"
+    sixdeskmess -1 "APPNAME/EXE    ${ETEXT}"
     echo
     
     if [ -e "$sixdeskstudy"/deleted ] ; then
