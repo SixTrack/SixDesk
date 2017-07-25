@@ -27,7 +27,10 @@ function how_to_use() {
    -B      break backward-compatibility
            for the moment, this sticks only to job names
    -t      reprocess old archives of results already parsed
-   -z      do not retrieve only fort.10, but also Sixout.zip
+   -z      do not retrieve only fort.10, but also ${oneResultName}
+   -x      run a dos2unix command on every file in ${oneResultName}
+           NB: this operation is quite lengthy, as each ${oneResultName} has to
+               be unzipped, every file dos2unix-ed and then re-zipped again.
    -n      renew kerberos token every n jobs (default: ${NrenewKerberosDef})
    -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
                0: only error messages and basic output 
@@ -1091,7 +1094,19 @@ function downloadNewResults(){
 	    
 	    if ${lretrieveZip} && [ $sixdeskplatform == "boinc" -a $duplicate == "false" ] ; then
 		sixdeskmess 1 "...${oneResultName} is there as well: ${__resZipName}! --> saving it!"
-		cp ${__origPath}/${__resZipName} ${where}/${oneResultName}
+		if ${ldos2unix} ; then
+		    sixdeskmess 1 "...dos2unix on files in archive"
+		    unzip ${__origPath}/${__resZipName} -d /tmp/${LOGNAME}
+		    local __tmpAllFiles=`zipinfo -1 ${__origPath}/${__resZipName}`
+		    cd /tmp/${LOGNAME}
+		    dos2unix ${__tmpAllFiles}
+		    zip ${__resZipName} ${__tmpAllFiles}
+		    cp ${__resZipName} ${where}/${oneResultName}
+		    rm -f ${__resZipName} ${__tmpAllFiles}
+		    cd $sixdeskhome
+		else
+		    cp ${__origPath}/${__resZipName} ${where}/${oneResultName}
+		fi
 	    fi
 			
 	    # Now we make a file completed_this_run which we will
@@ -1407,6 +1422,7 @@ loutform=false
 lretrieveZip=false
 downloadDir=/afs/cern.ch/work/b/boinc/download
 lunlockRunRes=false
+ldos2unix=false
 oneResultName='Sixout.zip'
 NrenewKerberosDef=2000
 NrenewKerberos=${NrenewKerberosDef}
@@ -1416,7 +1432,7 @@ optArgCurrPlatForm=""
 unlockSetEnv=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hBtxo:n:d:p:zU" opt ; do
+while getopts  ":hBtxo:n:d:p:zxU" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -1430,8 +1446,16 @@ while getopts  ":hBtxo:n:d:p:zU" opt ; do
 	    lreconsiderDelete=true
 	    ;;
 	z)
+	    # retrieve also Sixout.zip
 	    lretrieveZip=true
 	    ;;
+	x)
+	    # run dos2unix on every item in Sixout.zip
+	    ldos2unix=true
+	    # this call imply that Sixout.zip should be retrieved
+	    lretrieveZip=true
+	    ;;
+	    
 	n)
 	    # renew kerberos token every N jobs
 	    NrenewKerberos=${OPTARG}
@@ -1713,7 +1737,7 @@ else
 	
 	tmpArchiveName=`basename ${tmpArchive}`
 	tmpArchiveDir=`dirname ${tmpArchive}`
-	tmpExtractDir=/tmp/${tmpArchiveName//.zip/}
+	tmpExtractDir=/tmp/${LOGNAME}/${tmpArchiveName//.zip/}
 	
 	echo ""
 	printf '=%.0s' {1..80}
