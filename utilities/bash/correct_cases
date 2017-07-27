@@ -65,7 +65,7 @@ touch mycompleted_cases
 touch $sixdeskwork/taskids
 cp $sixdeskwork/completed_cases $sixdeskwork/backup
 cp $sixdeskwork/mycompleted_cases $sixdeskwork/backup
-cp $sixdeskwork/incomplete_case $sixdeskwork/backup
+cp $sixdeskwork/incomplete_cases $sixdeskwork/backup
 cp $sixdeskwork/myincomplete_cases $sixdeskwork/backup
 
 #MACRO mymktmpdir tmp /tmp/$LOGNAME
