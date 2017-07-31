@@ -39,7 +39,7 @@ function mvZip(){
 	    # day dir in download area
 	    boincDownloadDir=${boincDownloadDir}/`date "+%Y-%m-%d"`
 	    [ -d ${boincDownloadDir} ] || mkdir -p ${boincDownloadDir}
-	    [ -d ${boincDownloadDir}/delete ] || mkdir -p ${boincDownloadDir}/delete
+	    [ -d ${boincDownloadDir}/processed ] || mkdir -p ${boincDownloadDir}/processed
 	    lGenDownloadDir=false
 	fi
 	local __destPath=${boincDownloadDir}
