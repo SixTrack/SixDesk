@@ -1,4 +1,8 @@
 #!/bin/bash
+
+export platForms=( 'boinc' 'lsf' 'htcondor' )
+export fileSuffixes=( 'tasks' 'jobs' 'jobs' )
+
 # A set of Subroutines called by Macros for the SixDesk environment
 sixdeskmess(){
     # levels:
