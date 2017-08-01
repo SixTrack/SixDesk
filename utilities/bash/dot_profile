@@ -2,6 +2,8 @@
 
 newBuildPathDef=/afs/cern.ch/project/sixtrack/build
 appNameDef=sixtrack
+export platForms=( 'boinc' 'lsf' 'htcondor' )
+export fileSuffixes=( 'tasks' 'jobs' 'jobs' )
 
 # A set of Subroutines called by Macros for the SixDesk environment
 sixdeskmess(){
@@ -815,29 +817,25 @@ sixdeskDefineUserTree(){
     # $2: scratch dir (ie $scratchdir in sixdeskenv)
     # $3: workspace name (ie $workspace in sixdeskenv)
 
-    # unset all that is exported by sixdeskenv that can be re-set
-    unset  trackdir
-    unset  sixtrack_input
-    
     # basic paths (back-compatibility)
-    export basedir=$1               # eg /afs/cern.ch/user/$initial/$LOGNAME
-    export scratchdir=$2            # eg $basedir/scratch0
-    export trackdir=$scratchdir/$3  # eg $scratchdir/w2
-    export sixdeskhome=$basedir/$3/sixjobs # eg $trackdir/sixjobs
-    export sixdeskhomeStudies=$sixdeskhome/studies
+    [ -n "${basedir}" ] || export basedir=$1               # eg /afs/cern.ch/user/$initial/$LOGNAME
+    [ -n "${scratchdir}" ] || export scratchdir=$2            # eg $basedir/scratch0
+    [ -n "${trackdir}" ] || export trackdir=$scratchdir/$3  # eg $scratchdir/w2
+    [ -n "${sixdeskhome}" ] || export sixdeskhome=$basedir/$3/sixjobs # eg $trackdir/sixjobs
+    [ -n "${sixdeskhomeStudies}" ] || export sixdeskhomeStudies=$sixdeskhome/studies
 
     # 
-    export sixtrack_input=$scratchdir/sixtrack_input/$workspace/$LHCDescrip
-    export sixdesklogs=$scratchdir/sixdesklogs/$workspace
-    export sixdesklogdir=$sixdesklogs/$LHCDescrip
-    export cronlogs=$scratchdir/cronlogs/$workspace
-    export cronlogdir=$cronlogs/$LHCDescrip
-    export sixdesktrack=$trackdir/track
-    export sixdesktrackStudy=$sixdesktrack/$LHCDescrip
-    export sixdeskwork=$scratchdir/work/$workspace/$LHCDescrip
-    export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
-    export sixdeskjobs_logs=$sixdeskjobs/jobs_logs
-    export sixdeskstudy=$sixdeskhomeStudies/$LHCDescrip
+    [ -n "${sixtrack_input}" ] || export sixtrack_input=$scratchdir/sixtrack_input/$workspace/$LHCDescrip
+    [ -n "${sixdesklogs}" ] || export sixdesklogs=$scratchdir/sixdesklogs/$workspace
+    [ -n "${sixdesklogdir}" ] || export sixdesklogdir=$sixdesklogs/$LHCDescrip
+    [ -n "${cronlogs}" ] || export cronlogs=$scratchdir/cronlogs/$workspace
+    [ -n "${cronlogdir}" ] || export cronlogdir=$cronlogs/$LHCDescrip
+    [ -n "${sixdesktrack}" ] || export sixdesktrack=$trackdir/track
+    [ -n "${sixdesktrackStudy}" ] || export sixdesktrackStudy=$sixdesktrack/$LHCDescrip
+    [ -n "${sixdeskwork}" ] || export sixdeskwork=$scratchdir/work/$workspace/$LHCDescrip
+    [ -n "${sixdeskjobs}" ] || export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
+    [ -n "${sixdeskjobs_logs}" ] || export sixdeskjobs_logs=$sixdeskjobs/jobs_logs
+    [ -n "${sixdeskstudy}" ] || export sixdeskstudy=$sixdeskhomeStudies/$LHCDescrip
 }
 sixDeskDefineMADXTree(){
     local __SCRIPTDIR=$1
@@ -850,9 +848,9 @@ sixDeskDefineMADXTree(){
     #export MADX="madx_dev"
     # and the new default
 #    export MADX="madx"
-    export maskFilesPath=$sixdeskhome/mask
-    export controlFilesPath=$sixdeskhome/control_files
-    export lsfFilesPath=$__SCRIPTDIR/templates/lsf
+    [ -n "${maskFilesPath}" ] || export maskFilesPath=$sixdeskhome/mask
+    [ -n "${controlFilesPath}" ] || export controlFilesPath=$sixdeskhome/control_files
+    [ -n "${lsfFilesPath}" ] || export lsfFilesPath=$__SCRIPTDIR/templates/lsf
 }
 sixdeskDefinePointTree(){
     # $1: $LHCDesName
@@ -1114,18 +1112,18 @@ sixdeskSetPlatForm(){
 	# set default platform
 	export sixdeskplatform="htcondor"
     fi
-    export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
-    export sixdeskjobs_logs=$sixdeskjobs/jobs_logs
+    [ -n "${sixdeskjobs}" ] || export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
+    [ -n "${sixdeskjobs_logs}" ] || export sixdeskjobs_logs=$sixdeskjobs/jobs_logs
     if [ "$BNL" != "" ] ; then
-	export sixdeskbnlin="fort.54"
-	export bnlfilenames="beambeam-output.dat beambeamlostID.dat SixTwiss.dat checkdist.dat"
-	export bnlfortnames="fort.52 fort.53 fort.51 fort.97"
+	[ -n "${sixdeskbnlin}" ] || export sixdeskbnlin="fort.54"
+	[ -n "${bnlfilenames}" ] || export bnlfilenames="beambeam-output.dat beambeamlostID.dat SixTwiss.dat checkdist.dat"
+	[ -n "${bnlfortnames}" ] || export bnlfortnames="fort.52 fort.53 fort.51 fort.97"
 	if [ "$sixdeskplatform" == "boinc" ] ; then
-	    export sixdeskbnlout="fort.10"
+	    [ -n "${sixdeskbnlout}" ] || export sixdeskbnlout="fort.10"
 	elif [ "$sixdeskplatform" == "cpss" ] ; then
-	    export sixdeskbnlout=$bnlfortnames
+	    [ -n "${sixdeskbnlout}" ] || export sixdeskbnlout=$bnlfortnames
 	elif [ "$sixdeskplatform" == "lsf" ] ; then
-	    export sixdeskbnlout=$bnlfilenames
+	    [ -n "${sixdeskbnlout}" ] || export sixdeskbnlout=$bnlfilenames
 	fi
     fi
     return 0
@@ -1232,26 +1230,25 @@ sixdeskSetQueue(){
 }
 
 sixDeskSetBOINCVars(){
-    # The SixTrack executable is now ????.
     [ -n "$sixdeskpts" ] || export sixdeskpts=boinc:users
     [ -n "${boincdir}" ] || export boincdir=/afs/cern.ch/work/b/boinc
-    [ -n "${sixdeskboincdirname}" || export sixdeskboincdirname=$workspace"_"$LHCDescrip
+    [ -n "${sixdeskboincdirname}" ] || export sixdeskboincdirname="${workspace}_${LHCDescrip}"
     if [ -z "${sixdeskboincdir}" ] ; then
-	if [ -z "${sixdeskboinctest}" ] || ! ${sixdeskboinctest} ; then
-	    export sixdeskboincdir=$boincdir/boinc/$sixdeskboincdirname
-	else
-	    export sixdeskboincdir=$boincdir/boinctest/$sixdeskboincdirname
-	fi
+ 	if [ -z "${sixdeskboinctest}" ] || ! ${sixdeskboinctest} ; then
+ 	    export sixdeskboincdir=$boincdir/boinc/$sixdeskboincdirname
+ 	else
+ 	    export sixdeskboincdir=$boincdir/boinctest/$sixdeskboincdirname
+ 	fi
     fi
     [ -n "${sixdeskparts}" ] || export sixdeskparts=`expr $sixdeskpairs \* 2`
     if [ -z "${sixdeskturns}" ] ; then
 	if [ $short -eq 1 -o $da -eq 1 ] ; then
-	    export  sixdeskturns=$turnss
+	    [ -n "${sixdeskturns}" ] || export  sixdeskturns=$turnss
 	elif [ $long -eq 1 ] ; then
-	    export sixdeskturns=$turnsl
+	    [ -n "${sixdeskturns}" ] || export sixdeskturns=$turnsl
 	fi
 	if [ "$BNL" != "" ] ; then
-	    export sixdeskturns=$bnlturns
+	    [ -n "${sixdeskturns}" ] || export sixdeskturns=$bnlturns
 	fi
     fi
     if [ -z "${sixdeskfpopse}" ] ; then
@@ -1265,8 +1262,6 @@ sixDeskSetBOINCVars(){
 
     # --------------------------------------------------------------------------
     # from uploadWorkunit
-
-    # An upper bound on the amount of memory required to process the workunit. 
     # The workunit will only be sent to clients with at least this much
     # available RAM. If exceeded the workunit will be aborted.
     # Measured in bytes.
@@ -1322,33 +1317,32 @@ sixdeskSetCPSSVars(){
     # sixdeskprog/uploadProgram Variables
     # sixdeskProgramName, sixdeskFileName, sixdeskTargetFileName
     # sixdeskVersion, sixdeskAuthor, sixdeskDescription
-    export sixdeskexec="$sixdeskpath/exes/SixTrack_4411_crlibm_bnl_ifort_icpss.exe"
-    export sixdeskOsMin="5.0"
-    export sixdeskOsMax="9.9"
-    export sixdeskCpuSpeedMin="100"
-    export sixdeskclientv=2.5
-    export sixdeskProgramName="Sixtrack V4211 Tilt Lost CRLIBM CR BNL"
-    export sixdeskFileName="$sixdeskexec"
-    export sixdeskTargetFileName="sixtrack.exe"
-    export sixdeskVersion="4.2.11 BNL"
-    export sixdeskAuthor="Frank Schmidt & Eric McIntosh"
-    export sixdeskProgramDescription="Lahey 7.1 Sixtrack[CR] with crlibm made fom .s"
+    [ -n "${sixdeskexec}" ] || export sixdeskexec="$sixdeskpath/exes/SixTrack_4411_crlibm_bnl_ifort_icpss.exe"
+    [ -n "${sixdeskOsMin}" ] || export sixdeskOsMin="5.0"
+    [ -n "${sixdeskOsMax}" ] || export sixdeskOsMax="9.9"
+    [ -n "${sixdeskCpuSpeedMin}" ] || export sixdeskCpuSpeedMin="100"
+    [ -n "${sixdeskclientv}" ] || export sixdeskclientv=2.5
+    [ -n "${sixdeskProgramName}" ] || export sixdeskProgramName="Sixtrack V4211 Tilt Lost CRLIBM CR BNL"
+    [ -n "${sixdeskFileName}" ] || export sixdeskFileName="$sixdeskexec"
+    [ -n "${sixdeskTargetFileName}" ] || export sixdeskTargetFileName="sixtrack.exe"
+    [ -n "${sixdeskVersion}" ] || export sixdeskVersion="4.2.11 BNL"
+    [ -n "${sixdeskAuthor}" ] || export sixdeskAuthor="Frank Schmidt & Eric McIntosh"
+    [ -n "${sixdeskProgramDescription}" ] || export sixdeskProgramDescription="Lahey 7.1 Sixtrack[CR] with crlibm made fom .s"
     # sixdeskgroup/createTaskGroup Variables
     # sixdeskTaskGroupName, sixdeskTaskGroupDescription,
     # sixdeskStatus, sixdeskPriority, sixdeskComments
-    export sixdeskTaskGroupName=$LOGNAME"_"$workspace"_"$LHCDescrip
-    export sixdeskTaskGroupDescription=$workspace"_"$LHCDescrip
-    export sixdeskStatus="Active"
-    export sixdeskPriority="Normal"
-    export sixdeskComments="$LHCDescrip"
+    [ -n "${sixdeskTaskGroupName}" ] || export sixdeskTaskGroupName=$LOGNAME"_"$workspace"_"$LHCDescrip
+    [ -n "${sixdeskTaskGroupDescription}" ] || export sixdeskTaskGroupDescription=$workspace"_"$LHCDescrip
+    [ -n "${sixdeskStatus}" ] || export sixdeskStatus="Active"
+    [ -n "${sixdeskPriority}" ] || export sixdeskPriority="Normal"
+    [ -n "${sixdeskComments}" ] || export sixdeskComments="$LHCDescrip"
 }
 sixdeskSetOtherVars(){
     # Turn ON/OFF CASTOR........... true or false 
-    export sixdeskcastor="true"
+    [ -n "${sixdeskcastor}" ] || export sixdeskcastor="true"
     # Not really needed anymore but must be non-zero!
-    export sixdeskcr=1 
-    export LHCDesName=$LHCDescrip
-    export LHCDesHome=$LHCDescrip
+    [ -n "${sixdeskcr}" ] || export sixdeskcr=1 
+    [ -n "${LHCDesName}" ] || export LHCDesName=$LHCDescrip
 }
 sixdeskGetFileName(){
     local __fileName

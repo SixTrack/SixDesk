@@ -4,6 +4,7 @@
 # script for zipping WUs according to study name
 iNLT=400
 boincDownloadDir="/afs/cern.ch/work/b/boinc/download"
+boincSpoolDirPath="/afs/cern.ch/work/b/boinc"
 allDir=all
 zipToolDir=`basename $0`
 zipToolDir=${zipToolDir//.sh}
@@ -26,11 +27,27 @@ function getlock(){
 }
 
 function mvZip(){
-    # $1: file to copy
-    # $2: destination
-    cp $1 $2
+    local __fileToCopy=$1
+    local __studyName=$2
+    
+    for __destDir in `ls -1d ${boincSpoolDirPath}/` ; do
+	local __destPath=${__destDir}/${__studyName}/results
+	! [ -d ${__destPath} ] || break
+    done
+    if ! [ -d ${__destPath} ] ; then
+	if ${lGenDownloadDir} ; then
+	    # day dir in download area
+	    boincDownloadDir=${boincDownloadDir}/`date "+%Y-%m-%d"`
+	    [ -d ${boincDownloadDir} ] || mkdir -p ${boincDownloadDir}
+	    [ -d ${boincDownloadDir}/processed ] || mkdir -p ${boincDownloadDir}/processed
+	    lGenDownloadDir=false
+	fi
+	local __destPath=${boincDownloadDir}
+    fi
+    echo "...cp ${__fileToCopy} ${__destPath}"
+    cp ${__fileToCopy} ${__destPath}
     if [ $? -eq 0 ] ; then
-	rm -f $1
+	rm -f ${__fileToCopy}
     fi
 }
 
@@ -58,8 +75,6 @@ function zipAll(){
     # count
     let Nzipped+=${__nWUnames}
     
-    # move to boincDownloadDir
-    mvZip ${zipFileName} ${boincDownloadDir}/${filename}
 }
 
 # ==============================================================================
@@ -72,11 +87,7 @@ echo " starting `basename $0` at `date` ..."
 # adding lock mechanism
 getlock
 
-# day - to be used in download
-dayDir=`date "+%Y-%m-%d"`
-boincDownloadDir=${boincDownloadDir}/${dayDir}
-[ -d ${boincDownloadDir} ] || mkdir -p ${boincDownloadDir}
-[ -d ${boincDownloadDir}/delete ] || mkdir -p ${boincDownloadDir}/delete
+lGenDownloadDir=true
 
 STARTTIME=$(date +%s)
 Nzipped=0
@@ -100,16 +111,18 @@ if [ -n "${WUs2bZipped}" ] ; then
     # actually zip and move to boincDownloadDir
     for studyName in `echo "${studyNameStats}" | awk '{print ($2)}'` ; do
         # fileName of .zip
-	zipFileName=${studyName}__`date "+%H-%M-%S"`.zip
+	zipFileName=${studyName}__`date "+%Y-%m-%d_%H-%M-%S"`.zip
 	WUnames=`echo "${WUs2bZipped}" | grep ${studyName}`
-        # zip and mv
+        # zip
 	zipAll
+	# move
+	mvZip ${zipFileName} ${studyName}
     done
 
-    # moving old .zip files
-    echo " moving old .zip files to ${boincDownloadDir} ..."
+    # moving old or remaining .zip files
+    echo " old .zip files ..."
     for fileName in `find . -name "*.zip"` ; do
-	mvZip ${fileName} ${boincDownloadDir}
+	mvZip ${fileName} ${fileName%%__*}
     done
 else
     echo " ...no WUs in ${allDir}!"
@@ -128,14 +141,16 @@ for studyName in `ls -1d * | grep -v -e ${allDir} -e ${zipToolDir}` ; do
     # get ready for zipping and moving
     WUnames=`find -mmin +5 -name "*__*" | grep -v '.zip'`
     if [ -n "${WUnames}" ] ; then
-	zipFileName=${studyName}__`date "+%H-%M-%S"`.zip
-        # zip and mv
+	zipFileName=${studyName}__`date "+%Y-%m-%d_%H-%M-%S"`.zip
+        # zip
 	zipAll
+	# move
+	mvZip ${zipFileName} ${studyName}
     
         # moving old .zip files
-	echo " moving old .zip files to ${boincDownloadDir} ..."
+	echo " old .zip files ..."
 	for fileName in `find . -name "*.zip"` ; do
-	    mvZip ${fileName} ${boincDownloadDir}
+	    mvZip ${fileName} ${studyName}
 	done
     else
 	echo " ...no WUs in ${studyName}!"

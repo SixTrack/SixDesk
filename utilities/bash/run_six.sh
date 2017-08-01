@@ -582,6 +582,10 @@ function submitChromaJobs(){
         sixdeskmess -1 "Check the file first_oneturn which contains the SixTrack fort.6 output."
 	exit
     fi
+    # save all interesting files from first job
+    [ -d chromaJob01 ] || mkdir chromaJob01
+    cp fort.2 fort.3 fort.8 fort.16 fort.10 first_oneturn chromaJob01
+    gzip chromaJob01/*
     mv fort.10 fort.10_first_oneturn
     # clean dir
     export GLOBIGNORE=${__GLOBIGNORE}
@@ -599,6 +603,10 @@ function submitChromaJobs(){
         sixdeskmess -1 "Check the file second_oneturn which contains the SixTrack fort.6 output."
 	exit
     fi
+    # save all interesting files from second job
+    [ -d chromaJob02 ] || mkdir chromaJob02
+    cp fort.2 fort.3 fort.8 fort.16 fort.10 second_oneturn chromaJob02
+    gzip chromaJob02/*
     mv fort.10 fort.10_second_oneturn
     # clean dir
     export GLOBIGNORE=${__GLOBIGNORE}
@@ -674,6 +682,10 @@ function submitBetaJob(){
         sixdeskmess -1 "Check the file lin which contains the SixTrack fort.6 output."
 	exit
     fi
+    # save all interesting files from beta job
+    [ -d betaJob ] || mkdir betaJob
+    cp fort.2 fort.3 fort.8 fort.16 fort.10 lin betaJob
+    gzip betaJob/*
     mv lin lin_old
     cp fort.10 fort.10_old
     # clean dir
@@ -838,25 +850,31 @@ function fixDir(){
     #    that RunDirFullPath and actualDirNameFullPath are non-zero length strings
     local __RunDirFullPath=$1
     local __actualDirNameFullPath=$2
+    local __iFixed=0
     if [ ! -d $__RunDirFullPath ] ; then
 	sixdeskmess -1 "...directory path has problems: recreating it!!!"
 	rm -rf $__RunDirFullPath
 	mkdir -p $__RunDirFullPath
+	let __iFixed+=1
     fi
     if [ ! -L $__actualDirNameFullPath ] ; then
 	sixdeskmess -1 "...directory link has problems: recreating it!!!"
 	rm -rf $__actualDirNameFullPath
 	ln -fs $__RunDirFullPath $__actualDirNameFullPath
+	let __iFixed+=1
     fi
+    return ${__iFixed}
 }
 
 function fixInputFiles(){
     local __RunDirFullPath=$1
+    local __iFixed=0
     
     # fort.3
     if [ ! -f $RundirFullPath/fort.3.gz ] ; then
 	sixdeskmess -1 "...fort.3.gz has problems: recreating it!!!"
 	gzip -c $sixdeskjobs_logs/fort.3 > $RundirFullPath/fort.3.gz
+	let __iFixed+=1
     fi
 	
     # input from MADX: fort.2/.8/.16
@@ -864,8 +882,10 @@ function fixInputFiles(){
 	if [ ! -f $RundirFullPath/fort.${iFort}.gz ] ; then
 	    sixdeskmess -1 "...fort.${iFort}.gz has problems: recreating it!!!"
 	    ln -s $sixtrack_input/fort.${iFort}_$iMad.gz $RundirFullPath/fort.${iFort}.gz
+	    let __iFixed+=1
 	fi
     done
+    return ${__iFixed}
 }
 
 function checkDirStatus(){
@@ -1054,6 +1074,8 @@ function condor_sub(){
 	fi
 	sixdeskmess -1 "Submitting jobs to $sixdeskplatform from dir $PWD - batch name: \"$batch_name\""
 	sixdeskmess  1 "Depending on the number of points in the scan, this operation can take up to few minutes."
+	sixdeskmess -1 "First job: `head -1 ${sixdeskjobs}/${LHCDesName}.list`"
+	sixdeskmess -1 "Last job: `tail -1 ${sixdeskjobs}/${LHCDesName}.list`"
 	# let's renew the kerberos token just before submitting
 	sixdeskmess 2 "renewing kerberos token before submission to HTCondor"
 	sixdeskRenewKerberosToken
@@ -1221,6 +1243,8 @@ function treatShort(){
 	local __eCheckDirReadyForSubmission=0
 	# exit status: dir already run
 	local __eCheckDirAlreadyRun=0
+	# fixing dir
+	local __iFixed=0
 
 	# kk, Angle and kang
 	kk=${KKs[${iAngle}]}
@@ -1255,11 +1279,15 @@ function treatShort(){
 	    sixdeskmess -1 "Analysing and fixing dir $RundirFullPath"
 	    # fix dir
 	    fixDir $RundirFullPath $actualDirNameFullPath
+	    let __iFixed+=$?
 	    # finalise generation of fort.3
 	    submitCreateFinalFort3Short $kk
 	    # fix input files
 	    fixInputFiles $RundirFullPath
-	    let NsuccessFix+=1
+	    let __iFixed+=$?
+	    if [ $__iFixed -ne 0 ] ; then
+		let NsuccessFix+=1
+	    fi
 	    
 	# ----------------------------------------------------------------------
 	elif ${lstatus} ; then
@@ -1435,6 +1463,8 @@ function treatLong(){
 	    local __eCheckDirReadyForSubmission=0
 	    # exit status: dir already run
 	    local __eCheckDirAlreadyRun=0
+	    # fixing dir
+	    local __iFixed=0
 
 	    # kk, Angle and kang
 	    kk=${kksLoop[${iAngle}]}
@@ -1475,11 +1505,15 @@ function treatLong(){
 
 		# fix dir
 		fixDir $RundirFullPath $actualDirNameFullPath
+		let __iFixed+=$?
 		# finalise generation of fort.3
 		submitCreateFinalFort3Long
 		# fix input files
 		fixInputFiles $RundirFullPath
-		let NsuccessFix+=1
+		let __iFixed+=$?
+		if [ $__iFixed -ne 0 ] ; then
+		    let NsuccessFix+=1
+		fi
 	    
 	    # ----------------------------------------------------------------------
 	    elif ${lstatus} ; then
@@ -1636,6 +1670,8 @@ function treatDA(){
     kk=0
     
     let nConsidered+=1
+    # fixing dir
+    local __iFixed=0
     
     # get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
     sixdeskDefinePointTree $LHCDesName $iMad "d" $sixdesktunes $Ampl "0" $Angle $kk $sixdesktrack
@@ -1651,11 +1687,15 @@ function treatDA(){
 	sixdeskmess -1 "Analysing and fixing dir $RundirFullPath"
 	# fix dir
 	fixDir $RundirFullPath $actualDirNameFullPath
+	let __iFixed+=$?
 	# finalise generation of fort.3
 	submitCreateFinalFort3DA
 	# fix input files
 	fixInputFiles $RundirFullPath
-	let NsuccessFix+=1
+	let __iFixed+=$?
+	if [ $__iFixed -ne 0 ] ; then
+	    let NsuccessFix+=1
+	fi
 	    
     # ----------------------------------------------------------------------
     elif ${lstatus} ; then
@@ -1713,17 +1753,18 @@ function printSummary(){
 	sixdeskmess -1 "FIXED          ${NsuccessFix} directories"
     fi
     if ${lgenerate} ; then
-	sixdeskmess -1 "GENERATED      ${NsuccessGen} directories"	
+	sixdeskmess -1 "GENERATED      ${NsuccessGen} directories"
     fi
     if ${lcheck} ; then
-	sixdeskmess -1 "CHECKED        ${NsuccessChk} directories"		
+	sixdeskmess -1 "CHECKED        ${NsuccessChk} directories"
     fi
     if ${lsubmit} ; then
-	sixdeskmess -1 "SUBMITTED      ${NsuccessSub} jobs"		
+	sixdeskmess -1 "SUBMITTED      ${NsuccessSub} jobs"
     fi
     if ${lstatus} ; then
-	sixdeskmess -1 "STATUS LISTED  ${NsuccessSts} jobs"			
+	sixdeskmess -1 "STATUS LISTED  ${NsuccessSts} jobs"
     fi
+    sixdeskmess -1 "CONSIDERED     ${nConsidered} jobs"
 }
 
 # ==============================================================================
@@ -2266,6 +2307,11 @@ fi
 # - preparatory steps for submission to htcondor:
 if ${lsubmit} ; then
     if [ "$sixdeskplatform" == "htcondor" ] ; then
+	# clean away any existing .list, to avoid double submissions
+	if [ -e ${sixdeskjobs}/${LHCDesName}.list ] ; then
+	    sixdeskmess -1 "cleaning away existing ${sixdeskjobs}/${LHCDesName}.list to avoid double submissions!"
+	    rm -f ${sixdeskjobs}/${LHCDesName}.list
+	fi
 	cp ${SCRIPTDIR}/templates/htcondor/htcondor_job.sh ${sixdeskjobs}/htcondor_job.sh
 	cp ${SCRIPTDIR}/templates/htcondor/htcondor_run_six.sub ${sixdeskjobs}/htcondor_run_six.sub
 	# some set up of htcondor submission scripts
