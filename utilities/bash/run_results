@@ -67,50 +67,68 @@ update_cases()
   # previous run_results which was killed for some reason).
   touch $sixdeskwork/completed_this_run
   touch $sixdeskjobs/completed_tasks_this_run
+  
+  if [ `wc -l < $sixdeskwork/completed_this_run` -gt 0 ] ; then
+      touch $sixdeskwork/mycompleted_cases
+      cat $sixdeskwork/mycompleted_cases $sixdeskwork/completed_this_run | sort -u > $sixdeskwork/mycompleted_cases_temp
+      mv $sixdeskwork/mycompleted_cases_temp $sixdeskwork/mycompleted_cases
+      rm -f $sixdeskwork/sedscript.sed
+      #make a sed script
+      while read mycase ; do
+	  echo "/^${mycase}$/d" >> $sixdeskwork/sedscript.sed
+      done < $sixdeskwork/completed_this_run
+      sed -f $sixdeskwork/sedscript.sed $sixdeskwork/myincomplete_cases > $sixdeskwork/myincomplete_cases_temp
+      mv $sixdeskwork/myincomplete_cases_temp $sixdeskwork/myincomplete_cases
 
-#MACRO mymktmp newccases $sixdeskwork
-  sixdesktmpname=newccases
-  sixdesktmpdirarg=$sixdeskwork
-  sixdeskmktmp
-  newccases=$sixdesktmp
-#MACRO mymktmp
-
-
-#MACRO mymktmp newicases $sixdeskwork
-  sixdesktmpname=newicases
-  sixdesktmpdirarg=$sixdeskwork
-  sixdeskmktmp
-  newicases=$sixdesktmp
-#MACRO mymktmp
-
-  touch $sixdeskwork/mycompleted_cases
-  cat $sixdeskwork/mycompleted_cases $sixdeskwork/completed_this_run > $newccases
-  sort --unique $newccases > $sixdeskwork/mycompleted_cases
-  rm $newccases
-  rm -f $sixdeskwork/sedscript.sed
-  #make a sed script
-  while read mycase ; do
-    echo "/^${mycase}$/d" >> $sixdeskwork/sedscript.sed
-  done < $sixdeskwork/completed_this_run
-  sed -f $sixdeskwork/sedscript.sed $sixdeskwork/myincomplete_cases > $newicases
-  cp $newicases $sixdeskwork/myincomplete_cases
-
-  # apply the same logics to regular main DB
-  cat $sixdeskwork/completed_cases $sixdeskwork/completed_this_run | sort -u > $sixdeskwork/completed_cases
-  sed -i -f $sixdeskwork/sedscript.sed $sixdeskwork/incomplete_cases
-  # apply the same logics to plaform DB
-  rm -f $sixdeskjobs/sedscript.sed
-  while read aline ; do
-      echo "/^${aline}$/d" >> $sixdeskjobs/sedscript.sed
-  done < $sixdeskjobs/completed_tasks_this_run
-  sed -i -f $sixdeskjobs/sedscript.sed $sixdeskjobs/incomplete_tasks
-  sed -i -f $sixdeskjobs/sedscript.sed $sixdeskjobs/completed_tasks
-  cat $sixdeskjobs/completed_tasks $sixdeskjobs/completed_tasks_this_run > $sixdeskjobs/completed_tasks
-
-  rm -f $newicases
+      # apply the same logics to regular main DB
+      cat $sixdeskwork/completed_cases $sixdeskwork/completed_this_run | sort -u > $sixdeskwork/completed_cases_temp
+      mv $sixdeskwork/completed_cases_temp $sixdeskwork/completed_cases
+      sed -i -f $sixdeskwork/sedscript.sed $sixdeskwork/incomplete_cases
+  fi
+  if [ `wc -l < $sixdeskjobs/completed_tasks_this_run` -gt 0 ] ; then
+      # apply the same logics to plaform DB
+      rm -f $sixdeskjobs/sedscript.sed
+      while read aline ; do
+	  echo "/^${aline}/d" >> $sixdeskjobs/sedscript.sed
+      done < $sixdeskjobs/completed_tasks_this_run
+      sed -i -f $sixdeskjobs/sedscript.sed $sixdeskjobs/incomplete_tasks
+      sed -i -f $sixdeskjobs/sedscript.sed $sixdeskjobs/completed_tasks
+      cat $sixdeskjobs/completed_tasks $sixdeskjobs/completed_tasks_this_run | sort -u > $sixdeskjobs/completed_tasks_temp
+      mv $sixdeskjobs/completed_tasks_temp $sixdeskjobs/completed_tasks
+  fi
+  
   rm -f $sixdeskwork/completed_this_run
   rm -f $sixdeskjobs/completed_tasks_this_run
+
+  cases=0
+  if [ -s $sixdeskwork/taskids ] ; then
+      cases=`wc -l < $sixdeskwork/taskids`
+  fi
+  icases=0
+  if [ -s $sixdeskwork/incomplete_cases ] ; then
+      icases=`wc -l < $sixdeskwork/incomplete_cases`
+  fi
+  ccases=0
+  if [ -s $sixdeskwork/mycompleted_cases ] ; then
+      ccases=`wc -l < $sixdeskwork/completed_cases`
+  fi
+  sixdeskmess -1 "Present status of regular DB: $cases cases, $ccases complete ($icases incomplete)"
+  cases=0
+  if [ -s $sixdeskjobs/tasks ] ; then
+      cases=`wc -l < $sixdeskjobs/tasks`
+  fi
+  icases=0
+  if [ -s $sixdeskjobs/incomplete_tasks ] ; then
+      icases=`wc -l < $sixdeskjobs/incomplete_tasks`
+  fi
+  ccases=0
+  if [ -s $sixdeskjobs/completed_tasks ] ; then
+      ccases=`wc -l < $sixdeskjobs/completed_tasks`
+  fi
+  sixdeskmess -1 "Present status of platform DB: $cases cases, $ccases complete ($icases incomplete)"
+  
   # and make another report
+  echo ""
 
 #MACRO mymess 1 Due to an AFS/Linux bug we maintain another database
   sixdeskmess -1 "Due to an AFS/Linux bug we maintain another database"
@@ -127,21 +145,16 @@ update_cases()
 #MACRO mymess
 
   icases=0
-  if test -s $sixdeskwork/myincomplete_cases
-  then
-    icases=`wc -l $sixdeskwork/myincomplete_cases | awk '{print ($1)}'`
+  if [ -s $sixdeskwork/myincomplete_cases ] ; then
+      icases=`wc -l < $sixdeskwork/myincomplete_cases`
   fi
   ccases=0
-  if test -s $sixdeskwork/mycompleted_cases
-  then
-    ccases=`wc -l $sixdeskwork/mycompleted_cases | awk '{print ($1)}'`
+  if [ -s $sixdeskwork/mycompleted_cases ] ; then
+      ccases=`wc -l < $sixdeskwork/mycompleted_cases`
   fi
-
 #MACRO mymess 0 Before/after this download $cases mycases, $ccases complete ($icases incomplete)
   sixdeskmess -1 "Before/after this download $cases mycases, $ccases complete ($icases incomplete)"
 #MACRO mymess
-
-  sixdeskmess -1 "Present status of regular DB: `wc -l < $sixdeskjobs/tasks` cases, `wc -l < $sixdeskjobs/completed_tasks` complete (`wc -l < $sixdeskjobs/incomplete_tasks` incomplete)"
 }
 
 function getListNewResults(){
@@ -1219,7 +1232,9 @@ function downloadNewResults(){
 	printf '.%.0s' {1..80}
 	echo ""
     fi
-    sixdeskmess -1 "In this batch of ${tmpReady} ready results, ${__ok} were downloaded successfully, ${__duplicated} were deleted as duplicate/redundant, and ${__failed} failed."
+    if [ ${tmpReady} -gt 0 ] ; then
+	sixdeskmess -1 "In this batch of ${tmpReady} ready results, ${__ok} were downloaded successfully, ${__duplicated} were deleted as duplicate/redundant, and ${__failed} failed."
+    fi
 
     let ok+=${__ok}
     let duplicated+=${__duplicated}
@@ -1472,43 +1487,27 @@ then
 #MACRO myexit
 
 fi
+
 # Now update my database if a completed_this_run file exists froma previous run
-if [ -s $sixdeskwork/completed_this_run ] || [ -s $sixdeskjobs/completed_tasks_this_run ] ; then
 
 #MACRO mylock $sixdeskwork
   ###sixdesklockdir=$sixdeskwork
   ###sixdesklock
 #MACRO mylock
 
-  update_cases
+update_cases
 
 #MACRO myunlock $sixdeskwork
   ###sixdesklockdir=$sixdeskwork
   ###sixdeskunlock
 #MACRO myunlock
 
-fi
 # Get the counts before we run for checking later
 
 #MACRO mylock $sixdeskwork
 ###sixdesklockdir=$sixdeskwork
 ###sixdesklock
 #MACRO mylock
-
-if test -f $sixdeskwork/taskids
-then
-  cases=`wc -l "$sixdeskwork/taskids" | awk '{print ($1)}'`
-fi
-icases=0
-if test -s $sixdeskwork/incomplete_cases
-then
-  icases=`wc -l $sixdeskwork/incomplete_cases | awk '{print ($1)}'`
-fi
-ccases=0
-if test -s $sixdeskwork/completed_cases
-then
-  ccases=`wc -l $sixdeskwork/completed_cases | awk '{print ($1)}'`
-fi
 
 #MACRO myunlock $sixdeskwork
 ###sixdesklockdir=$sixdeskwork
@@ -1560,12 +1559,14 @@ printf '=%.0s' {1..80}
 echo ""
 echo ""
 
-# look into downloadDir: in case zipped files are there, then
-#    download all results there contained
-allNewArchives=`ls -1 ${downloadDir}/????-??-??/${workspace}_${currStudy}__*.zip 2> /dev/null`
-allOldArchives=`ls -1 ${downloadDir}/*/delete/${workspace}_${currStudy}__*.zip 2> /dev/null`
+# look for zipped files: in case download all results there contained
+allNewArchives=`ls -1 ${sixdeskboincdir}/results/${workspace}_${currStudy}__*.zip ${downloadDir}/????-??-??/${workspace}_${currStudy}__*.zip 2> /dev/null`
+allOldArchives=`ls -1 ${sixdeskboincdir}/results/processed/${workspace}_${currStudy}__*.zip ${downloadDir}/????-??-??/delete/${workspace}_${currStudy}__*.zip ${downloadDir}/????-??-??/processed/${workspace}_${currStudy}__*.zip 2> /dev/null`
 echo ""
 printf '=%.0s' {1..80}
+echo ""
+echo ""
+sixdeskmess -1 "looking for zipped results, either in ${sixdeskboincdir}/results or in ${downloadDir}"
 echo ""
 echo ""
 if [ -n "${allNewArchives}" ] ; then
@@ -1611,7 +1612,7 @@ if ${lProceedRunRes} ; then
         printf '=%.0s' {1..80}
         echo ""
         echo ""
-        sixdeskmess -1 "No results from ${downloadDir} to process"
+        sixdeskmess -1 "No zipped results to process"
         echo ""
         printf '=%.0s' {1..80}
         echo ""
@@ -1622,7 +1623,11 @@ if ${lProceedRunRes} ; then
     	
     	    tmpArchiveName=`basename ${tmpArchive}`
     	    tmpArchiveDir=`dirname ${tmpArchive}`
-    	    tmpExtractDir=/tmp/${tmpArchiveName//.zip/}
+	    if [ -d /tmp/${LOGNAME} ] ; then
+    		tmpExtractDir=/tmp/${LOGNAME}/${tmpArchiveName//.zip/}
+	    else
+    		tmpExtractDir=/tmp/${tmpArchiveName//.zip/}
+	    fi
     	
     	    echo ""
     	    printf '=%.0s' {1..80}
@@ -1647,9 +1652,10 @@ if ${lProceedRunRes} ; then
 	    update_cases
 	
 	    if [ $? -eq 0 ] ; then
-	        # mv in delete only brand new results
-		if [[ "${tmpArchive}" != *"/delete/"* ]] ; then
-		    mv ${tmpArchive} ${tmpArchiveDir}/delete/${tmpArchiveName}
+	        # mv in processed only brand new results
+		if [[ "${tmpArchive}" != *"/processed/"* ]] ; then
+		    [ -d ${tmpArchiveDir}/processed ] || mkdir ${tmpArchiveDir}/processed
+		    mv ${tmpArchive} ${tmpArchiveDir}/processed/${tmpArchiveName}
 		fi
 	    fi
 
@@ -1696,29 +1702,8 @@ fi
 ###sixdesklock
 #MACRO mylock
 
-if test -f $sixdeskwork/taskids
-then
-  cases=`wc -l "$sixdeskwork/taskids" | awk '{print ($1)}'`
-fi
-icases=0
-if test -s $sixdeskwork/incomplete_cases
-then
-  icases=`wc -l $sixdeskwork/incomplete_cases | awk '{print ($1)}'`
-fi
-ccases=0
-if test -s $sixdeskwork/completed_cases
-then
-  ccases=`wc -l $sixdeskwork/completed_cases | awk '{print ($1)}'`
-fi
-
-#MACRO mymess 0 After  this download $cases cases, $ccases complete ($icases incomplete)
-sixdeskmess -1 "Present status of DB: $cases cases, $ccases complete ($icases incomplete)"
-#MACRO mymess
-
 # update the my* DB
-if [ -s $sixdeskwork/completed_this_run ] || [ -s $sixdeskjobs/completed_tasks_this_run ] ; then
-    update_cases
-fi
+update_cases
 rm -f $tmp
 
 #MACRO myunlock $sixdeskwork
