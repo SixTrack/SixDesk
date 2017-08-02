@@ -105,7 +105,7 @@ function consistencyChecks(){
 }
 
 function getInfoFromFort3Local(){
-    export fort3localLines=`cat ${envFilesPath}/fort.3.local`
+    export fort3localLines=`awk 'NF' ${envFilesPath}/fort.3.local`
     local __activeLines=`echo "${fort3localLines}" | grep -v '/'`
     local __firstActiveBlock=`echo "${__activeLines}" | head -1 | cut -c1-4`
     local __otherActiveBlocks=`echo "${__activeLines}" | grep -A1 NEXT | grep -v NEXT | grep -v '^\-\-' | cut -c1-4`
