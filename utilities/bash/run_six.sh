@@ -2233,8 +2233,8 @@ if ${lcheck} ; then
 		    sixdeskmess -1 "Err of ownership of $sixdeskboincdir: ${tmpOwner} (expected: $LOGNAME)"
 		    let __lerr+=1
 		else
-		    # - check acl rights
-		    aclRights=`fs listacl $sixdeskboincdir | grep $LOGNAME 2> /dev/null | awk '{print ($2)}'`
+		    # - check acl rights of current user
+		    aclRights=`fs listacl $sixdeskboincdir | grep $LOGNAME 2> /dev/null | grep -v ":" | awk '{print ($2)}'`
 		    if [ "$aclRights" != "rlidwka" ] ; then
 			sixdeskmess -1 "Err of acl rights on $sixdeskboincdir for $LOGNAME: ${aclRights} (expected: rlidwka)"
 			let __lerr+=1
