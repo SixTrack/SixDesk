@@ -1097,6 +1097,7 @@ sixdeskSetExes(){
 	else
 	    export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_pro
 	fi
+    fi
     [ -n "${SIXTRACKBNLEXE}" ] || export SIXTRACKBNLEXE=$sixdeskpath/exes/SixTrack_bnl_pro
     [ -n "${SIXTRACKDAEXE}" ] || export SIXTRACKDAEXE=$sixdeskpath/exes/SixTrack_crlibm_da_lf95v4200
 }
