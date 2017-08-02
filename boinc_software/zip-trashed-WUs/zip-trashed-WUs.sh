@@ -30,8 +30,8 @@ function mvZip(){
     local __fileToCopy=$1
     local __studyName=$2
     
-    for __destDir in `ls -1d ${boincSpoolDirPath}/` ; do
-	local __destPath=${__destDir}/${__studyName}/results
+    for __destDir in `ls -1d ${boincSpoolDirPath}/*/` ; do
+	local __destPath=${__destDir}${__studyName}/results
 	! [ -d ${__destPath} ] || break
     done
     if ! [ -d ${__destPath} ] ; then
@@ -134,7 +134,7 @@ cd - > /dev/null 2>&1
 # treat studies
 # ==============================================================================
 
-for studyName in `ls -1d * | grep -v -e ${allDir} -e ${zipToolDir}` ; do
+for studyName in `ls -1d * | grep -v -e "^${allDir}$" -e "^${zipToolDir}$"` ; do
     echo " ...study ${studyName}"
     cd ${studyName}
 
