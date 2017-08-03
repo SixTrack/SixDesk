@@ -1657,6 +1657,7 @@ if ${lProceedRunRes} ; then
 		    [ -d ${tmpArchiveDir}/processed ] || mkdir ${tmpArchiveDir}/processed
 		    mv ${tmpArchive} ${tmpArchiveDir}/processed/${tmpArchiveName}
 		fi
+		touch ${tmpArchiveDir}/processed/${tmpArchiveName}
 	    fi
 
 	    rm -rf ${tmpExtractDir}
