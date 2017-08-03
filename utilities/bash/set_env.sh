@@ -98,32 +98,16 @@ function consistencyChecks(){
 
 function setFurtherEnvs(){
     # scan angles:
-    lReduceAngsWithAmplitude=false
-    ampFactor=1
-    local __ampFactorDef=0.3
-    # - reduce angles with amplitude
-    if [ -n "${reduce_angs_with_aplitude}" ] ; then
+    lReduceAngsWithAmplitude=0
+    if (( $(echo " ${reduce_angs_with_amplitude} > 0"|bc -l) )) ; then
 	if [ ${long} -eq 1 ] ; then
-	    local __tmpValues=`echo "${reduce_angs_with_aplitude}" | awk -v "ampFactorDef=${__ampFactorDef}" '{if ($1<0) {print (ampFactorDef,"true") } else if ($1==0||$1==1) { print(1,"false") } else { print($1,"true") } } '`
-	    __tmpValues=(${__tmpValues})
-	    ampFactor=${__tmpValues[0]}
-	    lReduceAngsWithAmplitude=${__tmpValues[1]}
-	else
-	    sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
-	fi
-    elif [ -n "${reduce_angs_with_amplitude}" ] ; then
-	if [ ${long} -eq 1 ] ; then
-	    local __tmpValues=`echo "${reduce_angs_with_amplitude}" | awk -v "ampFactorDef=${__ampFactorDef}" '{if ($1<0) {print (ampFactorDef,"true") } else if ($1==0||$1==1) { print(1,"false") } else { print($1,"true") } } '`
-	    __tmpValues=(${__tmpValues})
-	    ampFactor=${__tmpValues[0]}
-	    lReduceAngsWithAmplitude=${__tmpValues[1]}
+            lReduceAngsWithAmplitude=${reduce_angs_with_amplitude}
 	else
 	    sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
 	fi
     fi
     export totAngle=90
     export lReduceAngsWithAmplitude
-    export ampFactor
 }
 
 # ==============================================================================

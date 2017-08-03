@@ -1393,6 +1393,9 @@ function treatShort(){
 
 function treatLong(){
 
+    if (( $(echo "${lReduceAngsWithAmplitude} > 0 "|bc -l) )) ; then 
+        ampl_index=0
+    fi
     # ==========================================================================
     for (( iAmple=0; iAmple<${#allAmplitudeSteps[@]}; iAmple++ )) ; do
     # ==========================================================================
@@ -1400,10 +1403,10 @@ function treatLong(){
 	Ampl=${allAmplitudeSteps[${iAmple}]}
 	fampstart=${fAmpStarts[${iAmple}]}
 	fampend=${fAmpEnds[${iAmple}]}
-	
+
 	if ${lrestart} && ${lrestartAmpli} ; then
 	    if [ "${amplisFromName}" == "${Ampl}" ] ; then
-		lrestartAmpli=false
+ 		lrestartAmpli=false
 	    else
 		continue
 	    fi
@@ -1412,29 +1415,32 @@ function treatLong(){
 	# separate output for current case from previous one
 	echo ""
 	echo ""
-	
+
         sixdeskmess -1 "Considering amplitude step: $Ampl"
-	
-	# angles
-	if ${lReduceAngsWithAmplitude} ; then
-	    if [ ${ampstart} -gt ${ampFactor} ] ;then
-		kksLoop=${KKs[@]}
-		anglesLoop=${Angles[@]}
-		kangsLoop=${kAngs[@]}
-	    else
-		kksLoop=${KKs_reduced[@]}
-		anglesLoop=${Angles_reduced[@]}
-		kangsLoop=${kAngs_reduced[@]}
-	    fi
-	else
+
+        if (( $(echo "${lReduceAngsWithAmplitude} > 0 "|bc -l) )) ; then 
+            KKs_reduced=""
+            Angles_reduced=""
+            kAngs_reduced=""
+            while [ "${KKs_ampl[${ampl_index}]}" == "${iAmple}" ]	
+            do
+              KKs_reduced="${KKs_reduced} ${KKs[$ampl_index]}"
+              Angles_reduced="${Angles_reduced} ${Angles[$ampl_index]}"
+              kAngs_reduced="${kAngs_reduced} ${kAngs[$ampl_index]}"
+              ampl_index=$[$ampl_index+1]
+             done
+	    kksLoop=${KKs_reduced[@]}
+	    anglesLoop=${Angles_reduced[@]}
+	    kangsLoop=${kAngs_reduced[@]}
+        else       
 	    kksLoop=${KKs[@]}
-	    anglesLoop=${Angles[@]}
+ 	    anglesLoop=${Angles[@]}
 	    kangsLoop=${kAngs[@]}
-	fi
+        fi      
 	kksLoop=( ${kksLoop} )
 	anglesLoop=( ${anglesLoop} )
 	kangsLoop=( ${kangsLoop} )
-	
+
 	# ======================================================================
 	for (( iAngle=0; iAngle<${#kksLoop[@]}; iAngle++ )) ; do
 	# ======================================================================
@@ -1456,15 +1462,15 @@ function treatLong(){
 	    kang=${kangsLoop[${iAngle}]}
 
 	    if ${lrestart} && ${lrestartAngle} ; then
-		if [ "${angleFromName}" == "${Angle}" ] ; then
-		    lrestartAngle=false
-		    if ${lrestartLast} ; then
-			# -R LAST
-			continue
-		    fi
-		else
-		    continue
-		fi
+	        if [ "${angleFromName}" == "${Angle}" ] ; then
+	            lrestartAngle=false
+	            if ${lrestartLast} ; then
+	        	# -R LAST
+	        	continue
+	            fi
+	        else
+	            continue
+	        fi
 	    fi
 
 	    let nConsidered+=1
@@ -1472,13 +1478,13 @@ function treatLong(){
 	    # get dirs for this point in scan (returns Runnam, Rundir, actualDirName)
 	    sixdeskDefinePointTree $LHCDesName $iMad "s" $sixdesktunes $Ampl $turnsle $Angle $kk $sixdesktrack
 	    if [ $? -gt 0 ] ; then
-		# go to next WU (sixdeskmess already printed out and email sent to user/admins)
-		continue
+	        # go to next WU (sixdeskmess already printed out and email sent to user/admins)
+	        continue
 	    fi
 
 	    # separate output for current case from previous one
 	    if ! ${lquiet}; then
-		echo ""
+	        echo ""
 	    fi
 	    sixdeskmess  1 "Point in scan $Runnam $Rundir"
 	    sixdeskmess -1 "study: ${LHCDescrip} - Job: ${nConsidered}/${iTotal} - Seed: $iMad [${iMadStart}:${iend}] - Ampl: $Ampl - Angle: $Angle"
@@ -1487,24 +1493,24 @@ function treatLong(){
 	    if ${lfix} ; then
             # ----------------------------------------------------------------------
 
-		# fix dir
-		fixDir $RundirFullPath $actualDirNameFullPath
-		let __iFixed+=$?
-		# finalise generation of fort.3
-		submitCreateFinalFort3Long
-		# fix input files
-		fixInputFiles $RundirFullPath
-		let __iFixed+=$?
-		if [ $__iFixed -ne 0 ] ; then
-		    let NsuccessFix+=1
-		fi
+	        # fix dir
+	        fixDir $RundirFullPath $actualDirNameFullPath
+	        let __iFixed+=$?
+	        # finalise generation of fort.3
+	        submitCreateFinalFort3Long
+	        # fix input files
+	        fixInputFiles $RundirFullPath
+	        let __iFixed+=$?
+	        if [ $__iFixed -ne 0 ] ; then
+	            let NsuccessFix+=1
+	        fi
 	    
 	    # ----------------------------------------------------------------------
 	    elif ${lstatus} ; then
             # ----------------------------------------------------------------------
 
-		checkDirStatus
-		let NsuccessSts+=1
+	        checkDirStatus
+	        let NsuccessSts+=1
 	    
 	    # ----------------------------------------------------------------------
 	    else
@@ -1530,21 +1536,21 @@ function treatLong(){
 	        	
 	        	# create rundir
 	        	submitCreateRundir $RundirFullPath $actualDirNameFullPath
-			
+	        	
 	        	# finalise generation of fort.3
-			multipleTrials "submitCreateFinalFort3Long; local __exit_status=\$?" "[ \${__exit_status} -eq 0 ]" "Failing to generate a proper fort.3"
-			if [ $? -ne 0 ] ; then
-			    sixdeskmess  1 "Carrying on with next WU"
-			    continue
-			fi
-			
+	        	multipleTrials "submitCreateFinalFort3Long; local __exit_status=\$?" "[ \${__exit_status} -eq 0 ]" "Failing to generate a proper fort.3"
+	        	if [ $? -ne 0 ] ; then
+	        	    sixdeskmess  1 "Carrying on with next WU"
+	        	    continue
+	        	fi
+	        	
 	        	# final preparation of all SIXTRACK files
 	        	# NB: for boinc, it returns workunitName
 	        	submitCreateFinalInputs
-			if [ $? -ne 0 ] ; then
-			    sixdeskmess  1 "Carrying on with next WU"
-			    continue
-			fi
+	        	if [ $? -ne 0 ] ; then
+	        	    sixdeskmess  1 "Carrying on with next WU"
+	        	    continue
+	        	fi
 	        	
 	        	if [ "$sixdeskplatform" == "lsf" ] ; then
 	        	    # submission file
@@ -1555,7 +1561,7 @@ function treatLong(){
 	        		-e 's?SIXCASTOR?'$sixdeskcastor'?g' ${SCRIPTDIR}/templates/lsf/${lsfjobtype}.sh > $RundirFullPath/$Runnam.sh
 	        	    chmod 755 $RundirFullPath/$Runnam.sh
 	        	fi
-			let NsuccessGen+=1
+	        	let NsuccessGen+=1
 	            fi
 	        fi
 	        
@@ -1579,7 +1585,7 @@ function treatLong(){
 	        	__lSubmit=true
 	        	sixdeskmess  1 "$RundirFullPath ready to submit!"
 	            fi
-		    let NsuccessChk+=1
+	            let NsuccessChk+=1
 	        fi
 	        
 	        # ------------------------------------------------------------------
@@ -1587,25 +1593,25 @@ function treatLong(){
 	        # ------------------------------------------------------------------
 	            if ${__lSubmit} ; then
                         # clean, in case
-			dot_clean
-			touch $RundirFullPath/JOB_NOT_YET_STARTED
+	        	dot_clean
+	        	touch $RundirFullPath/JOB_NOT_YET_STARTED
 	        	if [ "$sixdeskplatform" == "lsf" ] ; then
 	        	    dot_bsub
-			    local __subSuccess=$?
+	        	    local __subSuccess=$?
 	        	elif [ "$sixdeskplatform" == "htcondor" ] ; then
 	        	    dot_htcondor
-			    local __subSuccess=1
-			    let nQueued+=1
-			    if  [ $((${nQueued}%${nMaxJobsSubmitHTCondor})) -eq 0 ] ; then
-				condor_sub
-			    fi
+	        	    local __subSuccess=1
+	        	    let nQueued+=1
+	        	    if  [ $((${nQueued}%${nMaxJobsSubmitHTCondor})) -eq 0 ] ; then
+	        		condor_sub
+	        	    fi
 	        	elif [ "$sixdeskplatform" == "boinc" ] ; then
 	        	    dot_boinc
-			    local __subSuccess=$?
+	        	    local __subSuccess=$?
 	        	fi
-			if [ ${__subSuccess} -eq 0 ] ; then
-			    let NsuccessSub+=1
-			fi
+	        	if [ ${__subSuccess} -eq 0 ] ; then
+	        	    let NsuccessSub+=1
+	        	fi
 	            else
 	        	sixdeskmess -1 "No submission!"
 	            fi
@@ -1614,31 +1620,31 @@ function treatLong(){
 	        # ------------------------------------------------------------------
 	        if ${lcleanzip} ; then
 	        # ------------------------------------------------------------------
-		    if ! ${lmegazip} ; then
-			dot_cleanZips $RundirFullPath $workunitname.zip $workunitname.desc
-		    fi
+	            if ! ${lmegazip} ; then
+	        	dot_cleanZips $RundirFullPath $workunitname.zip $workunitname.desc
+	            fi
 	        fi
 
 	        # ------------------------------------------------------------------
 	        # renew kerberos ticket (long submissions)
 	        # ------------------------------------------------------------------
-		if ${lfix} && [ $((${NsuccessGen}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessGen} -ne 0 ] ; then
-		    sixdeskmess 2 "renewing kerberos token: ${NsuccessGen} vs ${NrenewKerberos}"
-		    sixdeskRenewKerberosToken
-		elif ${lstatus} && [ $((${NsuccessSts}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessSts} -ne 0 ] ; then
-		    sixdeskmess 2 "renewing kerberos token: ${NsuccessSts} vs ${NrenewKerberos}"
-		    sixdeskRenewKerberosToken
-		elif ${lgenerate} && [ $((${NsuccessFix}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessFix} -ne 0 ] ; then
-		    sixdeskmess 2 "renewing kerberos token: ${NsuccessFix} vs ${NrenewKerberos}"
-		    sixdeskRenewKerberosToken
-		elif ${lcheck} && [ $((${NsuccessChk}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessChk} -ne 0 ] ; then
-		    sixdeskmess 2 "renewing kerberos token: ${NsuccessChk} vs ${NrenewKerberos}"
-		    sixdeskRenewKerberosToken
-		elif ${lsubmit} && [ $((${NsuccessSub}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessSub} -ne 0 ] ; then
-		    sixdeskmess 2 "renewing kerberos token: ${NsuccessSub} vs ${NrenewKerberos}"
-		    sixdeskRenewKerberosToken
-		fi
-		
+	        if ${lfix} && [ $((${NsuccessGen}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessGen} -ne 0 ] ; then
+	            sixdeskmess 2 "renewing kerberos token: ${NsuccessGen} vs ${NrenewKerberos}"
+	            sixdeskRenewKerberosToken
+	        elif ${lstatus} && [ $((${NsuccessSts}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessSts} -ne 0 ] ; then
+	            sixdeskmess 2 "renewing kerberos token: ${NsuccessSts} vs ${NrenewKerberos}"
+	            sixdeskRenewKerberosToken
+	        elif ${lgenerate} && [ $((${NsuccessFix}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessFix} -ne 0 ] ; then
+	            sixdeskmess 2 "renewing kerberos token: ${NsuccessFix} vs ${NrenewKerberos}"
+	            sixdeskRenewKerberosToken
+	        elif ${lcheck} && [ $((${NsuccessChk}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessChk} -ne 0 ] ; then
+	            sixdeskmess 2 "renewing kerberos token: ${NsuccessChk} vs ${NrenewKerberos}"
+	            sixdeskRenewKerberosToken
+	        elif ${lsubmit} && [ $((${NsuccessSub}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessSub} -ne 0 ] ; then
+	            sixdeskmess 2 "renewing kerberos token: ${NsuccessSub} vs ${NrenewKerberos}"
+	            sixdeskRenewKerberosToken
+	        fi
+	        
 	    # ----------------------------------------------------------------------
 	    fi
 	    # ----------------------------------------------------------------------
@@ -2111,7 +2117,7 @@ sixdesklockAll
 # actual traps
 trap "printSummary; sixdeskexit  199" EXIT
 trap "printSummary; sixdeskexit  1" SIGINT
-trap "printSummary; sixdeskexit  2" SIGQUIT
+trap "printSummary; sixdeskeedt  2" SIGQUIT
 trap "printSummary; sixdeskexit 11" SIGSEGV
 trap "printSummary; sixdeskexit  8" SIGFPE
 
@@ -2365,7 +2371,6 @@ else
 	sixdeskAllAmplitudes
 	iTotalAmplitudeSteps=${#allAmplitudeSteps[@]}
 	sixdeskmess -1 "- Amplitudes: from $ns1l to $ns2l by $nsincl - total: ${iTotalAmplitudeSteps} amplitude steps;"
-	# generate array of angles (it returns KKs, Angles and kAngs, and reduced ones)
 	sixdeskAllAngles $kinil $kendl $kmaxl $kstep $ampstart $ampfinish $lbackcomp ${lReduceAngsWithAmplitude} ${totAngle} ${ampFactor}
 	iTotalAngles=${#KKs[@]}
 	sixdeskmess -1 "- Angles: $kinil, $kendl, $kmaxl by $kstep - total: ${iTotalAngles} angles"
