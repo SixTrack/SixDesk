@@ -687,7 +687,7 @@ function downloadNewResults(){
 				delete="true"
 				anerror="true"
 			    else 
-				if [ ${sixdesklevel_option} -gt 1 ] ; then
+				if [ ${sixdesklevel} -gt 1 ] ; then
 				    line1=`head -1 fort.10`
 				    local __messLine1=`echo $line1 | awk '{print ("Maxturn",$1,"Lost",$2,"Qx/Qy",$3,$4)}'`
 				    local __messLine2=`echo $line1 | awk '{print (" 1st Ampx/y",$7,$8,"2nd",$26,$27)}'`
