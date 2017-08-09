@@ -672,7 +672,7 @@ function submitBetaJob(){
 	exit
     fi
     # save all interesting files from beta job
-    rm -rf betaJob/*
+    rm -rf betaJob
     mkdir betaJob
     cp fort.2 fort.3 fort.8 fort.16 fort.10 lin betaJob
     gzip -f betaJob/*
