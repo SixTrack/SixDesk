@@ -155,6 +155,7 @@ function submit(){
 	    
 	    sed -e 's?%NPART?'$bunch_charge'?g' \
 		-e 's?%EMIT_BEAM?'$emit_beam'?g' \
+		-e 's?%XING?'$xing'?g' \
 		-e 's?%SEEDSYS?'$iMad'?g' \
 		-e 's?%SEEDRAN?'$iMad'?g' $filejob.mask > $filejob."$iMad"
 	    sed -e 's?%SIXJUNKTMP%?'$junktmp'?g' \
