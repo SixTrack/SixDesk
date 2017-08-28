@@ -98,14 +98,29 @@ function consistencyChecks(){
 
 function setFurtherEnvs(){
     # scan angles:
-    lReduceAngsWithAmplitude=0
-    if (( $(echo " ${reduce_angs_with_amplitude} > 0"|bc -l) )) ; then
-	if [ ${long} -eq 1 ] ; then
-            lReduceAngsWithAmplitude=${reduce_angs_with_amplitude}
-	else
-	    sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
-	fi
+    lReduceAngsWithAmplitude=false
+ 
+    if [ -n "${reduce_angs_with_aplitude}" ] ; then
+        sixdeskmess -1 "wrong spelling of reduce_angs_with_amplitude. Please correct it for future use"
+        reduce_angs_with_aplitude=${reduce_angs_with_amplitude}
+    fi   
+    
+    if [ -z "${reduce_angs_with_amplitude}" ]; then
+        reduce_angs_with_amplitude=0         
+    elif (( $(echo "${reduce_angs_with_amplitude}" | awk '{print ($1 >0)}') )); then 
+        if [ ${long} -ne 1 ]; then
+            sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
+        else
+            if [ ${kinil} -ne 1 ] || [ ${kendl} -ne ${kmaxl} ] || [ ${kstep} -ne 1 ]; then
+                sixdeskmess -1 "reduced angles with amplitudes available only for kmin=1, kend=kmax and kstep=1"
+            elif (( $(echo "${reduce_angs_with_amplitude} ${ns2l}" | awk '{print ($1 >= $2)}') )); then
+                sixdeskmess -1 "reduced angles with amplitudes flag greater than maximum amplitude, flag de-activated"
+            else 
+                lReduceAngsWithAmplitude=true
+            fi 
+        fi
     fi
+
     export totAngle=90
     export lReduceAngsWithAmplitude
 }

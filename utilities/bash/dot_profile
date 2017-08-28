@@ -730,43 +730,36 @@ sixdeskAllAngles(){
     KKs=""
     Angles=""
     kAngs=""
-
-    if (( $(echo "${__lReduceAngsWithAmplitude} >= ${ampfinish}"|bc -l) )) ; then
-      lReduceAngsWithAmplitude=0   # both global and local !!
-      __lReduceAngsWithAmplitude=0   
-      sixdeskmess -1 "reduced angles with amplitudes flag greater than maximum amplitude, flag de-activated"
-    fi
+    KKs_ampl="0" 
 
     # generate regular angle steps:
-    if (( $(echo "${__lReduceAngsWithAmplitude} > 0 "|bc -l) )) ; then
-        KKs_ampl="" 
-        if [ ${__kmin} -eq 1 ] && [ ${__kend} -eq ${__kmax} ] && [ ${__kstep} -eq 1 ] ; then   
-            for (( iAmple=0; iAmple<${#fAmpEnds[@]}; iAmple++ )) ; do
-                if (( $(echo "${__lReduceAngsWithAmplitude} < ${fAmpEnds[${iAmple}]} "|bc -l) )) ; then
-                    local __angles_nb=$(printf %.f $(echo ${fAmpEnds[${iAmple}]} ${ampfinish} ${__kmax} | awk '{print ($1/$2*$3)}'))
-                else
-                    local __angles_nb=$(printf %.f $(echo ${__lReduceAngsWithAmplitude} ${ampfinish} ${__kmax} | awk '{print ($1/$2*$3)}'))
-                fi 
-                if [ ${__angles_nb} -eq 0 ];then
-                    __angles_nb=1
-                fi
+    if ${__lReduceAngsWithAmplitude}; then
 
-                for (( kk=1; kk<=${__angles_nb}; kk++ )) ; do
-	            KKs="${KKs} ${kk}"
-                    KKs_ampl="${KKs_ampl} ${iAmple}"
-                    local __tmpAngle=`echo ${totAngle} ${kk} ${__angles_nb} | awk '{print ($1*$2/($3+1))}'`
-	            Angles="${Angles} ${__tmpAngle}"  
-	            if ${__lbackcomp} ; then
-	                local __kang=`echo ${kk} ${__angles_nb} | awk '{print ($1/($2+1))}'`
-	            else
-	                local __kang=`echo ${kk} ${__angles_nb} | awk '{printf ("%.16E",$1/($2+1))}'`
-	            fi
-	            kAngs="${kAngs} ${__kang}"
-                done
-          done
-        else
-      	  sixdeskmess -1 "reduced angles with amplitudes available only for kmin=1, kend=kmax and kstep=1"
-        fi
+        for (( iAmple=0; iAmple<${#fAmpEnds[@]}; iAmple++ )) ; do
+            if (( $(echo "${reduce_angs_with_amplitude} ${fAmpEnds[${iAmple}]}" | awk '{print ($1 < $2)}') )); then
+                local __angles_nb=$(echo ${fAmpEnds[${iAmple}]} ${ampfinish} ${__kmax} | awk '{printf ("%.f", ($1/$2*$3))}')
+            else
+                local __angles_nb=$(echo ${reduce_angs_with_amplitude} ${ampfinish} ${__kmax} | awk '{printf ("%.f", ($1/$2*$3))}')
+            fi
+
+            if [ ${__angles_nb} -eq 0 ];then
+                __angles_nb=1
+            fi
+
+            for (( kk=1; kk<=${__angles_nb}; kk++ )) ; do
+	        KKs="${KKs} ${kk}"
+                local __tmpAngle=`echo ${totAngle} ${kk} ${__angles_nb} | awk '{print ($1*$2/($3+1))}'`
+	        Angles="${Angles} ${__tmpAngle}"  
+	        if ${__lbackcomp} ; then
+	            local __kang=`echo ${kk} ${__angles_nb} | awk '{print ($1/($2+1))}'`
+	        else
+	            local __kang=`echo ${kk} ${__angles_nb} | awk '{printf ("%.16E",$1/($2+1))}'`
+	        fi
+	        kAngs="${kAngs} ${__kang}"
+            done
+            let nTotAngles+=${__angles_nb}
+            KKs_ampl+=( ${nTotAngles} )
+        done
     else
         if ${__lbackcomp} ; then
             local __angleStep=`echo ${__totAngle} ${__kmax} | awk '{print ($1/($2+1))}'`
@@ -788,11 +781,11 @@ sixdeskAllAngles(){
 	    fi
 	  kAngs="${kAngs} ${__kang}"
         done
+        KKs_ampl=( ${KKs_ampl} ${__kend} )
     fi
 
     # make arrays
     KKs=( ${KKs} )
-    KKs_ampl=( ${KKs_ampl} )
     Angles=( ${Angles} )
     kAngs=( ${kAngs} )
 }
