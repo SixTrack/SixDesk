@@ -120,7 +120,6 @@ function setFurtherEnvs(){
             fi 
         fi
     fi
-
     export totAngle=90
     export lReduceAngsWithAmplitude
 }

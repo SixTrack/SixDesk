@@ -726,6 +726,7 @@ sixdeskAllAngles(){
     local __lReduceAngsWithAmplitude=$8
     local __totAngle=$9
     local __factor=${10}
+
     # generated arrays:
     KKs=""
     Angles=""
@@ -734,7 +735,6 @@ sixdeskAllAngles(){
 
     # generate regular angle steps:
     if ${__lReduceAngsWithAmplitude}; then
-
         for (( iAmple=0; iAmple<${#fAmpEnds[@]}; iAmple++ )) ; do
             if (( $(echo "${reduce_angs_with_amplitude} ${fAmpEnds[${iAmple}]}" | awk '{print ($1 < $2)}') )); then
                 local __angles_nb=$(echo ${fAmpEnds[${iAmple}]} ${ampfinish} ${__kmax} | awk '{printf ("%.f", ($1/$2*$3))}')

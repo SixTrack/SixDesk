@@ -1218,6 +1218,7 @@ function treatShort(){
 
 	# separate output for current case from previous one
 	echo ""
+	echo ""
 
 	# trigger for preparation
 	local __lGenerate=false
