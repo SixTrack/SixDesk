@@ -24,6 +24,10 @@
         <user_friendly_name>Linux running on 64-bit ARM</user_friendly_name>
     </platform>
     <platform>
+        <name>ppc64-linux-gnu</name>
+        <user_friendly_name>Linux running on a 64-bit PowerPC processor</user_friendly_name>
+    </platform>
+    <platform>
         <name>i386-pc-freebsd</name>
         <user_friendly_name>FreeBSD running on an Intel x86-compatible CPU</user_friendly_name>
     </platform>
@@ -38,6 +42,10 @@
     <platform>
         <name>x86_64-pc-netbsd</name>
         <user_friendly_name>NetBSD running on an Intel compatible 64bit CPU</user_friendly_name>
+    </platform>
+    <platform>
+        <name>x86_64-pc-openbsd</name>
+        <user_friendly_name>OpenBSD running on an Intel compatible 64bit CPU</user_friendly_name>
     </platform>
     <platform>
         <name>i686-apple-darwin</name>
