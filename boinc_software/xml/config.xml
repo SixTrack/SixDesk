@@ -58,6 +58,7 @@
     </disable_account_creation>
 
     <disable_team_creation/>
+    <credit_by_app/>
     <profile_screening> 0 </profile_screening>
     <no_forum_rating> 1 </no_forum_rating>
     <verify_files_on_app_start> 0 </verify_files_on_app_start>
@@ -92,14 +93,14 @@
     <fp_benchmark_weight> 1 </fp_benchmark_weight>
     <show_results> 1 </show_results>
     <min_sendwork_interval> 5 </min_sendwork_interval>
-    <daily_result_quota> 250 </daily_result_quota>
+    <daily_result_quota> 1000 </daily_result_quota>
     <ignore_delay_bound> 1 </ignore_delay_bound>
     <one_result_per_user_per_wu> 1 </one_result_per_user_per_wu>
-    <max_wus_to_send> 14 </max_wus_to_send>
-    <max_wus_in_progress> 14 </max_wus_in_progress>
+    <max_wus_to_send> 8 </max_wus_to_send>
+    <max_wus_in_progress> 2 </max_wus_in_progress>
     <resend_lost_results> 1 </resend_lost_results>
-    <next_rpc_delay> 18000 </next_rpc_delay>
-    <report_grace_period> 86400 </report_grace_period>
+    <next_rpc_delay> 3600 </next_rpc_delay>
+    <report_grace_period> 21600 </report_grace_period>
     <workload_sim> 1 </workload_sim>
     <shmem_work_items> 200 </shmem_work_items>
     <feeder_query_size> 400 </feeder_query_size>
@@ -211,7 +212,7 @@
   <daemons>
     <daemon>
       <cmd>
-        feeder -d 2 
+        feeder -d 2 --allapps
       </cmd>
     </daemon>
     <daemon>
