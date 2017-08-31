@@ -102,7 +102,7 @@ function setFurtherEnvs(){
  
     if [ -n "${reduce_angs_with_aplitude}" ] ; then
         sixdeskmess -1 "wrong spelling of reduce_angs_with_amplitude. Please correct it for future use"
-        reduce_angs_with_aplitude=${reduce_angs_with_amplitude}
+        reduce_angs_with_amplitude=${reduce_angs_with_aplitude}
     fi   
     
     if [ -z "${reduce_angs_with_amplitude}" ]; then
@@ -110,11 +110,14 @@ function setFurtherEnvs(){
     elif (( $(echo "${reduce_angs_with_amplitude}" | awk '{print ($1 >0)}') )); then 
         if [ ${long} -ne 1 ]; then
             sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
+	    sixdeskexit 9
         else
             if [ ${kinil} -ne 1 ] || [ ${kendl} -ne ${kmaxl} ] || [ ${kstep} -ne 1 ]; then
                 sixdeskmess -1 "reduced angles with amplitudes available only for kmin=1, kend=kmax and kstep=1"
+		sixdeskexit 10
             elif (( $(echo "${reduce_angs_with_amplitude} ${ns2l}" | awk '{print ($1 >= $2)}') )); then
-                sixdeskmess -1 "reduced angles with amplitudes flag greater than maximum amplitude, flag de-activated"
+                sixdeskmess -1 "reduced angles with amplitudes flag greater than maximum amplitude. Please de-activate the flag"
+		sixdeskexit 11
             else 
                 lReduceAngsWithAmplitude=true
             fi 
