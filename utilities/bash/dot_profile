@@ -1233,12 +1233,12 @@ sixDeskSetBOINCVars(){
     [ -n "$sixdeskpts" ] || export sixdeskpts=boinc:users
     [ -n "${boincdir}" ] || export boincdir=/afs/cern.ch/work/b/boinc
     [ -n "${sixdeskboincdirname}" ] || export sixdeskboincdirname="${workspace}_${LHCDescrip}"
-    if [ -z "${sixdeskboincdir}" ] ; then
- 	if [ -z "${sixdeskboinctest}" ] || ! ${sixdeskboinctest} ; then
- 	    export sixdeskboincdir=$boincdir/boinc/$sixdeskboincdirname
- 	else
- 	    export sixdeskboincdir=$boincdir/boinctest/$sixdeskboincdirname
- 	fi
+    if ${sixdeskboinctest} ; then
+	# overwrite definition of sixdeskboincdir with what is proper for sixtracktest
+ 	export sixdeskboincdir=$boincdir/boinctest/$sixdeskboincdirname
+    elif [ -z "${sixdeskboincdir}" ] ; then
+	# overwrite definition of sixdeskboincdir only if user did not specify anything
+ 	export sixdeskboincdir=$boincdir/boinc/$sixdeskboincdirname
     fi
     [ -n "${sixdeskparts}" ] || export sixdeskparts=`expr $sixdeskpairs \* 2`
     if [ -z "${sixdeskturns}" ] ; then
