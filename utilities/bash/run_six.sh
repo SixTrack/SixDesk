@@ -2355,14 +2355,20 @@ else
 	sixdeskAllAngles $kinil $kendl $kmaxl $kstep $ampstart $ampfinish $lbackcomp ${lReduceAngsWithAmplitude} ${totAngle} ${ampFactor}
 	iTotalAngles=${#KKs[@]}
 	sixdeskmess -1 "- Angles: $kinil, $kendl, $kmaxl by $kstep - total: ${iTotalAngles} angles"
+	if ${lReduceAngsWithAmplitude} ; then
+	    sixdeskmess -1 "  --> reduced angles with amplitude functionality active"
+	    let iTotal=${iTotalMad}*${iTotalTunes}*${iTotalAngles}
+	else
+	    let iTotal=${iTotalMad}*${iTotalTunes}*${iTotalAmplitudeSteps}*${iTotalAngles}
+	fi
     elif [ $short -eq 1 ] || [ $da -eq 1 ] ; then
 	iTotalAmplitudeSteps=1
 	sixdeskmess -1 "- Amplitudes: from $ns1s to $ns2s by $nss - total: ${iTotalAmplitudeSteps} amplitude steps;"
 	sixdeskAllAngles $kini $kend $kmax $kstep $ampstart $ampfinish $lbackcomp ${lReduceAngsWithAmplitude} ${totAngle} ${ampFactor}
 	iTotalAngles=${#KKs[@]}
 	sixdeskmess -1 "- Angles: $kini, $kend, $kmax by $kstep - total: ${iTotalAngles} angles"
+	let iTotal=${iTotalMad}*${iTotalTunes}*${iTotalAmplitudeSteps}*${iTotalAngles}
     fi
-    let iTotal=${iTotalMad}*${iTotalTunes}*${iTotalAmplitudeSteps}*${iTotalAngles}
     sixdeskmess -1 "for a total of ${iTotal} points."
 fi
 
