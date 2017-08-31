@@ -1416,9 +1416,9 @@ function treatLong(){
         sixdeskmess -1 "Considering amplitude step: $Ampl"
 
         if ${lReduceAngsWithAmplitude}; then 
-          let jAmple=${iAmple}
+          jAmple=${iAmple}
         else
-          let jAmple=0
+          jAmple=0
         fi
 
 	# ======================================================================
@@ -1627,7 +1627,7 @@ function treatLong(){
 	        
 	    # ----------------------------------------------------------------------
 	    fi
-	     ----------------------------------------------------------------------
+	    # ----------------------------------------------------------------------
 	
         done
 	# end of loop over angles
