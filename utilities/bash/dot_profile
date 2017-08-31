@@ -767,10 +767,7 @@ sixdeskAllAngles(){
             local __angleStep=`echo ${__totAngle} ${__kmax} | awk '{printf ("%.16E",$1/($2+1))}'`
         fi
 
-        local __kstepNew=${__kstep}
-        echo ${__kstepNew} "OFF"
-
-        for (( kk=${__kmin}; kk<=${__kend}; kk+=${__kstepNew} )) ; do
+        for (( kk=${__kmin}; kk<=${__kend}; kk+=${__kstep} )) ; do
 	    KKs="${KKs} ${kk}"
 	    local __tmpAngle=`echo ${kk} ${__angleStep} | awk '{print ($1*$2)}'`
 	    Angles="${Angles} ${__tmpAngle}"
