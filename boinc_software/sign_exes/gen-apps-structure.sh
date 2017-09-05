@@ -83,10 +83,10 @@ signit x86_64-pc-linux-gnu__avx         SixTrack_${VSorig}_${commonFlags}_Linux_
 signit i686-pc-linux-gnu__sse2          SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_i686_32bit                  ${fullAppName}_lin32_${VS}_sse2.linux
 #__________________________________________________ linux   ARM64  ______________________________________________
 # NB: no SSE/AVX/x86 instruction sets - keep generic
-signit aarch64-android-linux-gnu        SixTrack_${VSorig}_${commonFlags}_Linux_gfortran-6_static_aarch64_64bit             ${fullAppName}_aarch_android_lin64_${VS}.linux
-signit aarch64-unknown-linux-gnu        SixTrack_${VSorig}_${commonFlags}_Linux_gfortran-6_static_aarch64_64bit             ${fullAppName}_aarch_unknown_lin64_${VS}.linux
+# signit aarch64-android-linux-gnu        SixTrack_${VSorig}_${commonFlags}_Linux_gfortran-6_static_aarch64_64bit             ${fullAppName}_aarch_android_lin64_${VS}.linux
+# signit aarch64-unknown-linux-gnu        SixTrack_${VSorig}_${commonFlags}_Linux_gfortran-6_static_aarch64_64bit             ${fullAppName}_aarch_unknown_lin64_${VS}.linux
 #__________________________________________________ linux   ppc 64 bit le _______________________________________
-signit ppc64-linux-gnu__sse2            SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_ppc64le_64bit               ${fullAppName}_lin64_ppc64le_${VS}_sse2.exe
+# signit ppc64-linux-gnu__sse2            SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_ppc64le_64bit               ${fullAppName}_lin64_ppc64le_${VS}_sse2.exe
 
 
 #__________________________________________________ win     64 bit ______________________________________________
@@ -102,8 +102,8 @@ signit x86_64-apple-darwin__avx         SixTrack_${VSorig}_${commonFlags}_Darwin
 
 
 #__________________________________________________ freeBSD 64 bit ______________________________________________
-signit x86_64-pc-freebsd__sse2          SixTrack_${VSorig}_${commonFlags}_FreeBSD_gfortran_static_amd64_64bit               ${fullAppName}_freeBSD64_${VS}_sse2.exe
-signit x86_64-pc-freebsd__avx           SixTrack_${VSorig}_${commonFlags}_FreeBSD_gfortran_static_avx_amd64_64bit           ${fullAppName}_freeBSD64_${VS}_avx.exe
+# signit x86_64-pc-freebsd__sse2          SixTrack_${VSorig}_${commonFlags}_FreeBSD_gfortran_static_amd64_64bit               ${fullAppName}_freeBSD64_${VS}_sse2.exe
+# signit x86_64-pc-freebsd__avx           SixTrack_${VSorig}_${commonFlags}_FreeBSD_gfortran_static_avx_amd64_64bit           ${fullAppName}_freeBSD64_${VS}_avx.exe
 
 
 #__________________________________________________ netBSD  64 bit _______________________________________________
@@ -112,7 +112,7 @@ signit x86_64-pc-freebsd__avx           SixTrack_${VSorig}_${commonFlags}_FreeBS
 
 
 #__________________________________________________ openBSD 64 bit ______________________________________________
-signit x86_64-pc-openbsd__sse2          SixTrack_${VSorig}_${commonFlags}_OpenBSD_gfortran_amd64_64bit                      ${fullAppName}_openBSD64_${VS}_sse2.exe
+# signit x86_64-pc-openbsd__sse2          SixTrack_${VSorig}_${commonFlags}_OpenBSD_gfortran_amd64_64bit                      ${fullAppName}_openBSD64_${VS}_sse2.exe
 
 
 #___________________ finalize ________________
