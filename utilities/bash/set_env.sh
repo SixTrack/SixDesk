@@ -122,6 +122,9 @@ function setFurtherEnvs(){
                 lReduceAngsWithAmplitude=true
             fi 
         fi
+    else
+        sixdeskmess -1 "reduced angles with amplitudes accepts only positive values (sigma)!"
+	sixdeskexit 12
     fi
     export totAngle=90
     export lReduceAngsWithAmplitude
