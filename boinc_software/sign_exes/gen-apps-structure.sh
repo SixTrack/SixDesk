@@ -85,8 +85,20 @@ signit i686-pc-linux-gnu__sse2          SixTrack_${VSorig}_${commonFlags}_Linux_
 # NB: no SSE/AVX/x86 instruction sets - keep generic
 signit aarch64-android-linux-gnu        SixTrack_${VSorig}_${commonFlags}_Linux_gfortran-6_static_aarch64_64bit             ${fullAppName}_aarch_android_lin64_${VS}.linux
 signit aarch64-unknown-linux-gnu        SixTrack_${VSorig}_${commonFlags}_Linux_gfortran-6_static_aarch64_64bit             ${fullAppName}_aarch_unknown_lin64_${VS}.linux
+#__________________________________________________ linux   ARM32  ______________________________________________
+# NB: no SSE/AVX/x86 instruction sets - keep generic
+signit arm-unknown-linux-gnueabihf      SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_armv6l_32bit                ${fullAppName}_arm_unknown_lin32_${VS}.linux
+signit armv6l-unknown-linux-gnueabihf   SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_armv6l_32bit                ${fullAppName}_arm6_unknown_lin32_${VS}.linux
+signit armv7l-unknown-linux-gnueabihf   SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_armv6l_32bit                ${fullAppName}_arm7_unknown_lin32_${VS}.linux
 #__________________________________________________ linux   ppc 64 bit le _______________________________________
-signit ppc64-linux-gnu__sse2            SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_ppc64le_64bit               ${fullAppName}_lin64_ppc64le_${VS}_sse2.exe
+signit ppc64-linux-gnu                  SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_ppc64le_64bit               ${fullAppName}_lin64_ppc64le_${VS}.exe
+signit powerpc64le-unknown-linux-gnu    SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_ppc64le_64bit               ${fullAppName}_lin64_ppc64le_${VS}.exe
+
+
+#__________________________________________________ android 32bit  ______________________________________________
+signit x86-android-linux-gnu__sse2      SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_i686_32bit                  ${fullAppName}_and32_${VS}_sse2.linux
+#__________________________________________________ android 64bit  ______________________________________________
+signit x86_64-android-linux-gnu__sse2   SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_x86_64_64bit                ${fullAppName}_and64_${VS}_sse2.linux
 
 
 #__________________________________________________ win     64 bit ______________________________________________
