@@ -71,7 +71,8 @@
     <reliable_reduced_delay_bound> 0.5 </reliable_reduced_delay_bound>
     <reliable_priority_on_over> 0 </reliable_priority_on_over>
     <reliable_priority_on_over_except_error> 1 </reliable_priority_on_over_except_error>
-    <prefer_primary_platform> 0 </prefer_primary_platform>
+    <prefer_primary_platform> 1 </prefer_primary_platform>
+    <version_select_random_factor>0.5</version_select_random_factor>
     <locality_scheduling> 0 </locality_scheduling>
     <sched_debug_level> 2 </sched_debug_level>
     <debug_version_select> 0 </debug_version_select>
