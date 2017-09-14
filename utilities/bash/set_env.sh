@@ -129,31 +129,35 @@ function setFurtherEnvs(){
     sixdeskSetExes
     # scan angles:
     lReduceAngsWithAmplitude=false
-    ampFactor=1
-    local __ampFactorDef=0.3
-    # - reduce angles with amplitude
+ 
     if [ -n "${reduce_angs_with_aplitude}" ] ; then
-	if [ ${long} -eq 1 ] ; then
-	    local __tmpValues=`echo "${reduce_angs_with_aplitude}" | awk -v "ampFactorDef=${__ampFactorDef}" '{if ($1<0) {print (ampFactorDef,"true") } else if ($1==0||$1==1) { print(1,"false") } else { print($1,"true") } } '`
-	    __tmpValues=(${__tmpValues})
-	    ampFactor=${__tmpValues[0]}
-	    lReduceAngsWithAmplitude=${__tmpValues[1]}
-	else
-	    sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
-	fi
-    elif [ -n "${reduce_angs_with_amplitude}" ] ; then
-	if [ ${long} -eq 1 ] ; then
-	    local __tmpValues=`echo "${reduce_angs_with_amplitude}" | awk -v "ampFactorDef=${__ampFactorDef}" '{if ($1<0) {print (ampFactorDef,"true") } else if ($1==0||$1==1) { print(1,"false") } else { print($1,"true") } } '`
-	    __tmpValues=(${__tmpValues})
-	    ampFactor=${__tmpValues[0]}
-	    lReduceAngsWithAmplitude=${__tmpValues[1]}
-	else
-	    sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
-	fi
+        sixdeskmess -1 "wrong spelling of reduce_angs_with_amplitude. Please correct it for future use"
+        reduce_angs_with_amplitude=${reduce_angs_with_aplitude}
+    fi   
+    
+    if [ -z "${reduce_angs_with_amplitude}" ]; then
+        reduce_angs_with_amplitude=0         
+    elif (( $(echo "${reduce_angs_with_amplitude}" | awk '{print ($1 >0)}') )); then 
+        if [ ${long} -ne 1 ]; then
+            sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
+	    sixdeskexit 9
+        else
+            if [ ${kinil} -ne 1 ] || [ ${kendl} -ne ${kmaxl} ] || [ ${kstep} -ne 1 ]; then
+                sixdeskmess -1 "reduced angles with amplitudes available only for kmin=1, kend=kmax and kstep=1"
+		sixdeskexit 10
+            elif (( $(echo "${reduce_angs_with_amplitude} ${ns2l}" | awk '{print ($1 >= $2)}') )); then
+                sixdeskmess -1 "reduced angles with amplitudes flag greater than maximum amplitude. Please de-activate the flag"
+		sixdeskexit 11
+            else 
+                lReduceAngsWithAmplitude=true
+            fi 
+        fi
+    else
+        sixdeskmess -1 "reduced angles with amplitudes accepts only positive values (sigma)!"
+	sixdeskexit 12
     fi
     export totAngle=90
     export lReduceAngsWithAmplitude
-    export ampFactor
 }
 
 # ==============================================================================

@@ -114,8 +114,8 @@ signit x86_64-apple-darwin__avx         SixTrack_${VSorig}_${commonFlags}_Darwin
 
 
 #__________________________________________________ freeBSD 64 bit ______________________________________________
-signit x86_64-pc-freebsd__sse2          SixTrack_${VSorig}_${commonFlags}_FreeBSD_gfortran_static_amd64_64bit               ${fullAppName}_freeBSD64_${VS}_sse2.exe
-signit x86_64-pc-freebsd__avx           SixTrack_${VSorig}_${commonFlags}_FreeBSD_gfortran_static_avx_amd64_64bit           ${fullAppName}_freeBSD64_${VS}_avx.exe
+# signit x86_64-pc-freebsd__sse2          SixTrack_${VSorig}_${commonFlags}_FreeBSD_gfortran_static_amd64_64bit               ${fullAppName}_freeBSD64_${VS}_sse2.exe
+# signit x86_64-pc-freebsd__avx           SixTrack_${VSorig}_${commonFlags}_FreeBSD_gfortran_static_avx_amd64_64bit           ${fullAppName}_freeBSD64_${VS}_avx.exe
 
 
 #__________________________________________________ netBSD  64 bit _______________________________________________
@@ -124,7 +124,7 @@ signit x86_64-pc-freebsd__avx           SixTrack_${VSorig}_${commonFlags}_FreeBS
 
 
 #__________________________________________________ openBSD 64 bit ______________________________________________
-signit x86_64-pc-openbsd__sse2          SixTrack_${VSorig}_${commonFlags}_OpenBSD_gfortran_amd64_64bit                      ${fullAppName}_openBSD64_${VS}_sse2.exe
+# signit x86_64-pc-openbsd__sse2          SixTrack_${VSorig}_${commonFlags}_OpenBSD_gfortran_amd64_64bit                      ${fullAppName}_openBSD64_${VS}_sse2.exe
 
 
 #___________________ finalize ________________
