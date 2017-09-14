@@ -1156,13 +1156,17 @@ sixDeskCheckAppName(){
 	fi
 	if [ "${__appname}" == "sixtracktest" ] ; then
 	    export sixdeskboinctest=true
+	else
+	    export sixdeskboinctest=false
 	fi
     else
 	# appName assigned by default
 	if [ -z "${sixdeskboinctest}" ] || ! ${sixdeskboinctest} ; then
 	    export appName=sixtrack
+	    export sixdeskboinctest=false
 	else
 	    export appName=sixtracktest
+	    export sixdeskboinctest=true
 	fi
 	__lerr=0
     fi
