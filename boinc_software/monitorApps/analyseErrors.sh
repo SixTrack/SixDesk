@@ -5,8 +5,8 @@
 
 appID=10
 oFileName=results_`date +"%Y-%m-%d_%H-%M-%S"`.txt
-oFileName=results_2017-09-13_09-14-53.txt
-lretrieve=false
+#oFileName=results_2017-09-13_09-14-53.txt
+lretrieve=true
 lanalyse=true
 scanErrors=( '-186' '-185' '11' )
 scanErrorLabels=( 'ERR_RESULT_DOWNLOAD' 'ERR_RESULT_START' 'Unknown error code' )
@@ -16,7 +16,7 @@ appVerIDLabels=( 'x86_64-apple-darwin,avx' 'x86_64-apple-darwin' 'aarch64-androi
 # retrieve data
 if ${lretrieve} ; then
     echo " retrieving data for appID ${appID} ..."
-    mysql -h dbod-sixtrack.cern.ch -P 5513 -u admin -p -Dsixt_production -e"select id,workunitid,name,exit_status,create_time,sent_time,received_time,hostid,app_version_id from result where appid =${appID} and outcome=3 order by workunitid;" > oFileName
+    mysql -h dbod-sixtrack.cern.ch -P 5513 -u admin -p -Dsixt_production -e"select id,workunitid,name,exit_status,create_time,sent_time,received_time,hostid,app_version_id from result where appid =${appID} and outcome=3 order by workunitid;" > ${oFileName}
 fi
 
 # analysis
