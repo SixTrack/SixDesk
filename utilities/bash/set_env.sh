@@ -18,6 +18,12 @@ function how_to_use() {
                        to prepare a brand new study. The template files will
                        OVERWRITE the local ones. The template dir is:
            ${SCRIPTDIR}/templates/input
+   -N <workspace>  create and initialise a new workspace in the current dir
+                   with the workspace, please specify also the scratch name, eg
+                       -N scratch0/wTest
+                   the workspace will be populated with template files as checked-out
+                       with git from repo:
+                       path:
    -U      unlock dirs necessary to the script to run
            PAY ATTENTION when using this option, as no check whether the lock
               belongs to this script or not is performed, and you may screw up
@@ -182,6 +188,7 @@ necessaryInputFiles=( sixdeskenv sysenv )
 lset=false
 lload=false
 lcptemplate=false
+lcrwSpace=false
 loverwrite=true
 lverbose=false
 llocalfort3=false
@@ -192,8 +199,10 @@ tmpPythonPath=""
 
 # variables set based on parsing fort.3.local
 
+nActions=0
+
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hsvld:ep:P:nU" opt ; do
+while getopts  ":hsvld:ep:P:n:NU" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -202,15 +211,24 @@ while getopts  ":hsvld:ep:P:nU" opt ; do
 	s)
 	    # set study (new/update/switch)
 	    lset=true
+	    let nActions+=1
 	    ;;
 	d)
 	    # load existing study
 	    lload=true
 	    currStudy="${OPTARG}"
+	    let nActions+=1
 	    ;;
 	n) 
 	    # copy input files from template dir
 	    lcptemplate=true
+	    let nActions+=1
+	    ;;
+	N)
+	    # create workspace
+	    lcrwSpace=true
+	    wSpaceName="${OPTARG}"
+	    let nActions+=1
 	    ;;
 	e)
 	    # do not overwrite
@@ -229,7 +247,7 @@ while getopts  ":hsvld:ep:P:nU" opt ; do
 	    tmpPythonPath="${OPTARG}"
 	    ;;
 	U)
-	    # unlock currently locked folder
+	    # unlock currently locked folder (optional action)
 	    lunlock=true
 	    ;;
 	v)
@@ -251,11 +269,11 @@ done
 shift "$(($OPTIND - 1))"
 # user's request
 # - actions
-if ! ${lset} && ! ${lload} && ! ${lcptemplate} && ! ${lunlock} ; then
+if ! ${lset} && ! ${lload} && ! ${lcptemplate} && ! ${lunlock} && ! ${lcrwSpace} ; then
     how_to_use
     echo "No action specified!!! aborting..."
     exit
-elif ( ${lset} && ${lload} ) || ( ${lset} && ${lcptemplate} ) || ( ${lcptemplate} && ${lload} ) ; then
+elif [ ${nActions} -gt 1 ] ; then
     how_to_use
     echo "Please choose only one action!!! aborting..."
     exit
