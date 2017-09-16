@@ -419,6 +419,16 @@ if ${lcptemplate} ; then
 	cp -p ${SCRIPTDIR}/templates/input/${tmpFile} .
 	sixdeskmess 2 "${tmpFile}"
     done
+    tmpDir=${PWD}
+    tmpDir=`dirname ${tmpDir}`
+    workspace=`basename ${tmpDir}`
+    tmpDir=`dirname ${tmpDir}`
+    scratchDir=${tmpDir}
+    tmpDir=`dirname ${tmpDir}`
+    baseDir=${tmpDir}
+    sed -i -e "s#^export workspace=.*#export workspace=${workspace}#" \
+	   -e "s#^export basedir=.*#export basedir=${baseDir}#" \
+	   -e "s#^export scratchdir=.*#export scratchdir=${scratchDir}#" sixdeskenv
 
 else
 
