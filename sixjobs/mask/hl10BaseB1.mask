@@ -945,14 +945,14 @@ match;
 global, q1=qx0, q2=qy0;
 vary,   name=kqtf, step=1.0E-7 ;
 vary,   name=kqtd, step=1.0E-7 ;
-lmdif,  calls=100, tolerance=1.0E-21;
+lmdif,  calls=100, tolerance=1.0E-12;
 endmatch;
 
 match,chrom;
 global, dq1=qprime, dq2=qprime;
 vary,   name=ksf;
 vary,   name=ksd;
-lmdif,  calls=100, tolerance=1.0E-21;
+lmdif,  calls=100, tolerance=1.0E-12;
 endmatch;
 
 match,chrom;
@@ -962,7 +962,7 @@ vary,   name=ksf;
 vary,   name=ksd;
 vary,   name=kqtf, step=1.0E-7 ;
 vary,   name=kqtd, step=1.0E-7 ;
-lmdif,  calls=500, tolerance=1.0E-21;
+lmdif,  calls=500, tolerance=1.0E-12;
 endmatch;
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
