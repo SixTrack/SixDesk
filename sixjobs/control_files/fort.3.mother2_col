@@ -2,8 +2,8 @@ FLUCTUATION
 100000 1 7 3
 NEXT
 %TUNETUNE VARIATION----------------------------------------------------------
-%TUNE         mq.7r3.b1  %tunex
-%TUNE         mq.8r3.b1  %tuney
+%TUNE         mq.7r3.b1..1  %tunex
+%TUNE         mq.8r3.b1..1  %tuney
 %TUNE/          0.
 %TUNE/          
 %TUNENEXT
