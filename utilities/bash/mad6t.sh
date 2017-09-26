@@ -24,6 +24,9 @@ function how_to_use() {
            option available only for submission, not for checking
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
+           this option allows to override the value in sixdeskenv, with no need
+              for the user to manually change the corresponding variable. Similarly,
+              the variable is NOT automatically updated by the script
    -P      python path
    -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
                0: only error messages and basic output 

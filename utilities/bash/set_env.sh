@@ -34,6 +34,9 @@ function how_to_use() {
    options (optional)
    -p      platform name (when running many jobs in parallel)
            recognised platforms: LSF, BOINC, HTCONDOR
+           this option allows to override the value in sixdeskenv, with no need
+              for the user to manually change the corresponding variable. Similarly,
+              the variable is NOT automatically updated by the script
    -e      just parse the concerned input files (${necessaryInputFiles[@]}),
                without overwriting
    -l      use fort.3.local. This file will be added to the list of necessary

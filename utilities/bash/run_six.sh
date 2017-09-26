@@ -65,6 +65,9 @@ function how_to_use() {
    -v      verbose (OFF by default)
    -d      study name (when running many jobs in parallel)
    -p      platform name (when running many jobs in parallel)
+           this option allows to override the value in sixdeskenv, with no need
+              for the user to manually change the corresponding variable. Similarly,
+              the variable is NOT automatically updated by the script
    -n      renew kerberos token every n jobs (default: ${NrenewKerberosDef})
    -N      an HTCondor cluster of jobs should be composed of at most
               N jobs (active only in case of HTCondor - default: ${nMaxJobsSubmitHTCondorDef}).
