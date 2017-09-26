@@ -145,7 +145,7 @@ function setFurtherEnvs(){
     
     if [ -z "${reduce_angs_with_amplitude}" ]; then
         reduce_angs_with_amplitude=0         
-    elif (( $(echo "${reduce_angs_with_amplitude}" | awk '{print ($1 >0)}') )); then 
+    elif (( $(echo "${reduce_angs_with_amplitude}" | awk '{print ($1 >=0)}') )); then 
         if [ ${long} -ne 1 ]; then
             sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
 	    sixdeskexit 9
@@ -161,8 +161,7 @@ function setFurtherEnvs(){
             fi 
         fi
     else
-        sixdeskmess -1 "reduced angles with amplitudes accepts only positive values (sigma)!"
-	sixdeskexit 12
+        sixdeskmess -1 "reduced angles with amplitudes set to negative value. Flag de-activated"
     fi
     export totAngle=90
     export lReduceAngsWithAmplitude
