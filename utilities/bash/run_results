@@ -16,6 +16,9 @@ function how_to_use() {
                first optional argument is given, that one will
                overwrite the value of this option;
    -p      platform name (when running many jobs in parallel)
+           this option allows to override the value in sixdeskenv, with no need
+              for the user to manually change the corresponding variable. Similarly,
+              the variable is NOT automatically updated by the script
            NB: this option has been implemented to keep the same
                interface as for other main scripts. In case the
                second optional argument is given, that one will
