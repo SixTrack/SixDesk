@@ -18,6 +18,14 @@ function how_to_use() {
                        to prepare a brand new study. The template files will
                        OVERWRITE the local ones. The template dir is:
            ${SCRIPTDIR}/templates/input
+   -N <workspace>  create and initialise a new workspace in the current dir
+                   with the workspace, please specify also the scratch name, eg
+           -N scratch0/wTest
+                   the workspace will be populated with template files as checked-out
+                       with git from repo:
+           ${origRepoForSetup}
+                       branch:
+           ${origBranchForSetup}
    -U      unlock dirs necessary to the script to run
            PAY ATTENTION when using this option, as no check whether the lock
               belongs to this script or not is performed, and you may screw up
@@ -181,6 +189,7 @@ necessaryInputFiles=( sixdeskenv sysenv )
 lset=false
 lload=false
 lcptemplate=false
+lcrwSpace=false
 loverwrite=true
 lverbose=false
 llocalfort3=false
@@ -188,11 +197,15 @@ lunlock=false
 currPlatform=""
 currStudy=""
 tmpPythonPath=""
+origRepoForSetup='https://github.com/amereghe/SixDesk.git'
+origBranchForSetup='newWorkspace'
 
 # variables set based on parsing fort.3.local
 
+nActions=0
+
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hsvld:ep:P:nU" opt ; do
+while getopts  ":hsvld:ep:P:nN:U" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -201,15 +214,23 @@ while getopts  ":hsvld:ep:P:nU" opt ; do
 	s)
 	    # set study (new/update/switch)
 	    lset=true
+	    let nActions+=1
 	    ;;
 	d)
 	    # load existing study
 	    lload=true
 	    currStudy="${OPTARG}"
+	    let nActions+=1
 	    ;;
 	n) 
 	    # copy input files from template dir
 	    lcptemplate=true
+	    let nActions+=1
+	    ;;
+	N)
+	    # create workspace
+	    lcrwSpace=true
+	    wSpaceName="${OPTARG}"
 	    ;;
 	e)
 	    # do not overwrite
@@ -228,7 +249,7 @@ while getopts  ":hsvld:ep:P:nU" opt ; do
 	    tmpPythonPath="${OPTARG}"
 	    ;;
 	U)
-	    # unlock currently locked folder
+	    # unlock currently locked folder (optional action)
 	    lunlock=true
 	    ;;
 	v)
@@ -250,11 +271,11 @@ done
 shift "$(($OPTIND - 1))"
 # user's request
 # - actions
-if ! ${lset} && ! ${lload} && ! ${lcptemplate} && ! ${lunlock} ; then
+if ! ${lset} && ! ${lload} && ! ${lcptemplate} && ! ${lunlock} && ! ${lcrwSpace} ; then
     how_to_use
     echo "No action specified!!! aborting..."
     exit
-elif ( ${lset} && ${lload} ) || ( ${lset} && ${lcptemplate} ) || ( ${lcptemplate} && ${lload} ) ; then
+elif [ ${nActions} -gt 1 ] ; then
     how_to_use
     echo "Please choose only one action!!! aborting..."
     exit
@@ -287,12 +308,6 @@ fi
 export sixdeskhostname=`hostname`
 export sixdeskname=`basename $0`
 export sixdesknameshort=`echo "${sixdeskname}" | cut -b 1-15`
-export sixdeskroot=`basename $PWD`
-export sixdeskwhere=`dirname $PWD`
-# Set up some temporary values until we parse input files
-# Don't issue lock/unlock debug text (use 2 for that)
-export sixdesklogdir=""
-export sixdeskhome="."
 export sixdeskecho="yes!"
 export sixdesklevel=-1
 if [ ! -s ${SCRIPTDIR}/bash/dot_profile ] ; then
@@ -301,6 +316,61 @@ if [ ! -s ${SCRIPTDIR}/bash/dot_profile ] ; then
 fi
 # - load environment
 source ${SCRIPTDIR}/bash/dot_profile
+
+# - set up new workspace
+if ${lcrwSpace} ; then
+    if [ `echo "${wSpaceName}" | awk 'BEGIN{FS="/"}{print (NF)}'` -ne 2 ] ; then
+	how_to_use
+	echo "invalid workspace specification!"
+	exit 1
+    fi
+    sixdeskmess -1 "requested generation of new workspace:"
+    sixdeskmess -1 "- current path: $PWD"
+    sixdeskmess -1 "- <scratch_dir>/<workspace>: ${wSpaceName}"
+    if [ -d ${wSpaceName} ] ; then
+	how_to_use
+	sixdeskmess -1 "workspace ${wSpaceName} already exists!"
+	exit 1
+    else
+	mkdir -p ${wSpaceName}
+	cd ${wSpaceName}
+	if [ `which git 2>/dev/null | wc -l` -eq 1 ] ; then
+	    sixdeskmess -1 "--> using git to initialise sixjobs"
+	    git init
+	    git config core.sparseCheckout true
+	    cat > .git/info/sparse-checkout <<EOF
+sixjobs/control_files/*
+sixjobs/mask/*
+sixjobs/sixdeskTaskIds/*
+sixjobs/studies/*
+EOF
+	    git remote add -f origin ${origRepoForSetup}
+	    git checkout ${origBranchForSetup}
+	else
+	    origDir=`dirname ${SCRIPTDIR}`/sixjobs
+	    sixdeskmess -1 "--> initialising sixjobs from ${origDir}"
+	    cp -r ${origDir} .
+	fi
+	cd - 2>&1 > /dev/null
+	cd ${wSpaceName}/sixjobs
+	touch sixdesklock
+	touch studies/sixdesklock
+	cd - 2>&1 > /dev/null
+    fi
+    [ -e `basename ${wSpaceName}` ] || ln -s ${wSpaceName}
+    if [ ${nActions} -eq 0 ] ; then
+	sixdeskmess -1 "requested only initilising workspace. Exiting..."
+	exit 0
+    fi
+    cd ${wSpaceName}/sixjobs
+fi
+
+export sixdeskroot=`basename $PWD`
+export sixdeskwhere=`dirname $PWD`
+# Set up some temporary values until we parse input files
+# Don't issue lock/unlock debug text (use 2 for that)
+export sixdesklogdir=""
+export sixdeskhome="."
 
 # - locking dirs
 if ${lcptemplate} ; then
@@ -348,6 +418,16 @@ if ${lcptemplate} ; then
 	cp -p ${SCRIPTDIR}/templates/input/${tmpFile} .
 	sixdeskmess 2 "${tmpFile}"
     done
+    tmpDir=${PWD}
+    tmpDir=`dirname ${tmpDir}`
+    workspace=`basename ${tmpDir}`
+    tmpDir=`dirname ${tmpDir}`
+    scratchDir=${tmpDir}
+    tmpDir=`dirname ${tmpDir}`
+    baseDir=${tmpDir}
+    sed -i -e "s#^export workspace=.*#export workspace=${workspace}#" \
+	   -e "s#^export basedir=.*#export basedir=${baseDir}#" \
+	   -e "s#^export scratchdir=.*#export scratchdir=${scratchDir}#" sixdeskenv
 
 else
 
