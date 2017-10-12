@@ -600,7 +600,7 @@ if ${lsub} ; then
 	    # set the platform to htcondor
 	    sixdeskSetPlatForm "htcondor"
 	fi
-	lastJobsList=`\ls -trd ${sixtrack_input}/*/jobs.list 2> /dev/null`
+	lastJobsList=`ls -tr ${sixtrack_input}/*/jobs.list 2> /dev/null | tail -1`
 	if [ -z "${lastJobsList}" ] ; then
 	    sixdeskmess -1 "no jobs list previously generated! - I need one for using -w option"
 	    exit
