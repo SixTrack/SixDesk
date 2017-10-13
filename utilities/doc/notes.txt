@@ -1,0 +1,14 @@
+# AMereghetti, 2017-10-13
+# few dirty notes, while waiting for a more suitable documentation
+
+* choice of platform:
+  HTCondor is convenient in case of creation of simulation set-up (eg finalise
+  configuration to scan):
+  - short/few jobs;
+  - creating simulation set up, for which fast responsiveness of simulations
+    is key to quickly advance;
+  - re-submit missing jobs from BOINC;
+  BOINC is convenient in case of (eg produce results):
+  - long/many jobs;
+  - fast responsiveness (eg within 2h) of results is not key to progress, but
+    production is the action;
