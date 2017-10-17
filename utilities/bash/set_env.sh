@@ -457,6 +457,15 @@ else
     # - set further envs
     setFurtherEnvs
 
+    # - define user tree
+    sixdeskDefineUserTree $basedir $scratchdir $workspace
+
+    # - boinc variables
+    sixDeskSetBOINCVars
+
+    # - MADX variables
+    sixDeskDefineMADXTree ${SCRIPTDIR}
+    
     # - save input files
     if ${loverwrite} ; then
 	__lnew=false

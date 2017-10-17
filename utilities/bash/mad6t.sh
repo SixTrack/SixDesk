@@ -559,8 +559,6 @@ fi
 if ${loutform} ; then
     sixdesklevel=${sixdesklevel_option}
 fi
-# build paths
-sixDeskDefineMADXTree ${SCRIPTDIR}
 
 # - define locking dirs
 lockingDirs=( "$sixdeskstudy" "$sixtrack_input" )

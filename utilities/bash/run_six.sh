@@ -2101,12 +2101,6 @@ lrestartTune=false
 lrestartAmpli=false
 lrestartAngle=false
 
-# - define user tree
-sixdeskDefineUserTree $basedir $scratchdir $workspace
-
-# - boinc variables
-sixDeskSetBOINCVars
-
 # - preliminary checks
 preliminaryChecksRS
 if [ $? -gt 0 ] ; then
