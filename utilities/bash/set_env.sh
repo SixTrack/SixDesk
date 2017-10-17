@@ -18,7 +18,7 @@ function how_to_use() {
                        to prepare a brand new study. The template files will
                        OVERWRITE the local ones. The template dir is:
            ${SCRIPTDIR}/templates/input
-   -N <workspace>  create and initialise a new workspace in the current dir
+   -N <workspace>  create and initialise a new workspace in the current dir;
                    with the workspace, please specify also the scratch name, eg
            -N scratch0/wTest
                    the workspace will be populated with template files as checked-out
@@ -41,6 +41,7 @@ function how_to_use() {
                without overwriting
    -l      use fort.3.local. This file will be added to the list of necessary
                input files only in case this flag will be issued.
+   -g      use a git sparse checkout to initialise workspace (takes disk space)
    -P      python path
    -v      verbose (OFF by default)
 
@@ -185,6 +186,18 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
+# - infos about current repo
+export REPOPATH=`dirname ${SCRIPTDIR}`
+if [ `which git 2>/dev/null | wc -l` -eq 1 ] ; then
+    cd ${REPOPATH}
+    origRepoForSetup=`git remote show origin | grep Fetch | awk '{print ($NF)}'`
+    origBranchForSetup=`git branch | grep '^*' | awk '{print ($2)}'`
+    cd - 2>&1 /dev/null
+else
+    origRepoForSetup='https://github.com/amereghe/SixDesk.git'
+    origBranchForSetup='newWorkspace'
+fi
+
 # - necessary input files
 necessaryInputFiles=( sixdeskenv sysenv )
 
@@ -197,18 +210,17 @@ loverwrite=true
 lverbose=false
 llocalfort3=false
 lunlock=false
+lgit=false
 currPlatform=""
 currStudy=""
 tmpPythonPath=""
-origRepoForSetup='https://github.com/amereghe/SixDesk.git'
-origBranchForSetup='newWorkspace'
 
 # variables set based on parsing fort.3.local
 
 nActions=0
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hsvld:ep:P:nN:U" opt ; do
+while getopts  ":hsvld:ep:P:nN:Ug" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -259,6 +271,10 @@ while getopts  ":hsvld:ep:P:nN:U" opt ; do
 	    # verbose
 	    lverbose=true
 	    ;;
+        g)
+            # use git sparse checkout to set-up workspace
+            lgit=true
+            ;;
 	:)
 	    how_to_use
 	    echo "Option -$OPTARG requires an argument."
@@ -337,7 +353,7 @@ if ${lcrwSpace} ; then
     else
 	mkdir -p ${wSpaceName}
 	cd ${wSpaceName}
-	if [ `which git 2>/dev/null | wc -l` -eq 1 ] ; then
+	if ${lgit} && [ `which git 2>/dev/null | wc -l` -eq 1 ] ; then
 	    sixdeskmess -1 "--> using git to initialise sixjobs"
 	    git init
 	    git config core.sparseCheckout true
@@ -350,7 +366,7 @@ EOF
 	    git remote add -f origin ${origRepoForSetup}
 	    git checkout ${origBranchForSetup}
 	else
-	    origDir=`dirname ${SCRIPTDIR}`/sixjobs
+	    origDir=${REPOPATH}/sixjobs
 	    sixdeskmess -1 "--> initialising sixjobs from ${origDir}"
 	    cp -r ${origDir} .
 	fi
@@ -362,7 +378,7 @@ EOF
     fi
     [ -e `basename ${wSpaceName}` ] || ln -s ${wSpaceName}
     if [ ${nActions} -eq 0 ] ; then
-	sixdeskmess -1 "requested only initilising workspace. Exiting..."
+	sixdeskmess -1 "requested only initialising workspace. Exiting..."
 	exit 0
     fi
     cd ${wSpaceName}/sixjobs
