@@ -19,10 +19,11 @@ function how_to_use() {
                        OVERWRITE the local ones. The template dir is:
            ${SCRIPTDIR}/templates/input
    -N <workspace>  create and initialise a new workspace in the current dir;
-                   with the workspace, please specify also the scratch name, eg
+                   you can also specify the scratch name with the workspace, eg:
            -N scratch0/wTest
-                   the workspace will be populated with template files as checked-out
-                       with git from repo:
+                   the scratch can be omitted - it will be simply ignored;
+                   the workspace will be populated with template files as either
+                       from the current scripts or as checked-out from the git repo:
            ${origRepoForSetup}
                        branch:
            ${origBranchForSetup}
@@ -192,7 +193,7 @@ if [ `which git 2>/dev/null | wc -l` -eq 1 ] ; then
     cd ${REPOPATH}
     origRepoForSetup=`git remote show origin | grep Fetch | awk '{print ($NF)}'`
     origBranchForSetup=`git branch | grep '^*' | awk '{print ($2)}'`
-    cd - 2>&1 /dev/null
+    cd - 2>&1 > /dev/null
 else
     origRepoForSetup='https://github.com/amereghe/SixDesk.git'
     origBranchForSetup='newWorkspace'
@@ -338,14 +339,9 @@ source ${SCRIPTDIR}/bash/dot_profile
 
 # - set up new workspace
 if ${lcrwSpace} ; then
-    if [ `echo "${wSpaceName}" | awk 'BEGIN{FS="/"}{print (NF)}'` -ne 2 ] ; then
-	how_to_use
-	echo "invalid workspace specification!"
-	exit 1
-    fi
     sixdeskmess -1 "requested generation of new workspace:"
     sixdeskmess -1 "- current path: $PWD"
-    sixdeskmess -1 "- <scratch_dir>/<workspace>: ${wSpaceName}"
+    sixdeskmess -1 "- workspace path: ${wSpaceName}"
     if [ -d ${wSpaceName} ] ; then
 	how_to_use
 	sixdeskmess -1 "workspace ${wSpaceName} already exists!"
@@ -376,7 +372,7 @@ EOF
 	touch studies/sixdesklock
 	cd - 2>&1 > /dev/null
     fi
-    [ -e `basename ${wSpaceName}` ] || ln -s ${wSpaceName}
+    [[ "${wSpaceName}" != *"scratch"* ]] || ln -s ${wSpaceName}
     if [ ${nActions} -eq 0 ] ; then
 	sixdeskmess -1 "requested only initialising workspace. Exiting..."
 	exit 0
@@ -440,10 +436,19 @@ if ${lcptemplate} ; then
     tmpDir=`readlink -f $PWD`
     tmpDir=`dirname ${tmpDir}`
     workspace=`basename ${tmpDir}`
-    tmpDir=`dirname ${tmpDir}`
-    scratchDir=${tmpDir}
-    tmpDir=`dirname ${tmpDir}`
-    baseDir=${tmpDir}
+    if [[ "${wSpaceName}" == *"scratch"* ]] ; then
+        # scratchdir iS in the path
+        tmpDir=`dirname ${tmpDir}`
+        scratchDir=${tmpDir}
+        tmpDir=`dirname ${tmpDir}`
+        baseDir=${tmpDir}
+    else
+        # scratchdir is NOT in the path
+        # -> scratchdir and basedir coincide
+        tmpDir=`dirname ${tmpDir}`
+        scratchDir=${tmpDir}
+        baseDir=${tmpDir}
+    fi
     sed -i -e "s#^export workspace=.*#export workspace=${workspace}#" \
 	   -e "s#^export basedir=.*#export basedir=${baseDir}#" \
 	   -e "s#^export scratchdir=.*#export scratchdir=${scratchDir}#" sixdeskenv
