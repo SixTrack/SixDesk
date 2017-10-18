@@ -812,33 +812,62 @@ sixdeskDefinePythonPath(){
     fi
     sixdeskmess -1 "--> python set to: `which python`"
 }
+sixdeskGetCurretPaths(){
+    tmpDir=`readlink -f $PWD`
+    tmpDir=`dirname ${tmpDir}`
+    tmpWorkspace=`basename ${tmpDir}`
+    if [[ "${tmpDir}" == *"scratch"* ]] ; then
+        # scratchdir IS in the path
+        tmpDir=`dirname ${tmpDir}`
+        tmpScratchName=`basename ${tmpDir}`
+        tmpDir=`dirname ${tmpDir}`
+        tmpBaseDir=${tmpDir}
+        tmpScratchDir=\$basedir/${tmpScratchName}
+        tmpTrackDir=\$scratchdir/\$workspace
+        tmpSixtrackInput=\$scratchdir/sixtrack_input/\$workspace/\$LHCDescrip
+        tmpSixdeskWork=\$scratchdir/work/\$workspace/\$LHCDescrip
+        tmpCronLogs=\$scratchdir/cronlogs/\$workspace
+        tmpSixdeskLogs=\$scratchdir/sixdesklogs/$workspace
+    else
+        # scratchdir is NOT in the path
+        tmpDir=`dirname ${tmpDir}`
+        tmpBaseDir=${tmpDir}
+        tmpScratchDir=\$basedir/\$workspace
+        tmpTrackDir=\$basedir/\$workspace
+        tmpSixtrackInput=\$scratchdir/sixtrack_input/\$LHCDescrip
+        tmpSixdeskWork=\$scratchdir/work/\$LHCDescrip
+        tmpCronLogs=\$scratchdir/cronlogs
+        tmpSixdeskLogs=\$scratchdir/sixdesklogs
+    fi
+}
 sixdeskDefineUserTree(){
     # define the tree in the userspace
+
+    # get current paths
+    sixdeskGetCurretPaths
     
-    # input variables are the starting points:
-    # $1: root dir (ie $basedir in sixdeskenv)
-    # $2: scratch dir (ie $scratchdir in sixdeskenv)
-    # $3: workspace name (ie $workspace in sixdeskenv)
-
     # basic paths (back-compatibility)
-    [ -n "${basedir}" ] || export basedir=$1               # eg /afs/cern.ch/user/$initial/$LOGNAME
-    [ -n "${scratchdir}" ] || export scratchdir=$2            # eg $basedir/scratch0
-    [ -n "${trackdir}" ] || export trackdir=$scratchdir/$3  # eg $scratchdir/w2
-    [ -n "${sixdeskhome}" ] || export sixdeskhome=$basedir/$3/sixjobs # eg $trackdir/sixjobs
-    [ -n "${sixdeskhomeStudies}" ] || export sixdeskhomeStudies=$sixdeskhome/studies
+    [ -n "${workspace}" ] || export workspace=${tmpWorkspace}
+    [ -n "${basedir}" ] || export basedir=${tmpBaseDir}
+    [ -n "${scratchdir}" ] || export scratchdir=${tmpScratchDir}
+    [ -n "${trackdir}" ] || export trackdir=${tmpTrackDir}
+    [ -n "${sixtrack_input}" ] || export sixtrack_input=${tmpSixtrackInput}
+    [ -n "${sixdeskwork}" ] || export sixdeskwork=${tmpSixdeskWork}
 
-    # 
-    [ -n "${sixtrack_input}" ] || export sixtrack_input=$scratchdir/sixtrack_input/$workspace/$LHCDescrip
-    [ -n "${sixdesklogs}" ] || export sixdesklogs=$scratchdir/sixdesklogs/$workspace
-    [ -n "${sixdesklogdir}" ] || export sixdesklogdir=$sixdesklogs/$LHCDescrip
-    [ -n "${cronlogs}" ] || export cronlogs=$scratchdir/cronlogs/$workspace
-    [ -n "${cronlogdir}" ] || export cronlogdir=$cronlogs/$LHCDescrip
+    # dependent paths
+    [ -n "${sixdeskhome}" ] || export sixdeskhome=${basedir}/${workspace}/sixjobs
+    [ -n "${sixdeskhomeStudies}" ] || export sixdeskhomeStudies=${sixdeskhome}/studies
+    [ -n "${sixdeskstudy}" ] || export sixdeskstudy=$sixdeskhomeStudies/$LHCDescrip
     [ -n "${sixdesktrack}" ] || export sixdesktrack=$trackdir/track
     [ -n "${sixdesktrackStudy}" ] || export sixdesktrackStudy=$sixdesktrack/$LHCDescrip
-    [ -n "${sixdeskwork}" ] || export sixdeskwork=$scratchdir/work/$workspace/$LHCDescrip
+
+    # logs/jobs paths
+    [ -n "${sixdesklogs}" ] || export sixdesklogs=${tmpSixdeskLogs}
+    [ -n "${sixdesklogdir}" ] || export sixdesklogdir=$sixdesklogs/$LHCDescrip
+    [ -n "${cronlogs}" ] || export cronlogs=${tmpCronLogs}
+    [ -n "${cronlogdir}" ] || export cronlogdir=$cronlogs/$LHCDescrip
     [ -n "${sixdeskjobs}" ] || export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
     [ -n "${sixdeskjobs_logs}" ] || export sixdeskjobs_logs=$sixdeskjobs/jobs_logs
-    [ -n "${sixdeskstudy}" ] || export sixdeskstudy=$sixdeskhomeStudies/$LHCDescrip
 }
 sixDeskDefineMADXTree(){
     local __SCRIPTDIR=$1

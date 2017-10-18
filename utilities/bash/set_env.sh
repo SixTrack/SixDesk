@@ -76,8 +76,7 @@ function basicChecks(){
 	    sixdeskexit 3
 	fi
     fi
-
-    return 0
+    
 }
 
 function consistencyChecks(){
@@ -113,8 +112,7 @@ function consistencyChecks(){
     if [ $? -ne 0 ] ; then
 	sixdeskexit 9
     fi
-
-    return 0
+    
 }
 
 function getInfoFromFort3Local(){
@@ -372,6 +370,7 @@ EOF
 	touch studies/sixdesklock
 	cd - 2>&1 > /dev/null
     fi
+    # do we really need this link?
     [[ "${wSpaceName}" != *"scratch"* ]] || ln -s ${wSpaceName}
     if [ ${nActions} -eq 0 ] ; then
 	sixdeskmess -1 "requested only initialising workspace. Exiting..."
@@ -412,9 +411,6 @@ fi
 
 # - basic checks (i.e. dir structure)
 basicChecks
-if [ $? -gt 0 ] ; then
-    sixdeskexit 4
-fi
 
 # ------------------------------------------------------------------------------
 # actual operations
@@ -433,26 +429,19 @@ if ${lcptemplate} ; then
 	cp -p ${SCRIPTDIR}/templates/input/${tmpFile} .
 	sixdeskmess 2 "${tmpFile}"
     done
-    tmpDir=`readlink -f $PWD`
-    tmpDir=`dirname ${tmpDir}`
-    workspace=`basename ${tmpDir}`
-    if [[ "${wSpaceName}" == *"scratch"* ]] ; then
-        # scratchdir iS in the path
-        tmpDir=`dirname ${tmpDir}`
-        scratchDir=${tmpDir}
-        tmpDir=`dirname ${tmpDir}`
-        baseDir=${tmpDir}
-    else
-        # scratchdir is NOT in the path
-        # -> scratchdir and basedir coincide
-        tmpDir=`dirname ${tmpDir}`
-        scratchDir=${tmpDir}
-        baseDir=${tmpDir}
-    fi
-    sed -i -e "s#^export workspace=.*#export workspace=${workspace}#" \
-	   -e "s#^export basedir=.*#export basedir=${baseDir}#" \
-	   -e "s#^export scratchdir=.*#export scratchdir=${scratchDir}#" sixdeskenv
 
+    # get current paths:
+    sixdeskGetCurretPaths
+    sed -i -e "s#^export workspace=.*#export workspace=${tmpWorkspace}#" \
+	   -e "s#^export basedir=.*#export basedir=${tmpBaseDir}#" \
+	   -e "s#^export scratchdir=.*#export scratchdir=${tmpScratchDir}#" \
+	   -e "s#^export trackdir=.*#export trackdir=${tmpTrackDir}#" \
+	   -e "s#^export sixtrack_input=.*#export sixtrack_input=${tmpSixtrackInput}#" \
+           sixdeskenv
+    sed -i -e "s#^export sixdeskwork=.*#export sixdeskwork=${tmpSixdeskWork}#" \
+           -e "s#^export cronlogs=.*#export cronlogs=${tmpCronLogs}#" \
+           -e "s#^export sixdesklogs=.*#export sixdesklogs=${tmpSixdeskLogs}#" \
+           sysenv
 else
 
     # - make sure we have sixdeskenv/sysenv/fort.3.local files
@@ -479,7 +468,7 @@ else
     setFurtherEnvs
 
     # - define user tree
-    sixdeskDefineUserTree $basedir $scratchdir $workspace
+    sixdeskDefineUserTree
 
     # - boinc variables
     sixDeskSetBOINCVars
