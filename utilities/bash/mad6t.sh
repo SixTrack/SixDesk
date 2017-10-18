@@ -147,8 +147,12 @@ function submit(){
 	    rm -f jobs.list
 	fi
 
+        [ -e ${sixtrack_input}/mad6t1.sh ] || cp -p $lsfFilesPath/mad6t1.sh ${sixtrack_input}
+        [ -e ${sixtrack_input}/mad6t.sh ] || cp -p $lsfFilesPath/mad6t.sh ${sixtrack_input}
+        [ -e ${sixtrack_input}/mad6t.sub ] || cp -p ${SCRIPTDIR}/templates/htcondor/mad6t.sub ${sixtrack_input}
+        
 	# Loop over seeds
-	mad6tjob=$lsfFilesPath/mad6t1.sh
+	mad6tjob=${sixtrack_input}/mad6t1.sh
 	for (( iMad=$istamad ; iMad<=$iendmad ; iMad++ )) ; do
 	    
 	    # clean away any existing results for this seed
@@ -186,14 +190,13 @@ function submit(){
 		    echo mad6t_${iMad}.sh >> jobs.list
 		fi
 	    fi
-	    mad6tjob=$lsfFilesPath/mad6t.sh
+	    mad6tjob=${sixtrack_input}/mad6t.sh
 	done
     fi
 	
     if [ "$sixdeskplatform" == "htcondor" ] && ! ${linter} ; then
-	cp ${SCRIPTDIR}/templates/htcondor/mad6t.sub .
-	sed -i "s#^+JobFlavour =.*#+JobFlavour = \"${madHTCq}\"#" mad6t.sub
-	condor_submit -batch-name "mad/$workspace/$LHCDescrip" mad6t.sub
+	sed -i "s#^+JobFlavour =.*#+JobFlavour = \"${madHTCq}\"#" ${sixtrack_input}/mad6t.sub
+	condor_submit -batch-name "mad/$workspace/$LHCDescrip" ${sixtrack_input}/mad6t.sub
 	if [ $? -eq 0 ] ; then
 	    rm -f jobs.list
 	fi

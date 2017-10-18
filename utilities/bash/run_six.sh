@@ -1086,7 +1086,7 @@ function condor_sub(){
 	# let's renew the kerberos token just before submitting
 	sixdeskmess 2 "renewing kerberos token before submission to HTCondor"
 	sixdeskRenewKerberosToken
-	multipleTrials "terseString=\"\`condor_submit -batch-name ${batch_name} -terse ${sixdeskjobs}/htcondor_run_six.sub\`\" " "[ -n \"\${terseString}\" ]" "Problem at condor_submit"
+	multipleTrials "terseString=\"\`condor_submit -batch-name ${batch_name} -terse ${sixdeskwork}/htcondor_run_six.sub\`\" " "[ -n \"\${terseString}\" ]" "Problem at condor_submit"
 	let __lerr+=$?
 	if [ ${__lerr} -ne 0 ] ; then
 	    sixdeskmess -1 "Something wrong with htcondor submission: submission didn't work properly - exit status: ${__lerr}"
@@ -2299,15 +2299,17 @@ if ${lsubmit} ; then
 	    sixdeskmess -1 "cleaning away existing ${sixdeskjobs}/${LHCDesName}.list to avoid double submissions!"
 	    rm -f ${sixdeskjobs}/${LHCDesName}.list
 	fi
-	cp ${SCRIPTDIR}/templates/htcondor/htcondor_job.sh ${sixdeskjobs}/htcondor_job.sh
-	cp ${SCRIPTDIR}/templates/htcondor/htcondor_run_six.sub ${sixdeskjobs}/htcondor_run_six.sub
+        [ -e ${sixdeskwork}/htcondor_job.sh ] || cp -p ${SCRIPTDIR}/templates/htcondor/htcondor_job.sh ${sixdeskwork}
+        [ -e ${sixdeskwork}/htcondor_run_six.sub ] || cp -p ${SCRIPTDIR}/templates/htcondor/htcondor_run_six.sub ${sixdeskwork}
 	# some set up of htcondor submission scripts
- 	sed -i "s#^exe=.*#exe=${SIXTRACKEXE}#g" ${sixdeskjobs}/htcondor_job.sh
-	sed -i "s#^runDirBaseName=.*#runDirBaseName=${sixdesktrack}#g" ${sixdeskjobs}/htcondor_job.sh
-	chmod +x ${sixdeskjobs}/htcondor_job.sh
-	sed -i "s#^executable = .*#executable = ${sixdeskjobs}/htcondor_job.sh#g" ${sixdeskjobs}/htcondor_run_six.sub
-	sed -i "s#^queue dirname from.*#queue dirname from ${sixdeskjobs}/${LHCDesName}.list#g" ${sixdeskjobs}/htcondor_run_six.sub
-	sed -i "s#^+JobFlavour =.*#+JobFlavour = \"${HTCq}\"#g" ${sixdeskjobs}/htcondor_run_six.sub
+ 	sed -i -e "s#^exe=.*#exe=${SIXTRACKEXE}#g" \
+	    -e "s#^runDirBaseName=.*#runDirBaseName=${sixdesktrack}#g" \
+            ${sixdeskwork}/htcondor_job.sh
+	chmod +x ${sixdeskwork}/htcondor_job.sh
+	sed -i -e "s#^executable = .*#executable = ${sixdeskwork}/htcondor_job.sh#g" \
+	       -e "s#^queue dirname from.*#queue dirname from ${sixdeskjobs}/${LHCDesName}.list#g" \
+	       -e "s#^+JobFlavour =.*#+JobFlavour = \"${HTCq}\"#g" \
+               ${sixdeskwork}/htcondor_run_six.sub
     fi
 fi
 # - MegaZip: get file name

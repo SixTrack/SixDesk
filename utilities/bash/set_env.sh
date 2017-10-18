@@ -507,6 +507,15 @@ else
  	        # updating an existing study
 		sixdeskmess -1 "Updated sixdeskenv/sysenv(/fort.3.local) for $LHCDescrip"
 	    fi
+            # copy necessary .sub/.sh files
+            sixdeskmess -1 "if absent, copying necessary .sub/.sh files for MADX run in ${sixtrack_input}"
+            sixdeskmess -1 "   and necessary .sub/.sh files for 6T runs in ${sixdeskwork}"
+            for tmpFile in htcondor/mad6t.sub lsf/mad6t.sh lsf/mad6t1.sh ; do
+                [ -e ${sixtrack_input}/`basename ${tmpFile}` ] || cp -p ${SCRIPTDIR}/templates/${tmpFile} ${sixtrack_input}
+            done
+            for tmpFile in htcondor/htcondor_run_six.sub htcondor/htcondor_job.sh ; do
+                [ -e ${sixdeskwork}/`basename ${tmpFile}` ] || cp -p ${SCRIPTDIR}/templates/${tmpFile} ${sixdeskwork}
+            done
 	elif ${lload} ; then
 	    cp ${envFilesPath}/sixdeskenv .
 	    cp ${envFilesPath}/sysenv .
