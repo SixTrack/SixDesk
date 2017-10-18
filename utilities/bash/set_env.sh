@@ -480,9 +480,9 @@ else
     if ${loverwrite} ; then
 	__lnew=false
 	if ${lset} ; then
-	    if ! [ -d ${sixdeskhomeStudies} ] ; then
+	    if ! [ -d ${sixdeskstudy} ] ; then
 		__lnew=true
-		mkdir ${sixdeskhomeStudies}
+		mkdir ${sixdeskstudy}
 	    fi
 	fi
 
