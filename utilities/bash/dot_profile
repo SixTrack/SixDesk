@@ -827,7 +827,7 @@ sixdeskGetCurretPaths(){
         tmpSixtrackInput=\$scratchdir/sixtrack_input/\$workspace/\$LHCDescrip
         tmpSixdeskWork=\$scratchdir/work/\$workspace/\$LHCDescrip
         tmpCronLogs=\$scratchdir/cronlogs/\$workspace
-        tmpSixdeskLogs=\$scratchdir/sixdesklogs/$workspace
+        tmpSixdeskLogs=\$scratchdir/sixdesklogs/\$workspace
     else
         # scratchdir is NOT in the path
         tmpDir=`dirname ${tmpDir}`
