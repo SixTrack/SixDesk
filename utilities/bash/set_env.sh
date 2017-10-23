@@ -421,7 +421,7 @@ if ${lcptemplate} ; then
 	cp -p ${SCRIPTDIR}/templates/input/${tmpFile} .
 	sixdeskmess 2 "${tmpFile}"
     done
-    tmpDir=${PWD}
+    tmpDir=`readlink -f $PWD`
     tmpDir=`dirname ${tmpDir}`
     workspace=`basename ${tmpDir}`
     tmpDir=`dirname ${tmpDir}`
