@@ -623,8 +623,5 @@ fi
 trap "sixdeskexit 0" EXIT SIGINT SIGQUIT
 
 # echo that everything went fine
-sixdeskmess -1 "               Appears to have completed normally"
-echo
-
-# bye bye
-exit 0
+echo ""
+sixdeskmess -1 "done."
