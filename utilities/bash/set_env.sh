@@ -421,7 +421,7 @@ if ${lcptemplate} ; then
 	cp -p ${SCRIPTDIR}/templates/input/${tmpFile} .
 	sixdeskmess 2 "${tmpFile}"
     done
-    tmpDir=${PWD}
+    tmpDir=`readlink -f $PWD`
     tmpDir=`dirname ${tmpDir}`
     workspace=`basename ${tmpDir}`
     tmpDir=`dirname ${tmpDir}`
@@ -438,9 +438,9 @@ else
     sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s ${necessaryInputFiles[@]}
     if [ $? -gt 0 ] ; then
         sixdeskmess -1 "not all necessary files are in $envFilesPath dir:"
-        for tmpFile in ${necessaryInputFiles[@]} ; do
-            sixdeskmess -1 "file ${tmpFile} : `\ls -ltrh $envFilesPath`"
-        done
+        sixdeskmess -1 "missing files: ${necessaryInputFiles[@]}"
+        sixdeskmess -1 "status of dir:"
+        \ls -ltrh $envFilesPath
 	sixdeskexit 4
     fi
 
