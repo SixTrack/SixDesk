@@ -9,9 +9,9 @@ universe = vanilla
 # executable, completed by run_six.sh
 executable = /afs/cern.ch/project/sixtrack/build/sixtrack
 arguments = "$(dirname)"
-output = $(dirname)/htcondor.out
-error = $(dirname)/htcondor.err
-log = $(dirname)/htcondor.log
+output = $(dirname)/htcondor.$(ClusterId).$(ProcId).out
+error = $(dirname)/htcondor.$(ClusterId).$(ProcId).err
+log = $(dirname)/htcondor.$(ClusterId).$(ProcId).log
 # do not ask htcondor to take care of output files, otherwise empty ones will be created while the simulation proceeds
 transfer_output_files = ""
 ShouldTransferFiles = YES
