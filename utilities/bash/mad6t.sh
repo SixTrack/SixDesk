@@ -269,7 +269,8 @@ function check(){
 	echo "ERRORS"
 	cat ERRORS
 	let __lerr+=1
-    elif [ -s WARNINGS ] ; then
+    fi
+    if [ -s WARNINGS ] ; then
 	sixdeskmess -1 "There appear to be some MADX result warnings!"
 	sixdeskmess -1 "Some files are being changed; details in sixtrack_input/WARNINGS"
 	sixdeskmess -1 "If these messages are annoying you and you have checked them carefully then"
