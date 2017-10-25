@@ -19,7 +19,7 @@ function how_to_use() {
               processing of another script
 
    options (optional):
-   -i      madx is run interactively (ie on the node you are locally
+   -I      madx is run interactively (ie on the node you are locally
               connected to, no submission to lsf at all)
            option available only for submission, not for checking
    -d      study name (when running many jobs in parallel)
@@ -269,7 +269,8 @@ function check(){
 	echo "ERRORS"
 	cat ERRORS
 	let __lerr+=1
-    elif [ -s WARNINGS ] ; then
+    fi
+    if [ -s WARNINGS ] ; then
 	sixdeskmess -1 "There appear to be some MADX result warnings!"
 	sixdeskmess -1 "Some files are being changed; details in sixtrack_input/WARNINGS"
 	sixdeskmess -1 "If these messages are annoying you and you have checked them carefully then"
@@ -439,13 +440,13 @@ optArgCurrStudy="-s"
 optArgCurrPlatForm=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hiwseo:cd:p:P:U" opt ; do
+while getopts  ":hIwseo:cd:p:P:U" opt ; do
     case $opt in
 	h)
 	    how_to_use
 	    exit 1
 	    ;;
-	i)
+	I)
 	    # interactive mode of running
 	    linter=true
 	    ;;
@@ -623,8 +624,5 @@ fi
 trap "sixdeskexit 0" EXIT SIGINT SIGQUIT
 
 # echo that everything went fine
-sixdeskmess -1 "               Appears to have completed normally"
-echo
-
-# bye bye
-exit 0
+echo ""
+sixdeskmess -1 "done."
