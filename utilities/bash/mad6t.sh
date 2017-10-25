@@ -19,7 +19,7 @@ function how_to_use() {
               processing of another script
 
    options (optional):
-   -i      madx is run interactively (ie on the node you are locally
+   -I      madx is run interactively (ie on the node you are locally
               connected to, no submission to lsf at all)
            option available only for submission, not for checking
    -d      study name (when running many jobs in parallel)
@@ -439,13 +439,13 @@ optArgCurrStudy="-s"
 optArgCurrPlatForm=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hiwseo:cd:p:P:U" opt ; do
+while getopts  ":hIwseo:cd:p:P:U" opt ; do
     case $opt in
 	h)
 	    how_to_use
 	    exit 1
 	    ;;
-	i)
+	I)
 	    # interactive mode of running
 	    linter=true
 	    ;;
