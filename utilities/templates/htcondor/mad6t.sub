@@ -6,9 +6,9 @@
 #   the list is automatically deleted after a successful submission
 universe = vanilla
 executable = $(filename)
-output = $Fn(filename).out
-error = $Fn(filename).err
-log = $Fn(filename).log
+output = $Fn(filename).$(ClusterId).$(ProcId).out
+error = $Fn(filename).$(ClusterId).$(ProcId).err
+log = $Fn(filename).$(ClusterId).$(ProcId).log
 # do not ask htcondor to take care of input/output files
 # the bash script used as exe will take care of that
 transfer_output_files = ""
