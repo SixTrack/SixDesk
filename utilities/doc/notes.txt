@@ -12,3 +12,22 @@
   - long/many jobs;
   - fast responsiveness (eg within 2h) of results is not key to progress, but
     production is the action;
+
+* retrieval of results:
+  - based on last platform used:
+    . run_results -> BOINC;
+    . run_status -> HTCondor, HTBoinc;
+
+* pre-requisites:
+  - running on lxplus: none;
+  - running on local local machine:
+    @ kerberos: kinit/klist;
+    @ AFS mounted:
+      . for MADX optics files;
+      . for submission to BOINC;
+    @ HTCondor locally installed;
+    @ python2.7:
+      . default path used by SixDesk in lxplus:
+        /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc49-opt/setup.sh
+      . on a local machine which mounts AFS, usually the default path is found;
+  
