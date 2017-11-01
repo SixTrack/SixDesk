@@ -378,7 +378,7 @@ for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
 		sed -i -e "/^${inTaskIds}/d" taskids
 		echo "${inTaskIds} ${taskid} " >> taskids
 	    fi
-	done < ${missing_taskids_temp} 
+	done < missing_taskids_temp
     fi
 done
 
