@@ -431,6 +431,17 @@ then
 #MACRO mymess
 
 fi
+if [ ! -e $sixdeskjobs_logs/fort.3 ] ;then
+    sixdeskmess -1 "No SIXTRACK control file (fort.3): Run stopped"
+#MACRO myunlock $sixdeskstudy
+    sixdesklockdir=$sixdeskstudy
+    sixdeskunlock
+#MACRO myunlock
+#MACRO myexit 7
+    sixdeskexitparam=7
+    sixdeskexit
+#MACRO myexit
+fi
 i=$ista
 while test "$i" -le "$iend" 
 do
@@ -468,7 +479,6 @@ do
     nobetas=`cat $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues | wc -w`
     if test "$nobetas" -ne 14
     then 
-
 #MACRO mymess 0 betavalues has only $nobetas words!!! Should be 14!
       sixdeskmesslevel=0
       sixdeskmess -1 "betavalues has only $nobetas words!!! Should be 14!"
@@ -480,14 +490,37 @@ do
       sixdesklockdir=$sixdeskstudy
       sixdeskunlock
 #MACRO myunlock
-
-
 #MACRO myexit 98
       sixdeskexitparam=98
       sixdeskexit
 #MACRO myexit
-
     fi
+    if [ ! -e "$dir16"/fort.2_"$i".gz ] ;then
+        sixdeskmess -1 "No SIXTRACK geometry file (fort.2): Run stopped"
+#MACRO myunlock $sixdeskstudy
+        sixdesklockdir=$sixdeskstudy
+        sixdeskunlock
+#MACRO myunlock
+#MACRO myexit 6
+        sixdeskexitparam=6
+        sixdeskexit
+#MACRO myexit
+    fi
+    if [ ! -e "$dir16"/fort.8_"$i".gz ] ;then
+
+        sixdeskmess -1 "No SIXTRACK misalignment file (fort.8): dummy file created"
+
+        touch "$tree"/"$Rundir"/fort.8
+        gzip "$tree"/"$Rundir"/fort.8
+    fi
+    if [ ! -e "$dir16"/fort.16_"$i".gz ] ;then
+
+        sixdeskmess -1 "No SIXTRACK error file (fort.16): dummy file created"
+
+        touch "$tree"/"$Rundir"/fort.16
+        gzip "$tree"/"$Rundir"/fort.16
+    fi
+    #
     #
     #run for longterm
     #
@@ -539,79 +572,6 @@ do
           #
           if [ ! -d "$tree"/"$Rundir" ] ;then
             echo "$Rundir is MISSING!!!"
-          fi
-          #
-          if [ ! -e "$dir16"/fort.2_"$i".gz ] ;then
-
-#MACRO mymess 0 No SIXTRACK geometry file (fort.2): Run stopped
-            sixdeskmesslevel=0
-            sixdeskmess -1 "No SIXTRACK geometry file (fort.2): Run stopped"
-#MACRO mymess
-
-
-#MACRO myunlock $sixdeskjobs_logs
-            ###sixdesklockdir=$sixdeskjobs_logs
-            ###sixdeskunlock
-#MACRO myunlock
-
-
-#MACRO myunlock $sixdeskstudy
-            sixdesklockdir=$sixdeskstudy
-            sixdeskunlock
-#MACRO myunlock
-
-
-#MACRO myexit 6
-            sixdeskexitparam=6
-            sixdeskexit
-#MACRO myexit
-
-          fi
-          if [ ! -e $sixdeskjobs_logs/fort.3 ] ;then
-
-#MACRO mymess 0 No SIXTRACK control file (fort.3): Run stopped
-            sixdeskmesslevel=0
-            sixdeskmess -1 "No SIXTRACK control file (fort.3): Run stopped"
-#MACRO mymess
-
-
-#MACRO myunlock $sixdeskjobs_logs
-            ###sixdesklockdir=$sixdeskjobs_logs
-            ###sixdeskunlock
-#MACRO myunlock
-
-
-#MACRO myunlock $sixdeskstudy
-            sixdesklockdir=$sixdeskstudy
-            sixdeskunlock
-#MACRO myunlock
-
-
-#MACRO myexit 7
-            sixdeskexitparam=7
-            sixdeskexit
-#MACRO myexit
-
-          fi
-          if [ ! -e "$dir16"/fort.8_"$i".gz ] ;then
-
-#MACRO mymess 0 No SIXTRACK misalignment file (fort.8): dummy file created
-            sixdeskmesslevel=0
-            sixdeskmess -1 "No SIXTRACK misalignment file (fort.8): dummy file created"
-#MACRO mymess
-
-            touch "$tree"/"$Rundir"/fort.8
-            gzip "$tree"/"$Rundir"/fort.8
-          fi
-          if [ ! -e "$dir16"/fort.16_"$i".gz ] ;then
-
-#MACRO mymess 0 No SIXTRACK error file (fort.16): dummy file created
-            sixdeskmesslevel=0
-            sixdeskmess -1 "No SIXTRACK error file (fort.16): dummy file created"
-#MACRO mymess
-
-            touch "$tree"/"$Rundir"/fort.16
-            gzip "$tree"/"$Rundir"/fort.16
           fi
           #
 # Now try the FIX!
