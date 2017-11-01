@@ -163,6 +163,8 @@ cd /tmp/${LOGNAME}/work
 cp -r * backup
 # collect missing directories
 rm -f missingDirs.txt
+# collect damaged directories
+rm -f damagedDirs.txt
 
 echo ""
 printf "=%.0s" {1..80}
@@ -570,15 +572,20 @@ do
 #MACRO myrundir
  
           #
-          if [ ! -d "$tree"/"$Rundir" ] ;then
-            echo "$Rundir is MISSING!!!"
-          fi
-          #
-# Now try the FIX!
-          if test ! -d $tree/$Rundir 
-          then
-            echo "Something really bad, $Rundir does NOT exist!!!"
-	    echo "$Rundir" >> missingDirs.txt
+          if [ ! -d ${tree}/${Rundir} ] ;then
+              echo "Something really bad, $Rundir does NOT exist!!!"
+	      echo "$Rundir" >> missingDirs.txt
+          else
+              damaged=false
+              for iFort in 2 3 8 16 ; do
+                  if ! [ -s ${tree}/fort.${iFort}.gz ] ; then
+                      echo "Something really bad, ${tree}/fort.${iFort}.gz does NOT exist!!!"
+                      damaged=true
+                  fi
+                  if ${damaged} ; then
+                      echo "${Rundir}" >> damagedDirs.txt
+                  fi
+              done
           fi
 # Now add the taskid if missing
           grep "$Runnam " taskids
@@ -608,7 +615,11 @@ cd $sixdeskhome
 rm -rf /tmp/${LOGNAME}/work
 
 if [ -s $sixdeskwork/missingDirs.txt ] ; then
-    sixdeskmess -1 "missing dirs! please see missingDirs.txt"
+    sixdeskmess -1 "missing dirs! please see $sixdeskwork/missingDirs.txt"
+fi
+
+if [ -s $sixdeskwork/damagedDirs.txt ] ; then
+    sixdeskmess -1 "damaged dirs! please see $sixdeskwork/damagedDirs.txt"
 fi
 
 #MACRO myunlock $sixdeskjobs_logs
