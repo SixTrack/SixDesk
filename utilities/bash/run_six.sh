@@ -2171,9 +2171,9 @@ if ${lgenerate} || ${lfix} ; then
     else
 	${SCRIPTDIR}/bash/mad6t.sh -c -e ${currPythonPath} 
     fi
+    let __lerr+=$?
     printf "=%.0s" {1..80}
     echo ""
-    let __lerr+=$?
     # - these dirs should already exist...
     for tmpDir in $sixdesktrack $sixdeskjobs $sixdeskjobs_logs $sixdesktrackStudy ; do
 	[ -d $tmpDir ] || mkdir -p $tmpDir
