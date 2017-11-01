@@ -381,6 +381,7 @@ for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
 		echo "${inTaskIds} ${taskid} " >> taskids
 	    fi
 	done < missing_taskids_temp
+        rm -f missing_taskids_temp
     fi
 done
 
