@@ -160,7 +160,9 @@ cd /tmp/${LOGNAME}/work
 
 # make backup of present DB
 [ -d backup ] || mkdir backup
+export GLOBIGNORE='backup'
 cp -r * backup
+export GLOBIGNORE=
 # collect missing directories
 rm -f missingDirs.txt
 # collect damaged directories
