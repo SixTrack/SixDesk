@@ -8,25 +8,93 @@ boincSpoolDirPath="/afs/cern.ch/work/b/boinc"
 allDir=all
 zipToolDir=`basename $0`
 zipToolDir=${zipToolDir//.sh}
+initDir=$PWD
+tmpDirBase=/tmp/`basename $0`
+lTest=false
 
 boincdir=/data/boinc/project/sixtrack
 host=$(hostname -s)
+#
+logdir=$boincdir/log_$host
+[ -d $logdir ] || mkdir $logdir
+LOGFILE="$logdir/$(basename $0).log"
+#
 lockdir=$boincdir/pid_$host
 [ -d $lockdir ] || mkdir $lockdir
 lockfile=$lockdir/$(basename $0).lock
 
+function log(){ # log_message
+    if [ $# -gt 0 ] ; then 
+	logtofile "$*"
+    else
+	local line
+	while read line ; do 
+	        logtofile "$line"
+		done
+    fi
+}   
+
+function logtofile(){ #[opt-file] log_message
+    local logfile
+    logfile="$LOGFILE"
+    if [ $# -gt 1 ] ; then 
+	logfile="$logdir/$1"
+	shift
+    fi
+    echo "$(date -Iseconds) $1" >>"$logfile"
+}
+
 function getlock(){
     if  ln -s PID:$$ $lockfile >/dev/null 2>&1 ; then
-	trap " rm $lockfile; echo \" Relase lock $lockfile\"" EXIT
-	echo " got lock $lockfile"
+	if ${lTest} ; then
+ 	    trap " rm $lockfile; log \" Relase lock $lockfile\"" EXIT
+	else
+ 	    trap " log \" cleaning ${tmpDirBase} away...\" ; rm -rf ${tmpDirBase} ; rm $lockfile; log \" Relase lock $lockfile\"" EXIT
+	fi
+	log " got lock $lockfile"
     else 
-	echo "$lockfile already exists. $PWD/$0 already running? Abort..."
+	log "$lockfile already exists. $PWD/$0 already running? Abort..."
 	#never get here
 	exit 1
     fi
 }
 
+function treatStudy(){
+    # global vars:
+    # - tmpDirBase
+
+    local __studyName=$1
+    local __lAll=$2
+
+    # fileName of .zip
+    local __zipFileName=${__studyName}__`date "+%Y-%m-%d_%H-%M-%S"`
+    # tmpDir
+    local __tmpDir=${tmpDirBase}/${__zipFileName}
+    mkdir -p ${__tmpDir}
+    log " ...zipping performed in tmp dir ${__tmpDir} ..."
+    # actual fileName of .zip
+    __zipFileName=${__zipFileName}.zip
+    # zip
+    zipAll ${__zipFileName} ${__tmpDir}
+    # move
+    mvZip ${__tmpDir}/${__zipFileName} ${__studyName}
+    
+    if ! ${__lAll} ; then
+        # moving old .zip files
+	log " old .zip files ..."
+	for __fileName in `find . -name "*.zip"` ; do
+	    mvZip ${__fileName} ${__studyName}
+	done
+    fi
+}
+
 function mvZip(){
+    # global vars:
+    # - boincSpoolDirPath
+    # - lGenDownloadDir
+    # - boincDownloadDir
+    # - tmpDirBase
+    
     local __fileToCopy=$1
     local __studyName=$2
     
@@ -36,7 +104,7 @@ function mvZip(){
     done
     if ! [ -d ${__destPath} ] ; then
 	if ${lGenDownloadDir} ; then
-	    # day dir in download area
+	    # day dir in download area, only if required
 	    boincDownloadDir=${boincDownloadDir}/`date "+%Y-%m-%d"`
 	    [ -d ${boincDownloadDir} ] || mkdir -p ${boincDownloadDir}
 	    [ -d ${boincDownloadDir}/processed ] || mkdir -p ${boincDownloadDir}/processed
@@ -44,17 +112,29 @@ function mvZip(){
 	fi
 	local __destPath=${boincDownloadDir}
     fi
-    echo "...cp ${__fileToCopy} ${__destPath}"
+    log "...cp ${__fileToCopy} ${__destPath}"
     cp ${__fileToCopy} ${__destPath}
     if [ $? -eq 0 ] ; then
-	rm -f ${__fileToCopy}
+        if [[ "${__fileToCopy}" != "${tmpDirBase}"* ]] ; then
+            # in case of zip in a subfolder of ${tmpDirBase}, there is no
+	    #    need to clean away, as cleaning will be performed at the end
+	    rm -f ${__fileToCopy}
+	fi
+    else
+        if [[ "${__fileToCopy}" == "${tmpDirBase}"* ]] ; then
+            # in case of zip in a subfolder of ${tmpDirBase}, copy it here
+            cp ${__fileToCopy} .
+        fi
     fi
 }
 
 function zipAll(){
+    # global vars:
     # - WUnames: WUs to be zipped
-    # - zipFileName: name of zip file
+    # - tmpWUnames: WUs to be zipped
     # - Nzipped: total number of zipped WUs
+    local __zipFileName=$1
+    local __tmpDir=$2
     
     # zip/rm WUs in bunches
     local __nWUnames=`echo "${WUnames}" | wc -l`
@@ -62,27 +142,43 @@ function zipAll(){
     local __nResiduals=`echo "${iNLT} ${__nWUnames} ${__iiMax}" | awk '{print ($2-$3*$1)}'`
     for (( __ii=1; __ii<=${__iiMax} ; __ii++ )) ; do
 	let __nHead=$__ii*$iNLT
-	local __tmpWUnames=`echo "${WUnames}" | head -n ${__nHead} | tail -n ${iNLT}`
-	zip ${zipFileName} ${__tmpWUnames}
-	rm ${__tmpWUnames}
+	tmpWUnames=`echo "${WUnames}" | head -n ${__nHead} | tail -n ${iNLT}`
+        actualZip ${__zipFileName} ${__tmpDir}
     done
     if [ ${__nResiduals} -gt 0 ] ; then
-	local __tmpWUnames=`echo "${WUnames}" | tail -n ${__nResiduals}`
-	zip ${zipFileName} ${__tmpWUnames}
-	rm ${__tmpWUnames}
+	tmpWUnames=`echo "${WUnames}" | tail -n ${__nResiduals}`
+        actualZip ${__zipFileName} ${__tmpDir}
     fi
 
     # count
     let Nzipped+=${__nWUnames}
+}
+
+function actualZip(){
+    # global vars:
+    # - tmpWUnames: WUs to be zipped
+    local __zipFileName=$1
+    local __tmpDir=$2
     
+    local __currDir=$PWD
+    cp ${tmpWUnames} ${__tmpDir}
+    cd ${__tmpDir}
+    zip ${__zipFileName} ${tmpWUnames} 2>&1 | log
+    local __zipStatus=$?
+    cd ${__currDir}
+    if ! ${lTest} ; then
+	if [ ${__zipStatus} -eq 0 ] ; then
+	    rm ${tmpWUnames}
+	fi
+    fi
 }
 
 # ==============================================================================
 # start
 # ==============================================================================
 
-echo ""
-echo " starting `basename $0` at `date` ..."
+log ""
+log " starting `basename $0` at `date` ..."
 
 # adding lock mechanism
 getlock
@@ -93,71 +189,59 @@ STARTTIME=$(date +%s)
 Nzipped=0
 
 # ==============================================================================
-# treat all
+# treat all/ dir
 # ==============================================================================
 
 cd ${allDir}
+lAll=true
 
-# get new WUs (grep -v is redundant, but it is kept for security)
-WUs2bZipped=`find -mmin +5 -name "*__*" | grep -v '.zip'`
+# get WUs (grep -v is redundant, but it is kept for security)
+WUs2bZipped=`find . -mmin +5 -name "*__*" | grep -v '.zip'`
 
 if [ -n "${WUs2bZipped}" ] ; then
     # get study names and simple statistics
     studyNameStats=`echo "${WUs2bZipped}" | awk 'BEGIN{FS="__"}{print ($1)}' | sort | uniq -c`
 
-    echo " ... ${allDir} - studies involved:"
-    echo "${studyNameStats}"
+    log " ... ${allDir} - studies involved:"
+    log " # N_WUs, wSpace_studyName"
+    log "${studyNameStats}"
 
     # actually zip and move to boincDownloadDir
     for studyName in `echo "${studyNameStats}" | awk '{print ($2)}'` ; do
-        # fileName of .zip
-	zipFileName=${studyName}__`date "+%Y-%m-%d_%H-%M-%S"`.zip
 	WUnames=`echo "${WUs2bZipped}" | grep ${studyName}`
-        # zip
-	zipAll
-	# move
-	mvZip ${zipFileName} ${studyName}
+	treatStudy ${studyName} ${lAll}
     done
 
     # moving old or remaining .zip files
-    echo " old .zip files ..."
+    log " old .zip files ..."
     for fileName in `find . -name "*.zip"` ; do
 	mvZip ${fileName} ${fileName%%__*}
     done
 else
-    echo " ...no WUs in ${allDir}!"
+    log " ...only super-recent WUs in ${allDir}! - skipping..."
 fi
 
-cd - > /dev/null 2>&1
+cd ${initDir}
+lAll=false
 
 # ==============================================================================
 # treat studies
 # ==============================================================================
 
 for studyName in `ls -1d * | grep -v -e "^${allDir}$" -e "^${zipToolDir}$"` ; do
-    echo " ...study ${studyName}"
+    log " ...study ${studyName}"
     cd ${studyName}
 
     # get ready for zipping and moving
-    WUnames=`find -mmin +5 -name "*__*" | grep -v '.zip'`
+    WUnames=`find . -mmin +5 -name "*__*" | grep -v '.zip'`
     if [ -n "${WUnames}" ] ; then
-	zipFileName=${studyName}__`date "+%Y-%m-%d_%H-%M-%S"`.zip
-        # zip
-	zipAll
-	# move
-	mvZip ${zipFileName} ${studyName}
-    
-        # moving old .zip files
-	echo " old .zip files ..."
-	for fileName in `find . -name "*.zip"` ; do
-	    mvZip ${fileName} ${studyName}
-	done
+	treatStudy ${studyName} ${lAll}
     else
-	echo " ...no WUs in ${studyName}!"
+	log " ...only super-recent WUs in ${studyName}! - skipping..."
     fi
 
     # get ready for next study
-    cd - > /dev/null 2>&1
+    cd ${initDir}
 done
 
 # ==============================================================================
@@ -166,11 +250,11 @@ done
 
 # rm empty dirs
 # NB: all might be empty - it is not actually, thanks to: all/.doNotRemoveMe
-echo " finding and removing empty dirs..."
-find . -maxdepth 1 -type d -empty -delete -print
+log " finding and removing empty dirs..."
+find . -maxdepth 1 -type d -empty -delete -print | log
 
 ENDTIME=$(date +%s)
 
 # done
 TIMEDELTA=$(($ENDTIME - $STARTTIME))
-echo " ...done by `date` - it took ${TIMEDELTA} seconds - zipped ${Nzipped} WUs."
+log " ...done by `date` - it took ${TIMEDELTA} seconds - zipped ${Nzipped} WUs."
