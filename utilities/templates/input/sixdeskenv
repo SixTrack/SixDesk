@@ -22,7 +22,7 @@ export bunch_charge=1.1500e+11
 # It must NOT contain a "%" (replacing "#") nor "_""_"
 # It now includes the Version info e.g. v64lhc
 # (If running mad6t you must have a $LHCDescrip.mask file in the subdirectory mask)
-export LHCDescrip=hl10BaseB1
+export LHCDescrip=hl13B1
 
 # The workspace for the scripts, sixdesk.log and links to sixtrack_input, track and work, 
 # It must NOT contain a "%" (replacing "#") nor "__" (two consecutive underscores)
