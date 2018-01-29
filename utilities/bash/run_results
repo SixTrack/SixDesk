@@ -645,6 +645,7 @@ function downloadNewResults(){
 				    if ${lretrieveSTDOUT} ; then
 					if [ -e ${__origPath}/${__resSTDOUTName} ] ; then
 					    cp ${__origPath}/${__resSTDOUTName} ../problems/proble${taskid}_${stdoutFile}
+					    gzip ../problems/proble${taskid}_${stdoutFile}
 					else
 					    sixdeskmess -1 "${__origPath}/${__resSTDOUTName} NOT found!"
 					fi
@@ -691,6 +692,7 @@ function downloadNewResults(){
 					if ${lretrieveSTDOUT} ; then
 					    if [ -e ${__origPath}/${__resSTDOUTName} ] ; then
 						cp ${__origPath}/${__resSTDOUTName} ../problems/proble${taskid}_${stdoutFile}
+						gzip ../problems/proble${taskid}_${stdoutFile}
 					    else
 						sixdeskmess -1 "${__origPath}/${__resSTDOUTName} NOT found!"
 					    fi
@@ -727,6 +729,7 @@ function downloadNewResults(){
 					if ${lretrieveSTDOUT} ; then
 					    if [ -e ${__origPath}/${__resSTDOUTName} ] ; then
 						cp ${__origPath}/${__resSTDOUTName} ../problems/proble${taskid}_${stdoutFile}
+						gzip ../problems/proble${taskid}_${stdoutFile}
 					    else
 						sixdeskmess -1 "${__origPath}/${__resSTDOUTName} NOT found!"
 					    fi
@@ -1215,6 +1218,7 @@ function downloadNewResults(){
 		if ${ldos2unix} ; then
 		    dos2unix ${where}/${stdoutFile}
 		fi
+		gzip ${where}/${stdoutFile}
 	    fi
 			
 	    # Now we make a file completed_this_run which we will
