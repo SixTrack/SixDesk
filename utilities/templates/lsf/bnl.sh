@@ -60,4 +60,9 @@ then
   export STAGE_SVCCLASS="default"
   xrdcp SIXJOBNAME.tar root://${STAGE_HOST}.cern.ch/$CASTORDIR
 fi
+
+if [ -f Sixout.zip ] ; then
+    cp Sixout.zip $TRACKDIR/SIXJOBDIR/
+fi
+
 rm -f $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_COMPLETED

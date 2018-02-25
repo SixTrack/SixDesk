@@ -22,12 +22,8 @@ if [ ! -s fort.10 ];then
 fi
 gzip fort.*
 cp fort.10.gz $TRACKDIR/SIXJOBDIR/
-if [ -f fma_sixtrack ]; then
-  gzip fma_sixtrack
-  cp fma_sixtrack.gz $TRACKDIR/SIXJOBDIR/
-# for debugging also copy files with particle
-# coordinates
-#  gzip *_DUMP_*
-#  cp *_DUMP_*.gz $TRACKDIR/SIXJOBDIR/
+if [ -f Sixout.zip ] ; then
+    cp Sixout.zip $TRACKDIR/SIXJOBDIR/
 fi
+
 rm -f $TRACKDIR/SIXJOBDIR/JOB_NOT_YET_COMPLETED

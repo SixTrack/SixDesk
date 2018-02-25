@@ -186,8 +186,8 @@ bool files_match(RESULT &r1, FILE_CKSUM_LIST& f1, const RESULT &r2, FILE_CKSUM_L
 	   if(claimed_credit2 > 1.3*credit)  crl2='F';
 	   fracturn = turnx/(mturn*n*2.0);
 	   outlier = 0;
-	   if(fracturn <= 0.1) { 
-		r1.runtime_outlier = 1;
+	   if(fracturn < 1.0) { 
+	     r1.runtime_outlier = true;
 //              r2.runtime_outlier = 1;   // const
 		outlier = 1;
 	   }

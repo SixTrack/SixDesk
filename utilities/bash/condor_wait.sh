@@ -36,7 +36,7 @@ msg 1 "Waiting for jobs named $bname to complete. Querying every $interval secon
 
 while
   while
-    cq="$(condor_q)"
+    cq="$(condor_q -w)"
     [ $? -ne 0 ]
   do
     msg 1 "Warning condor_q did not return zero..."

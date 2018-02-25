@@ -16,6 +16,9 @@ function how_to_use() {
                first optional argument is given, that one will
                overwrite the value of this option;
    -p      platform name (when running many jobs in parallel)
+           this option allows to override the value in sixdeskenv, with no need
+              for the user to manually change the corresponding variable. Similarly,
+              the variable is NOT automatically updated by the script
            NB: this option has been implemented to keep the same
                interface as for other main scripts. In case the
                second optional argument is given, that one will
@@ -27,13 +30,40 @@ function how_to_use() {
    -B      break backward-compatibility
            for the moment, this sticks only to job names
    -t      reprocess old archives of results already parsed
+   -z      do not retrieve only fort.10, but also ${oneResultName}
+   -x      run a dos2unix command on every file in ${oneResultName}
+           NB: this operation is quite lengthy, as each ${oneResultName} has to
+               be unzipped, every file dos2unix-ed and then re-zipped again.
    -n      renew kerberos token every n jobs (default: ${NrenewKerberosDef})
+   -l      only list available results
    -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
                0: only error messages and basic output 
                1: full output
                2: extended output for debugging
 
 EOF
+}
+
+function checkDBnLines(){
+    # returns lequal
+    local __lprint=$1
+    local __lcheck=$2
+    lequal=false
+    nAll=`wc -l < ${dbAll}`
+    nInc=`wc -l < ${dbInc}`
+    nCom=`wc -l < ${dbCom}`
+    let nChk=${nInc}+${nCom}
+    if ${__lcheck} ; then
+	if [ ${nAll} -ne ${nChk} ] ; then
+	    let nDiff=${nAll}-${nChk}
+	    sixdeskmess -1 "different number of entries in ${dbAll} (${nAll}) and ${dbInc} (${nInc}) plus ${dbCom} (${nCom}) - diff: ${nDiff}"
+	else
+	    sixdeskmess  1 "same number of entries in ${dbAll} (${nAll}) and ${dbInc} (${nInc}) plus ${dbCom} (${nCom})"
+	    lequal=true
+	fi
+    elif ${__lprint} ; then
+	sixdeskmess -1 "number of entries in ${dbAll}/${dbInc}/${dbCom} ${nAll}/${nInc}/${nCom}"
+    fi
 }
 
 # A new subroutine to update mydatabase......
@@ -43,38 +73,69 @@ update_cases()
   # using the new completed_this_run file (or left over from a
   # previous run_results which was killed for some reason).
   touch $sixdeskwork/completed_this_run
+  touch $sixdeskjobs/completed_tasks_this_run
+  
+  if [ `wc -l < $sixdeskwork/completed_this_run` -gt 0 ] ; then
+      touch $sixdeskwork/mycompleted_cases
+      cat $sixdeskwork/mycompleted_cases $sixdeskwork/completed_this_run | sort -u > $sixdeskwork/mycompleted_cases_temp
+      mv $sixdeskwork/mycompleted_cases_temp $sixdeskwork/mycompleted_cases
+      rm -f $sixdeskwork/sedscript.sed
+      #make a sed script
+      while read mycase ; do
+	  echo "/^${mycase}$/d" >> $sixdeskwork/sedscript.sed
+      done < $sixdeskwork/completed_this_run
+      sed -f $sixdeskwork/sedscript.sed $sixdeskwork/myincomplete_cases > $sixdeskwork/myincomplete_cases_temp
+      mv $sixdeskwork/myincomplete_cases_temp $sixdeskwork/myincomplete_cases
 
-#MACRO mymktmp newccases $sixdeskwork
-  sixdesktmpname=newccases
-  sixdesktmpdirarg=$sixdeskwork
-  sixdeskmktmp
-  newccases=$sixdesktmp
-#MACRO mymktmp
-
-
-#MACRO mymktmp newicases $sixdeskwork
-  sixdesktmpname=newicases
-  sixdesktmpdirarg=$sixdeskwork
-  sixdeskmktmp
-  newicases=$sixdesktmp
-#MACRO mymktmp
-
-  touch $sixdeskwork/mycompleted_cases
-  cat $sixdeskwork/mycompleted_cases $sixdeskwork/completed_this_run > $newccases
-  sort --unique $newccases > $sixdeskwork/mycompleted_cases
-  rm $newccases
-  rm -f $sixdeskwork/sedscript.sed
-  touch $sixdeskwork/sedscript.sed
-  while read mycase
-  do
-  #make a sed script
-    echo "/^${mycase}$/d" >> $sixdeskwork/sedscript.sed
-  done < $sixdeskwork/completed_this_run
-  sed -f $sixdeskwork/sedscript.sed $sixdeskwork/myincomplete_cases > $newicases
-  cp $newicases $sixdeskwork/myincomplete_cases
-  rm -f $newicases
+      # apply the same logics to regular main DB
+      cat $sixdeskwork/completed_cases $sixdeskwork/completed_this_run | sort -u > $sixdeskwork/completed_cases_temp
+      mv $sixdeskwork/completed_cases_temp $sixdeskwork/completed_cases
+      sed -i -f $sixdeskwork/sedscript.sed $sixdeskwork/incomplete_cases
+  fi
+  if [ `wc -l < $sixdeskjobs/completed_tasks_this_run` -gt 0 ] ; then
+      # apply the same logics to plaform DB
+      rm -f $sixdeskjobs/sedscript.sed
+      while read aline ; do
+	  echo "/^${aline}/d" >> $sixdeskjobs/sedscript.sed
+      done < $sixdeskjobs/completed_tasks_this_run
+      sed -i -f $sixdeskjobs/sedscript.sed $sixdeskjobs/incomplete_tasks
+      sed -i -f $sixdeskjobs/sedscript.sed $sixdeskjobs/completed_tasks
+      cat $sixdeskjobs/completed_tasks $sixdeskjobs/completed_tasks_this_run | sort -u > $sixdeskjobs/completed_tasks_temp
+      mv $sixdeskjobs/completed_tasks_temp $sixdeskjobs/completed_tasks
+  fi
+  
   rm -f $sixdeskwork/completed_this_run
+  rm -f $sixdeskjobs/completed_tasks_this_run
+
+  cases=0
+  if [ -s $sixdeskwork/taskids ] ; then
+      cases=`wc -l < $sixdeskwork/taskids`
+  fi
+  icases=0
+  if [ -s $sixdeskwork/incomplete_cases ] ; then
+      icases=`wc -l < $sixdeskwork/incomplete_cases`
+  fi
+  ccases=0
+  if [ -s $sixdeskwork/mycompleted_cases ] ; then
+      ccases=`wc -l < $sixdeskwork/completed_cases`
+  fi
+  sixdeskmess -1 "Present status of regular DB: $cases cases, $ccases complete ($icases incomplete)"
+  cases=0
+  if [ -s $sixdeskjobs/tasks ] ; then
+      cases=`wc -l < $sixdeskjobs/tasks`
+  fi
+  icases=0
+  if [ -s $sixdeskjobs/incomplete_tasks ] ; then
+      icases=`wc -l < $sixdeskjobs/incomplete_tasks`
+  fi
+  ccases=0
+  if [ -s $sixdeskjobs/completed_tasks ] ; then
+      ccases=`wc -l < $sixdeskjobs/completed_tasks`
+  fi
+  sixdeskmess -1 "Present status of platform DB: $cases cases, $ccases complete ($icases incomplete)"
+  
   # and make another report
+  echo ""
 
 #MACRO mymess 1 Due to an AFS/Linux bug we maintain another database
   sixdeskmess -1 "Due to an AFS/Linux bug we maintain another database"
@@ -91,20 +152,16 @@ update_cases()
 #MACRO mymess
 
   icases=0
-  if test -s $sixdeskwork/myincomplete_cases
-  then
-    icases=`wc -l $sixdeskwork/myincomplete_cases | awk '{print ($1)}'`
+  if [ -s $sixdeskwork/myincomplete_cases ] ; then
+      icases=`wc -l < $sixdeskwork/myincomplete_cases`
   fi
   ccases=0
-  if test -s $sixdeskwork/mycompleted_cases
-  then
-    ccases=`wc -l $sixdeskwork/mycompleted_cases | awk '{print ($1)}'`
+  if [ -s $sixdeskwork/mycompleted_cases ] ; then
+      ccases=`wc -l < $sixdeskwork/mycompleted_cases`
   fi
-
 #MACRO mymess 0 Before/after this download $cases mycases, $ccases complete ($icases incomplete)
   sixdeskmess -1 "Before/after this download $cases mycases, $ccases complete ($icases incomplete)"
 #MACRO mymess
-
 }
 
 function getListNewResults(){
@@ -262,7 +319,8 @@ function getListNewResults(){
 	    mkdir -p ${__origPath}
 	fi
 	cd ${__origPath}
-	find . -name ${workspace}_${LHCDesName}__\*_1_sixvf_boinc\* > $tmp 2> /dev/null
+	# remove possible *_1 entries (Sixout.zip)
+	find . -name ${workspace}_${LHCDesName}__\*_1_sixvf_boinc\* | sed '/_1$/d'> $tmp 2> /dev/null
 	cd $sixdeskhome
 	
 #MACRO mymktmp sixdeskresults $sixdeskjobs
@@ -344,9 +402,11 @@ function downloadNewResults(){
 	unknown="false"
 	
 #MACRO mymess 1 Now treating TaskID $taskid
-	echo ""
-	printf '.%.0s' {1..80}
-	echo ""
+	if [ ${sixdesklevel} -gt 0 ] ; then
+	    echo ""
+	    printf '.%.0s' {1..80}
+	    echo ""
+	fi
 	sixdeskmess -1 "Now treating TaskID $taskid"
 #MACRO mymess
 	
@@ -474,6 +534,14 @@ function downloadNewResults(){
 		    found="false"
 		    boincRunnam=`echo $Runnam | sed -e's/%/__/g'`
 		    local __resName=${workspace}_${boincRunnam}_1_sixvf_${taskid}${__suffix}
+		    if ${lretrieveZip} ; then
+			if [ -z ${__suffix} ] ; then
+			    # dealing with results in spooldir
+			    local __resZipName=${__resName}_1
+			else
+			    local __resZipName=${__resName/%_0/_1}
+			fi
+		    fi
 		    if test ! -f ${__origPath}/${__resName}
 		    then
 			
@@ -557,6 +625,13 @@ function downloadNewResults(){
 				    
 				    mkdir -p ../problems
 				    cp fort.10 ../problems/problem$taskid
+				    if ${lretrieveZip} ; then
+					if [ -e ${__origPath}/${__resZipName} ] ; then
+					    cp ${__origPath}/${__resZipName} ../problems/proble${taskid}_${oneResultName}
+					else
+					    sixdeskmess -1 "${__origPath}/${__resZipName} NOT found!"
+					fi
+				    fi
 				    ignore="true"
 				    delete="true"
 				    anerror="true"
@@ -589,6 +664,13 @@ function downloadNewResults(){
 					mkdir -p ../problems
 					cp fort.10 ../problems/problem$taskid
 					cp $tmp ../problems/diffs$taskid
+					if ${lretrieveZip} ; then
+					    if [ -e ${__origPath}/${__resZipName} ] ; then
+						cp ${__origPath}/${__resZipName} ../problems/proble${taskid}_${oneResultName}
+					    else
+						sixdeskmess -1 "${__origPath}/${__resZipName} NOT found!"
+					    fi
+					fi
 				    else
 					grep "DIFF" $tmp >/dev/null 2>&1
 					if test $? -ne 0
@@ -611,13 +693,20 @@ function downloadNewResults(){
 					mkdir -p ../problems
 					cp fort.10 ../problems/problem$taskid
 					cp $tmp ../problems/diffs$taskid
+					if ${lretrieveZip} ; then
+					    if [ -e ${__origPath}/${__resZipName} ] ; then
+						cp ${__origPath}/${__resZipName} ../problems/proble${taskid}_${oneResultName}
+					    else
+						sixdeskmess -1 "${__origPath}/${__resZipName} NOT found!"
+					    fi
+					fi
 				    fi
 				    rm $tmp
 				fi
 			    fi
 			else
-			    words=`wc -w fort.10 | awk '{print ($1)}'`
-			    lines=`wc -l fort.10 | awk '{print ($1)}'`
+			    words=`wc -w < fort.10`
+			    lines=`wc -l < fort.10`
 			    nwords=`expr $sixdeskpairs \* 60`
 			    if test "$words" -ne  $nwords -o "$lines" -ne $sixdeskpairs
 			    then
@@ -635,17 +724,20 @@ function downloadNewResults(){
 				delete="true"
 				anerror="true"
 			    else 
-				line1=`head -1 fort.10`
-				local __messLine1=`echo $line1 | awk '{print ("Maxturn",$1,"Lost",$2,"Qx/Qy",$3,$4)}'`
-				local __messLine2=`echo $line1 | awk '{print (" 1st Ampx/y",$7,$8,"2nd",$26,$27)}'`
-				local __messLine3=`echo $line1 | awk '{print ("DP",$9,"Findist",$10,"Maxslope",$11,"Turns",$22,$23)}'`
-				local __messLine4=`echo $line1 | awk '{print ("CPU",$60,"seconds Version",$52)}'`
-				sixdeskmess 1 "${__messLine1}"
-				sixdeskmess 1 "${__messLine2}"
-				sixdeskmess 1 "${__messLine3}"
-				sixdeskmess 1 "${__messLine4}"
-				
+				if [ ${sixdesklevel} -gt 1 ] ; then
+				    line1=`head -1 fort.10`
+				    local __messLine1=`echo $line1 | awk '{print ("Maxturn",$1,"Lost",$2,"Qx/Qy",$3,$4)}'`
+				    local __messLine2=`echo $line1 | awk '{print (" 1st Ampx/y",$7,$8,"2nd",$26,$27)}'`
+				    local __messLine3=`echo $line1 | awk '{print ("DP",$9,"Findist",$10,"Maxslope",$11,"Turns",$22,$23)}'`
+				    local __messLine4=`echo $line1 | awk '{print ("CPU",$60,"seconds Version",$52)}'`
+				    sixdeskmess 1 "${__messLine1}"
+				    sixdeskmess 1 "${__messLine2}"
+				    sixdeskmess 1 "${__messLine3}"
+				    sixdeskmess 1 "${__messLine4}"
+				fi
 				gzip -f fort.10
+
+
 				ignore="false"
 				success="true"
 				delete="true"
@@ -1026,11 +1118,23 @@ function downloadNewResults(){
 	fi
 	# end of found a taskid or not
 	cd $sixdeskhome
+
+	# check if Sixout.zip is there or not (only when it should be)
+	if ${lretrieveZip} && [ $success == "true" -a $sixdeskplatform == "boinc" ] ; then
+	    if [ ! -e ${__origPath}/${__resZipName} ] ; then
+		sixdeskmess -1 "${__origPath}/${__resZipName} NOT found when it should be there!"
+		sixdeskmess -1 "flagging event as NOT successful!!!"
+		success="false"
+		ignore="true"
+		delete="false"
+		anerror="true"
+	    fi
+	fi
 	if test "$success" = "true"
 	then
 	    
 #MACRO mymess 1 Saving fort.10.gz and updating completed jobs etc
-	    sixdeskmess 1 "Saving fort.10.gz and updating completed jobs etc"
+	    sixdeskmess 1 "Saving fort.10.gz (and ${oneResultName}) and updating completed jobs etc"
 #MACRO mymess
 	    
 	    if test "$duplicate" = "false"
@@ -1044,109 +1148,27 @@ function downloadNewResults(){
 #MACRO mylock
 	    
 	    
+	    if ${lretrieveZip} && [ $sixdeskplatform == "boinc" -a $duplicate == "false" ] ; then
+		sixdeskmess 1 "...${oneResultName} is there as well: ${__resZipName}! --> saving it!"
+		if ${ldos2unix} ; then
+		    sixdeskmess 1 "...dos2unix on files in archive"
+		    unzip ${__origPath}/${__resZipName} -d /tmp/${LOGNAME}
+		    local __tmpAllFiles=`zipinfo -1 ${__origPath}/${__resZipName}`
+		    cd /tmp/${LOGNAME}
+		    dos2unix ${__tmpAllFiles}
+		    zip ${__resZipName} ${__tmpAllFiles}
+		    cp ${__resZipName} ${where}/${oneResultName}
+		    rm -f ${__resZipName} ${__tmpAllFiles}
+		    cd $sixdeskhome
+		else
+		    cp ${__origPath}/${__resZipName} ${where}/${oneResultName}
+		fi
+	    fi
+			
 	    # Now we make a file completed_this_run which we will
 	    # use to update a parallel mycompleted_cases and myincomplete_cases
 	    echo "$Runnam" >> $sixdeskwork/completed_this_run
-	    touch $sixdeskwork/DEBUG
-	    sed -i -e"/^${Runnam}$/d" $sixdeskwork/incomplete_cases
-	    if test $? -ne 0
-	    then
-		stat $sixdeskwork/incomplete_cases >> $sixdeskwork/DEBUG
-		stat $tmp >> $sixdeskwork/DEBUG
-		
-#MACRO mymess 0 AFS problem with incomplete cases!!!
-		sixdeskmess -1 "AFS problem with incomplete cases!!!"
-#MACRO mymess
-		
-		
-#MACRO mymess 0 `stat $sixdeskwork/incomplete_cases`
-		sixdeskmess -1 "`stat $sixdeskwork/incomplete_cases`"
-#MACRO mymess
-		
-		
-#MACRO mymess 0 `stat $tmp`
-		sixdeskmess -1 "`stat $tmp`"
-#MACRO mymess
-		
-		
-#MACRO myunlock $sixdeskstudy
-		sixdesklockdir=$sixdeskstudy
-		sixdeskunlock
-#MACRO myunlock
-		
-		
-#MACRO myexit 999
-		sixdeskexitparam=999
-		sixdeskexit
-#MACRO myexit
-		
-	    fi
-	    dicases=`wc -l $sixdeskwork/incomplete_cases | awk '{print ($1)}'`
-	    if test -s $sixdeskwork/completed_cases
-	    then
-		sed -i -e"/^${Runnam}$/d" $sixdeskwork/completed_cases
-		if test $? -ne 0
-		then
-		    stat $sixdeskwork/completed_cases >> $sixdeskwork/DEBUG
-		    stat $tmp >> $sixdeskwork/DEBUG
-		    
-#MACRO mymess 0 AFS problem with completed cases!!!
-		    sixdeskmess -1 "AFS problem with completed cases!!!"
-#MACRO mymess
-		    
-		    
-#MACRO mymess 0 `stat $sixdeskwork/completed_cases`
-		    sixdeskmess -1 "`stat $sixdeskwork/completed_cases`"
-#MACRO mymess
-		    
-		    
-#MACRO mymess 0 `stat $tmp`
-		    sixdeskmess -1 "`stat $tmp`"
-#MACRO mymess
-
-		    
-#MACRO myunlock $sixdeskstudy
-		    sixdesklockdir=$sixdeskstudy
-		    sixdeskunlock
-#MACRO myunlock
-		    
-		    
-#MACRO myexit 999
-		    sixdeskexitparam=999
-		    sixdeskexit
-#MACRO myexit
-		    
-		fi
-	    fi
-	    echo $Runnam >> $sixdeskwork/completed_cases
-	    dccases=`wc -l $sixdeskwork/completed_cases | awk '{print ($1)}'`
-	    tot=`expr $dicases + $dccases`
-	    allcases=`wc -l $sixdeskwork/taskids | awk '{print ($1)}'`
-	    if test "$tot" -ne "$allcases"
-	    then
-		
-#MACRO mymess 0 DEBUGZ $tot NOT= $allcases !!!
-		sixdeskmess -1 "DEBUGZ $tot NOT #MACRO mymess"
-		
-		stat $sixdeskwork/completed_cases >> $sixdeskwork/DEBUG
-		stat $sixdeskwork/incomplete_cases >> $sixdeskwork/DEBUG
-		
-#MACRO mymess 0 `stat $sixdeskwork/completed_cases`
-		sixdeskmess -1 "`stat $sixdeskwork/completed_cases`"
-#MACRO mymess
-		
-		
-#MACRO mymess 0 `stat $sixdeskwork/incomplete_cases`
-		sixdeskmess -1 "`stat $sixdeskwork/incomplete_cases`"
-#MACRO mymess
-		
-		
-#MACRO myunlock $sixdeskstudy
-		###sixdesklockdir=$sixdeskstudy
-		###sixdeskunlock
-#MACRO myunlock
-		
-	    fi
+	    echo "$Runnam ${taskid}" >> $sixdeskjobs/completed_tasks_this_run
 	    #Eric here we should now delete other redundant tasks
 	    #mess="Taskids were x$taskids""x"
 	    #taskids=`echo "$taskids" | sed -e's? '$taskid' ? ?'`
@@ -1184,24 +1206,6 @@ function downloadNewResults(){
 	if test "$delete" = "true"
 	then
 	    # success = true => delete = true
-	    if test "$unknown" = "false"
-	    then
-		
-#MACRO mylock $sixdeskjobs
-		###sixdesklockdir=$sixdeskjobs
-		###sixdesklock
-#MACRO mylock
-		
-		sed -i -e"/${Runnam} ${taskid}/d" $sixdeskjobs/incomplete_tasks
-		sed -i -e"/${Runnam} ${taskid}/d" $sixdeskjobs/completed_tasks
-		echo "${Runnam} ${taskid}" >> $sixdeskjobs/completed_tasks
-		
-#MACRO myunlock $sixdeskjobs
-		###sixdesklockdir=$sixdeskjobs
-		###sixdeskunlock
-#MACRO myunlock
-		
-	    fi
 	    if test $sixdeskplatform = "cpss"
 	    then
 		
@@ -1229,20 +1233,34 @@ function downloadNewResults(){
 		
 		if test "$Runnam" != ""
 		then
-		    rm -f ${__origPath}/${__resName}
-		    # and try and remove Alex .done and .zip
+		    if [ -z "${__suffix}" ] ; then
+			# dealing with results in spooldir, otherwise if in /tmp, results
+			#    will be deleted at the end of processing
+			rm -f ${__origPath}/${__resName}
+			if ${lretrieveZip} ; then
+			    rm -f ${__origPath}/${__resZipName}
+			fi
+			# and try and remove Alex .done and .zip
 		    
 #MACRO mymess 1 Deleting .done and .zip
-		    sixdeskmess 1 "Deleting .done and .zip"
+			sixdeskmess 1 "Deleting .done and .zip"
 #MACRO mymess
-		    
-		    rm -f $sixdeskboincdir/work/${workspace}_${boincRunnam}_1_sixvf_$taskid.desc.done
-		    rm -f $sixdeskboincdir/work/${workspace}_${boincRunnam}_1_sixvf_$taskid.zip
+			rm -f $sixdeskboincdir/work/${workspace}_${boincRunnam}_1_sixvf_$taskid.desc.done
+			rm -f $sixdeskboincdir/work/${workspace}_${boincRunnam}_1_sixvf_$taskid.zip
+		    fi
 		else
-		    rm -f ${__origPath}/${workspace}_*_1_sixvf_$taskid
-		    # Alex stuff?
-		    rm -f $sixdeskboincdir/work/${workspace}_*_1_sixvf_$taskid.desc.done
-		    rm -f $sixdeskboincdir/work/${workspace}_*_1_sixvf_$taskid.zip
+		    if [ -z "${__suffix}" ] ; then
+			# dealing with results in spooldir, otherwise if in /tmp, results
+			#    will be deleted at the end of processing
+			rm -f ${__origPath}/${workspace}_*_1_sixvf_$taskid
+			rm -f ${__origPath}/${workspace}_*_1_sixvf_${taskid}_0
+			if ${lretrieveZip} ; then
+			    rm -f ${__origPath}/${workspace}_*_1_sixvf_${taskid}_1
+			fi
+			# Alex stuff?
+			rm -f $sixdeskboincdir/work/${workspace}_*_1_sixvf_$taskid.desc.done
+			rm -f $sixdeskboincdir/work/${workspace}_*_1_sixvf_$taskid.zip
+		    fi
 		fi
 	    fi
 	fi
@@ -1291,10 +1309,14 @@ function downloadNewResults(){
     # end of all tasks
     rm -f ${__sixdesktasklist}
 
-    echo ""
-    printf '.%.0s' {1..80}
-    echo ""
-    sixdeskmess -1 "In this batch of ${tmpReady} ready results, ${__ok} were downloaded successfully, ${__duplicated} were deleted as duplicate/redundant, and ${__failed} failed."
+    if [ ${sixdesklevel} -gt 0 ] ; then
+	echo ""
+	printf '.%.0s' {1..80}
+	echo ""
+    fi
+    if [ ${tmpReady} -gt 0 ] ; then
+	sixdeskmess -1 "In this batch of ${tmpReady} ready results, ${__ok} were downloaded successfully, ${__duplicated} were deleted as duplicate/redundant, and ${__failed} failed."
+    fi
 
     let ok+=${__ok}
     let duplicated+=${__duplicated}
@@ -1340,17 +1362,21 @@ fi
 lbackcomp=true
 lreconsiderDelete=false
 loutform=false
+lretrieveZip=false
 downloadDir=/afs/cern.ch/work/b/boinc/download
 lunlockRunRes=false
+ldos2unix=false
+oneResultName='Sixout.zip'
+lProceedRunRes=true
 NrenewKerberosDef=2000
 NrenewKerberos=${NrenewKerberosDef}
-optArgCurrStudy=""
-doNotOverwrite=""
+optArgCurrStudy="-s"
+doNotOverwrite="-e"
 optArgCurrPlatForm=""
 unlockSetEnv=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hBto:n:d:p:U" opt ; do
+while getopts  ":hBto:n:d:p:zxUl" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -1363,6 +1389,17 @@ while getopts  ":hBto:n:d:p:U" opt ; do
 	t)
 	    lreconsiderDelete=true
 	    ;;
+	z)
+	    # retrieve also Sixout.zip
+	    lretrieveZip=true
+	    ;;
+	x)
+	    # run dos2unix on every item in Sixout.zip
+	    ldos2unix=true
+	    # this call imply that Sixout.zip should be retrieved
+	    lretrieveZip=true
+	    ;;
+	    
 	n)
 	    # renew kerberos token every N jobs
 	    NrenewKerberos=${OPTARG}
@@ -1381,7 +1418,6 @@ while getopts  ":hBto:n:d:p:U" opt ; do
 	d)
 	    # the user is requesting a specific study
 	    optArgCurrStudy="-d ${OPTARG}"
-	    doNotOverwrite="-e"
 	    ;;
 	p)
 	    # the user is requesting a specific platform
@@ -1391,6 +1427,10 @@ while getopts  ":hBto:n:d:p:U" opt ; do
 	    # unlock currently locked folder
 	    lunlockRunRes=true
 	    unlockSetEnv="-U"
+	    ;;
+	l)
+	    # only list results
+	    lProceedRunRes=false
 	    ;;
 	:)
 	    how_to_use
@@ -1413,7 +1453,6 @@ OPTIND=1
 # optional arguments
 if [ -n "$1" ] ; then
     optArgCurrStudy="-d $1"
-    doNotOverwrite="-e"
 fi
 if [ -n "$2" ] ; then
     optArgCurrPlatForm="-p $2"
@@ -1433,14 +1472,20 @@ printf "=%.0s" {1..80}
 echo ""
 echo ""
 
+# locking dirs
+lockingDirs=( $sixdeskstudy )
+
 if ${loutform} ; then
     sixdesklevel=${sixdesklevel_option}
 fi
 
 # unlock
 if ${lunlockRunRes} ; then
-    sixdeskunlock $sixdeskstudy
+    sixdeskunlockAll
 fi
+
+# setting traps
+trap "sixdeskexit  199" EXIT
 
 # set boinc vars
 sixDeskSetBOINCVars
@@ -1483,8 +1528,8 @@ then
 fi
 
 #MACRO mylock $sixdeskstudy
-sixdesklockdir=$sixdeskstudy
-sixdesklock
+#sixdesklockdir=$sixdeskstudy
+#sixdesklock
 #MACRO mylock
 
 
@@ -1538,44 +1583,27 @@ then
 #MACRO myexit
 
 fi
+
 # Now update my database if a completed_this_run file exists froma previous run
-if test -s $sixdeskwork/completed_this_run
-then
 
 #MACRO mylock $sixdeskwork
   ###sixdesklockdir=$sixdeskwork
   ###sixdesklock
 #MACRO mylock
 
-  update_cases
+update_cases
 
 #MACRO myunlock $sixdeskwork
   ###sixdesklockdir=$sixdeskwork
   ###sixdeskunlock
 #MACRO myunlock
 
-fi
 # Get the counts before we run for checking later
 
 #MACRO mylock $sixdeskwork
 ###sixdesklockdir=$sixdeskwork
 ###sixdesklock
 #MACRO mylock
-
-if test -f $sixdeskwork/taskids
-then
-  cases=`wc -l "$sixdeskwork/taskids" | awk '{print ($1)}'`
-fi
-icases=0
-if test -s $sixdeskwork/incomplete_cases
-then
-  icases=`wc -l $sixdeskwork/incomplete_cases | awk '{print ($1)}'`
-fi
-ccases=0
-if test -s $sixdeskwork/completed_cases
-then
-  ccases=`wc -l $sixdeskwork/completed_cases | awk '{print ($1)}'`
-fi
 
 #MACRO myunlock $sixdeskwork
 ###sixdesklockdir=$sixdeskwork
@@ -1603,90 +1631,159 @@ echo ""
 echo ""
 sixdeskmess -1 "looking for results in $sixdeskboincdir/results"
 
-# get list of new results originally from CPU resource
-# it produces:
-# - sixdesktasklist: a file with the takslist of results (eg boincXXXX)
-getListNewResults $sixdeskboincdir/results
+if ${lProceedRunRes} ; then
+    # get list of new results originally from CPU resource
+    # it produces:
+    # - sixdesktasklist: a file with the takslist of results (eg boincXXXX)
+    getListNewResults $sixdeskboincdir/results
 
-# download results and save them in track tree
-downloadNewResults $sixdeskboincdir/results $sixdesktasklist ""
-
-# update the my* DB
-update_cases
+    # download results and save them in track tree
+    downloadNewResults $sixdeskboincdir/results $sixdesktasklist ""
+    # update the my* DB
+    update_cases
+else
+    nFoundNewResults=`ls -1 $sixdeskboincdir/results/${workspace}_${LHCDesName}__\*_1_sixvf_boinc\* 2> /dev/null | wc -l `
+    if [ ${nFoundNewResults} -gt 0 ] ; then
+	sixdeskmess -1 "...found ${nFoundNewResults} fresh results from BOINC!"
+    else
+	sixdeskmess -1 "...no fresh results from BOINC!"
+    fi
+fi
 
 echo ""
 printf '=%.0s' {1..80}
 echo ""
 echo ""
 
-# look into downloadDir: in case zipped files are there, then
-#    download all results there contained
-allArchives=`ls -1 ${downloadDir}/????-??-??/${workspace}_${currStudy}_*.zip 2> /dev/null`
-if ${lreconsiderDelete} ; then
-    allArchives="${allArchives} `ls -1 ${downloadDir}/*/delete/${workspace}_${currStudy}_*.zip 2> /dev/null`"
-fi
-for tmpArchive in ${allArchives} ; do
-
-    tmpArchiveName=`basename ${tmpArchive}`
-    tmpArchiveDir=`dirname ${tmpArchive}`
-    tmpExtractDir=/tmp/${tmpArchiveName//.zip/}
-
-    echo ""
-    printf '=%.0s' {1..80}
-    echo ""
-    echo ""
-    sixdeskmess -1 "You have results in ${tmpArchiveDir} archived in ${tmpArchiveName}!!"
-    sixdeskmess -1 "I will download them as well!!"
-
-    # set trap
-    trap "rm -rf ${tmpExtractDir}" 0
-
-    unzip ${tmpArchive} -d ${tmpExtractDir}
-
-    # get list of new results originally from CPU resource
-    # it produces:
-    # - sixdesktasklist: a file with the takslist of results (eg boincXXXX)
-    getListNewResults ${tmpExtractDir}
-
-    # download results and save them in track tree
-    downloadNewResults ${tmpExtractDir} $sixdesktasklist "_0"
-
-    # update the my* DB
-    update_cases
-    
-    if [ $? -eq 0 ] ; then
-	# mv in delete only brand new results
-	if [[ "${tmpArchive}" != *"/delete/"* ]] ; then
-	    mv ${tmpArchive} ${tmpArchiveDir}/delete/${tmpArchiveName}
-	fi
-    fi
-
-    rm -rf ${tmpExtractDir}
-    # reset trap
-    trap - 0
-
-    echo ""
-    printf '=%.0s' {1..80}
-    echo ""
-    echo ""
-
-done
-
-sixdeskmess -1 "Before this run of `basename $0`: $cases total cases, $ccases complete ($icases incomplete)"
-
-if test "$ready" -ne 0
-then
-
-#MACRO mymess 0 Of $ready Ready results, $ok were downloaded successfully, $duplicated were deleted as duplicate/redundant, and $failed failed.
-  sixdeskmess -1 "Of $ready Ready results, $ok were downloaded successfully, $duplicated were deleted as duplicate/redundant, and $failed failed."
-#MACRO mymess
-
+# look for zipped files: in case download all results there contained
+allNewArchives=`ls -1 ${sixdeskboincdir}/results/${workspace}_${currStudy}__*.zip ${downloadDir}/????-??-??/${workspace}_${currStudy}__*.zip 2> /dev/null`
+allOldArchives=`ls -1 ${sixdeskboincdir}/results/processed/${workspace}_${currStudy}__*.zip ${downloadDir}/????-??-??/delete/${workspace}_${currStudy}__*.zip ${downloadDir}/????-??-??/processed/${workspace}_${currStudy}__*.zip 2> /dev/null`
+echo ""
+printf '=%.0s' {1..80}
+echo ""
+echo ""
+sixdeskmess -1 "looking for zipped results, either in ${sixdeskboincdir}/results or in ${downloadDir}"
+echo ""
+echo ""
+if [ -n "${allNewArchives}" ] ; then
+    nNewArchives=`echo "${allNewArchives}" | wc -l`
+    nNewResults=0
+    sixdeskmess -1 "Found ${nNewArchives} archives with fresh results from BOINC:"
+    for tmpArchive in ${allNewArchives} ; do
+	nResults=`zipinfo -1 ${tmpArchive} | grep '_0$' | wc -l`
+	sixdeskmess -1 "...archive ${tmpArchive} - results: ${nResults}"
+	let nNewResults+=${nResults}
+    done
+    sixdeskmess -1 "...for a total of ${nNewResults} fresh results from BOINC"
 else
+    sixdeskmess -1 "...no archives with fresh results from BOINC"
+fi
+echo ""
+if [ -n "${allOldArchives}" ] ; then
+    nOldArchives=`echo "${allOldArchives}" | wc -l`
+    nOldResults=0
+    sixdeskmess -1 "Found ${nOldArchives} archives with old results from BOINC:"
+    for tmpArchive in ${allOldArchives} ; do
+	nResults=`zipinfo -1 ${tmpArchive} | grep '_0$' | wc -l`
+	sixdeskmess -1 "...archive ${tmpArchive} - results: ${nResults}"
+	let nOldResults+=${nResults}
+    done
+    sixdeskmess -1 "...for a total of ${nOldResults} old results from BOINC"
+else
+    sixdeskmess -1 "...no archives with old results from BOINC"
+fi
+echo ""
+printf '=%.0s' {1..80}
+echo ""
+echo ""
 
-#MACRO mymess 0 There were no results available
-  sixdeskmess -1 "There were no results available"
-#MACRO mymess
+if ${lProceedRunRes} ; then
+    if ${lreconsiderDelete} ; then
+	allArchives="${allNewArchives} ${allOldArchives}"
+    else
+	allArchives="${allNewArchives}"
+    fi
+    if [ -z "${allArchives}" ] ; then
+        echo ""
+        printf '=%.0s' {1..80}
+        echo ""
+        echo ""
+        sixdeskmess -1 "No zipped results to process"
+        echo ""
+        printf '=%.0s' {1..80}
+        echo ""
+        echo ""
+    else
+    
+        for tmpArchive in ${allArchives} ; do
+    	
+    	    tmpArchiveName=`basename ${tmpArchive}`
+    	    tmpArchiveDir=`dirname ${tmpArchive}`
+	    if [ -d /tmp/${LOGNAME} ] ; then
+    		tmpExtractDir=/tmp/${LOGNAME}/${tmpArchiveName//.zip/}
+	    else
+    		tmpExtractDir=/tmp/${tmpArchiveName//.zip/}
+	    fi
+    	
+    	    echo ""
+    	    printf '=%.0s' {1..80}
+    	    echo ""
+    	    echo ""
+    	    sixdeskmess -1 "You have results in ${tmpArchiveDir} archived in ${tmpArchiveName}!!"
+    	    sixdeskmess -1 "I will download them as well!!"
+    	
+            # set trap
+    	    trap "rm -rf ${tmpExtractDir}" 0
+    	
+    	    unzip ${tmpArchive} -d ${tmpExtractDir}
+    	
+            # get list of new results originally from CPU resource
+    	    # it produces:
+    	    # - sixdesktasklist: a file with the takslist of results (eg boincXXXX)
+    	    getListNewResults ${tmpExtractDir}
+	
+	    # download results and save them in track tree
+	    downloadNewResults ${tmpExtractDir} $sixdesktasklist "_0"
+   	    # update the my* DB
+	    update_cases
+	
+	    if [ $? -eq 0 ] ; then
+	        # mv in processed only brand new results
+		if [[ "${tmpArchive}" != *"/processed/"* ]] ; then
+		    [ -d ${tmpArchiveDir}/processed ] || mkdir ${tmpArchiveDir}/processed
+		    mv ${tmpArchive} ${tmpArchiveDir}/processed/${tmpArchiveName}
+		fi
+		touch ${tmpArchiveDir}/processed/${tmpArchiveName}
+	    fi
 
+	    rm -rf ${tmpExtractDir}
+ 	    # reset trap
+	    trap - 0
+	
+	    echo ""
+	    printf '=%.0s' {1..80}
+	    echo ""
+	    echo ""
+	    
+	done
+    fi
+    
+    sixdeskmess -1 "Before this run of `basename $0`: $cases total cases, $ccases complete ($icases incomplete)"
+
+    if test "$ready" -ne 0
+    then
+
+        #MACRO mymess 0 Of $ready Ready results, $ok were downloaded successfully, $duplicated were deleted as duplicate/redundant, and $failed failed.
+	sixdeskmess -1 "Of $ready Ready results, $ok were downloaded successfully, $duplicated were deleted as duplicate/redundant, and $failed failed."
+        #MACRO mymess
+
+    else
+
+        #MACRO mymess 0 There were no results available
+	sixdeskmess -1 "There were no results available"
+        #MACRO mymess
+	
+    fi
 fi
 
 #MACRO myunlock $sixdeskstudy
@@ -1701,25 +1798,6 @@ fi
 ###sixdesklockdir=$sixdeskwork
 ###sixdesklock
 #MACRO mylock
-
-if test -f $sixdeskwork/taskids
-then
-  cases=`wc -l "$sixdeskwork/taskids" | awk '{print ($1)}'`
-fi
-icases=0
-if test -s $sixdeskwork/incomplete_cases
-then
-  icases=`wc -l $sixdeskwork/incomplete_cases | awk '{print ($1)}'`
-fi
-ccases=0
-if test -s $sixdeskwork/completed_cases
-then
-  ccases=`wc -l $sixdeskwork/completed_cases | awk '{print ($1)}'`
-fi
-
-#MACRO mymess 0 After  this download $cases cases, $ccases complete ($icases incomplete)
-sixdeskmess -1 "After  this download $cases cases, $ccases complete ($icases incomplete)"
-#MACRO mymess
 
 # update the my* DB
 update_cases
@@ -1736,6 +1814,8 @@ sixdesklockdir=$sixdeskstudy
 sixdeskunlock
 #MACRO myunlock
 
+# resetting trap
+trap - EXIT
 
 #MACRO myexit 0
 sixdeskexitparam=0

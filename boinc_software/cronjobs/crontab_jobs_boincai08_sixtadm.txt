@@ -13,11 +13,11 @@
 # Puppet Name: worksubmit sixtrack
 11,41 * * * * /share/boinc/project/sixtrack/bin/cron.submit-sixtrack-simo3 > /dev/null 2>&1
 # zip all WUs which were not given back to user
-# crontab every 12h
+# crontab every 3h
 # Puppet Name: assimilation zip
-30 */6 * * * cd /share/sixtrack/assimilation ; ./zip-trashed-WUs/zip-trashed-WUs.sh >> zip-trashed-WUs/zip-trashed-WUs.log 2>&1
-# Restart Sixtrack daemons weekly:
-13 13 * * 3 cd /share/boinc/project/sixtrack ; ./bin/stop ; sleep 3 ; ./bin/start  > /dev/null 2>&1
+30 */3 * * * cd /share/sixtrack/assimilation ; /data/boinc/project/sixtrack/bin/zip-trashed-WUs.sh > /dev/null 2>&1
+# Antique file deleter:
+13 13 * * 3 cd /share/boinc/project/sixtrack ; ./bin/antique_file_deleter  > /dev/null 2>&1
 # Delete spam:
 02 13 * * * cd /share/boinc/project/sixtrack/html/ops ; ./delete_spammers.php --forums --teams --user_url --profiles   > /dev/null 2>&1
 
