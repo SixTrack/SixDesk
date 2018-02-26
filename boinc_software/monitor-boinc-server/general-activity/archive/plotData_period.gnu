@@ -1,6 +1,11 @@
 period='2018-02'
 iFileName='server_status_'.period
 
+# changes in status page:
+# - 2018-02-26: old server actually switched off on 2018-02-06;
+#   -> new status page has slightly different order of table lines;
+#   -> swapping $10 and $11, and $13 and $14;
+
 set terminal postscript enhanced color 'Times-Roman, 11'
 set output 'status_'.period.'.ps'
 
@@ -40,10 +45,10 @@ set y2tics tc rgb 'magenta'
 set grid xtics ytics lt 0 lw 1 lc rgb 'black'
 set title 'credit - period: '.period
 plot \
-     iFileName.'.dat' index 0 using 1:($10/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'users',\
-     ''               index 0 using 1:($13/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'blue' title 'computers',\
-     ''               index 0 using 1:($11/1000) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'magenta' notitle,\
-     ''               index 0 using 1:($14/1000) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'cyan' notitle
+     iFileName.'.dat' index 0 using 1:($11/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'users',\
+     ''               index 0 using 1:($14/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'blue' title 'computers',\
+     ''               index 0 using 1:($10/1000) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'magenta' notitle,\
+     ''               index 0 using 1:($13/1000) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'cyan' notitle
 
 # gigaflops
 set key outside horizontal
