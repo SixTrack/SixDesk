@@ -106,17 +106,10 @@ getlock(){
 }
 
 
-run_spool_megazip(){ # max_jobs_to_submit
+run_spool_megazip(){
 
     megaZip=1
     
-    if [ -z "$1" -o "$1" = "0" ] ; then
-	local max_jobs=""
-    else
-	local max_jobs="$1"	
-	local complete=0
-    fi
-
     find "$spooldirUpload" -mmin +5 -name "*.zip" | (
 	while read workBatch ; do
 	    unzip -t $workBatch  >/dev/null 2>&1
@@ -136,13 +129,6 @@ run_spool_megazip(){ # max_jobs_to_submit
 		    # process the desc files
 		    if submit_descfile "$descfile" ; then
 			logstudy "Submitted $WUname"
-			#stop after max_jobs (0=unlimited)
-			if [ -n "$max_jobs" ] ; then
-			    complete=$(( $complete + 1 ))
-			    if [ $complete -ge $max_jobs ] ; then
-				break 2
-			    fi
-			fi
 		    else
 			logstudy "Problem submitting $WUname"
 		    fi
@@ -155,21 +141,32 @@ run_spool_megazip(){ # max_jobs_to_submit
     )
 }
 
-run_spool(){ # max_jobs_to_submit 
+run_spool(){ # max_jobs_to_submit, max_jobs_perStudy, specific_study
 
     megaZip=0
     
-    if [ -z "$1" -o "$1" = "0" ] ; then
-	local max_jobs=""
+    local max_jobs="$1"	
+    local complete=0
+    local lMaxJobs=false
+    [ -z "${max_jobs}" -o "${max_jobs}" = "0" ] || lMaxJobs=true
+
+    local max_jobs_perStudy="$2"	
+    local lMaxJobsPerStudy=false
+    [ -z "${max_jobs_perStudy}" -o "${max_jobs_perStudy}" = "0" ] || lMaxJobsPerStudy=true
+
+    if [ -z "$3" ] ; then
+        #find the work dirs 2 levels down
+	local allWorkDirs=`find "$spooldir" -maxdepth 2 -type d -name "work"`
     else
-	local max_jobs="$1"	
-	local complete=0
+	#target a specific study
+	local allWorkDirs=$spooldir/$3/work
     fi
 
-    #find the work dirs 2 levels down
-    find "$spooldir" -maxdepth 2 -type d -name "work" | (
+    # main loop
+    echo "${allWorkDirs}" | (
 	while read workdir ; do
 	    origPath=$workdir
+	    local complete_perStudy=0
 	    #check for desc files in the work dirs
 	    find "$workdir" -maxdepth 1 -type f -name '*.desc' | (
 	        while read descfile ; do
@@ -177,10 +174,17 @@ run_spool(){ # max_jobs_to_submit
 		    if submit_descfile "$descfile" ; then
 			logstudy "Submitted $WUname"
 			#stop after max_jobs (0=unlimited)
-			if [ -n "$max_jobs" ] ; then
+			if ${lMaxJobs} ; then
 			    complete=$(( $complete + 1 ))
 			    if [ $complete -ge $max_jobs ] ; then
 				break 2
+			    fi
+			fi
+			if ${lMaxJobsPerStudy} ; then
+			    complete_perStudy=$(( ${complete_perStudy} + 1 ))
+			    if [ ${complete_perStudy} -ge ${max_jobs_perStudy} ] ; then
+                                # continue with next study
+				break 1
 			    fi
 			fi
 		    else
@@ -411,15 +415,19 @@ if [ -x /usr/bin/ionice ] ; then
 fi
 
 maxjobs=0
+maxjobs_perStudy=0
 keepzip=0
+studyName=""
 
-while getopts ":hn:k"  OPT
+while getopts ":hn:m:d:k"  OPT
 do
   #Debug
   #echo "OPT is $OPT. OPTIND is $OPTIND. OPTARG is $OPTARG."
 case "$OPT" in
 h) printhelp ; exit 0 ;;
+m) maxjobs_perStudy="$OPTARG" ;;
 n) maxjobs="$OPTARG" ;;
+d) studyName="$OPTARG" ;;
 k) keepzip=1 ;;
 :|?) error 'Invalid Argument(s)' ; printhelp; exit 0 ;;
 esac
@@ -433,10 +441,10 @@ cd $boincdir
 
 getlock
 #Klog
-log run_spool $maxjobs
-run_spool $maxjobs
+log run_spool $maxjobs $maxjobs_perStudy $studyName
+run_spool $maxjobs $maxjobs_perStudy $studyName
 
-log run_spool_megazip $maxjobs
-run_spool_megazip $maxjobs
+log run_spool_megazip
+run_spool_megazip
 
 log FINISHING
