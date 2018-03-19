@@ -46,8 +46,8 @@ if ${lgetOwners} ; then
     for uniqueStudyName in ${uniqueStudyNames[@]} ; do
 	spoolDir=''
 	for tmpDir in ${spoolDirPath} ${spoolDirTestPath} ; do
-	    if [ -d ${spoolDirPath}/${uniqueStudyName} ] ; then
-		spoolDir=${spoolDirPath}/${uniqueStudyName}
+	    if [ -d ${tmpDir}/${uniqueStudyName} ] ; then
+		spoolDir=${tmpDir}/${uniqueStudyName}
 		break
 	    fi
 	done
@@ -56,8 +56,8 @@ if ${lgetOwners} ; then
 	    owner="-"
 	    dirOwner="-"
 	else
-	    dirOwner=`ls -ld ${spoolDirPath}/${uniqueStudyName} | awk '{print ($3)}'`
-	    ownerFile=${spoolDirPath}/${uniqueStudyName}/owner
+	    dirOwner=`ls -ld ${spoolDir} | awk '{print ($3)}'`
+	    ownerFile=${spoolDir}/owner
 	    if [ -e ${ownerFile} ] ; then
 		owner=`cat ${ownerFile}`
 	    else

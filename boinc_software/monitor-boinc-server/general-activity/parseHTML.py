@@ -1,9 +1,16 @@
 """
 A.Mereghetti, 2017-01-29
-script for parsing the server_status.pho and getting values from tables
+script for parsing the server_status.php and getting values from tables
+NB: html file is a table of tables!
 
 parsing of HTML table based on:
 http://codereview.stackexchange.com/questions/60769/scrape-an-html-table-with-python
+
+reminders on html tables:
+- <table>: start a new table;
+- <tr>: start a new table row;
+- <th>: start a table header (actually, a header cell);
+- <td>: start a table cell in a row;
 """
 
 import sys
@@ -15,13 +22,17 @@ import time
 lDebug=False
 lPrintTables=False
 wantedApps=[ 'SixTrack', 'sixtracktest' ]
+wantedH4tags=[ 'Work', 'Users', 'Computers' ]
+wantedH3tags=[ 'Tasks by application' ]
+findEntries=['table','h4','h3']
 
 class TABLE():
 
-    def __init__( self ):
+    def __init__( self, name ):
         """creating a table"""
         self.columnNames=[]
-        self.content=[]
+        self.content=[]  # array (rows) of dictionary (column header: value)!
+        self.name=name
 
     def addColumnNames( self, table_columnNames ):
         self.columnNames=[ tmpColumnName.encode('ascii','ignore') for tmpColumnName in table_columnNames ]
@@ -65,64 +76,116 @@ class TABLE():
 
     def printAll( self ):
         print ''
-        print '\t'.join(self.columnNames)
+        print 'TABLE:',self.name
+        print 'HEADER:','\t'.join(self.columnNames)
         for tmpLine in self.content:
             print '\t'.join( [ tmpLine[tmpColumnName] for tmpColumnName in self.columnNames ] )
 
 class TABLE_ComputingStatus( TABLE ):
 
+    '''
+Example of table to be parsed:
+<h3>Computing status</h3>
+<h4>Work</h4>
+<div class="table">
+      <table  width="100%" class="table table-condensed table-striped" >
+    <tr><td>Tasks ready to send</td><td>586</td></tr>
+<tr><td>Tasks in progress</td><td>207292</td></tr>
+<tr><td>Workunits waiting for validation</td><td>42644</td></tr>
+<tr><td>Workunits waiting for assimilation</td><td>10</td></tr>
+<tr><td>Workunits waiting for file deletion</td><td>53054</td></tr>
+<tr><td>Tasks waiting for file deletion</td><td>52639</td></tr>
+<tr><td>Transitioner backlog (hours)</td><td>0.00</td></tr>
+</table>
+        </div>
+    '''
+    
     @staticmethod
-    def fromHTML( table_data ):
-        WorkTable=TABLE()
-        UsersTable=TABLE()
-        pcTable=TABLE()
-        lRead=False
-        for table_datum in table_data:
-            if ( lDebug ):
-                print "-->",'\t'.join(table_datum), len(table_datum), "<--"
-            if ( table_datum[0] == "Tasks by application" ):
-                lRead=False
-                continue
-            if ( len(table_datum)==2 ):
-                if ( table_datum[0] == "Work" ):
-                    tmpTable=WorkTable
-                    tmpTable.addColumnNames( table_datum )
-                    lRead=True
-                    continue
-                elif ( table_datum[0] == "Users" ):
-                    tmpTable=UsersTable
-                    tmpTable.addColumnNames( table_datum )
-                    lRead=True
-                    continue
-                elif ( table_datum[0] == "Computers" ):
-                    tmpTable=pcTable
-                    tmpTable.addColumnNames( table_datum )
-                    lRead=True
-                    continue
-            if ( lRead ):
-                tmpTable.addContent( table_datum )
-        return WorkTable, UsersTable, pcTable
+    def fromHTML( entries, TABLES ):
+        '''
+        Final state of instance:
+
+        self.columnNames=['entry','#']
+        self.content=[
+        {'entry':'Tasks in progress','#':207292},
+        {'entry':'Tasks ready to send','#':586},
+        ...
+        ]
+        
+        '''
+        parseTab=None
+        
+        for entry in entries:
+            if(lDebug):
+                print "--> reading entry:",entry," -- end entry"
+            if(entry.name=='h4'):
+                if (lDebug):
+                    print '--> recognised h4 tag - value:',entry.text
+                if (entry.text in wantedH4tags):
+                    parseTab=entry.text
+                    TABLES[parseTab]=TABLE(parseTab)
+                    TABLES[parseTab].addColumnNames(['entry','#'])
+            elif(entry.name=='table' and parseTab is not None):
+                if(lDebug):
+                    print '--> recognised table tag - acquring data'
+                rows=entry.find_all('tr')
+                for row in rows:
+                    data=row.find_all('td')
+                    if(len(data)==0):
+                        # skip empty line
+                        continue
+                    if(len(data)!=2):
+                        print 'error in reading table %s'%(parseTab)
+                        print 'at row:', row
+                        sys.exit()
+                    TABLES[parseTab].addContent( [ datum.get_text() for datum in data ] )
+                parseTab=None
+                    
+        return TABLES
 
 class TABLE_TasksByApplication( TABLE ):
 
     @staticmethod
-    def fromHTML( table_data ):
-        lRead=False
-        lFirst=False
-        table=TABLE()
-        for table_datum in table_data:
-            if ( lDebug ):
-                print "-->",'\t'.join(table_datum), len(table_datum), "<--"
-            if ( table_datum[0] == "Tasks by application" ):
-                lRead=True
-                lFirst=True
-            elif ( lRead ):
-                if ( lFirst ):
-                    table.addColumnNames( table_datum )
-                    lFirst=False
-                else:
-                    table.addContent( table_datum )
-        return table
+    def fromHTML( entries, TABLES ):
+        '''
+        Final state of instance:
+
+        self.columnNames=['Application','Unsent','In progress',...]
+        self.content=[
+        {'Application':'SixTrack','Unsent':586, ...},
+        {'Application':'sixtracktest','Unsent':2867, ...},
+        ...
+        ]
+        
+        '''
+        parseTab=None
+        
+        for entry in entries:
+            if(lDebug):
+                print "--> reading entry:",entry," -- end entry"
+            if(entry.name=='h3'):
+                if(lDebug):
+                    print '--> recognised h3 tag - value:',entry.text
+                if(entry.text in wantedH3tags):
+                    parseTab=entry.text
+                    TABLES[parseTab]=TABLE(parseTab)
+            elif (entry.name=='table' and parseTab is not None):
+                if(lDebug):
+                    print 'recognised table tag - acquring data'
+                rows=entry.find_all('tr')
+                for row in rows:
+                    table_headers = row.find_all('th')
+                    if table_headers:
+                        TABLES[parseTab].addColumnNames([headers.get_text() for headers in table_headers])
+                        continue
+                    data=row.find_all('td')
+                    if(len(data)==0):
+                        # skip empty line
+                        continue
+                    TABLES[parseTab].addContent([datum.get_text() for datum in data])
+                parseTab=None
+                    
+        return TABLES
 
 def cleanIntegers( tmpArray ):
     return [ tmpNum.replace(',','' ) for tmpNum in tmpArray ]
@@ -141,38 +204,11 @@ def parse_arguments():
     args = parser.parse_args()
     return args
 
-def getRelevantData_TasksByApplication( table_data ):
-    lRead=False
-    lFirst=False
-    table=TABLE()
-    for table_datum in table_data:
-        if ( "Tasks by application" in table_datum[0] ):
-            lRead=True
-            lFirst=True
-        elif ( lRead ):
-            if ( lFirst ):
-                table.addColumnNames( table_datum )
-                lFirst=False
-            else:
-                table.addContent( table_datum )
-    return table
-
-def parse_rows(rows):
-    """ Get data from rows """
-    results = []
-    for row in rows:
-        table_headers = row.find_all('th')
-        if table_headers:
-            results.append([headers.get_text() for headers in table_headers])
-        table_data = row.find_all('td')
-        if table_data:
-            results.append([data.get_text() for data in table_data])
-    return results
-
 def main():
     outServerStatus="server_status_%s.dat"
     outAppStatus="%s_status_%s.dat"
-    appDesiredColumns=['unsent','in progress','users in last 24h']
+    appDesiredColumns=['Unsent','In progress','Users in last 24 hours']
+    TABLES={}
 
     # get arguments
     args = parse_arguments()
@@ -184,7 +220,7 @@ def main():
             print 'An error occured fetching %s \n %s' % (args.url, e.reason)   
             return 10
         try:
-            soup = BeautifulSoup(resp.read())
+            soup = BeautifulSoup(resp.read(),'lxml')
         except:
             print 'Error while using BeautifulSoup'
             return 10
@@ -204,6 +240,7 @@ def main():
         print ' please specify either a URL or a local file to parse'
         return 3
 
+    # output file names will embed timestamp
     if args.date:
         currDate=args.date
     else:
@@ -213,33 +250,55 @@ def main():
     else:
         currTime=time.strftime('%H-%M-%S')
 
-    # get Tables
+    # get the main table
     try:
-        table = soup.find('table')
-        rows = table.find_all('tr')
+        entries=soup.find_all(findEntries)
     except AttributeError as e:
-        raise ValueError("No valid table found")
-    table_data = parse_rows(rows)
-    if ( lDebug ):
-        for i in table_data:
-            print '\t'.join(i)
-    WorkTable, UsersTable, pcTable = TABLE_ComputingStatus.fromHTML( table_data )
-    tabApps=TABLE_TasksByApplication.fromHTML( table_data )
+        raise ValueError("No valid entries found")
+        return 1
+
+    if(lDebug):
+        print '--> acquired',len(entries),'entries, searching for:',findEntries
+    # extract tables of Work, Users, Computers
+    TABLES = TABLE_ComputingStatus.fromHTML( entries[1:], TABLES )
+    # extract table of tasks by apps
+    TABLES = TABLE_TasksByApplication.fromHTML( entries[1:], TABLES )
     if ( lPrintTables ):
-        WorkTable.printAll()
-        UsersTable.printAll()
-        pcTable.printAll()
-        tabApps.printAll()
+        for table in TABLES.values():
+            table.printAll()
 
     # strem in output files:
     # - serverStatus
+    #   NB: format depends directly on tables and their order of parsing:
+    #       $1, $2: date (YYYY-MM-DD), time (HH-MM-SS);
+    #       - Work table:
+    #       $3: ready to send (plotted);
+    #       $4: in progress (plotted);
+    #       $5: workunits waiting for validation (plotted);
+    #       $6: workunits waiting for assimilation (plotted);
+    #       $7: workunits waiting for file deletion;
+    #       $8: tasks waiting for file deletion;
+    #       $9: transitioner backlog;
+    #       - Users table:
+    #       $10: credit (plotted - no longer $11);
+    #       $11: recent credit (plotted - no longer $10);
+    #       $12: registered in past 24h;
+    #       - Computers table:
+    #       $13: credit (plotted - no longer $14);
+    #       $14: recent credit (plotted - no longer $13);
+    #       $15: registered in past 24h;
+    #       $16: current gigaflops (plotted);
     oFile=open(outServerStatus%(currDate),'a')
-    oFile.write( '%s %s %s %s %s \n' % ( currDate, currTime, ' '.join(cleanIntegers(WorkTable.retColumn('#') ) ), ' '.join(cleanIntegers(UsersTable.retColumn('#') ) ), ' '.join(cleanIntegers(pcTable.retColumn('#') ) ) ) )
+    oFile.write( '%s %s ' % ( currDate, currTime ) )
+    for tmpTag in wantedH4tags:
+        oFile.write( '%s ' % ( ' '.join(cleanIntegers(TABLES[tmpTag].retColumn('#') ) ) ) )
+    oFile.write('\n')
     oFile.close()
-    # - apss status:
+    # - apps status:
+    #   NB: format depends on appDesiredColumns
     for wantedApp in wantedApps:
         oFile=open(outAppStatus%(wantedApp,currDate),'a')
-        oFile.write( '%s %s %s \n' % ( currDate, currTime, ' '.join(cleanIntegers(tabApps.retRowName( columnName='application', matchName=wantedApp, columnNames=appDesiredColumns ) ) ) ) )
+        oFile.write( '%s %s %s \n' % ( currDate, currTime, ' '.join(cleanIntegers(TABLES[wantedH3tags[0]].retRowName( columnName='Application', matchName=wantedApp, columnNames=appDesiredColumns ) ) ) ) )
         oFile.close()
 
     return 0
