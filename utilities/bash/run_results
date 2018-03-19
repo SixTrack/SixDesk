@@ -1152,9 +1152,9 @@ function downloadNewResults(){
 		sixdeskmess 1 "...${oneResultName} is there as well: ${__resZipName}! --> saving it!"
 		if ${ldos2unix} ; then
 		    sixdeskmess 1 "...dos2unix on files in archive"
-		    unzip ${__origPath}/${__resZipName} -d /tmp/${LOGNAME}
+		    unzip ${__origPath}/${__resZipName} -d ${tmpNodeDir}
 		    local __tmpAllFiles=`zipinfo -1 ${__origPath}/${__resZipName}`
-		    cd /tmp/${LOGNAME}
+		    cd ${tmpNodeDir}
 		    dos2unix ${__tmpAllFiles}
 		    zip ${__resZipName} ${__tmpAllFiles}
 		    cp ${__resZipName} ${where}/${oneResultName}
@@ -1719,11 +1719,7 @@ if ${lProceedRunRes} ; then
     	
     	    tmpArchiveName=`basename ${tmpArchive}`
     	    tmpArchiveDir=`dirname ${tmpArchive}`
-	    if [ -d /tmp/${LOGNAME} ] ; then
-    		tmpExtractDir=/tmp/${LOGNAME}/${tmpArchiveName//.zip/}
-	    else
-    		tmpExtractDir=/tmp/${tmpArchiveName//.zip/}
-	    fi
+    	    tmpExtractDir=${tmpNodeDir}/${tmpArchiveName//.zip/}
     	
     	    echo ""
     	    printf '=%.0s' {1..80}
