@@ -27,6 +27,8 @@ fi
 # initialisation of local vars
 pythonPath=""
 
+source ${SCRIPTDIR}/bash/dot_profile
+
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":hP:" opt ; do
     case $opt in
@@ -53,8 +55,11 @@ done
 shift "$(($OPTIND - 1))"
 
 # python path
-source ${SCRIPTDIR}/bash/dot_profile
-sixdeskDefinePythonPath ${pythonPath}
+if [ -n "${pythonPath}" ] ; then
+    sixdeskDefinePythonPath ${pythonPath}
+else
+    sixdeskSetLocalNodeStuff
+fi
 
 # actually call sixdb
 python ${SCRIPTDIR}/externals/SixDeskDB/sixdb $*

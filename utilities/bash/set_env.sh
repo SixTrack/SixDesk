@@ -319,6 +319,8 @@ if [ ! -s ${SCRIPTDIR}/bash/dot_profile ] ; then
 fi
 # - load environment
 source ${SCRIPTDIR}/bash/dot_profile
+# - stuff specific to node where user is running:
+sixdeskSetLocalNodeStuff
 
 # - set up new workspace
 if ${lcrwSpace} ; then
@@ -548,9 +550,11 @@ fi
 sixdeskunlockAll
 
 if ! ${lcptemplate} ; then
-    
-    # - kinit, to renew kerberos ticket
-    sixdeskRenewKerberosToken
+
+    if ${lKerberos} ; then
+        # - kinit, to renew kerberos ticket
+        sixdeskRenewKerberosToken
+    fi
     
     # - fs listquota
     echo ""

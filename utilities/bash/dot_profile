@@ -1,8 +1,5 @@
 #!/bin/bash
 
-newBuildPathDef=/afs/cern.ch/project/sixtrack/build
-appNameDef=sixtrack
-export platForms=( 'boinc' 'lsf' 'htcondor' )
 export fileSuffixes=( 'tasks' 'jobs' 'jobs' )
 
 # A set of Subroutines called by Macros for the SixDesk environment
@@ -805,10 +802,6 @@ sixdeskDefinePythonPath(){
     if [ $# -eq 1 ] ; then
 	export PATH=${1}:${PATH}
 	sixdeskmess 2 "Setting python to ${1} in PATH env var"
-    else
-	local __sourceEnv=/cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc49-opt/setup.sh
-	sixdeskmess 2 "Loading python as defined in ${__sourceEnv}"
-	source ${__sourceEnv}
     fi
     sixdeskmess -1 "--> python set to: `which python`"
 }
@@ -1519,5 +1512,31 @@ function sixdeskRenewKerberosToken(){
 	    sixdeskmess -1 " --> klist output after kinit -R:"
 	    klist
 	fi
+    fi
+}
+function sixdeskSetLocalNodeStuff(){
+    if [[ `uname -n` == "lxplus"* ]] ; then
+        # set some default stuff for lxplus
+        export newBuildPathDef=/afs/cern.ch/project/sixtrack/build
+        export appNameDef=sixtrack
+        export platForms=( 'boinc' 'lsf' 'htcondor' )
+        export lKerberos=true
+        export lAFS=true
+        export tmpNodeDir=/tmp/${LOGNAME}
+        # source path to python2.7 and other utilities
+	local __sourceEnv=/cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc49-opt/setup.sh
+	source ${__sourceEnv}
+    elif [[ `uname -n` != *".cern.ch" ]] ; then
+        # set some default stuff for a local machine in CERN domain
+        export newBuildPathDef=/afs/cern.ch/project/sixtrack/build
+        export appNameDef=sixtrack
+        export platForms=( 'boinc' 'lsf' 'htcondor' )
+        export lKerberos=true
+        export lAFS=true
+        export tmpNodeDir=/tmp/
+    else
+        # set some default stuff for a local machine
+        sixdeskmess -1 "No default for local machine `uname -n` - please update set_env.sh and re-run"
+        exit 1
     fi
 }

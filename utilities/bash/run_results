@@ -1301,7 +1301,7 @@ function downloadNewResults(){
 	fi
 	#Eric
 	let iTreated+=1
-	if [ $((${iTreated}%${NrenewKerberos})) -eq 0 ] ; then
+	if ${lKerberos} && [ $((${iTreated}%${NrenewKerberos})) -eq 0 ] ; then
 	    sixdeskmess 2 "renewing kerberos token: ${iTreated} vs ${NrenewKerberos}"
 	    sixdeskRenewKerberosToken
 	fi

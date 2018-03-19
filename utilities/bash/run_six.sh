@@ -1091,9 +1091,11 @@ function condor_sub(){
 	sixdeskmess  1 "Depending on the number of points in the scan, this operation can take up to few minutes."
 	sixdeskmess -1 "First job: `head -1 ${sixdeskjobs}/${LHCDesName}.list`"
 	sixdeskmess -1 "Last job: `tail -1 ${sixdeskjobs}/${LHCDesName}.list`"
-	# let's renew the kerberos token just before submitting
-	sixdeskmess 2 "renewing kerberos token before submission to HTCondor"
-	sixdeskRenewKerberosToken
+        if ${lKerberos} ; then
+	    # let's renew the kerberos token just before submitting
+	    sixdeskmess 2 "renewing kerberos token before submission to HTCondor"
+	    sixdeskRenewKerberosToken
+        fi
 	multipleTrials "terseString=\"\`condor_submit -batch-name ${batch_name} -terse ${sixdeskjobs}/htcondor_run_six.sub\`\" " "[ -n \"\${terseString}\" ]" "Problem at condor_submit"
 	let __lerr+=$?
 	if [ ${__lerr} -ne 0 ] ; then
@@ -1645,22 +1647,24 @@ function treatLong(){
 	        # ------------------------------------------------------------------
 	        # renew kerberos ticket (long submissions)
 	        # ------------------------------------------------------------------
-	        if ${lfix} && [ $((${NsuccessGen}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessGen} -ne 0 ] ; then
-	            sixdeskmess 2 "renewing kerberos token: ${NsuccessGen} vs ${NrenewKerberos}"
-	            sixdeskRenewKerberosToken
-	        elif ${lstatus} && [ $((${NsuccessSts}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessSts} -ne 0 ] ; then
-	            sixdeskmess 2 "renewing kerberos token: ${NsuccessSts} vs ${NrenewKerberos}"
-	            sixdeskRenewKerberosToken
-	        elif ${lgenerate} && [ $((${NsuccessFix}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessFix} -ne 0 ] ; then
-	            sixdeskmess 2 "renewing kerberos token: ${NsuccessFix} vs ${NrenewKerberos}"
-	            sixdeskRenewKerberosToken
-	        elif ${lcheck} && [ $((${NsuccessChk}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessChk} -ne 0 ] ; then
-	            sixdeskmess 2 "renewing kerberos token: ${NsuccessChk} vs ${NrenewKerberos}"
-	            sixdeskRenewKerberosToken
-	        elif ${lsubmit} && [ $((${NsuccessSub}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessSub} -ne 0 ] ; then
-	            sixdeskmess 2 "renewing kerberos token: ${NsuccessSub} vs ${NrenewKerberos}"
-	            sixdeskRenewKerberosToken
-	        fi
+                if ${lKerberos} ; then
+	            if ${lfix} && [ $((${NsuccessGen}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessGen} -ne 0 ] ; then
+	                sixdeskmess 2 "renewing kerberos token: ${NsuccessGen} vs ${NrenewKerberos}"
+	                sixdeskRenewKerberosToken
+	            elif ${lstatus} && [ $((${NsuccessSts}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessSts} -ne 0 ] ; then
+	                sixdeskmess 2 "renewing kerberos token: ${NsuccessSts} vs ${NrenewKerberos}"
+	                sixdeskRenewKerberosToken
+	            elif ${lgenerate} && [ $((${NsuccessFix}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessFix} -ne 0 ] ; then
+	                sixdeskmess 2 "renewing kerberos token: ${NsuccessFix} vs ${NrenewKerberos}"
+	                sixdeskRenewKerberosToken
+	            elif ${lcheck} && [ $((${NsuccessChk}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessChk} -ne 0 ] ; then
+	                sixdeskmess 2 "renewing kerberos token: ${NsuccessChk} vs ${NrenewKerberos}"
+	                sixdeskRenewKerberosToken
+	            elif ${lsubmit} && [ $((${NsuccessSub}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessSub} -ne 0 ] ; then
+	                sixdeskmess 2 "renewing kerberos token: ${NsuccessSub} vs ${NrenewKerberos}"
+	                sixdeskRenewKerberosToken
+	            fi
+                fi
 	        
 	    # ----------------------------------------------------------------------
 	    fi
