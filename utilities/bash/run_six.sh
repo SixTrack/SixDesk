@@ -1828,6 +1828,7 @@ nMaxJobsSubmitHTCondorDef=15000
 nMaxJobsSubmitHTCondor=${nMaxJobsSubmitHTCondorDef}
 nMaxJobsSubmitBoincDef=7000
 nMaxJobsSubmitBoinc=${nMaxJobsSubmitBoincDef}
+belowPyVersion=3
 
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":aBcCd:fghilm:Mn:N:o:p:P:R:sStUvw" opt ; do
@@ -2038,6 +2039,17 @@ echo ""
 # - settings for sixdeskmessages
 if ${loutform} ; then
     sixdesklevel=${sixdesklevel_option}
+fi
+# - check python version
+if ! ${lincomplete} ; then
+    # NB: for the time being, if submission of incomplete cases is triggered,
+    #     then no scan is performed
+    pyVer=`python --version 2>&1 | awk '{print ($NF)}'`
+    if [ `sixdeskCompareVersions ${belowPyVersion} ${pyVer}` -eq 0 ] ; then
+        echo "python version too new: ${pyVer}"
+        echo "please use at most ${belowPyVersion} (excluded)"
+        exit 1
+    fi
 fi
 
 # - action-dependent stuff

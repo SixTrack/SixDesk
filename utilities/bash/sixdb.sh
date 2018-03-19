@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# use at least a given version of python
+requiredPyVersion=2.7
+
 function how_to_use() {
     cat <<EOF
 
@@ -59,6 +62,14 @@ if [ -n "${pythonPath}" ] ; then
     sixdeskDefinePythonPath ${pythonPath}
 else
     sixdeskSetLocalNodeStuff
+fi
+
+# check it is python 2.7 at least
+pyVer=`python --version 2>&1 | awk '{print ($NF)}'`
+if [ `sixdeskCompareVersions ${pyVer} ${requiredPyVersion}` -eq 0 ] ; then
+    echo "python version too old: ${pyVer}"
+    echo "please use at least ${requiredPyVersion} (included)"
+    exit 1
 fi
 
 # actually call sixdb

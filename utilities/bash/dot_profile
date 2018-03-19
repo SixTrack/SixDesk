@@ -803,7 +803,7 @@ sixdeskDefinePythonPath(){
 	export PATH=${1}:${PATH}
 	sixdeskmess 2 "Setting python to ${1} in PATH env var"
     fi
-    sixdeskmess -1 "--> python set to: `which python`"
+    sixdeskmess -1 "--> python set to: `which python` - version: `python --version`"
 }
 sixdeskDefineUserTree(){
     # define the tree in the userspace
@@ -1539,4 +1539,8 @@ function sixdeskSetLocalNodeStuff(){
         sixdeskmess -1 "No default for local machine `uname -n` - please update set_env.sh and re-run"
         exit 1
     fi
+}
+function sixdeskCompareVersions(){
+    # 0: true ; 1: false
+    echo $1 $2 | awk '{print ($1>=$2)}'
 }
