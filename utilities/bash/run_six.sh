@@ -5,6 +5,7 @@ function how_to_use() {
 
    `basename $0` (-h) [action] [option]
    to manage the submission of sixtrack jobs
+
    -h      displays this help
 
    actions (mandatory, one of the following):
@@ -41,13 +42,18 @@ function how_to_use() {
               emittances, amplitude scans and job names in fort.3
    -d      study name (when running many jobs in parallel)
    -l      use fort.3.local (only for generation/fixing)
+   -m      a batch of BOINC jobs should be composed of at most
+              N jobs (active only in case of BOINC platform - default: ${nMaxJobsSubmitBoincDef}).
+           in case the current submission passes this value, a new temporary
+              dir in the work dir in the AFS spooldir will be created, allowing
+              to overpass the current limit by AFS
    -M      MegaZip: in case of boinc, WUs all zipped in one file.
               (.zip/.desc files of each WU will be put in a big .zip)
            this option shall be used with both -g and -s actions, and in case
               of explicitely requiring -c
    -n      renew kerberos token every n jobs (default: ${NrenewKerberosDef})
    -N      an HTCondor cluster of jobs should be composed of at most
-              N jobs (active only in case of HTCondor - default: ${nMaxJobsSubmitHTCondorDef}).
+              N jobs (active only in case of HTCondor platform - default: ${nMaxJobsSubmitHTCondorDef}).
            this option can be used also for submitting incomplete_cases
    -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
                0: only error messages and basic output 
@@ -1028,7 +1034,7 @@ function dot_boinc(){
     sixdeskGetFileName "${descFileNames}" workunitname
     sixdeskGetTaskIDfromWorkUnitName $workunitname
     if ! ${lmegazip} ; then
-	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Submission to BOINC - Problem at cp to spooldir"
+	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip ${AFSworkSpooldir} ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Submission to BOINC - Problem at cp to spooldir"
 	let __lerr+=$?
 	if [ ${__lerr} -ne 0 ] ; then
 	    sixdeskmess -1 "failed to submit boinc job!!!"
@@ -1617,6 +1623,12 @@ function treatLong(){
 	        	if [ ${__subSuccess} -eq 0 ] ; then
 	        	    let NsuccessSub+=1
 	        	fi
+                        # in case of BOINC, get ready with a new work subfolder, to avoid
+                        #    hitting limit of max number of files per dir in AFS work.boinc
+                        #    user spooldir
+                        if [ "$sixdeskplatform" == "boinc" ] && [ $((${NsuccessSub}%${nMaxJobsSubmitBoinc})) -eq 0 ] && [ ${NsuccessSub} -ne 0 ] ; then
+                            sixDeskReSetWorkSpoolDir ${AFSworkSpooldirDef}
+                        fi
 	            else
 	        	sixdeskmess -1 "No submission!"
 	            fi
@@ -1810,9 +1822,11 @@ NrenewKerberosDef=10000
 NrenewKerberos=${NrenewKerberosDef}
 nMaxJobsSubmitHTCondorDef=15000
 nMaxJobsSubmitHTCondor=${nMaxJobsSubmitHTCondorDef}
+nMaxJobsSubmitBoincDef=7000
+nMaxJobsSubmitBoinc=${nMaxJobsSubmitBoincDef}
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":aBcCd:fghilMn:N:o:p:P:R:sStUvw" opt ; do
+while getopts  ":aBcCd:fghilm:Mn:N:o:p:P:R:sStUvw" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1865,6 +1879,17 @@ while getopts  ":aBcCd:fghilMn:N:o:p:P:R:sStUvw" opt ; do
 	l) 
 	    # use fort.3.local
 	    llocalfort3=true
+	    ;;
+	m)
+	    # max number of jobs per subdir in work.boinc AFS spooldir
+	    nMaxJobsSubmitBoinc=${OPTARG}
+	    # check it is actually a number
+	    let nMaxJobsSubmitBoinc+=0
+	    if [ $? -ne 0 ] 2>/dev/null; then
+		how_to_use
+		echo "-m argument option is not a number!"
+		exit 1
+	    fi
 	    ;;
 	M)
 	    # submission to boinc through MegaZip
@@ -2299,9 +2324,10 @@ if ${lsubmit} ; then
 	touch $sixdeskjobs/incomplete_tasks
     fi
 fi
-# - preparatory steps for submission to htcondor:
+# - preparatory steps for submission:
 if ${lsubmit} ; then
     if [ "$sixdeskplatform" == "htcondor" ] ; then
+        #  to htcondor
 	# clean away any existing .list, to avoid double submissions
 	if [ -e ${sixdeskjobs}/${LHCDesName}.list ] ; then
 	    sixdeskmess -1 "cleaning away existing ${sixdeskjobs}/${LHCDesName}.list to avoid double submissions!"
@@ -2316,6 +2342,9 @@ if ${lsubmit} ; then
 	sed -i "s#^executable = .*#executable = ${sixdeskjobs}/htcondor_job.sh#g" ${sixdeskjobs}/htcondor_run_six.sub
 	sed -i "s#^queue dirname from.*#queue dirname from ${sixdeskjobs}/${LHCDesName}.list#g" ${sixdeskjobs}/htcondor_run_six.sub
 	sed -i "s#^+JobFlavour =.*#+JobFlavour = \"${HTCq}\"#g" ${sixdeskjobs}/htcondor_run_six.sub
+    elif [ "$sixdeskplatform" == "boinc" ] ; then
+        #  to boinc
+        sixDeskReSetWorkSpoolDir ${AFSworkSpooldirDef}
     fi
 fi
 # - MegaZip: get file name

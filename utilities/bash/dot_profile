@@ -1319,7 +1319,18 @@ sixDeskSetBOINCVars(){
     # --------------------------------------------------------------------------
     # for megaZip
     [ -n "${megaZipPath}" ] || export megaZipPath=$boincdir/boinc/upload
+    
+    # --------------------------------------------------------------------------
+    # for work folder in work.boinc AFS spooldir
+    [ -n "${AFSworkSpooldirDef}" ] || export AFSworkSpooldirDef=$sixdeskboincdir/work
+    [ -n "${AFSworkSpooldir}" ] || export AFSworkSpooldir=${AFSworkSpooldirDef}
 }
+
+function sixDeskReSetWorkSpoolDir(){
+    AFSworkSpooldir=${1}/`date "+%Y-%m-%d_%H-%M-%S"`
+    AFSworkSpooldir=`mktemp -d ${AFSworkSpooldir}_XXX`
+}
+
 sixdeskSetCPSSVars(){
     # sixdeskprog/uploadProgram Variables
     # sixdeskProgramName, sixdeskFileName, sixdeskTargetFileName
