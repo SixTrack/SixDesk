@@ -3,29 +3,31 @@
 function how_to_use() {
     cat <<EOF
 
-   `basename $0` [action] [option]
+   `basename $0` (-h) [action] [option]
    to manage the submission of sixtrack jobs
 
+   -h      displays this help
+
    actions (mandatory, one of the following):
-   -g      generate simulation files 
-           NB: this includes also preliminary SixTrack jobs for computing
-               chromas and beta functions
-   -s      actually submit
+   -a      equivalent to -g -c -s
    -c      check that all the input files have been created and job is ready
                for submission on the required platform
            NB: this is done by default after preparation and before submission,
                but this action can be triggered on its own
-   -a      equivalent to -g -c -s
+   -C      clean .zip/.desc after submission in boinc
+           NB: this is done by default in case of submission to boinc
    -f      fix compromised directory structure
            similar to -g, but it fixes folders which miss any of the input files
               (i.e. the fort.*.gz) - BOINC .zip/.desc files are not re-generated;
-   -C      clean .zip/.desc after submission in boinc
-           NB: this is done by default in case of submission to boinc
-   -t      report the current status of simulations
-           for the time being, it reports the number of input and output files
+   -g      generate simulation files 
+           NB: this includes also preliminary SixTrack jobs for computing
+               chromas and beta functions
    -i      submit only incomplete cases. The platform of submission is forced to
            ${sixdeskplatformDefIncomplete}
            NB: no check at all of concerned directories / inputs is performed
+   -s      actually submit
+   -t      report the current status of simulations
+           for the time being, it reports the number of input and output files
    -U      unlock dirs necessary to the script to run
            PAY ATTENTION when using this option, as no check whether the lock
               belongs to this script or not is performed, and you may screw up
@@ -35,6 +37,40 @@ function how_to_use() {
            The platform of submission is forced to ${sixdeskplatformDefIncomplete}
 
    options (optional)
+   -B      break backward-compatibility
+           for the moment, this sticks only to expressions affecting ratio of
+              emittances, amplitude scans and job names in fort.3
+   -d      study name (when running many jobs in parallel)
+   -l      use fort.3.local (only for generation/fixing)
+   -m      a batch of BOINC jobs should be composed of at most
+              N jobs (active only in case of BOINC platform - default: ${nMaxJobsSubmitBoincDef}).
+           in case the current submission passes this value, a new temporary
+              dir in the work dir in the AFS spooldir will be created, allowing
+              to overpass the current limit by AFS
+   -M      MegaZip: in case of boinc, WUs all zipped in one file.
+              (.zip/.desc files of each WU will be put in a big .zip)
+           this option shall be used with both -g and -s actions, and in case
+              of explicitely requiring -c
+   -n      renew kerberos token every n jobs (default: ${NrenewKerberosDef})
+   -N      an HTCondor cluster of jobs should be composed of at most
+              N jobs (active only in case of HTCondor platform - default: ${nMaxJobsSubmitHTCondorDef}).
+           this option can be used also for submitting incomplete_cases
+   -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
+               0: only error messages and basic output 
+               1: full output
+               2: extended output for debugging
+   -p      platform name (when running many jobs in parallel)
+           this option allows to override the value in sixdeskenv, with no need
+              for the user to manually change the corresponding variable. Similarly,
+              the variable is NOT automatically updated by the script
+   -P      python path
+   -R      restart action from a specific point in scan (point is not treated again):
+           - e.g. -R lhc_coll%1%s%65_64%3_4%5%37.5, for starting from the specified
+             point;
+           - -R last, for starting from the last point present in taskids;
+           NB: when used with -S option, it is your responsibility to make sure that
+               there are no points in the scan that should be submitted but they are
+               actually skipped as they come 'after' the job you provided
    -S      selected points of scan only
            in case of preparation of files, regenerate only those directories
               with an incomplete set of input files, unless a fort.10.gz of non-zero
@@ -46,36 +82,8 @@ function how_to_use() {
            NB: 
            - this option is NOT active in case of -c only!
            - this option is NOT compatible with -i action!
-   -R      restart action from a specific point in scan (point is not treated again):
-           - e.g. -R lhc_coll%1%s%65_64%3_4%5%37.5, for starting from the specified
-             point;
-           - -R last, for starting from the last point present in taskids;
-           NB: when used with -S option, it is your responsibility to make sure that
-               there are no points in the scan that should be submitted but they are
-               actually skipped as they come 'after' the job you provided
-   -M      MegaZip: in case of boinc, WUs all zipped in one file.
-              (.zip/.desc files of each WU will be put in a big .zip)
-           this option shall be used with both -g and -s actions, and in case
-              of explicitely requiring -c
-   -B      break backward-compatibility
-           for the moment, this sticks only to expressions affecting ratio of
-              emittances, amplitude scans and job names in fort.3
-   -l      use fort.3.local (only for generation/fixing)
-   -P      python path
    -v      verbose (OFF by default)
-   -d      study name (when running many jobs in parallel)
-   -p      platform name (when running many jobs in parallel)
-           this option allows to override the value in sixdeskenv, with no need
-              for the user to manually change the corresponding variable. Similarly,
-              the variable is NOT automatically updated by the script
-   -n      renew kerberos token every n jobs (default: ${NrenewKerberosDef})
-   -N      an HTCondor cluster of jobs should be composed of at most
-              N jobs (active only in case of HTCondor - default: ${nMaxJobsSubmitHTCondorDef}).
-           this option can be used also for submitting incomplete_cases
-   -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
-               0: only error messages and basic output 
-               1: full output
-               2: extended output for debugging
+
 
 EOF
 }
@@ -1020,16 +1028,38 @@ function dot_boinc(){
 
     # temporary variables
     local __lerr=0
+    local __quotaThresh=98
     
     # actually submit
     descFileNames=`ls -1 $RundirFullPath/*.desc 2> /dev/null`
     sixdeskGetFileName "${descFileNames}" workunitname
     sixdeskGetTaskIDfromWorkUnitName $workunitname
     if ! ${lmegazip} ; then
-	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip $sixdeskboincdir/work ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Submission to BOINC - Problem at cp to spooldir"
+	multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip ${AFSworkSpooldir} ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Submission to BOINC - Problem at cp to spooldir"
 	let __lerr+=$?
 	if [ ${__lerr} -ne 0 ] ; then
 	    sixdeskmess -1 "failed to submit boinc job!!!"
+            # the reason might be not enough space on the work.boinc volume on AFS
+            if [[ "${AFSworkSpooldir}" == "/afs"* ]] ; then
+                sixdeskmess -1 "checking fs listquota ${AFSworkSpooldir}:"
+	        local __tmpLines=`fs listquota ${AFSworkSpooldir}`
+	        echo "${__tmpLines}"
+	        #   check, and in case re-submit with a slower pace
+	        fraction=`echo "${__tmpLines}" | tail -1 | awk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
+	        if [ ${fraction} -ge ${__quotaThresh} ] ; then
+	            sixdeskmess -1 "WARNING: work.boinc quota is >= ${__quotaThresh}%!! Slow down, man..."
+	            sixdeskmess -1 "I will try to re-submit again your job with multiple-trial algorithm with a waiting time of ${multipleTrialLargeWaitingTime} s..."
+                    # try again:
+                    __lerr=0
+	            multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip ${AFSworkSpooldir} ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Submission to BOINC - Problem at cp to spooldir" ${multipleTrialLargeWaitingTime}
+	            let __lerr+=$?
+	            if [ ${__lerr} -ne 0 ] ; then
+	                sixdeskmess -1 "...anyway failed to submit boinc job!!!"
+                    else
+	                sixdeskmess  1 "Submitting WU to BOINC as taskid ${sixdesktaskid}"
+                    fi
+	        fi
+            fi
 	else
 	    sixdeskmess  1 "Submitting WU to BOINC as taskid ${sixdesktaskid}"
 	fi
@@ -1083,9 +1113,11 @@ function condor_sub(){
 	sixdeskmess  1 "Depending on the number of points in the scan, this operation can take up to few minutes."
 	sixdeskmess -1 "First job: `head -1 ${sixdeskjobs}/${LHCDesName}.list`"
 	sixdeskmess -1 "Last job: `tail -1 ${sixdeskjobs}/${LHCDesName}.list`"
-	# let's renew the kerberos token just before submitting
-	sixdeskmess 2 "renewing kerberos token before submission to HTCondor"
-	sixdeskRenewKerberosToken
+        if ${lKerberos} ; then
+	    # let's renew the kerberos token just before submitting
+	    sixdeskmess 2 "renewing kerberos token before submission to HTCondor"
+	    sixdeskRenewKerberosToken
+        fi
 	multipleTrials "terseString=\"\`condor_submit -batch-name ${batch_name} -terse ${sixdeskjobs}/htcondor_run_six.sub\`\" " "[ -n \"\${terseString}\" ]" "Problem at condor_submit"
 	let __lerr+=$?
 	if [ ${__lerr} -ne 0 ] ; then
@@ -1615,6 +1647,12 @@ function treatLong(){
 	        	if [ ${__subSuccess} -eq 0 ] ; then
 	        	    let NsuccessSub+=1
 	        	fi
+                        # in case of BOINC, get ready with a new work subfolder, to avoid
+                        #    hitting limit of max number of files per dir in AFS work.boinc
+                        #    user spooldir
+                        if [ "$sixdeskplatform" == "boinc" ] && [ $((${NsuccessSub}%${nMaxJobsSubmitBoinc})) -eq 0 ] && [ ${NsuccessSub} -ne 0 ] ; then
+                            sixDeskReSetWorkSpoolDir ${AFSworkSpooldirDef}
+                        fi
 	            else
 	        	sixdeskmess -1 "No submission!"
 	            fi
@@ -1631,22 +1669,24 @@ function treatLong(){
 	        # ------------------------------------------------------------------
 	        # renew kerberos ticket (long submissions)
 	        # ------------------------------------------------------------------
-	        if ${lfix} && [ $((${NsuccessGen}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessGen} -ne 0 ] ; then
-	            sixdeskmess 2 "renewing kerberos token: ${NsuccessGen} vs ${NrenewKerberos}"
-	            sixdeskRenewKerberosToken
-	        elif ${lstatus} && [ $((${NsuccessSts}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessSts} -ne 0 ] ; then
-	            sixdeskmess 2 "renewing kerberos token: ${NsuccessSts} vs ${NrenewKerberos}"
-	            sixdeskRenewKerberosToken
-	        elif ${lgenerate} && [ $((${NsuccessFix}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessFix} -ne 0 ] ; then
-	            sixdeskmess 2 "renewing kerberos token: ${NsuccessFix} vs ${NrenewKerberos}"
-	            sixdeskRenewKerberosToken
-	        elif ${lcheck} && [ $((${NsuccessChk}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessChk} -ne 0 ] ; then
-	            sixdeskmess 2 "renewing kerberos token: ${NsuccessChk} vs ${NrenewKerberos}"
-	            sixdeskRenewKerberosToken
-	        elif ${lsubmit} && [ $((${NsuccessSub}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessSub} -ne 0 ] ; then
-	            sixdeskmess 2 "renewing kerberos token: ${NsuccessSub} vs ${NrenewKerberos}"
-	            sixdeskRenewKerberosToken
-	        fi
+                if ${lKerberos} ; then
+	            if ${lfix} && [ $((${NsuccessGen}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessGen} -ne 0 ] ; then
+	                sixdeskmess 2 "renewing kerberos token: ${NsuccessGen} vs ${NrenewKerberos}"
+	                sixdeskRenewKerberosToken
+	            elif ${lstatus} && [ $((${NsuccessSts}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessSts} -ne 0 ] ; then
+	                sixdeskmess 2 "renewing kerberos token: ${NsuccessSts} vs ${NrenewKerberos}"
+	                sixdeskRenewKerberosToken
+	            elif ${lgenerate} && [ $((${NsuccessFix}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessFix} -ne 0 ] ; then
+	                sixdeskmess 2 "renewing kerberos token: ${NsuccessFix} vs ${NrenewKerberos}"
+	                sixdeskRenewKerberosToken
+	            elif ${lcheck} && [ $((${NsuccessChk}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessChk} -ne 0 ] ; then
+	                sixdeskmess 2 "renewing kerberos token: ${NsuccessChk} vs ${NrenewKerberos}"
+	                sixdeskRenewKerberosToken
+	            elif ${lsubmit} && [ $((${NsuccessSub}%${NrenewKerberos})) -eq 0 ] && [ ${NsuccessSub} -ne 0 ] ; then
+	                sixdeskmess 2 "renewing kerberos token: ${NsuccessSub} vs ${NrenewKerberos}"
+	                sixdeskRenewKerberosToken
+	            fi
+                fi
 	        
 	    # ----------------------------------------------------------------------
 	    fi
@@ -1808,9 +1848,13 @@ NrenewKerberosDef=10000
 NrenewKerberos=${NrenewKerberosDef}
 nMaxJobsSubmitHTCondorDef=15000
 nMaxJobsSubmitHTCondor=${nMaxJobsSubmitHTCondorDef}
+nMaxJobsSubmitBoincDef=7000
+nMaxJobsSubmitBoinc=${nMaxJobsSubmitBoincDef}
+belowPyVersion=3
+multipleTrialLargeWaitingTime=300
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hgo:sctakfvBlSCMid:p:R:P:n:N:wU" opt ; do
+while getopts  ":aBcCd:fghilm:Mn:N:o:p:P:R:sStUvw" opt ; do
     case $opt in
 	a)
 	    # do everything
@@ -1819,17 +1863,26 @@ while getopts  ":hgo:sctakfvBlSCMid:p:R:P:n:N:wU" opt ; do
 	    lsubmit=true
 	    lcleanzip=true
 	    ;;
+	B)
+	    # use whatever breaks backward compatibility
+	    lbackcomp=false
+	    ;;
 	c)
 	    # check only
 	    lcheck=true
 	    ;;
-	o)
-	    # output option
-	    check_output_option
-	    ;;	
-	h)
-	    how_to_use
-	    exit 1
+	C)
+	    # the user requests to delete .zip/.desc files
+	    #   after submission with boinc
+	    lcleanzip=true
+	    ;;
+	d)
+	    # the user is requesting a specific study
+	    currStudy="${OPTARG}"
+	    ;;
+	f)
+	    # fix directories
+	    lfix=true
 	    ;;
 	g)
 	    # generate simulation files
@@ -1837,35 +1890,9 @@ while getopts  ":hgo:sctakfvBlSCMid:p:R:P:n:N:wU" opt ; do
 	    # check
 	    lcheck=true
 	    ;;
-	s)
-	    # check
-	    lcheck=true
-	    # submit
-	    lsubmit=true
-	    # clean .zip/.desc
-	    lcleanzip=true
-	    ;;
-	S)
-	    # selected points of scan only
-	    lselected=true
-	    ;;
-	R)
-	    # restart from point in scan
-	    lrestart=true
-	    restartPoint="${OPTARG}"
-	    ;;
-	f)
-	    # fix directories
-	    lfix=true
-	    ;;
-	C)
-	    # the user requests to delete .zip/.desc files
-	    #   after submission with boinc
-	    lcleanzip=true
-	    ;;
-	M)
-	    # submission to boinc through MegaZip
-	    lmegazip=true
+	h)
+	    how_to_use
+	    exit 1
 	    ;;
 	i)
 	    # submit incomplete cases only
@@ -1877,29 +1904,24 @@ while getopts  ":hgo:sctakfvBlSCMid:p:R:P:n:N:wU" opt ; do
 	    # submit
 	    lsubmit=true
 	    ;;
-	B)
-	    # use whatever breaks backward compatibility
-	    lbackcomp=false
-	    ;;
 	l) 
 	    # use fort.3.local
 	    llocalfort3=true
 	    ;;
-	d)
-	    # the user is requesting a specific study
-	    currStudy="${OPTARG}"
+	m)
+	    # max number of jobs per subdir in work.boinc AFS spooldir
+	    nMaxJobsSubmitBoinc=${OPTARG}
+	    # check it is actually a number
+	    let nMaxJobsSubmitBoinc+=0
+	    if [ $? -ne 0 ] 2>/dev/null; then
+		how_to_use
+		echo "-m argument option is not a number!"
+		exit 1
+	    fi
 	    ;;
-	p)
-	    # the user is requesting a specific platform
-	    currPlatform="${OPTARG}"
-	    ;;
-	t)
-	    # status
-	    lstatus=true
-	    ;;
-	P)
-	    # the user is requesting a specific path to python
-	    currPythonPath="-P ${OPTARG}"
+	M)
+	    # submission to boinc through MegaZip
+	    lmegazip=true
 	    ;;
 	n)
 	    # renew kerberos token every N jobs
@@ -1923,6 +1945,44 @@ while getopts  ":hgo:sctakfvBlSCMid:p:R:P:n:N:wU" opt ; do
 		exit 1
 	    fi
 	    ;;
+	o)
+	    # output option
+	    check_output_option
+	    ;;	
+	p)
+	    # the user is requesting a specific platform
+	    currPlatform="${OPTARG}"
+	    ;;
+	P)
+	    # the user is requesting a specific path to python
+	    currPythonPath="-P ${OPTARG}"
+	    ;;
+	R)
+	    # restart from point in scan
+	    lrestart=true
+	    restartPoint="${OPTARG}"
+	    ;;
+	s)
+	    # check
+	    lcheck=true
+	    # submit
+	    lsubmit=true
+	    # clean .zip/.desc
+	    lcleanzip=true
+	    ;;
+	S)
+	    # selected points of scan only
+	    lselected=true
+	    ;;
+	t)
+	    # status
+	    lstatus=true
+	    ;;
+	U)
+	    # unlock currently locked folder
+	    lunlockRun6T=true
+	    unlockSetEnv="-U"
+	    ;;
 	v) 
 	    # verbose
 	    lverbose=true
@@ -1930,11 +1990,6 @@ while getopts  ":hgo:sctakfvBlSCMid:p:R:P:n:N:wU" opt ; do
 	w)
 	    # submit any .list left behind
 	    lFinaliseHTCondor=true
-	    ;;
-	U)
-	    # unlock currently locked folder
-	    lunlockRun6T=true
-	    unlockSetEnv="-U"
 	    ;;
 	:)
 	    how_to_use
@@ -2007,6 +2062,17 @@ echo ""
 # - settings for sixdeskmessages
 if ${loutform} ; then
     sixdesklevel=${sixdesklevel_option}
+fi
+# - check python version
+if ! ${lincomplete} ; then
+    # NB: for the time being, if submission of incomplete cases is triggered,
+    #     then no scan is performed
+    pyVer=`python --version 2>&1 | awk '{print ($NF)}'`
+    if [ `sixdeskCompareVersions ${belowPyVersion} ${pyVer}` -eq 0 ] ; then
+        echo "python version too new: ${pyVer}"
+        echo "please use at most ${belowPyVersion} (excluded)"
+        exit 1
+    fi
 fi
 
 # - action-dependent stuff
@@ -2297,9 +2363,10 @@ if ${lsubmit} ; then
 	touch $sixdeskjobs/incomplete_tasks
     fi
 fi
-# - preparatory steps for submission to htcondor:
+# - preparatory steps for submission:
 if ${lsubmit} ; then
     if [ "$sixdeskplatform" == "htcondor" ] ; then
+        #  to htcondor
 	# clean away any existing .list, to avoid double submissions
 	if [ -e ${sixdeskjobs}/${LHCDesName}.list ] ; then
 	    sixdeskmess -1 "cleaning away existing ${sixdeskjobs}/${LHCDesName}.list to avoid double submissions!"
@@ -2314,6 +2381,9 @@ if ${lsubmit} ; then
 	sed -i "s#^executable = .*#executable = ${sixdeskjobs}/htcondor_job.sh#g" ${sixdeskjobs}/htcondor_run_six.sub
 	sed -i "s#^queue dirname from.*#queue dirname from ${sixdeskjobs}/${LHCDesName}.list#g" ${sixdeskjobs}/htcondor_run_six.sub
 	sed -i "s#^+JobFlavour =.*#+JobFlavour = \"${HTCq}\"#g" ${sixdeskjobs}/htcondor_run_six.sub
+    elif [ "$sixdeskplatform" == "boinc" ] ; then
+        #  to boinc
+        sixDeskReSetWorkSpoolDir ${AFSworkSpooldirDef}
     fi
 fi
 # - MegaZip: get file name

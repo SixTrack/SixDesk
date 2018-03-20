@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# use at least a given version of python
+requiredPyVersion=2.7
+
 function how_to_use() {
     cat <<EOF
 
@@ -27,6 +30,8 @@ fi
 # initialisation of local vars
 pythonPath=""
 
+source ${SCRIPTDIR}/bash/dot_profile
+
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":hP:" opt ; do
     case $opt in
@@ -53,8 +58,19 @@ done
 shift "$(($OPTIND - 1))"
 
 # python path
-source ${SCRIPTDIR}/bash/dot_profile
-sixdeskDefinePythonPath ${pythonPath}
+if [ -n "${pythonPath}" ] ; then
+    sixdeskDefinePythonPath ${pythonPath}
+else
+    sixdeskSetLocalNodeStuff
+fi
+
+# check it is python 2.7 at least
+pyVer=`python --version 2>&1 | awk '{print ($NF)}'`
+if [ `sixdeskCompareVersions ${pyVer} ${requiredPyVersion}` -eq 0 ] ; then
+    echo "python version too old: ${pyVer}"
+    echo "please use at least ${requiredPyVersion} (included)"
+    exit 1
+fi
 
 # actually call sixdb
 python ${SCRIPTDIR}/externals/SixDeskDB/sixdb $*
