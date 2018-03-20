@@ -1028,6 +1028,7 @@ function dot_boinc(){
 
     # temporary variables
     local __lerr=0
+    local __quotaThresh=98
     
     # actually submit
     descFileNames=`ls -1 $RundirFullPath/*.desc 2> /dev/null`
@@ -1038,6 +1039,27 @@ function dot_boinc(){
 	let __lerr+=$?
 	if [ ${__lerr} -ne 0 ] ; then
 	    sixdeskmess -1 "failed to submit boinc job!!!"
+            # the reason might be not enough space on the work.boinc volume on AFS
+            if [[ "${AFSworkSpooldir}" == "/afs"* ]] ; then
+                sixdeskmess -1 "checking fs listquota ${AFSworkSpooldir}:"
+	        local __tmpLines=`fs listquota ${AFSworkSpooldir}`
+	        echo "${__tmpLines}"
+	        #   check, and in case re-submit with a slower pace
+	        fraction=`echo "${__tmpLines}" | tail -1 | awk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
+	        if [ ${fraction} -ge ${__quotaThresh} ] ; then
+	            sixdeskmess -1 "WARNING: work.boinc quota is >= ${__quotaThresh}%!! Slow down, man..."
+	            sixdeskmess -1 "I will try to re-submit again your job with multiple-trial algorithm with a waiting time of ${multipleTrialLargeWaitingTime} s..."
+                    # try again:
+                    __lerr=0
+	            multipleTrials "cp $RundirFullPath/$workunitname.desc $RundirFullPath/$workunitname.zip ${AFSworkSpooldir} ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]" "Submission to BOINC - Problem at cp to spooldir" ${multipleTrialLargeWaitingTime}
+	            let __lerr+=$?
+	            if [ ${__lerr} -ne 0 ] ; then
+	                sixdeskmess -1 "...anyway failed to submit boinc job!!!"
+                    else
+	                sixdeskmess  1 "Submitting WU to BOINC as taskid ${sixdesktaskid}"
+                    fi
+	        fi
+            fi
 	else
 	    sixdeskmess  1 "Submitting WU to BOINC as taskid ${sixdesktaskid}"
 	fi
@@ -1829,6 +1851,7 @@ nMaxJobsSubmitHTCondor=${nMaxJobsSubmitHTCondorDef}
 nMaxJobsSubmitBoincDef=7000
 nMaxJobsSubmitBoinc=${nMaxJobsSubmitBoincDef}
 belowPyVersion=3
+multipleTrialLargeWaitingTime=300
 
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":aBcCd:fghilm:Mn:N:o:p:P:R:sStUvw" opt ; do
