@@ -22,7 +22,7 @@ export bunch_charge=1.1500e+11
 # It must NOT contain a "%" (replacing "#") nor "_""_"
 # It now includes the Version info e.g. v64lhc
 # (If running mad6t you must have a $LHCDescrip.mask file in the subdirectory mask)
-export LHCDescrip=jobrefslhc_coll
+export LHCDescrip=hl10BaseB1
 
 # The workspace for the scripts, sixdesk.log and links to sixtrack_input, track and work, 
 # It must NOT contain a "%" (replacing "#") nor "__" (two consecutive underscores)
@@ -30,10 +30,10 @@ export workspace=w1
 
 # The directory for the workspace normally $HOME
 initial=`echo $LOGNAME | cut -c 1`
-export basedir=/afs/cern.ch/user/$initial/$LOGNAME
+export basedir=/afs/cern.ch/work/$initial/$LOGNAME
 
 # The scratch directory for temporary input files, jobs, sixdesk databases etc (not normally backed up)
-export scratchdir=/afs/cern.ch/user/$initial/$LOGNAME/scratch0
+export scratchdir=/afs/cern.ch/work/$initial/$LOGNAME/scratch0
 
 # The root track directory for all the tracking input and output
 # This directory can be used by multiple workspaces for scalability
@@ -244,7 +244,7 @@ then
   export lsfjobtype=sixtracking
 
   # reduce angle steps at small angles, achieving a constant density painting of the phase space
-  # export reduce_angs_with_amplitude=1
+  # export reduce_angs_with_amplitude=10
 fi  
 
 #da parameters 
