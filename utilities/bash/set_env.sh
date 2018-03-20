@@ -558,7 +558,7 @@ if ! ${lcptemplate} ; then
     
     # - fs listquota
     echo ""
-    if [ `echo "${sixdesktrack}" | cut -c-4` == "/afs" ] ; then
+    if [[ "${sixdesktrack}" == "/afs"* ]] ; then
 	sixdeskmess -1 " --> fs listquota ${sixdesktrack}:"
 	tmpLines=`fs listquota ${sixdesktrack}`
 	echo "${tmpLines}"
@@ -568,8 +568,8 @@ if ! ${lcptemplate} ; then
 	    sixdeskmess -1 "WARNING: your quota is above 90%!! pay attention to occupancy of the current study, in case of submission..."
 	fi
     else
-	sixdeskmess -1 " --> df -Th:"
-	\df -Th
+	sixdeskmess -1 " --> df -Th ${sixdesktrack}:"
+	\df -Th ${sixdesktrack}
 	sixdeskmess -1 " the above output is at your convenience, for you to check disk space"
     fi
 
