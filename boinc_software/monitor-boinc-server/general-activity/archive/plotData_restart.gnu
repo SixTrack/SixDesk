@@ -13,11 +13,11 @@ set xdata time
 set timefmt '%Y-%m-%d %H:%M:%S'
 # set format x '%Y-%m-%d'
 set format x '%Y-%m-%d %H:%M'
-set xtics 3600*24 rotate by 90 right
+set xtics 3600*12 rotate by 90 right
 set grid xtics lt 0 lw 1
 # tMin=strptime("%Y-%m-%d %H:%M:%S","2017-02-01 00:00:00")
 # tMin=strptime("%Y-%m-%d %H:%M:%S","2017-06-15 00:00:00")
-tMin=strptime("%Y-%m-%d %H:%M:%S","2017-12-10 00:00:00")
+tMin=strptime("%Y-%m-%d %H:%M:%S","2018-03-01 00:00:00")
 set xrange [tMin:*]
 ybar=300
 M=0.1
@@ -52,7 +52,7 @@ set y2label 'tasks waiting for assimilation' tc rgb 'blue'
 set y2tics tc rgb 'blue'
 nLines=system("wc -l ".restaFile." | awk '{print ($1)}'")
 plot \
-     '< cat 201[7-8]-??/server_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
+     '< cat 2018-??/server_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
      ''               index 0 using 1:($3/1000*M) with linespoints pt 7 ps 1 lt 2 lw 1 lc rgb 'green' title 'ready to send '.gprintf('(x%.1f)',1.0/M),\
      ''               index 0 using 1:6 with linespoints axis x1y2 pt 7 ps 1 lt 2 lw 1 lc rgb 'blue' notitle,\
      restartFile index 0 using 1:(ybar) with impulses lt -1 lw 2 notitle,\
@@ -82,7 +82,7 @@ set y2label 'total credit (users/computers) [10^3]' tc rgb 'magenta'
 set y2tics tc rgb 'magenta'
 set grid xtics ytics lt 0 lw 1 lc rgb 'black'
 plot \
-     '< cat 201[7-8]-??/server_status_????-??.dat' index 0 using 1:($11/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'users',\
+     '< cat 2018-??/server_status_????-??.dat' index 0 using 1:($11/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'users',\
      ''               index 0 using 1:($14/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'blue' title 'computers',\
      ''               index 0 using 1:($10/1000) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'magenta' notitle,\
      ''               index 0 using 1:($13/1000) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'cyan' notitle
@@ -103,7 +103,7 @@ unset y2label
 unset y2tics
 set grid xtics ytics lt 0 lw 1 lc rgb 'black'
 plot \
-     '< cat 201[7-8]-??/server_status_????-??.dat' index 0 using 1:($16/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
+     '< cat 2018-??/server_status_????-??.dat' index 0 using 1:($16/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
 unset title
 
 # WUs waiting for validation
@@ -122,7 +122,7 @@ unset y2label
 unset y2tics
 set grid xtics ytics lt 0 lw 1 lc rgb 'black'
 plot \
-     '< cat 201[7-8]-??/server_status_????-??.dat' index 0 using 1:5 with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
+     '< cat 2018-??/server_status_????-??.dat' index 0 using 1:5 with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
 unset title
 
 # ------------------------------------------------------------------------------
@@ -144,7 +144,7 @@ set y2tics tc rgb 'blue'
 set xtics rotate by 90 right
 set grid xtics lt 0 lw 1
 plot \
-     '< cat 201[7-8]-??/SixTrack_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
+     '< cat 2018-??/SixTrack_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
      ''               index 0 using 1:($3/1000*M) with linespoints pt 7 ps 1 lt 2 lw 1 lc rgb 'green' title 'ready to send '.gprintf('(x%.1f)',1.0/M),\
      ''               index 0 using 1:5 with linespoints axis x1y2 pt 7 ps 1 lt 2 lw 1 lc rgb 'blue' notitle
 unset grid
@@ -174,7 +174,7 @@ set y2tics tc rgb 'blue'
 set xtics rotate by 90 right
 set grid xtics lt 0 lw 1
 plot \
-     '< cat 201[7-8]-??/sixtracktest_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
+     '< cat 2018-??/sixtracktest_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
      ''               index 0 using 1:($3/1000*M) with linespoints pt 7 ps 1 lt 2 lw 1 lc rgb 'green' title 'ready to send '.gprintf('(x%.1f)',1.0/M),\
      ''               index 0 using 1:5 with linespoints axis x1y2 pt 7 ps 1 lt 2 lw 1 lc rgb 'blue' notitle
 unset grid
