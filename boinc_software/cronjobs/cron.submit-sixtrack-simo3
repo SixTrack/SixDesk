@@ -25,11 +25,11 @@ spooldirUpload=$spooldir/upload
 
 # The relative path of the workunit template file from the config dir.
 # this template will present Sixin.zip as the input file
-WU_template=templates/sixtracktest_wu_template.xml
+WU_template=templates/sixtrack_wu_template.xml
 
 # The relative path of the result template file from the config dir.
 # this template will bring back also the Sixout.zip results
-result_template_SixOutZip=templates/sixtrack_zip_res_template.xml
+result_template_SixOutZip=templates/sixtrack_res_template.xml
 
 # default app name
 applicationDef=sixtrack
@@ -228,7 +228,7 @@ submit_descfile(){
 	fi
 
         #overriding delay bound
-        WUdelayBound=$(cat $boincdir/suggested_deadline)
+        WUdelayBound="$WUdelayBoundDef"
 	
 
 #copyfiles
@@ -422,6 +422,7 @@ maxjobs=0
 maxjobs_perStudy=0
 keepzip=0
 studyName=""
+WUdelayBoundDef=574334 # [s]
 
 while getopts ":hn:m:d:k"  OPT
 do
