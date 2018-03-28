@@ -163,41 +163,38 @@ run_spool(){ # max_jobs_to_submit, max_jobs_perStudy, specific_study
     fi
 
     # main loop
-    echo "${allWorkDirs}" | (
-	while read workdir ; do
-	    local complete_perStudy=0
-	    #check for desc files in the current work dir, and subfolders
-	    find "$workdir" -maxdepth 2 -type f -name '*.desc' | (
-	        while read descfile ; do
-		    #process the desc files
-	            origPath=`dirname ${descfile}`
-		    if submit_descfile "$descfile" ; then
-			logstudy "Submitted $WUname"
-			#stop after max_jobs (0=unlimited)
-			if ${lMaxJobs} ; then
-			    complete=$(( $complete + 1 ))
-			    if [ $complete -ge $max_jobs ] ; then
-                                log "reached ${max_jobs} in total"
-				break 2
-			    fi
-			fi
-			if ${lMaxJobsPerStudy} ; then
-			    complete_perStudy=$(( ${complete_perStudy} + 1 ))
-			    if [ ${complete_perStudy} -ge ${max_jobs_perStudy} ] ; then
-                                # continue with next study
-                                log "reached ${max_jobs_perStudy} in ${workdir}"
-				break 1
-			    fi
-			fi
-		    else
-			logstudy "Problem submitting $WUname"
+    for workdir in ${allWorkDirs} ; do
+	local complete_perStudy=0
+	#check for desc files in the current work dir, and subfolders
+	local allDescs=`find "$workdir" -maxdepth 2 -type f -name '*.desc'`
+	for descfile in ${allDescs} ; do
+	    #process the desc files
+	    origPath=`dirname ${descfile}`
+	    if submit_descfile "$descfile" ; then
+		logstudy "Submitted $WUname"
+		#stop after max_jobs (0=unlimited)
+		if ${lMaxJobs} ; then
+		    complete=$(( $complete + 1 ))
+		    if [ $complete -ge $max_jobs ] ; then
+                        log "reached ${max_jobs} in total"
+			break 2
 		    fi
-	        done
-	    )
-            # remove temp dirs in work
-            find ${workdir} -mindepth 1 -maxdepth 1 -type d -empty -delete -print | log
+		fi
+		if ${lMaxJobsPerStudy} ; then
+		    complete_perStudy=$(( ${complete_perStudy} + 1 ))
+		    if [ ${complete_perStudy} -ge ${max_jobs_perStudy} ] ; then
+                        # continue with next study
+                        log "reached ${max_jobs_perStudy} in ${workdir}"
+			break 1
+		    fi
+		fi
+	    else
+		logstudy "Problem submitting $WUname"
+	    fi
 	done
-    )
+        # remove temp dirs in work
+        find ${workdir} -mindepth 1 -maxdepth 1 -type d -empty -delete -print | log
+    done
 }
 
 submit_descfile(){ 
