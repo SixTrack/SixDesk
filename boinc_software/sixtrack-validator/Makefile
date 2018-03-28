@@ -1,7 +1,7 @@
 #!make
 
-PROJ=/data/boinc/software/boinc/boinc
-SIXT=/data/boinc/project/sixtrack/sixtrack-validator
+PROJ=/share/boinc/software/boinc-src/boinc
+SIXT=/usr/local/boinc/project/sixtrack/sixtrack-validator
 
 INCL=-I$(PROJ) -I$(PROJ)/lib -I$(PROJ)/db -I$(PROJ)/sched -I/usr/include/mysql
 LIBD=-rdynamic -L/usr/lib64/mysql -lmysqlclient -lcrypt -lnsl -lm -lssl -lcrypto -ldl -lz
@@ -13,7 +13,7 @@ LDFLAGS=--tag=CXX --mode=link g++  -g -O2 -static
 
 OBJD=$(PROJ)/sched
 #OBJD=$(SIXT)
-LIBS = $(PROJ)/sched/libsched.la $(PROJ)/lib/libboinc_crypt.la $(PROJ)/lib/libboinc.la 
+LIBS = $(PROJ)/sched/libsched.a $(PROJ)/lib/libboinc_crypt.la $(PROJ)/lib/libboinc.la 
 
 OBJS = sixtrack_bitwise_validator.o 
 STDO = $(OBJD)/validator.o $(OBJD)/validate_util.o $(OBJD)/validate_util2.o  \
