@@ -1533,7 +1533,7 @@ function sixdeskSetLocalNodeStuff(){
         export platForms=( 'boinc' 'lsf' 'htcondor' )
         export lKerberos=true
         export lAFS=true
-        export tmpNodeDir=/tmp/
+        export tmpNodeDir=/tmp
     else
         # set some default stuff for a local machine
         sixdeskmess -1 "No default for local machine `uname -n` - please update set_env.sh and re-run"
