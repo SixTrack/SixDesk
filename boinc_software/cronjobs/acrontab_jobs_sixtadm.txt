@@ -1,3 +1,17 @@
+## Acrontab for Sixtrack
+# crontab every 12h
+## Crontab for Sixtrack - append to default BOINC cronjob
+# Puppet Name: worksubmit sixtrack 2
+7,17,27,37,47,57 * * * * boincai11.cern.ch /usr/local/boinc/project/sixtrack/bin/cron.submit-sixtracktest-simo3 -m 1000 > /dev/null 2>&1
+# Puppet Name: worksubmit sixtrack
+1,11,21,31,41,51 * * * * boincai11.cern.ch /usr/local/boinc/project/sixtrack/bin/cron.submit-sixtrack-simo3 -m 1000 > /dev/null 2>&1
+# zip all WUs which were not given back to user
+# crontab every 3h
+30 */3 * * * boincai11.cern.ch cd /share/sixtrack/assimilation ; /usr/local/boinc/project/sixtrack/bin/zip-trashed-WUs.sh > /dev/null 2>&1
+#
+#
+# acrontab jobs for keeping work.boinc volume clean and tidy
+#
 # remove old zip files from /afs/cern.ch/work/b/boinc/download
 # m h  dom mon dow   command
 0 3 * * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/download ; ./clean.sh >> clean.log 2>&1
