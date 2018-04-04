@@ -122,7 +122,7 @@ then
 
 #MACRO mymktmpdir lsftmp /tmp/$LOGNAME
         sixdesktmpdirname=lsftmp
-        sixdesktmpdirarg=/tmp/$LOGNAME
+        sixdesktmpdirarg=${tmpNodeDir}
         sixdeskmktmpdir
         lsftmp=$sixdesktmpdir
 #MACRO mymktmp

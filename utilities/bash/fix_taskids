@@ -152,11 +152,11 @@ if [ $long -eq 1 ] ;then
   fi
 fi
 
-sixdeskmess -1 "copying database to /tmp/${LOGNAME}/work, to speed up processing"
-rm -rf /tmp/${LOGNAME}/work
-mkdir -p /tmp/${LOGNAME}/work
-cp -rp $sixdeskwork/* /tmp/${LOGNAME}/work
-cd /tmp/${LOGNAME}/work
+sixdeskmess -1 "copying database to ${tmpNodeDir}/work, to speed up processing"
+rm -rf ${tmpNodeDir}/work
+mkdir -p ${tmpNodeDir}/work
+cp -rp $sixdeskwork/* ${tmpNodeDir}/work
+cd ${tmpNodeDir}/work
 
 # make backup of present DB
 [ -d backup ] || mkdir backup
@@ -609,7 +609,7 @@ done
 
 cp -pr * $sixdeskwork/
 cd $sixdeskhome
-rm -rf /tmp/${LOGNAME}/work
+rm -rf ${tmpNodeDir}/work
 
 if [ -s $sixdeskwork/missingDirs.txt ] ; then
     sixdeskmess -1 "missing dirs! please see $sixdeskwork/missingDirs.txt"
