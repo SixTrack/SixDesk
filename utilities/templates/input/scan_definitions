@@ -1,0 +1,52 @@
+
+#!/bin/sh
+
+#################
+## Definitions ##
+#################
+
+
+
+export SixDeskDev="/afs/cern.ch/work/p/phermes/private/development/SixDesk/utilities/bash/"
+
+
+
+############################## SCAN OVER A CARTESIAN GRID ################################
+
+# specify the variable names to be used in naming the studies
+scan_variables="QP IOCT"
+
+
+# specify the placeholders in the mask file
+scan_placeholders="%QPV %OCV"                 
+
+
+# specify the prefix of the study name
+# e.g. if the base mask file is called ats2017_b1.mask, we use:
+
+scan_prefix="ats2017_b1"                            
+
+
+# specify the values to be taken by the different variables
+# if we want to use 14 for QP and values between 0 and 40 in steps of 40 for IOCT:
+
+scan_vals_QP="14"
+scan_vals_IOCT=$(seq 0 4 40)
+
+
+############################## SCAN OVER SPECIFIC MASKS  ################################
+
+# THIS OPTION REQUIRES THE MASK FILES TO BE EXISTING
+
+scan_masks=false                                        # (de)activate the scan over specific masks
+scan_studies="
+ats2017_QP_0_IOCT_12
+ats2017_QP_0_IOCT_16
+"
+
+
+
+
+
+
+
