@@ -201,7 +201,7 @@ currPlatform=""
 currStudy=""
 tmpPythonPath=""
 origRepoForSetup='https://github.com/amereghe/SixDesk.git'
-origBranchForSetup='newWorkspace'
+origBranchForSetup=`git --git-dir=${SCRIPTDIR}/../.git branch | grep '*' | awk '{print ($NF)}'`
 
 # variables set based on parsing fort.3.local
 
