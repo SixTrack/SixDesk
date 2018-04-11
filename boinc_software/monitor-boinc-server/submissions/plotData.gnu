@@ -1,5 +1,5 @@
 # today=system("date +%F")
-today='2017-07-04'
+today='2018-02-25'
 iFileName='submitAll_'.today
 iFileNameAssimilated='assimilateAll_'.today
 

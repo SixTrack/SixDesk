@@ -152,15 +152,17 @@ if [ $long -eq 1 ] ;then
   fi
 fi
 
-sixdeskmess -1 "copying database to /tmp/${LOGNAME}/work, to speed up processing"
-rm -rf /tmp/${LOGNAME}/work
-[ -d /tmp/${LOGNAME}/work ] || mkdir -p /tmp/${LOGNAME}/work
-cp -rp $sixdeskwork/* /tmp/${LOGNAME}/work
-cd /tmp/${LOGNAME}/work
+sixdeskmess -1 "copying database to ${tmpNodeDir}/work, to speed up processing"
+rm -rf ${tmpNodeDir}/work
+mkdir -p ${tmpNodeDir}/work
+cp -rp $sixdeskwork/* ${tmpNodeDir}/work
+cd ${tmpNodeDir}/work
 
 # make backup of present DB
 [ -d backup ] || mkdir backup
+export GLOBIGNORE='backup'
 cp -r * backup
+export GLOBIGNORE=
 # collect missing directories
 rm -f missingDirs.txt
 # collect damaged directories
@@ -185,6 +187,8 @@ for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
             # - remove lines without a Runnam
 	    grep '%' ${dbFile} > ${dbFile}_temp
 	    rm ${dbFile}_temp
+	    # - sanitize file from non-ASCI chars
+	    sed -i '/[^[:print:]]/d' ${dbFile}
 	done
     fi
 done
@@ -202,7 +206,7 @@ for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
 	checkDBnLines true true
 	if ! ${lequal} ; then
 	    # - remove double entries in each file
-	    sixdeskmess  1 "   ...removing double entries in each file..."
+            sixdeskmess  1 "   ...removing double entries in each file..."
 	    for dbFile in ${dbInc} ${dbCom} ${dbAll} ; do
 		sixdeskmess  1 "      ...considering DB file ${dbFile} ..."
 		cat ${dbFile} | sort -u > ${dbFile}_temp
@@ -294,7 +298,7 @@ if ! ${lequal} ; then
     awk '{print ($1)}' ${dbAll} | sort | uniq -c | awk '{if ($1>1) {print ($2)}}' > double.lis
     while read aRunnam ; do
 	sixdeskmess  1 "found duplicate Runnam ${aRunnam}"
-	allTaskIDs=`grep ${aRunnam} ${dbAll} | cut -d\  -f2-`
+	allTaskIDs=`grep "^${aRunnam} " ${dbAll} | cut -d\  -f2- | sort -u`
 	allTaskIDs=( ${allTaskIDs} )
 	sed -i -e "/${aRunnam}/d" ${dbAll}
 	echo "${aRunnam} ${allTaskIDs[@]} " >> ${dbAll}
@@ -333,7 +337,7 @@ if ! ${lequal} ; then
 	! [ -e ${platForms[$ii]}jobs/${fileSuffixes[$ii]} ] || searchFiles="${searchFiles} ${platForms[$ii]}jobs/${fileSuffixes[$ii]}"
     done
     while read aRunnam ; do
-	allTaskIDs=`grep ${aRunnam} ${searchFiles} | cut -d\  -f2-`
+	allTaskIDs=`grep "^${aRunnam} " ${searchFiles} | cut -d\  -f2-`
 	allTaskIDs=( ${allTaskIDs} )
 	echo "${aRunnam} ${allTaskIDs[@]} " >> ${dbAll}
 	sixdeskmess  1 " added Runnam ${aRunnam} missing in ${dbAll} - taskids: ${allTaskIDs[@]}"
@@ -361,24 +365,16 @@ echo ""
 for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
     tmpCheckFile=${platForms[$ii]}jobs/${fileSuffixes[$ii]}
     if [ -s ${tmpCheckFile} ] ; then
-	sixdeskmess -1 "...checking against ${tmpCheckFile}"
-	cat taskids ${tmpCheckFile} | awk '{print ($1)}' | sort | uniq -c | awk '{if ($1==1) {print ($0)}}' > missing_taskids_temp
-	while read aline ; do
-	    data=( ${aline} )
-	    Runnam=${data[0]}
-	    taskid=${data[1]}
-	    inTaskIds=`grep ${Runnam} taskids`
-	    inTaskIds2=`echo "${inTaskIds}" | grep ${taskid}`
+	sixdeskmess -1 "...checking against ${tmpCheckFile} ..."
+	sixdeskmess -1 "   this operation might take few minutes, depending on how many tasks you have in taskids - be patient..."
+	cat taskids ${tmpCheckFile} | awk '{print ($1)}' | sort | uniq -c | awk '{if ($1==1) {print ($2)}}' > missing_taskids_temp
+	while read Runnam ; do
+	    inTaskIds=`grep "^${Runnam} " taskids`
 	    if [ -z "${inTaskIds}" ] ; then
+		inTaskIds2=`grep "^${Runnam} " ${tmpCheckFile}`
 		# the taskid is present in the platform listing but not in taskids - add it
 		sixdeskmess -1 "...missing ${Runnam} in taskids - adding it ..."
-		echo "${aline}" >> taskids
-	    elif [ -z "${inTaskIds2}" ] ; then
-		# the taskid is present in the platform listing and in taskids, but
-		#     not with the specified taskid - add it
-		sixdeskmess -1 "...${Runnam} is present in taskids but not as ${taskid} - adding it ..."
-		sed -i -e "/^${inTaskIds}/d" taskids
-		echo "${inTaskIds} ${taskid} " >> taskids
+		echo "${inTaskIds2}" >> taskids
 	    fi
 	done < missing_taskids_temp
         rm -f missing_taskids_temp
@@ -513,15 +509,15 @@ do
 
         sixdeskmess -1 "No SIXTRACK misalignment file (fort.8): dummy file created"
 
-        touch "$tree"/"$Rundir"/fort.8
-        gzip "$tree"/"$Rundir"/fort.8
+        touch "$dir16"/fort.8_${i}
+        gzip "$dir16"/fort.8_${i}
     fi
     if [ ! -e "$dir16"/fort.16_"$i".gz ] ;then
 
         sixdeskmess -1 "No SIXTRACK error file (fort.16): dummy file created"
 
-        touch "$tree"/"$Rundir"/fort.16
-        gzip "$tree"/"$Rundir"/fort.16
+        touch "$dir16"/fort.16_${i}
+        gzip "$dir16"/fort.16_${i}
     fi
     #
     #
@@ -579,8 +575,8 @@ do
           else
               damaged=false
               for iFort in 2 3 8 16 ; do
-                  if ! [ -s ${tree}/fort.${iFort}.gz ] ; then
-                      echo "Something really bad, ${tree}/fort.${iFort}.gz does NOT exist!!!"
+                  if ! [ -s ${tree}/${Rundir}/fort.${iFort}.gz ] ; then
+                      echo "Something really bad, ${tree}/${Rundir}/fort.${iFort}.gz does NOT exist!!!"
                       damaged=true
                   fi
                   if ${damaged} ; then
@@ -589,11 +585,11 @@ do
               done
           fi
 # Now add the taskid if missing
-          grep "$Runnam " taskids
+          grep "^${Runnam} " taskids
           if test $? -ne 0
           then
-            echo "$Runnam is MISSING"
-            echo "$Runnam " >> taskids
+            echo "${Runnam} is MISSING"
+            echo "${Runnam} " >> taskids
           fi  
           k=`expr $k + $kstep`
         done
@@ -613,7 +609,7 @@ done
 
 cp -pr * $sixdeskwork/
 cd $sixdeskhome
-rm -rf /tmp/${LOGNAME}/work
+rm -rf ${tmpNodeDir}/work
 
 if [ -s $sixdeskwork/missingDirs.txt ] ; then
     sixdeskmess -1 "missing dirs! please see $sixdeskwork/missingDirs.txt"
