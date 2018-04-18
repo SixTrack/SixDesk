@@ -1,2 +1,42 @@
 \chapter{Introduction} \label{Intro}
-Some words.
+
+\section{Work Flow}
+Show workflow of production of results, both for BOINC (including ``processed''
+folder) and HTCondor.
+
+Retrieval of results depends on the submission platform:
+\begin{itemize}
+\item \texttt{run\_results}: BOINC
+\item \texttt{run\_status}: HTCondor, HTBoinc
+\end{itemize}
+
+\section{The BOINC Platform for Volunteering Computing}
+BOINC vs local batch system (e.g.~HTCondor)
+
+\section{Pre-requisites}
+\SIXDESK{} is native to \texttt{lxplus.cern.ch}. Hence, for running in such
+an environment, the user does not need to set up anything. On the contrary,
+in case of a local machine or other distributed resources,
+
+\begin{table}[h]
+\begin{center}
+    \caption{Pre-Requisites}
+    \label{tab:Pre-Requisites}
+    \begin{tabular}{|l|l|}
+    \hline
+    \rowcolor{blue!30}
+    \textbf{Component} & \textbf{reason} \\
+    \hline
+    kerberos & to renew/check credentials via \texttt{klist} and \texttt{kinit} \\
+    \hline
+    AFS (local mount) & retrieval of optics files \\
+    & submission to BOINC via spooldir\\
+    \hline
+    HTCondor (local installation) & submission of jobs to local batch system \\
+    \hline
+    \texttt{python2.7} & \texttt{SixDB} \\
+    & computation of floating point scan parameters \\
+    \hline
+    \end{tabular}
+\end{center}
+\end{table}
