@@ -1,7 +1,7 @@
 #!/bin/bash
 
-boincServer=boincai08.cern.ch
-sixtrackProjPath=/share/boinc/project/sixtrack
+boincServer=boincai11.cern.ch
+sixtrackProjPath=/usr/local/boinc/project/sixtrack
 spoolDirPath=/afs/cern.ch/work/b/boinc/boinc
 spoolDirTestPath=/afs/cern.ch/work/b/boinc/boinctest
 where=$PWD
@@ -23,14 +23,14 @@ echo " starting `basename $0` at `date` ..."
 if ${lretrieve} ; then
     echo " retrieving submitted WUs and time intervals from log files on ${boincServer} - date: ${tmpDate}"
     # do not use grep -h: the script still needs the study name (from the submit.*.log file)!
-    ssh amereghe@${boincServer} "cd ${sixtrackProjPath}/log_boincai08 ; grep -e $tmpDate submit*log | awk '{sub(/:/,\"\ \",\$0); print (\$0)}' | sort -k2 > ${where}/submitAll_${tmpDate}.txt"
+    ssh amereghe@${boincServer} "cd ${sixtrackProjPath}/log_boincai11 ; grep -e $tmpDate submit*log | awk '{sub(/:/,\"\ \",\$0); print (\$0)}' | sort -k2 > ${where}/submitAll_${tmpDate}.txt"
     echo " reshuffling retrieve info in a more compact and plottable way in submitAll_${tmpDate}.dat ..."
     # $1 is really the study name (from the submit.*.log file)
     # awk '{if ($1!=lastStudy) {print (tStart,lastLine,Ntot); tStart=$2; Ntot=0;} Ntot=Ntot+1; lastLine=$0; lastStudy=$1;}END{print (tStart,$0,Ntot)}' submitAll_${tmpDate}.txt > submitAll_${tmpDate}.dat
     awk '{if ($1!=lastStudy) {if (NR>1) {print (tStart,lastStudy,tStop,Ntot);} tStart=$2; Ntot=0;} Ntot=Ntot+1; lastStudy=$1; tStop=$2;}END{print (tStart,lastStudy,tStop,Ntot)}' submitAll_${tmpDate}.txt > submitAll_${tmpDate}.dat
     # WUs being assimilated
     echo " retrieving assimilated WUs - date: ${tmpDate}"
-    ssh amereghe@${boincServer} "cd ${sixtrackProjPath}/log_boincai08 ; grep Assimilated sixtrack_assimilator.log | grep $tmpDate > ${where}/assimilateAll_${tmpDate}.dat"
+    ssh amereghe@${boincServer} "cd ${sixtrackProjPath}/log_boincai11 ; grep Assimilated sixtrack_assimilator.log | grep $tmpDate > ${where}/assimilateAll_${tmpDate}.dat"
 fi
 
 if ${lgetOwners} ; then
@@ -46,8 +46,8 @@ if ${lgetOwners} ; then
     for uniqueStudyName in ${uniqueStudyNames[@]} ; do
 	spoolDir=''
 	for tmpDir in ${spoolDirPath} ${spoolDirTestPath} ; do
-	    if [ -d ${spoolDirPath}/${uniqueStudyName} ] ; then
-		spoolDir=${spoolDirPath}/${uniqueStudyName}
+	    if [ -d ${tmpDir}/${uniqueStudyName} ] ; then
+		spoolDir=${tmpDir}/${uniqueStudyName}
 		break
 	    fi
 	done
@@ -56,8 +56,8 @@ if ${lgetOwners} ; then
 	    owner="-"
 	    dirOwner="-"
 	else
-	    dirOwner=`ls -ld ${spoolDirPath}/${uniqueStudyName} | awk '{print ($3)}'`
-	    ownerFile=${spoolDirPath}/${uniqueStudyName}/owner
+	    dirOwner=`ls -ld ${spoolDir} | awk '{print ($3)}'`
+	    ownerFile=${spoolDir}/owner
 	    if [ -e ${ownerFile} ] ; then
 		owner=`cat ${ownerFile}`
 	    else

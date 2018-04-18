@@ -2,7 +2,7 @@
 
 # by A.Mereghetti
 
-serverStatusReport=http://lhcathomeclassic.cern.ch/sixtrack/server_status.php
+serverStatusReport=https://lhcathome.cern.ch/lhcathome/server_status.php
 
 # time stamp
 rightNow=`date +"%F %T"`
@@ -17,7 +17,9 @@ echo "new query at: ${rightNow}"
 echo " getting report from server and parsing data..."
 EXIT_STATUS=10
 while [ $EXIT_STATUS -eq 10 ] ; do
-    python parseHTML.py --url ${serverStatusReport} -d ${currDay} -t ${currTim}
+    tmpCommand="python parseHTML.py --url ${serverStatusReport} -d ${currDay} -t ${currTim}"
+    # echo " running command: ${tmpCommand}"
+    ${tmpCommand}
     EXIT_STATUS=$?
     echo " `date` - exit status of parser: $EXIT_STATUS"
     sleep 3

@@ -43,6 +43,8 @@ then
   exit 1
 fi
 source ${SCRIPTDIR}/bash/dot_profile
+# - stuff specific to node where user is running:
+sixdeskSetLocalNodeStuff
 # and make sure we have a studies directory!
 if test ! -d studies
 then

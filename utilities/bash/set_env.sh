@@ -201,7 +201,7 @@ currPlatform=""
 currStudy=""
 tmpPythonPath=""
 origRepoForSetup='https://github.com/amereghe/SixDesk.git'
-origBranchForSetup='newWorkspace'
+origBranchForSetup=`git --git-dir=${SCRIPTDIR}/../.git branch | grep '*' | awk '{print ($NF)}'`
 
 # variables set based on parsing fort.3.local
 
@@ -319,6 +319,8 @@ if [ ! -s ${SCRIPTDIR}/bash/dot_profile ] ; then
 fi
 # - load environment
 source ${SCRIPTDIR}/bash/dot_profile
+# - stuff specific to node where user is running:
+sixdeskSetLocalNodeStuff
 
 # - set up new workspace
 if ${lcrwSpace} ; then
@@ -548,13 +550,15 @@ fi
 sixdeskunlockAll
 
 if ! ${lcptemplate} ; then
-    
-    # - kinit, to renew kerberos ticket
-    sixdeskRenewKerberosToken
+
+    if ${lKerberos} ; then
+        # - kinit, to renew kerberos ticket
+        sixdeskRenewKerberosToken
+    fi
     
     # - fs listquota
     echo ""
-    if [ `echo "${sixdesktrack}" | cut -c-4` == "/afs" ] ; then
+    if [[ "${sixdesktrack}" == "/afs"* ]] ; then
 	sixdeskmess -1 " --> fs listquota ${sixdesktrack}:"
 	tmpLines=`fs listquota ${sixdesktrack}`
 	echo "${tmpLines}"
@@ -564,8 +568,8 @@ if ! ${lcptemplate} ; then
 	    sixdeskmess -1 "WARNING: your quota is above 90%!! pay attention to occupancy of the current study, in case of submission..."
 	fi
     else
-	sixdeskmess -1 " --> df -Th:"
-	\df -Th
+	sixdeskmess -1 " --> df -Th ${sixdesktrack}:"
+	\df -Th ${sixdesktrack}
 	sixdeskmess -1 " the above output is at your convenience, for you to check disk space"
     fi
 

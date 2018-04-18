@@ -138,7 +138,8 @@ bool files_match(RESULT &r1, FILE_CKSUM_LIST& f1, const RESULT &r2, FILE_CKSUM_L
 		       "[RESULT#%d %d] compare_results: case of zero turns pos= %d %d %d %d turns: %.0f %.0f version: %.0f %.0f\n",
 			r1id,r2id,ns1,ns2,w1,w2,turn1,turn2,vers1,vers2);
 
-			return true;   // COMPARE TRUE for now, may need to change this !!!
+// change 08/11/2017			return true;   // COMPARE TRUE for now, may need to change this !!!
+			return false;   // COMPARE TRUE for now, may need to change this !!!
 		   }
                    log_messages.printf(MSG_DEBUG,
 		       "[RESULT#%d %d] compare_results: differ in #doubles pos= %d %d %d %d turns: %.0f %.0f version: %.0f %.0f\n",
