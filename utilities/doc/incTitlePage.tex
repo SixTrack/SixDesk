@@ -23,14 +23,28 @@
 \begin{center}\large
     \vspace*{10mm}\textbf{Abstract} \\
 \end{center}
-SixTrack is a single particle tracking code widely used at CERN. One of the
+\SIXTRACK{}~\cite{SixTrack_user_manual} is a single particle tracking
+code widely used at CERN. One of its
 most important applications is the estimation of the dynamic aperture available
 in large storage rings like the Large Hadron Collider (LHC) or the Future
 Circular Collider (FCC). These studies require massive computing resources,
-consisting of scans over large parameter spaces probing non-linear beam
-dynamics over long times. The SixDesk environment is the simulation framework
-used to manage and control the large amount of information necessary for and
-produced by the studies.
+since they consist of scans over large parameter spaces probing non-linear beam
+dynamics over long times.
+The \SIXDESK{}~\cite{SixDesk_original,SixDesk_updated} environment is the
+simulation framework used to manage and control the large amount of
+information necessary for and produced by the studies. \\
+This document updates the previous documentation, and describes how massive
+tracking campaigns can be performed with \SIXTRACK{}
+starting from a \MADX{} ``mask'' file.
+The \SIXDESK{} environment is an ensemble of shell scripts and configuration
+files, aimed at easing the everyday life of the user interested in performing
+large parameter scans with \SIXTRACK{}.
+% It describes a new set
+% of UNIX BASH or Korn shell scripts which allow the use of the Berkeley Open
+% Infrastructure for Network Computing, BOINC~\cite{Boinc}) as an alternative to
+% the Linux LSF batch system. This note is also published and regularly updated
+% on the web page
+% \myhref{http://cern.ch/sixtrack-ng/doc/sixdesk/sixdesk_env.html}{cern.ch/sixtrack-ng/doc/sixdesk/sixdesk\_env.html}.
 \vfill
 \begin{center}
     Geneva, Switzerland \\
