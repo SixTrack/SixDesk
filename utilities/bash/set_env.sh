@@ -41,6 +41,8 @@ function how_to_use() {
                without overwriting
    -l      use fort.3.local. This file will be added to the list of necessary
                input files only in case this flag will be issued.
+   -c      take into account also scan_definitions file. This option is available
+               only in conjunction with -n
    -P      python path
    -v      verbose (OFF by default)
 
@@ -196,6 +198,7 @@ lcrwSpace=false
 loverwrite=true
 lverbose=false
 llocalfort3=false
+lScanDefs=false
 lunlock=false
 currPlatform=""
 currStudy=""
@@ -208,7 +211,7 @@ origBranchForSetup=`git --git-dir=${SCRIPTDIR}/../.git branch | grep '*' | awk '
 nActions=0
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hsvld:ep:P:nN:U" opt ; do
+while getopts  ":hsvlcd:ep:P:nN:U" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -246,6 +249,10 @@ while getopts  ":hsvld:ep:P:nN:U" opt ; do
 	l)
 	    # use fort.3.local
 	    llocalfort3=true
+	    ;;
+	c)
+	    # use scan_definitions
+	    lScanDefs=true
 	    ;;
 	P)
 	    # the user is requesting a specific path to python
@@ -301,7 +308,21 @@ if ${llocalfort3} ; then
     echo ""
     echo "--> User requested inclusion of fort.3.local"
     echo ""
-    necessaryInputFiles=( sixdeskenv sysenv fort.3.local )
+    necessaryInputFiles=( "${necessaryInputFiles[@]} fort.3.local" )
+fi
+if ${lScanDefs} ; then
+    if ${lcptemplate} ; then
+        echo ""
+        echo "--> User requested inclusion of scan_definitions"
+        echo ""
+        necessaryInputFiles=( "${necessaryInputFiles[@]} scan_definitions" )
+    else
+        echo ""
+        echo "--> Inclusion of scan_definitions avaiable only in case of copy"
+        echo "-->    of template files. De-activating it."
+        echo ""
+        lScanDefs=false
+    fi
 fi
 
 # ------------------------------------------------------------------------------
