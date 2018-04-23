@@ -1,0 +1,225 @@
+#!/bin/bash
+
+
+source scan_definitions
+
+# ------------------------------------------------------------------------------
+# preparatory steps
+# ------------------------------------------------------------------------------
+
+export sixdeskhostname=`hostname`
+export sixdeskname=`basename $0`
+export sixdeskroot=`basename $PWD`
+export sixdeskwhere=`dirname $PWD`
+# Set up some temporary values until we execute sixdeskenv/sysenv
+# Don't issue lock/unlock debug text (use 2 for that)
+export sixdesklogdir=""
+export sixdesklevel=1
+export sixdeskhome="."
+export sixdeskecho="yes!"
+if [ ! -s ${SixDeskDev}/dot_profile ] ; then
+    echo "${SixDeskDev}"
+    echo "dot_profile is missing!!!"
+    #    exit 1
+else
+    source ${SixDeskDev}/dot_profile
+fi
+
+
+
+sixdeskmessleveldef=0
+sixdeskmesslevel=$sixdeskmessleveldef
+
+
+
+function set_env_to_mask(){     
+    local __study
+
+    if [ $# -eq 1 ]; then
+	__study=${1}
+    else
+	__study=${study}
+    fi
+
+    echo "Setting sixdeskenv to ${__study}"
+
+    cat sixdeskenv |\
+	sed -e "s/export LHCDescrip=.*/export LHCDescrip=${__study}/" > sixdeskenv.new
+    mv sixdeskenv.new sixdeskenv
+    
+    ${SixDeskDev}/set_env.sh -s 
+    
+}
+
+
+
+
+function make_array_with_delimiter(){
+    # reads an array and returns a string with the array entries separated by the delimiter "|"
+    # example:
+    #             In: make_array_with_delimiter "1 2 3"
+    #            Out: |1|2|3|
+    # this function is used as a helper function, because bash can't handle arrays of arrays
+    
+    local _array=${1}
+    local _string=""
+    local _element
+    
+    for _element in ${_array[@]}; do
+        _string="${_string}|${_element}"
+    done
+    _string="${_string}|"
+    echo ${_string}
+}
+
+
+
+function make_mask_names() {
+    # create an an array containing the names of the mask files depending on the input given in scan_definitions
+    
+    scan_vars=(${scan_variables})
+
+    local _result="${scan_prefix}"
+    local _arg
+    local _x
+    local _xx
+    local _r
+    local _new
+
+    i=0
+    for _arg in "${@:1}"                  # skip the first arg ( function name )
+    do
+	IFS='|' read -ra _arg <<< "$_arg"   # split at delimiter "|"
+	_arg="${_arg[@]}"
+	if [[ ! -z "${_arg// }" ]]          # test if the argument is not whites only
+	then
+	    _new=""
+	    for _r in $_result                # take all the old strings...
+	    do
+		for _x in $_arg
+		do
+		    _xx="${scan_vars[i]}_${_x}"
+		    _new="$_new ${_r}_${_xx}"     # ...and append the new parameter
+		done
+	    done
+	    _result=${_new:1}                 # strip the leading space
+	fi
+	((i++))      
+    done
+    
+    scan_studies=${_result}
+    scan_studies=(${scan_studies})
+  
+}
+
+
+
+
+function make_mask_values() {
+    # create an an array containing the scan values of the mask files depending on the input given in scan_definitions
+    local _result="%"
+    local _arg
+    local _x
+    local _xx
+    local _r
+    local _new
+
+    i=0
+    for _arg in "${@:1}"                  # skip the first arg ( function name )
+    do
+	IFS='|' read -ra _arg <<< "$_arg"   # split at delimiter "|"
+	_arg="${_arg[@]}"  
+	if [[ ! -z "${_arg// }" ]]          # test if the argument is not whites only
+	then
+	    _new=""
+	    for _r in $_result                # take all the old strings...
+	    do
+		for _x in $_arg
+		do
+		    _new="$_new ${_r}%${_x}"     # ...and append the new parameter
+		done
+	    done
+	    _result=${_new:1}                 # strip the leading space
+	fi
+	((i++))      
+    done
+    
+    mask_values=${_result}
+    mask_values=(${mask_values})
+  
+}
+
+
+
+function get_arguments_make_mask(){
+    # creates the argument required for make_mask_value and make_mask_names
+    local _v
+    local _V
+    local _Z
+    local _Y
+    local _arg
+    
+    arguments=""
+    for _v in ${scan_vars[@]}; do
+	_V=_v
+	eval "_Z=scan_vals_\$$_V"           # create the variable scan_vals_B
+	eval "_Y=\$$_Z"                     # read the value of the variable scan_vals_B
+	_arg=$(make_array_with_delimiter "${_Y}")
+	arguments="${arguments} ${_arg}"
+    done
+    
+}
+
+
+
+function get_study_names(){
+
+    if ! ${scan_masks}; then
+	scan_vars=(${scan_variables})
+	get_arguments_make_mask
+	make_mask_names  ${arguments}
+	make_mask_values ${arguments}
+    else
+	sixdeskmess -1 "scan_masks set to TRUE, using defined list of mask names"
+	scan_studies=(${scan_studies})
+    fi
+   
+}
+
+
+function set_env_to_mask(){   
+    cat sixdeskenv |\
+      sed -e "s/export LHCDescrip=.*/export LHCDescrip=${study}/" > sixdeskenv.new
+    mv sixdeskenv.new sixdeskenv
+    ${SixDeskDev}/set_env.sh -s 
+}
+
+
+function scan_loop(){
+
+    local _var
+
+    i=0
+    for study in ${scan_studies[@]}; do
+	set_env_to_mask ${study}
+
+	for _var in "$@"
+	do
+	    ${_var}
+	done
+    ((i++))
+    done
+    
+    
+    }
+
+
+
+
+
+
+
+#### MAIN
+
+get_study_names
+
