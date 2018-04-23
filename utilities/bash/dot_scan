@@ -214,6 +214,70 @@ function scan_loop(){
     }
 
 
+function generate_mask_file(){
+
+    local _val
+    local _j
+    local _placeholders=(${scan_placeholders})
+    local _placeholder
+    local _
+    local _tmpmask="mask/${scan_prefix}_temp.mask"
+
+    cp mask/${scan_prefix}.mask ${_tmpmask}            # copy mask template to other name to be working on
+
+    mask_vals=${mask_values[i]:2}                      # read the mask variable values for the particular studies
+
+    IFS='%' read -a values <<< "${mask_vals}"          # split the string
+
+    _j=0
+    for _ in ${values[@]}; do                          # replace the individual placeholders in the tmp mask file
+
+	_placeholder=${_placeholders[${_j}]}           # the placeholder to be substituted in the mask file
+	_val=${values[${_j}]}                          # the value this placeholder shall be replaced with
+
+
+	if ${do_placeholder_check}; then                            # check if all placeholders are existing in mask file
+	    check_mask_for_placeholder ${_placeholder} ${_tmpmask}
+	fi
+
+	sed -i "s/${_placeholder}/${_val}/g" ${_tmpmask}
+
+	((_j++))
+    done
+
+    sixdeskmess -1 "Generated mask file: ${study}.mask"
+    mv ${_tmpmask} mask/${study}.mask                  # move tmp mask file to definite name
+
+
+}
+
+function check_mask_for_placeholder(){
+    local _placeholder=${1}
+    local _tmpmask=${2}
+
+    if ! grep -q "${_placeholder}" "${_tmpmask}"; then
+	sixdeskmess -1 "WARNING: Placeholder ${_placeholder} not found in raw mask file ${_tmpmask}!"
+	sixdeskmess -1 "Continue? [y/n]"
+	mask_integrity_error_message
+    fi
+}
+
+function mask_integrity_error_message(){
+	read answer
+	case ${answer} in
+	    [yY] | [yY][Ee][Ss] )
+		sixdeskmess -1 "Continuing..."
+		do_placeholder_check=false
+                ;;
+	    [nN] | [n|N][O|o] )
+                sixdeskmess -1  "Interrupted, please modify mask file or check scan_definitions";
+                exit 1
+                ;;
+	    *) sixdeskmess -1 "Invalid input"
+	       ;;
+	esac
+}
+
 
 
 
