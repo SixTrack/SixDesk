@@ -12,15 +12,15 @@ scan_placeholders="%QPV %OCV"
 
 # specify the prefix of the study name
 # e.g. if the base mask file is called hl13B1.mask, we use:
-# scan_prefix="hl13B1"
-scan_prefix="hl13B1"
+# scan_prefix="hl10BaseB1"
+scan_prefix="hl10BaseB1"
 
 # specify the values to be taken by the different variables
 # if we want to use 14 for QP and values between 0 and 40 in steps of 40 for IOCT:
-# scan_vals_QP="14"
-# scan_vals_IOCT=$(seq 0 4 40)
-scan_vals_QP="14"
-scan_vals_IOCT=$(seq 0 4 40)
+# scan_vals_QP="3"
+# scan_vals_IOCT=$(seq -500 200 500)
+scan_vals_QP="3"
+scan_vals_IOCT=$(seq -500 200 500)
 
 
 ############################## SCAN OVER SPECIFIC MASKS  #######################

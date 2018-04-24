@@ -142,10 +142,19 @@ if ${lcommand} ; then
         exit 1
     fi
     case ${desiredScript} in
-        mad6t.sh | run_six.sh | set_env.sh | run_results | run_status | sixdb.sh ) lSetEnv=false ;;
-        *) lSetEnv=false ;;
+        mad6t.sh | run_six.sh | set_env.sh | sixdb.sh )
+            # no need to run set_env.sh for loading the study, but -d option is required
+            scan_loop "${SCRIPTDIR}/bash/${tmpCommand} -d" false ${llocalfort3}
+            ;;
+        run_results | run_status )
+            # no need to run set_env.sh for loading the study, but study name is required
+            scan_loop "${SCRIPTDIR}/bash/${tmpCommand}" false ${llocalfort3}
+            ;;
+        *)
+            scan_loop "${SCRIPTDIR}/bash/${tmpCommand}" true ${llocalfort3}
+            ;;
     esac
-    scan_loop "${SCRIPTDIR}/bash/${tmpCommand}" ${lSetEnv} ${llocalfort3}
+    
 fi
 
 # ------------------------------------------------------------------------------

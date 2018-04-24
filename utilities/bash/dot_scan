@@ -99,9 +99,9 @@ function get_arguments_make_mask(){
 ############################    generate study   ############################
 
 function set_study(){
-    # global vars: study
-    sed -i -e "s/export LHCDescrip=.*/export LHCDescrip=${study}/" sixdeskenv
-    if [ "$1" == "-l" ] ; then
+    local _study=$1
+    sed -i -e "s/export LHCDescrip=.*/export LHCDescrip=${_study}/" sixdeskenv
+    if [ "$2" == "-l" ] ; then
         ${SCRIPTDIR}/bash/set_env.sh -s -l
     else
         ${SCRIPTDIR}/bash/set_env.sh -s
@@ -113,14 +113,15 @@ function set_study(){
 function generate_mask_file(){
     # generate mask files from a template in mask dir
     # function to be called in sixjobs
-    # global vars: study, iStudy
+    # global vars: iStudy
     
     local _val
     local _j
     local _placeholders=(${scan_placeholders})
     local _placeholder
+    local _study=$1
     local _orimask=mask/${scan_prefix}.mask
-    local _tmpmask=mask/${study}.mask
+    local _tmpmask=mask/${_study}.mask
 
     # read the mask variable values for the particular studies
     mask_vals=${mask_values[$iStudy]:2}
@@ -182,11 +183,11 @@ function scan_loop(){
         fi
         # command (-d ${study} not used in case of functions)
         if ${__llocalfort3} ; then
-            echo "--> running command: ${__tmpCommand} -l -d ${study}"
-            ${__tmpCommand} -l -d ${study}
+            echo "--> running command: ${__tmpCommand} ${study} -l"
+            ${__tmpCommand} ${study} -l
         else
-            echo "--> running command: ${__tmpCommand} -d ${study}"
-            ${__tmpCommand} -d ${study}
+            echo "--> running command: ${__tmpCommand} ${study}"
+            ${__tmpCommand} ${study}
         fi
         # get ready for new iteration
         ((iStudy++))
