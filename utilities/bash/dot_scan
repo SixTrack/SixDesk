@@ -17,7 +17,7 @@ function make_array_with_delimiter(){
         _string="${_string}|${_element}"
     done
     _string="${_string}|"
-    # debug
+    # output result
     echo ${_string}
 }
 
@@ -98,10 +98,14 @@ function get_arguments_make_mask(){
 
 ############################    generate study   ############################
 
-function set_study(){   
-    # study name taken from study var
+function set_study(){
+    # global vars: study
     sed -i -e "s/export LHCDescrip=.*/export LHCDescrip=${study}/" sixdeskenv
-    ${SCRIPTDIR}/bash/set_env.sh -s 
+    if [ "$1" == "-l" ] ; then
+        ${SCRIPTDIR}/bash/set_env.sh -s -l
+    else
+        ${SCRIPTDIR}/bash/set_env.sh -s
+    fi
 }
 
 ############################ generate mask files ############################
@@ -133,7 +137,6 @@ function generate_mask_file(){
         # concatenate actual sed commands
         __sedCommand="${__sedCommand} -e \"s?${_placeholder}?${_val}?g\""
     done
-    echo "sed ${__sedCommand} ${_orimask} > ${_tmpmask}"
     eval "sed ${__sedCommand} ${_orimask} > ${_tmpmask}"
     sixdeskmess -1 "Generated mask file: ${_tmpmask}"
 }
