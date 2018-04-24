@@ -1,58 +1,6 @@
 #!/bin/bash
 
-
-source scan_definitions
-
-# ------------------------------------------------------------------------------
-# preparatory steps
-# ------------------------------------------------------------------------------
-
-export sixdeskhostname=`hostname`
-export sixdeskname=`basename $0`
-export sixdeskroot=`basename $PWD`
-export sixdeskwhere=`dirname $PWD`
-# Set up some temporary values until we execute sixdeskenv/sysenv
-# Don't issue lock/unlock debug text (use 2 for that)
-export sixdesklogdir=""
-export sixdesklevel=1
-export sixdeskhome="."
-export sixdeskecho="yes!"
-if [ ! -s ${SixDeskDev}/dot_profile ] ; then
-    echo "${SixDeskDev}"
-    echo "dot_profile is missing!!!"
-    #    exit 1
-else
-    source ${SixDeskDev}/dot_profile
-fi
-
-
-
-sixdeskmessleveldef=0
-sixdeskmesslevel=$sixdeskmessleveldef
-
-
-
-function set_env_to_mask(){     
-    local __study
-
-    if [ $# -eq 1 ]; then
-	__study=${1}
-    else
-	__study=${study}
-    fi
-
-    echo "Setting sixdeskenv to ${__study}"
-
-    cat sixdeskenv |\
-	sed -e "s/export LHCDescrip=.*/export LHCDescrip=${__study}/" > sixdeskenv.new
-    mv sixdeskenv.new sixdeskenv
-    
-    ${SixDeskDev}/set_env.sh -s 
-    
-}
-
-
-
+############################ build study/mask names #########################
 
 function make_array_with_delimiter(){
     # reads an array and returns a string with the array entries separated by the delimiter "|"
@@ -69,87 +17,65 @@ function make_array_with_delimiter(){
         _string="${_string}|${_element}"
     done
     _string="${_string}|"
+    # debug
     echo ${_string}
 }
 
-
-
-function make_mask_names() {
-    # create an an array containing the names of the mask files depending on the input given in scan_definitions
+function make_mask_names_values() {
+    # create two arrays containing the names and the values of the mask files,
+    #    depending on the input given in scan_definitions
     
     scan_vars=(${scan_variables})
 
-    local _result="${scan_prefix}"
+    local _result_names="${scan_prefix}"
+    local _result_values="%"
     local _arg
     local _x
     local _xx
     local _r
     local _new
 
-    i=0
-    for _arg in "${@:1}"                  # skip the first arg ( function name )
-    do
-	IFS='|' read -ra _arg <<< "$_arg"   # split at delimiter "|"
+    for _arg in "${@:1}" ; do                   # skip the first arg ( function name )
+	IFS='|' read -ra _arg <<< "$_arg"       # split at delimiter "|"
 	_arg="${_arg[@]}"
-	if [[ ! -z "${_arg// }" ]]          # test if the argument is not whites only
-	then
+	if [[ ! -z "${_arg// }" ]] ; then       # test if the argument is not whites only
+            # - names
 	    _new=""
-	    for _r in $_result                # take all the old strings...
-	    do
-		for _x in $_arg
-		do
-		    _xx="${scan_vars[i]}_${_x}"
-		    _new="$_new ${_r}_${_xx}"     # ...and append the new parameter
+	    for _r in $_result_names ; do       # take all the old strings...
+		for _x in $_arg ; do
+		    _xx="${scan_vars[i]}_${_x}" 
+		    _new="$_new ${_r}_${_xx}"   # ...and append the new parameter
 		done
 	    done
-	    _result=${_new:1}                 # strip the leading space
+	    _result_names=${_new:1}             # strip the leading space
+            # - values
+	    _new=""
+	    for _r in $_result_values ; do      # take all the old strings...
+		for _x in $_arg ; do
+		    _new="$_new ${_r}%${_x}"    # ...and append the new parameter
+		done
+	    done
+	    _result_values=${_new:1}            # strip the leading space
 	fi
-	((i++))      
     done
     
-    scan_studies=${_result}
+    scan_studies=${_result_namse}
     scan_studies=(${scan_studies})
-  
-}
-
-
-
-
-function make_mask_values() {
-    # create an an array containing the scan values of the mask files depending on the input given in scan_definitions
-    local _result="%"
-    local _arg
-    local _x
-    local _xx
-    local _r
-    local _new
-
-    i=0
-    for _arg in "${@:1}"                  # skip the first arg ( function name )
-    do
-	IFS='|' read -ra _arg <<< "$_arg"   # split at delimiter "|"
-	_arg="${_arg[@]}"  
-	if [[ ! -z "${_arg// }" ]]          # test if the argument is not whites only
-	then
-	    _new=""
-	    for _r in $_result                # take all the old strings...
-	    do
-		for _x in $_arg
-		do
-		    _new="$_new ${_r}%${_x}"     # ...and append the new parameter
-		done
-	    done
-	    _result=${_new:1}                 # strip the leading space
-	fi
-	((i++))      
-    done
-    
-    mask_values=${_result}
+    mask_values=${_result_values}
     mask_values=(${mask_values})
   
 }
 
-
+function get_study_names(){
+    if ! ${scan_masks}; then
+	get_arguments_make_mask
+	make_mask_names  ${arguments}
+	make_mask_values ${arguments}
+    else
+	sixdeskmess -1 "scan_masks set to TRUE, using defined list of mask names"
+	scan_studies=(${scan_studies})
+    fi
+}
 
 function get_arguments_make_mask(){
     # creates the argument required for make_mask_value and make_mask_names
@@ -160,130 +86,105 @@ function get_arguments_make_mask(){
     local _arg
     
     arguments=""
-    for _v in ${scan_vars[@]}; do
+    for _v in ${scan_variables}; do
 	_V=_v
 	eval "_Z=scan_vals_\$$_V"           # create the variable scan_vals_B
 	eval "_Y=\$$_Z"                     # read the value of the variable scan_vals_B
 	_arg=$(make_array_with_delimiter "${_Y}")
 	arguments="${arguments} ${_arg}"
     done
-    
 }
 
+############################    generate study   ############################
 
-
-function get_study_names(){
-
-    if ! ${scan_masks}; then
-	scan_vars=(${scan_variables})
-	get_arguments_make_mask
-	make_mask_names  ${arguments}
-	make_mask_values ${arguments}
-    else
-	sixdeskmess -1 "scan_masks set to TRUE, using defined list of mask names"
-	scan_studies=(${scan_studies})
-    fi
-   
+function set_study(){   
+    # study name taken from study var
+    sed -i -e "s/export LHCDescrip=.*/export LHCDescrip=${study}/" sixdeskenv
+    ${SCRIPTDIR}/bash/set_env.sh -s 
 }
 
-
-function set_env_to_mask(){   
-    cat sixdeskenv |\
-      sed -e "s/export LHCDescrip=.*/export LHCDescrip=${study}/" > sixdeskenv.new
-    mv sixdeskenv.new sixdeskenv
-    ${SixDeskDev}/set_env.sh -s 
-}
-
-
-function scan_loop(){
-
-    local _var
-
-    i=0
-    for study in ${scan_studies[@]}; do
-	set_env_to_mask ${study}
-
-	for _var in "$@"
-	do
-	    ${_var}
-	done
-    ((i++))
-    done
-    
-    
-    }
-
+############################ generate mask files ############################
 
 function generate_mask_file(){
-
+    # generate mask files from a template in mask dir
+    # function to be called in sixjobs
+    # study name taken from study var
+    
     local _val
     local _j
     local _placeholders=(${scan_placeholders})
     local _placeholder
-    local _
     local _tmpmask="mask/${scan_prefix}_temp.mask"
 
-    cp mask/${scan_prefix}.mask ${_tmpmask}            # copy mask template to other name to be working on
+    # copy mask template to other name to be working on
+    cp mask/${scan_prefix}.mask ${_tmpmask}
 
-    mask_vals=${mask_values[i]:2}                      # read the mask variable values for the particular studies
+    # read the mask variable values for the particular studies
+    mask_vals=${mask_values[i]:2}
+    # split the string
+    IFS='%' read -a values <<< "${mask_vals}"
 
-    IFS='%' read -a values <<< "${mask_vals}"          # split the string
+    # replace the individual placeholders in the tmp mask file
+    for (( _j=0; _j<=${#values[@]}; _j++ )) ; do
+        # the placeholder to be substituted in the mask file
+	_placeholder=${_placeholders[${_j}]}
+        # the value this placeholder shall be replaced with
+	_val=${values[${_j}]}
 
-    _j=0
-    for _ in ${values[@]}; do                          # replace the individual placeholders in the tmp mask file
-
-	_placeholder=${_placeholders[${_j}]}           # the placeholder to be substituted in the mask file
-	_val=${values[${_j}]}                          # the value this placeholder shall be replaced with
-
-
-	if ${do_placeholder_check}; then                            # check if all placeholders are existing in mask file
-	    check_mask_for_placeholder ${_placeholder} ${_tmpmask}
-	fi
+        # check if all placeholders are existing in mask file
+	[ ! ${lPlaceHolderCheck} ] || check_mask_for_placeholder ${_placeholder} ${_tmpmask}
 
 	sed -i "s/${_placeholder}/${_val}/g" ${_tmpmask}
-
-	((_j++))
     done
 
     sixdeskmess -1 "Generated mask file: ${study}.mask"
-    mv ${_tmpmask} mask/${study}.mask                  # move tmp mask file to definite name
-
-
+    mv ${_tmpmask} mask/${study}.mask
 }
 
 function check_mask_for_placeholder(){
+    # check presence of placeholder and ask what to do in case
+    #     it is not found
     local _placeholder=${1}
     local _tmpmask=${2}
 
     if ! grep -q "${_placeholder}" "${_tmpmask}"; then
 	sixdeskmess -1 "WARNING: Placeholder ${_placeholder} not found in raw mask file ${_tmpmask}!"
-	sixdeskmess -1 "Continue? [y/n]"
-	mask_integrity_error_message
+	sixdeskConfirmExit
+        if [ $? -ne 0 ] ; then
+            sixdeskmess -1  "Please modify mask file or check scan_definitions";
+            exit 1
+        fi
     fi
 }
 
-function mask_integrity_error_message(){
-	read answer
-	case ${answer} in
-	    [yY] | [yY][Ee][Ss] )
-		sixdeskmess -1 "Continuing..."
-		do_placeholder_check=false
-                ;;
-	    [nN] | [n|N][O|o] )
-                sixdeskmess -1  "Interrupted, please modify mask file or check scan_definitions";
-                exit 1
-                ;;
-	    *) sixdeskmess -1 "Invalid input"
-	       ;;
-	esac
+############################      actual loop    ############################
+
+function scan_loop(){
+    local __tmpCommand=$1
+    local __lSetEnv=$2
+    local __llocalfort3=$3
+    
+    for study in ${scan_studies[@]} ; do
+        echo ""
+        printf "#%.0s" {1..80}
+        echo ""
+        # set_env.sh beforehand
+        if ${__lSetEnv} ; then
+            if ${__llocalfort3} ; then
+                echo "--> running: ${SCRIPTDIR}/bash/set_env.sh -l -d ${study}"
+                ${SCRIPTDIR}/bash/set_env.sh -l -d ${study}
+            else
+                echo "--> running: ${SCRIPTDIR}/bash/set_env.sh -d ${study}"
+                ${SCRIPTDIR}/bash/set_env.sh -d ${study}
+            fi
+        fi
+        # command (-d ${study} not used in case of functions)
+        if ${__llocalfort3} ; then
+            echo "--> running command: ${__tmpCommand} -l -d ${study}"
+            ${__tmpCommand} -l -d ${study}
+        else
+            echo "--> running command: ${__tmpCommand} -d ${study}"
+            ${__tmpCommand} -d ${study}
+        fi
+    done
 }
-
-
-
-
-
-
-#### MAIN
-
-get_study_names
-

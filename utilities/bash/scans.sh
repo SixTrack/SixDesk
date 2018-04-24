@@ -9,9 +9,14 @@ function how_to_use() {
    -h      displays this help
 
     actions
-    -M      create the mask files for all studies
+    -m      create the mask files for all studies
+    -s      set all the studies
     -x      loop the given command over all studies
 
+    options
+    -c      do NOT check existence of placeholders before generating the .mask files
+            effective only in case of -m action
+    -l      use fort.3.local
 
 EOF
 }
@@ -33,30 +38,31 @@ fi
 
 # actions
 lcreatemask=false
+lsetstudy=false
 lcommand=false
 # options
 tmpCommand=""
+lPlaceHolderCheck=true
+llocalfort3=false
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hMx:" opt ; do
+while getopts  ":hmlcsx:" opt ; do
     case $opt in
-	M)  lcreatemask=true
-	    ;;
-	h)
-	    how_to_use
+        c)  lPlaceHolderCheck=false  ;;
+	h)  how_to_use
 	    exit 1
 	    ;;
-        x)
-            lcommand=true
+        l)  llocalfort3=true ;;
+	m)  lcreatemask=true ;;
+        s)  lsetstudy=true  ;;
+        x)  lcommand=true
             tmpCommand="${OPTARG}"
             ;;
-	:)
-	    how_to_use
+	:)  how_to_use
 	    echo "Option -$OPTARG requires an argument."
 	    exit 1
 	    ;;
-	\?)
-	    how_to_use
+	\?) how_to_use
 	    echo "Invalid option: -$OPTARG"
 	    exit 1
 	    ;;
@@ -65,7 +71,7 @@ done
 shift "$(($OPTIND - 1))"
 
 # check actions
-if ! ${lcommand} && ! ${lcreatemask} ; then
+if ! ${lcommand} && ! ${lcreatemask} && ! ${lsetstudy} ; then
     how_to_use
     echo "ERROR: no action specified"
     exit 1
@@ -101,13 +107,27 @@ source ${SCRIPTDIR}/bash/dot_profile
 source ${SCRIPTDIR}/bash/dot_scan
 # - stuff specific to node where user is running:
 sixdeskSetLocalNodeStuff
+# - source definition of scans
+source scan_definitions
+# - get list of studies
+get_study_names
 
-# actions:
+# ------------------------------------------------------------------------------
+# actions
+# ------------------------------------------------------------------------------
+
 # - create mask files:
 if ${lcreatemask}; then
     sixdeskmess 1 "Creating mask file"
-    scan_loop generate_mask_file
+    scan_loop generate_mask_file false false
 fi
+
+# - create the studies
+if ${lsetstudy} ; then
+    sixdeskmess 1 "Creating studies"
+    scan_loop set_study false ${llocalfort3}
+fi
+
 # - run an actual command available in SixDesk
 if ${lcommand} ; then
     # check that desired script is there
@@ -117,7 +137,16 @@ if ${lcommand} ; then
         sixdeskmess -1 "script ${desiredScript} not available in ${SCRIPTDIR}/bash !!"
         exit 1
     fi
-    scan_loop "${SCRIPTDIR}/bash/${tmpCommand}"
+    case ${desiredScript} in
+        mad6t.sh | run_six.sh | set_env.sh | run_results | run_status | sixdb.sh ) lSetEnv=false ;;
+        *) lSetEnv=false ;;
+    esac
+    scan_loop "${SCRIPTDIR}/bash/${tmpCommand}" ${lSetEnv} ${llocalfort3}
 fi
 
+# ------------------------------------------------------------------------------
+# go home, man
+# ------------------------------------------------------------------------------
+
+sixdeskmess -1 "...done."
 exit 0
