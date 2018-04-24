@@ -1,6 +1,6 @@
 #!/bin/bash
 
-############################## SCAN OVER A CARTESIAN GRID ################################
+############################## SCAN OVER A CARTESIAN GRID ######################
 
 # specify the variable names to be used in naming the studies, e.g.:
 # scan_variables="QP IOCT"
@@ -23,7 +23,7 @@ scan_vals_QP="14"
 scan_vals_IOCT=$(seq 0 4 40)
 
 
-############################## SCAN OVER SPECIFIC MASKS  ################################
+############################## SCAN OVER SPECIFIC MASKS  #######################
 
 # THIS OPTION REQUIRES ALL THE MASK FILES TO BE EXISTING
 

@@ -8,15 +8,15 @@ function how_to_use() {
 
    -h      displays this help
 
-    actions
-    -m      create the mask files for all studies
-    -s      set all the studies
-    -x      loop the given command over all studies
+   actions
+   -m      create the mask files for all studies
+   -s      set all the studies
+   -x      loop the given command over all studies
 
-    options
-    -c      do NOT check existence of placeholders before generating the .mask files
-            effective only in case of -m action
-    -l      use fort.3.local
+   options
+   -c      do NOT check existence of placeholders before generating the .mask files
+           effective only in case of -m action
+   -l      use fort.3.local
 
 EOF
 }
@@ -118,13 +118,17 @@ get_study_names
 
 # - create mask files:
 if ${lcreatemask}; then
-    sixdeskmess 1 "Creating mask file"
+    if ${lPlaceHolderCheck} ; then
+        sixdeskmess -1 "Checking if all placeholders are existing in mask file "
+	check_mask_for_placeholders
+    fi
+    sixdeskmess -1 "Creating mask files"
     scan_loop generate_mask_file false false
 fi
 
 # - create the studies
 if ${lsetstudy} ; then
-    sixdeskmess 1 "Creating studies"
+    sixdeskmess -1 "Creating studies"
     scan_loop set_study false ${llocalfort3}
 fi
 

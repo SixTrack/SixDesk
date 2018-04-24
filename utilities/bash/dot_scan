@@ -34,43 +34,44 @@ function make_mask_names_values() {
     local _xx
     local _r
     local _new
-
+    
+    local __iArg=0
     for _arg in "${@:1}" ; do                   # skip the first arg ( function name )
 	IFS='|' read -ra _arg <<< "$_arg"       # split at delimiter "|"
 	_arg="${_arg[@]}"
 	if [[ ! -z "${_arg// }" ]] ; then       # test if the argument is not whites only
             # - names
 	    _new=""
-	    for _r in $_result_names ; do       # take all the old strings...
+	    for _r in ${_result_names} ; do     # take all the old strings...
 		for _x in $_arg ; do
-		    _xx="${scan_vars[i]}_${_x}" 
+		    _xx="${scan_vars[__iArg]}_${_x}" 
 		    _new="$_new ${_r}_${_xx}"   # ...and append the new parameter
 		done
 	    done
 	    _result_names=${_new:1}             # strip the leading space
             # - values
 	    _new=""
-	    for _r in $_result_values ; do      # take all the old strings...
+	    for _r in ${_result_values} ; do    # take all the old strings...
 		for _x in $_arg ; do
 		    _new="$_new ${_r}%${_x}"    # ...and append the new parameter
 		done
 	    done
 	    _result_values=${_new:1}            # strip the leading space
 	fi
+        ((__iArg++))
     done
     
-    scan_studies=${_result_namse}
+    scan_studies=${_result_names}
     scan_studies=(${scan_studies})
     mask_values=${_result_values}
     mask_values=(${mask_values})
-  
+
 }
 
 function get_study_names(){
     if ! ${scan_masks}; then
 	get_arguments_make_mask
-	make_mask_names  ${arguments}
-	make_mask_values ${arguments}
+	make_mask_names_values ${arguments}
     else
 	sixdeskmess -1 "scan_masks set to TRUE, using defined list of mask names"
 	scan_studies=(${scan_studies})
@@ -108,53 +109,50 @@ function set_study(){
 function generate_mask_file(){
     # generate mask files from a template in mask dir
     # function to be called in sixjobs
-    # study name taken from study var
+    # global vars: study, iStudy
     
     local _val
     local _j
     local _placeholders=(${scan_placeholders})
     local _placeholder
-    local _tmpmask="mask/${scan_prefix}_temp.mask"
-
-    # copy mask template to other name to be working on
-    cp mask/${scan_prefix}.mask ${_tmpmask}
+    local _orimask=mask/${scan_prefix}.mask
+    local _tmpmask=mask/${study}.mask
 
     # read the mask variable values for the particular studies
-    mask_vals=${mask_values[i]:2}
+    mask_vals=${mask_values[$iStudy]:2}
     # split the string
     IFS='%' read -a values <<< "${mask_vals}"
 
     # replace the individual placeholders in the tmp mask file
-    for (( _j=0; _j<=${#values[@]}; _j++ )) ; do
+    local __sedCommand=""
+    for (( _j=0; _j<${#values[@]}; _j++ )) ; do
         # the placeholder to be substituted in the mask file
 	_placeholder=${_placeholders[${_j}]}
         # the value this placeholder shall be replaced with
 	_val=${values[${_j}]}
-
-        # check if all placeholders are existing in mask file
-	[ ! ${lPlaceHolderCheck} ] || check_mask_for_placeholder ${_placeholder} ${_tmpmask}
-
-	sed -i "s/${_placeholder}/${_val}/g" ${_tmpmask}
+        # concatenate actual sed commands
+        __sedCommand="${__sedCommand} -e \"s?${_placeholder}?${_val}?g\""
     done
-
-    sixdeskmess -1 "Generated mask file: ${study}.mask"
-    mv ${_tmpmask} mask/${study}.mask
+    echo "sed ${__sedCommand} ${_orimask} > ${_tmpmask}"
+    eval "sed ${__sedCommand} ${_orimask} > ${_tmpmask}"
+    sixdeskmess -1 "Generated mask file: ${_tmpmask}"
 }
 
-function check_mask_for_placeholder(){
+function check_mask_for_placeholders(){
     # check presence of placeholder and ask what to do in case
     #     it is not found
-    local _placeholder=${1}
-    local _tmpmask=${2}
-
-    if ! grep -q "${_placeholder}" "${_tmpmask}"; then
-	sixdeskmess -1 "WARNING: Placeholder ${_placeholder} not found in raw mask file ${_tmpmask}!"
-	sixdeskConfirmExit
-        if [ $? -ne 0 ] ; then
-            sixdeskmess -1  "Please modify mask file or check scan_definitions";
-            exit 1
+    local _orimask=mask/${scan_prefix}.mask
+    local _placeholder
+    for _placeholder in ${scan_placeholders} ; do
+        if ! grep -q "${_placeholder}" "${_orimask}"; then
+	    sixdeskmess -1 "WARNING: Placeholder ${_placeholder} not found in original mask file ${_orimask}!"
+	    sixdeskConfirmExit
+            if [ $? -ne 0 ] ; then
+                sixdeskmess -1  "Please modify mask file or check scan_definitions";
+                exit 1
+            fi
         fi
-    fi
+    done
 }
 
 ############################      actual loop    ############################
@@ -163,7 +161,8 @@ function scan_loop(){
     local __tmpCommand=$1
     local __lSetEnv=$2
     local __llocalfort3=$3
-    
+
+    iStudy=0
     for study in ${scan_studies[@]} ; do
         echo ""
         printf "#%.0s" {1..80}
@@ -186,5 +185,10 @@ function scan_loop(){
             echo "--> running command: ${__tmpCommand} -d ${study}"
             ${__tmpCommand} -d ${study}
         fi
+        # get ready for new iteration
+        ((iStudy++))
     done
+    echo ""
+    printf "#%.0s" {1..80}
+    echo ""
 }
