@@ -23,7 +23,7 @@ function make_array_with_delimiter(){
 
 function make_mask_names_values() {
     # create two arrays containing the names and the values of the mask files,
-    #    depending on the input given in scan_definitions
+    #    depending on the input given in the file defining the scans
     
     scan_vars=(${scan_variables})
 
@@ -152,7 +152,7 @@ function check_mask_for_placeholders(){
 	    sixdeskmess -1 "WARNING: Placeholder ${_placeholder} not found in original mask file ${_orimask}!"
 	    sixdeskConfirmExit
             if [ $? -ne 0 ] ; then
-                sixdeskmess -1  "Please modify mask file or check scan_definitions";
+                sixdeskmess -1  "Please modify mask file or check ${scanDefinitionsFileName}";
                 exit 1
             fi
         fi

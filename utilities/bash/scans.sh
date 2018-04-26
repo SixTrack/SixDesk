@@ -17,6 +17,7 @@ function how_to_use() {
    -c      do NOT check existence of placeholders before generating the .mask files
            effective only in case of -m action
    -l      use fort.3.local
+   -d      file containining the scan definitions. Default name: ${scanDefinitionsFileNameDef}
 
 EOF
 }
@@ -36,6 +37,9 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
+scanDefinitionsFileNameDef="scan_definitions"
+scanDefinitionsFileName=""
+
 # actions
 lcreatemask=false
 lsetstudy=false
@@ -46,15 +50,16 @@ lPlaceHolderCheck=true
 llocalfort3=false
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hmlcsx:" opt ; do
+while getopts  ":cdhlmsx:" opt ; do
     case $opt in
-        c)  lPlaceHolderCheck=false  ;;
+        c)  lPlaceHolderCheck=false ;;
+        d)  scanDefinitionsFileName="${OPTARG}" ;;
 	h)  how_to_use
 	    exit 1
 	    ;;
         l)  llocalfort3=true ;;
 	m)  lcreatemask=true ;;
-        s)  lsetstudy=true  ;;
+        s)  lsetstudy=true ;;
         x)  lcommand=true
             tmpCommand="${OPTARG}"
             ;;
@@ -85,6 +90,11 @@ if ${lcommand} ; then
     fi
 fi
 
+# file containing definition of scans
+if [ -z "${scanDefinitionsFileName}" ] ; then
+    scanDefinitionsFileName=${scanDefinitionsFileNameDef}
+fi
+
 # ------------------------------------------------------------------------------
 # preparatory steps
 # ------------------------------------------------------------------------------
@@ -108,7 +118,7 @@ source ${SCRIPTDIR}/bash/dot_scan
 # - stuff specific to node where user is running:
 sixdeskSetLocalNodeStuff
 # - source definition of scans
-source scan_definitions
+source ${scanDefinitionsFileName}
 # - get list of studies
 get_study_names
 
