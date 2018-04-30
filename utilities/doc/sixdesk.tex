@@ -15,7 +15,7 @@
 \usepackage{longtable}
 \usepackage[table]{xcolor}
 \usepackage{tabu}
-\usepackage{multirow}
+\usepackage{multirow,makecell}
 \usepackage{tabularx}
 % \usepackage{makecell}
 %\tabulinesep=^1mm_1mm
@@ -110,6 +110,27 @@
 \newcommand{\SIXTRACK}{{\sc \textsc{SixTrack}}}
 \newcommand{\MADX}{{\sc \textsc{MadX}}}
 \newcommand{\SIXDB}{{\sc \textsc{SixDB}}}
+
+% fancy box with terminal line commands
+%**************************************
+\usepackage{listings}
+
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+% https://en.wikibooks.org/wiki/LaTeX/Source_Code_Listings
+\lstset{
+  language=sh,
+  basicstyle=\small\ttfamily,
+  numbers=left,
+  numberstyle=\tiny,
+  backgroundcolor=\color{lightgray},
+  breaklines=true,
+  columns=fullflexible,
+  showstringspaces=false}
 
 \fancyhf{}
 \defaulthead
