@@ -1,34 +1,84 @@
 import sys
 
-xmin=float(sys.argv[1])
-xmax=float(sys.argv[2])
+lDebug=False
+
+xstart=float(sys.argv[1])
+xstop=float(sys.argv[2])
 xdelta=float(sys.argv[3])
 prec=float(sys.argv[4])
 
-# checks
-if ( xmax<xmin ):
-    tmp=xmax
-    xmax=xmin
-    xmin=tmp
-if ( abs(xdelta)<prec):
-    xdelta=xmin
-if ( xmin != 0.0 ):
-    if ( abs(xmax/xmin-1)<prec ):
-        xdelta=xmin
-        xmax=xmin
-elif ( xdelta != 0.0 ):
-    if ( abs(xmax/xdelta-1)<prec ):
-        xdelta=xmin
-        xmax=xmin
-else:
-    if ( abs(xmax)<prec ):
-        xdelta=xmin
-        xmax=xmin
+if (lDebug):
+    print 'floats:',xstart,xstop,xdelta,prec
 
-x=xmin
-while ( x<xmax*(1+prec) ):
-    if ( x-int(x) < prec ):
-        print int(x)
+# checks
+
+# - null values:
+if ( abs(xstart)<prec):
+    xstart=0.0
+if ( abs(xstop)<prec):
+    xstop=0.0
+if ( abs(xdelta)<prec):
+    delta=0.0
+
+# - inverted extremes
+if ( xdelta>0.0 and xstop<xstart ):
+    xdelta=-xdelta
+    if (lDebug):
+        print '1a:',xstart,xstop,xdelta,prec
+elif ( xdelta<0.0 and xstop>xstart ):
+    xdelta=-xdelta
+    if (lDebug):
+        print '1b:',xstart,xstop,xdelta,prec
+        
+# - grant single points
+if ( xdelta==0.0 ):
+    if ( xstop==0.0 ):
+        if ( xstart==0.0 ):
+            xfin=1
+        else:
+            xfin=xstart
+    else:
+        if ( xstart==0.0 ):
+            xfin=xstop
+        else:
+            xfin=xstart
+    xdelta=xfin
+    xstop=xstart+xfin*0.5
+    if (lDebug):
+        print '2:',xstart,xstop,xdelta,prec
+else:
+    if ( abs(xstop-xstart)<prec or # xstop==xstart
+         abs((xstop-xstart)/xdelta-1)<prec ): # only a step
+        if ( xstart==0.0 ):
+            xfin=1
+        else:
+            xfin=xstart
+        xdelta=xfin
+        xstop=xstart+xfin*0.5
+        if (lDebug):
+            print '3:',xstart,xstop,xdelta,prec
+
+# - do not skip last point
+if (xstop==0.0):
+    xstop=xdelta*0.5
+    if (lDebug):
+        print '4:',xstart,xstop,xdelta,prec
+
+x0=xstart
+nIter=0
+x=x0
+if (lDebug):
+    print 'start loop:',xstart,xstop,xdelta,prec
+if ( xdelta>0.0):
+    sign=1
+else:
+    sign=-1
+while ( x*sign<xstop*sign*(1+prec) ):
+    if ( abs(x%1)<prec or abs(x%1-1)<prec ):
+        print int(round(x))
     else:
         print x
-    x+=xdelta
+    nIter+=1
+    x=x0+nIter*xdelta
+if (lDebug):
+    print 'end loop:',xstart,xstop,xdelta,prec
