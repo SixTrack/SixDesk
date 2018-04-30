@@ -1,6 +1,7 @@
 import sys
 
 lDebug=False
+lInvertExtremes=False
 
 xstart=float(sys.argv[1])
 xstop=float(sys.argv[2])
@@ -22,11 +23,21 @@ if ( abs(xdelta)<prec):
 
 # - inverted extremes
 if ( xdelta>0.0 and xstop<xstart ):
-    xdelta=-xdelta
+    if (lInvertExtremes):
+        tmpX=xstop
+        xstop=xstart
+        xstart=tmpX
+    else:
+        xdelta=-xdelta
     if (lDebug):
         print '1a:',xstart,xstop,xdelta,prec
 elif ( xdelta<0.0 and xstop>xstart ):
-    xdelta=-xdelta
+    if (lInvertExtremes):
+        tmpX=xstop
+        xstop=xstart
+        xstart=tmpX
+    else:
+        xdelta=-xdelta
     if (lDebug):
         print '1b:',xstart,xstop,xdelta,prec
         
@@ -47,8 +58,8 @@ if ( xdelta==0.0 ):
     if (lDebug):
         print '2:',xstart,xstop,xdelta,prec
 else:
-    if ( abs(xstop-xstart)<prec or # xstop==xstart
-         abs((xstop-xstart)/xdelta-1)<prec ): # only a step
+    if ( abs(xstop-xstart)<prec ):
+        # xstop==xstart
         if ( xstart==0.0 ):
             xfin=1
         else:
