@@ -477,9 +477,16 @@ went wrong with the \MADX{} jobs. Checking can be performed e.g.
 > $SixDeskTools/utilities/bash/scans.sh -x "run_six.sh -a -p BOINC"
 \end{lstlisting}
 Submission is explicitely done to the \texttt{BOINC} platform
-for all the studies.
+for all the studies. The usual list of platforms supported by
+\texttt{run\_six.sh} is available;
 \item download results and update the job database
 \begin{lstlisting}
 > $SixDeskTools/utilities/bash/scans.sh -x "run_results"
+\end{lstlisting}
+The same command can be issued with \texttt{run\_status};
+\item \texttt{scans.sh} can be used for calling any script
+  in \SIXDESK{}, e.g.
+\begin{lstlisting}
+> $SixDeskTools/utilities/bash/scans.sh -x "correct_cases"
 \end{lstlisting}
 \end{enumerate}
