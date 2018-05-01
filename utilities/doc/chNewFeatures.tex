@@ -1,6 +1,14 @@
 \chapter{New Features} \label{NewFeatures}
 This chapter illustrates the new features implemented in \SIXDESK{} from
-the user point of view.
+the user point of view. In general, all the new features have an introduction,
+where the rationale and the working principles of the new feature are briefly
+presented; afterwards, an essential look at user input and implementation
+is given; each section is then closed by a step by step guide, with
+examples. In the following, the environment variable
+\texttt{SixDeskTools} is assumed and defined as
+\begin{lstlisting}
+  SixDeskTools=/afs/cern.ch/project/sixtrack/SixDesk_utilities/dev
+\end{lstlisting}
 
 \section{Initialisation of Workspace and Study} \label{Initialisation}
 \begin{flushright}
@@ -8,16 +16,11 @@ the user point of view.
 \end{flushright}
 It is useful to have a standard way of setting up workspace and study
 from within the \SIXDESK{} script, so that the user does not have to
-worry about proper template files, to be kept in sync with a given
+worry about proper template files and their synchronisation with a given
 version of the scripts.
 
 \subsection{Step-by-Step Guide}
-This short guide will show the user how to properly initialise
-a new workspace and study, step by step. In the following,
-the environment variable \texttt{SixDeskTools} is defined, e.g.~as
-\begin{lstlisting}
-  SixDeskTools=/afs/cern.ch/project/sixtrack/SixDesk_utilities/dev
-\end{lstlisting}
+The main steps to properly set up the workspace and a study are:
 \begin{enumerate}
 \item set up the workspace, e.g.
 \begin{lstlisting}
@@ -53,8 +56,9 @@ directories. The action will create also the following tree structure:
 > $SixDeskTools/utilities/bash/set_env.sh -n -l -c
 \end{lstlisting}
 This action will generate the \texttt{sixdeskenv}, \texttt{sysenv},
-\texttt{fort.3.local} and \texttt{scan\_definitions} (see
-Sec.~\ref{Initialisation}) files. This action will also update
+\texttt{fort.3.local} (see Sec.~\ref{fort3local}) and
+\texttt{scan\_definitions} (see Sec.~\ref{ExternalScans}) files.
+This action will also update
 the \texttt{workspace}, \texttt{basedir} and \texttt{scratchdir}
 variables in the \texttt{sixdeskenv} file
 with the correct values for the workspace just set up.
@@ -87,16 +91,17 @@ in this way, templates and scripts are synchronised.
 \emph{Original work by: P.~D.~Hermes, D.~Pellegrini} \\
 \emph{Updated by: A.~Mereghetti}
 \end{flushright}
-``Internal scans'' are the scans handled by \SIXDESK{} coded
-in the \texttt{sixdeskenv} file. These are the fundamental
-scans used to estimate the dynamic aperture for a given machine configuration,
-mainly probing the beam phase space via a linear scan in particle amplitude
-parametric in angle. The internal scan also cover different error
+``Internal scans'' are the fundamental scans used to estimate the dynamic
+aperture for a given machine configuration, mainly probing the beam phase
+space via a linear scan in particle amplitude parametric in angle.
+The internal scan also cover different error
 configurations of the magnetic fields; optionally, the user can also request
 to replicate the study varying the machine tune.
+The internal scans are handled by \SIXDESK{} with the input coded
+in the \texttt{sixdeskenv} file.
 Table~\ref{tab:InternalScanParamters} summarises essential technical
 characteristics of the internal scans.
-\begin{table}[h]
+\begin{table}[t]
 \begin{center}
     \caption{Essential technical
       characteristics of the internal scans.}
@@ -129,9 +134,13 @@ original study case.
 
 ``External'' scans identify a set of additional scan parameters, not aimed at
 exploring further the beam phase space but machine configurations of possible
-interest -- something we may call machine ``phase space''. Any point in
+interest -- something that could be loosely called machine ``phase space''.
+Any point in
 an external scan is an independent \SIXDESK{} study, and it can be handled
 with the standard tools, since it has its own folders and files.
+On the other hand, all the studies have something in common; hence,
+it can be suitable to have a set of tools for treating all the
+studies in an external scan the same way.
 
 External scans can be useful to explore the dependence of the dynamic
 aperture on parameters like chromaticity, octupole current, and crossing
@@ -139,11 +148,10 @@ angles, for the same optics. Therefore,
 these scans are based on a 1:1 relation between \MADX{} and
 \SIXTRACK{}, i.e.~the knobs defined in \MADX{} are exported as they
 are in \SIXTRACK{} by means of the geometry files (see Sec.~\ref{Overview}).
-Hence, the user must make sure that the desired parameters can be
+Hence, the user is responsible for assuring that the desired parameters can be
 represented by \MADX{} and all the necessary settings are propagated
 to \SIXTRACK{} via the geometry input files,
 including magnet kicks as computed by the \MADX{} matching.
-
 It should be noted that no parameter defining the internal scan
 coded in the \texttt{sixdeskenv} input file is modified.
 
@@ -151,20 +159,24 @@ Two types of external scans are available to the user:
 \begin{enumerate}
 \item a scan over a \emph{Cartesian grid} of an arbitrary number
   of variables with given steps for each variable. All the studies
-  will be named after a reference machine configuration, and the names
-  of the scanned variables will appear explicitly in the study name,
-  together with the values actually used for a given study.
-\item a scan over a \emph{preset list} of studies which must exist.
+  will be created and named after a reference machine configuration;
+  each study will inherit a unique set of values of the scanned variables,
+  which will appear explicitly in the study name
+  together with the values actually used;
+\item a scan over a \emph{preset list of studies} which must exist.
   This option is extremely useful when punctual operations are
   required on a sub-set of studies composing the original scan.
 \end{enumerate}
 
 \subsection{Input Files}
-\begin{table}[h]
+\begin{table}[t]
 \begin{center}
   \caption{Parameters controlling external scans, to be defined by
-    the user in the \texttt{scan\_definitions} file.}
-    \label{tab:ExternalScanParametersCartesian}
+    the user in the \texttt{scan\_definitions} file. The central
+    block of variables is used for scans on a \emph{Cartesian grid},
+    whereas the last block is used for scans on a \emph{preset list}
+    of studies.}
+    \label{tab:ExternalScanParameters}
     \begin{tabular}{|l|l|l|}
     \hline
     \rowcolor{blue!30}
@@ -192,7 +204,9 @@ Two types of external scans are available to the user:
 \end{table}
 The file describing the external scan is the \texttt{scan\_definitions}.
 It is a new file to \SIXDESK{}, where the user fully describes the Cartesian
-grid of interest or the pre-set list of studies.
+grid of interest or the pre-set list of studies. As for the
+\texttt{sixdeskenv} and \texttt{sysenv} files, it must be coded
+following the syntax of \texttt{bash}.
 Table~\ref{tab:ExternalScanParameters}
 lists the variables that the file should contain.
 With the \texttt{scan\_masks} logical variable, the user instructs
@@ -220,58 +234,58 @@ studies must be already existing, and no other input file is
 required.
 
 \subsubsection{Scan on a Cartesian Grid}
+In the scan on a \emph{Cartesian grid}, all the concerned studies
+are generated out of a set of template files, based on a
+\texttt{sixdeskenv}, \texttt{sysenv}, \texttt{*.mask} and
+\texttt{scan\_definitions} files (and \texttt{fort.3.local}, optionally).
+All the optics configurations are variations of the same one coded
+in the template \texttt{*.mask} file.
+
 The user defines the parameter space in the \texttt{scan\_definitions}
-at their will, with no restriction due to interfaces. The user must
+file at their will, with no restrictions due to interfaces. The user must
 make sure that the desired parameters can be represented by \MADX{}
 and all the necessary settings are propagated to \SIXTRACK{} via
 the geometry input files (see Sec.~\ref{Overview}).
-In fact, the user 
+In fact, contrary to what done normally in
+\SIXDESK{}, the user defines suitable \emph{placeholders} that will be
+used by \SIXDESK{} for query/replace in the \texttt{*.mask} file and
+for disentangling the various studies. Hence, it is responsibility of the
+user not only to define the variables and the concerned range of values,
+but also to set up the necessary \emph{placeholders}
+in the template \texttt{*.mask} file.
 
-In particular, it is responsibility of the
-user not only to define the variables and range of values,
-but also to prepare in the template \texttt{*.mask} file
-suitable \emph{placeholders} that will be recognised by
-\SIXDESK{} and used for differentiating the various studies.
-Hence, contrary to what done normally in
-\SIXDESK{}, the user is responsible for the proper definition
-of the parameter space, i.e.~not only that the range of explored
-values is sensible, but also all the handles in the \texttt{*.mask}
-file generate adequate input to \SIXTRACK{} jobs.
-
-More in details:
-\begin{description}
-\item[\texttt{sixdeskenv}] a regular \texttt{sixdeskenv} is used as template.
+For starting an external scan, the user should prepare:
+\begin{itemize}
+\item a regular \texttt{sixdeskenv}, to be used as template.
   The file is automatically replicated by \SIXDESK{} in all the studies
   involved in the scan as is, with the exception of the actual study name
-  (i.e.~\texttt{LHCDescrip} field), which is automatically updated.
+  (i.e.~the \texttt{LHCDescrip} field), which is automatically updated
+  at the generation of the study.
   Hence, it is user's convenience to freeze the paramters for the internal
   scan before starting the external one, such that all the studies will inherit
   immediately the correct parameters and range of values;
-\item[\texttt{sysenv}] a regular \texttt{sysenv} is duplicated as is, with
+\item a regular \texttt{sysenv}, to be cloned as is, with
   no further modifications by \SIXDESK{}. As for the \texttt{sixdeskenv} file, 
-  it is user's convenience to set this file up before starting the
-  external scan;
-\item[\texttt{fort.3.local}] the optional file \texttt{fort.3.local}
-  can be used in the external scan with no specific limitations; it
-  will be cloned as it is by \SIXDESK{} to all bundled studies. As for the
+  it is user's convenience to set this file up correctly and completely
+  before starting the external scan;
+\item an optional file \texttt{fort.3.local}, to be cloned
+  as is, with no further modifications by \SIXDESK{}. As for the
   \texttt{sixdeskenv} and \texttt{sysenv} files, it is user's convenience
-  to set this file up before starting the external scan;
-\item[\texttt{*.mask}] a \texttt{*.mask} file is used as template to all studies
+  to set this file up correctly and completely before starting the external scan;
+\item a template \texttt{*.mask} file, to be used to generate all studies
   in the scan. \SIXDESK{} will take care of cloning it to the involved studies,
-  automatically performing the query-replace of the placeholders
-  necessary to correctly set up the study. The query-replace patterns
+  automatically performing the query/replace of the placeholders
+  necessary to correctly set up the study. The query/replace patterns
   (and hence the placeholders) are uniquely defined by the user,
   and no spefic syntax is hard-coded in \SIXDESK{};
-\item[\texttt{scan\_definitions}] it contains
-  the full description of the scans, using a \texttt{bash} syntax. More than a
-  parameter can be scanned at the same time; if it is the case, then the actual
-  studies submitted will follow the cartesian product of all the parameter
-  values.
-\end{description}
-
+\item the \texttt{scan\_definitions} files, which contains
+  the full description of the scans. More than a parameter can be scanned
+  at the same time, and the actual studies handled will follow the cartesian
+  product of all the parameter values.
+\end{itemize}
 Table~\ref{tab:ExternalScanInputFile} summarises the key facts about the
 input files.
-\begin{table}[h]
+\begin{table}[t]
 \begin{center}
     \caption{Input files for external scans.}
     \label{tab:ExternalScanInputFile}
@@ -280,12 +294,12 @@ input files.
     \rowcolor{blue!30}
     \textbf{File} & \textbf{Comments} & \textbf{Location} \\
     \hline
-    \texttt{sixdeskenv} & a template file for automatic query/replace
+    \texttt{sixdeskenv} & -- a template file for automatic query/replace
     & \texttt{sixjobs} \\
-    & must define correct settings for the internal scan & \\
+    & -- it must define correct settings for the internal scan & \\
     \texttt{sysenv} & cloned as it is & \texttt{sixjobs} \\
-    \texttt{*.mask} & a template for automatic query/replace & \texttt{mask} \\
-    & must contain place holders of scanned parameters & \\
+    \texttt{*.mask} & -- a template for automatic query/replace & \texttt{mask} \\
+    & -- it must contain place holders of scanned parameters & \\
     \texttt{scan\_definitions} & unique & \texttt{sixjobs} \\
     & it describes the scans (\texttt{bash} syntax) & \\
     \hline
@@ -295,9 +309,8 @@ input files.
 
 The user requests \SIXDESK{} to perform a scan on the \emph{Cartesian grid}
 setting the \texttt{scan\_masks} flag in the \texttt{scan\_definitions} file
-to \texttt{false}. The same file (see
-Tab.~\ref{tab:ExternalScanParametersCartesian}) contains all the information
-necessary to perform the scan:
+to \texttt{false}. The same file (see Tab.~\ref{tab:ExternalScanParameters})
+contains all the information necessary to define the scan:
 \begin{itemize}
 \item the variable names to be looped on are specified by the user via
   the \texttt{scan\_variables} variable;
@@ -309,42 +322,32 @@ necessary to perform the scan:
 \end{itemize}
 
 When generating the \texttt{*.mask} specific to each study,
-\SIXDESK{} will automatically query-replace the placeholders with
-the actual values to be used.
+\SIXDESK{} will automatically copy the template \texttt{*.mask}
+file and query/replace the placeholders with the actual values to be used.
+Hence, the parameter names must match actual \emph{placeholders} in the
+template \texttt{*.mask} file, and it is the responsibility of the
+user to match the \emph{placeholders} listed in the \texttt{scan\_definitions}
+with those in the template \texttt{*.mask} file.
 
-The variables are automatically
-replaced by \SIXDESK{} and the new \texttt{*.mask} files created. The user defines
-the parameters of the Cartesian grid and the range of values that should be
-covered by each. In each new study, the same template \texttt{*.mask}
-file is copied and modified according to the requirements of the user.
-The parameter names must match actual \emph{placeholders} in the
-\texttt{*.mask} file. The variable names to use in the \texttt{*.mask}
-file and the values to be spanned are set in the \texttt{scan\_definitions}
-file.
-
-The naming convention of the study (and of the \texttt{*.mask} file)
-combines a commond name (which can identify the specific optics explored in
-the scan, for instance) and the name of each scanned variable
+The naming convention of the study (and hence of the \texttt{*.mask} file)
+combines a commond name (which can identify e.g.~the specific optics explored in
+the scan) and the name of each scanned variable
 with the explicit value used in each study.
 
-The user defines in the \texttt{scan\_definitions} files the variable names,
-the placeholders used in the \texttt{*.mask} file and the actual values to be
-scanned. Table~\ref{tab:ExternalScanParametersCartesian} summarises the necessary
-fields, with examples.
-
-The examples report the parameters scans for
+Table~\ref{tab:ExternalScanParameters} reports an example of
+variables in the \texttt{scan\_definitions}, coding an external scan for
 studying the dynamic aperture of the HL-LHC machine at injection; the
-scans are done on both beams (1 and 4, variable \texttt{B} and \texttt{\%BV}
-as placeholder in \texttt{*.mask}) with three values of chromaticity
-(0, 2 and 4, variable \texttt{QP} and \texttt{\%QPV} as placeholder in
-\texttt{*.mask}). Names of variables and placeholders are fully decided by
-the user, with no rules enforced by \SIXDESK{}. Anyway, at set-up time,
-\SIXDESK{} will check that placeholders exist in the template
-\texttt{*.mask} file.
+scan is performed on both beams (variable \texttt{B}, \texttt{\%BV}
+as placeholder in \texttt{*.mask}, and values 1 and 4) with three values
+of chromaticity (0, 2 and 4, variable \texttt{QP} and \texttt{\%QPV} as
+placeholder in). As it can be seen, names of variables and placeholders
+are fully decided by the user, with no rules enforced by \SIXDESK{}.
+Anyway, at set-up time, \SIXDESK{} will check that placeholders exist in
+the template \texttt{*.mask} file.
 
 The template \texttt{*.mask} file must be existing in the \texttt{mask}
 directory, and it must have the name specified in the \texttt{scan\_prefix}
-field in the \texttt{scan\_definitions} file. In the above example,
+field in the \texttt{scan\_definitions} file. In the example,
 the template \texttt{*.mask} file would be named \texttt{HLLHC\_inj.mask}.
 The actual scan is made of 6 studies, named:
 \begin{lstlisting}
@@ -356,42 +359,35 @@ HLLHC_inj_B_4_QP_2
 HLLHC_inj_B_4_QP_4
 \end{lstlisting}
 
-\subsubsection{Scan on a Preset List}
+\subsubsection{Scan on a Preset List of Studies}
 If the user has already produced the required \texttt{*.mask} files
-and wants to scan over a specific (sub)set of studies, he can also
-specify the study names explicitly. This can be useful if we want
+and want to scan over a specific (sub)set of studies, they can
+specify the study names explicitly. This can be useful if they want
 to run a command for only a subset of a larger set of studies of the
-Cartesian scan. To use this option, the variable listed in
-Tab.~\ref{tab:ExternalScanParametersCartesian} are not suitable, and
-those described in Tab.~\ref{tab:ExternalScanParametersPresetList} should be used.
-\begin{table}[h]
-\begin{center}
-  \caption{Parameters controlling external scans for a preset list
-    of studie, to be defined by the user in the \texttt{scan\_definitions}
-    file.}
-    \label{tab:ExternalScanParametersPresetList}
-    \begin{tabular}{|l|l|l|}
-    \hline
-    \rowcolor{blue!30}
-    \textbf{Parameter Name} & \textbf{Comment} & \textbf{Example} \\
-    \hline
-    \end{tabular}
-\end{center}
-\end{table}
+Cartesian scan. To use this option, the variables used to set up
+the \emph{Cartesian product}, listed in the middle block of
+Tab.~\ref{tab:ExternalScanParameters} are not suitable, and
+those described in last block of the same table should be used.
+
+The user requests \SIXDESK{} to perform a scan on the \emph{preset list}
+of studies setting the \texttt{scan\_masks} flag in the
+\texttt{scan\_definitions} file to \texttt{true}. The same file
+(see Tab.~\ref{tab:ExternalScanParameters}) specifies also the list
+of the studies to be treated via their full name.
+As already mentioned, the concerned studies with all their input files
+and folders must already exist.
+
 In the above example, the only studies which will be considered in the
-scan are:
+scan are (once the \texttt{scan\_masks} flag is set to \texttt{true}
+by the user):
 \begin{lstlisting}
 HLLHC_inj_B_1_QP_4
 HLLHC_inj_B_4_QP_0
 \end{lstlisting}
-As already mentioned, all the necessary input files (e.g.~\texttt{*.mask},
-\texttt{sixdeskenv}, \texttt{sysenv}, \texttt{fort.3.local}, etc\ldots)
-and the concerned folders (e.g.~\texttt{sixtrack\_input}, \texttt{track},
-\texttt{work}, \texttt{study}, etc\ldots) must already exist.
 
 \subsection{Implementation}
 The scans are handled via the \texttt{scans.sh} user script;
-it is a bash wrapper, looping the action requested by the
+it is simply a bash wrapper which loops the action requested by the
 user over the desired studies. The actual
 functions are coded in \texttt{dot\_scan} (\texttt{bash}) library.
 Hence, the user will have to deal with only the \texttt{scans.sh}
@@ -399,12 +395,14 @@ script.
 
 To perform a desired action on all the studies in the scan, the user
 just need to issue the \texttt{scans.sh} script using the \texttt{-x}
-\emph{action} with the detailed command within double quotes. There is no
-need to specify the \texttt{-d} \emph{option} of the called script, since
+\emph{action} with the detailed command to be performed enclosed within
+double quotes. There is no
+need to specify the \texttt{-d} \emph{option} for the called script, since
 \texttt{scans.sh} will automatically trigger the requeted command on each
 study in the scan separately. The script
 will take care of looping over all the studies and issue the requested
-command on each study. The only exceptions are the generation
+command on each study. The only exceptional actions that have
+dedicated terminal line arguments are the generation
 of the actual \texttt{*.mask} files, achieved via the \texttt{-m}
 \emph{action}, and the set up of the directories of each study,
 achieved via the \texttt{-s} \emph{action}.
@@ -421,16 +419,13 @@ the string passed through the \texttt{-x} \emph{action}.
 A very basic parallelisation of the scan is available. The user can
 split the final scan into smaller ones. Each of them must have
 its own \texttt{scan\_definitions} files, with a unique name. Then,
-the same number of instances of the \texttt{scans.sh} can be issued,
-each with the \texttt{-d} \emph{option}, specifying the name
+the respective number of instances of the \texttt{scans.sh} can be issued,
+each with the \texttt{-d} \emph{option} with the specific name
 of the \texttt{scan\_definitions} instance to be used.
 
 \subsection{Step-by-Step Guide}
-This little guide will show the user how to set-up an the external
-scan and how to proceed, step by step. The reference guide is given
-for a scan on a Cartesian grid started from scratch, whereas some
-remarks will be done for the preset list of studies.
-
+This guide is given for an external scan on a \emph{Cartesian grid}
+started from scratch:
 \begin{enumerate}
 \item set up your workspace and download template files
   (see Sec.~\ref{Initialisation});
@@ -453,7 +448,7 @@ remarks will be done for the preset list of studies.
     \item all the placeholders defined in \texttt{scan\_placeholders}
       are actually in the \texttt{*.mask} template file, and in the
       correct positions. Please keep in mind that the query/replace
-      will be performed via a \texttt{sed} command.
+      will be performed via a \texttt{sed} command;
     \end{itemize}
   \end{enumerate}
 \item generate all the necessary \texttt{*.mask} file and the
@@ -461,10 +456,10 @@ remarks will be done for the preset list of studies.
 \begin{lstlisting}
 > $SixDeskTools/utilities/bash/scans.sh -m -s -l
 \end{lstlisting}
-The \texttt{-l} \emph{option} is illustrated in the example.
-If the \texttt{fort.3.local} file is not required, please ignore it.
+The \texttt{-l} \emph{option} is illustrated in the example to show
+the command in case the \texttt{fort.3.local} file is required.
 The \texttt{-m} \emph{action} (i.e.~generation of \texttt{*.mask} files)
-and the \texttt{-s} \emph{action} (i.e.~set up of studies) can be
+and the \texttt{-s} \emph{action} (i.e.~set up of studies) can also be
 performed separately;
 \item run \MADX{} and generate the geometry files for the \SIXTRACK{}
   jobs, e.g.
@@ -481,7 +476,9 @@ went wrong with the \MADX{} jobs. Checking can be performed e.g.
 \begin{lstlisting}
 > $SixDeskTools/utilities/bash/scans.sh -x "run_six.sh -a -p BOINC"
 \end{lstlisting}
-\item download results and update job database
+Submission is explicitely done to the \texttt{BOINC} platform
+for all the studies.
+\item download results and update the job database
 \begin{lstlisting}
 > $SixDeskTools/utilities/bash/scans.sh -x "run_results"
 \end{lstlisting}
