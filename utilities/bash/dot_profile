@@ -625,7 +625,6 @@ sixdeskamps()
 sixdeskAllFloats(){
     # A.Mereghetti, 2017-04-08
     # new function, to generate an array of floating point values
-    local __precision=1.0E-15
     local __xMin=$1
     local __xMax=$2
     local __xDelta=$3
@@ -635,7 +634,7 @@ sixdeskAllFloats(){
 	__xDelta=${__xMin}
     fi
     # - get all values
-    python ${SCRIPTDIR}/python/generate_floats.py ${__xMin} ${__xMax} ${__xDelta} ${__precision}
+    python ${SCRIPTDIR}/python/generate_floats.py ${__xMin} ${__xMax} ${__xDelta}
 }
 sixdeskFixDotFloat(){
     # A.Mereghetti, 2017-04-08
@@ -661,10 +660,11 @@ sixdeskAllTunes(){
     # - tunesYY: returned array of ver tune values
     # - inttunesXX: returned array of integer part of hor tunes
     # - inttunesYY: returned array of integer part of ver tunes
+    local __lForceIntegers=False
     # hor:
     tunesXX=""
     inttunesXX=""
-    local __tunesXX=$(sixdeskAllFloats $tunex $tunex1 $deltax)
+    local __tunesXX=$(sixdeskAllFloats $tunex $tunex1 $deltax )
     for tmptn in ${__tunesXX} ; do
 	tunesXX="${tunesXX} $(sixdeskFixDotFloat ${tmptn})"
 	inttunesXX="${inttunesXX} $(sixdeskinttune ${tmptn})"
@@ -674,7 +674,7 @@ sixdeskAllTunes(){
     # ver:
     tunesYY=""
     inttunesYY=""
-    local __tunesYY=$(sixdeskAllFloats $tuney $tuney1 $deltay)
+    local __tunesYY=$(sixdeskAllFloats $tuney $tuney1 $deltay )
     for tmptn in ${__tunesYY} ; do
 	tunesYY="${tunesYY} $(sixdeskFixDotFloat ${tmptn})"
 	inttunesYY="${inttunesYY} $(sixdeskinttune ${tmptn})"
@@ -691,9 +691,10 @@ sixdeskAllAmplitudes(){
     ampstart=""
     ampfinish=""
     local __iLast=0
+    local __lForceIntegers=False
 
     # get all amplitude points
-    local __allAmplitudes=$(sixdeskAllFloats $ns1l $ns2l $nsincl)
+    local __allAmplitudes=$(sixdeskAllFloats $ns1l $ns2l $nsincl )
     __allAmplitudes=( ${__allAmplitudes} )
 
     # get all amplitude intervals
@@ -779,7 +780,7 @@ sixdeskAllAngles(){
 	    else
 	        local __kang=`echo ${kk} ${__kmax} | awk '{printf ("%.16E",$1/($2+1))}'`
 	    fi
-	  kAngs="${kAngs} ${__kang}"
+	    kAngs="${kAngs} ${__kang}"
         done
         KKs_ampl=( ${KKs_ampl} ${__kend} )
     fi
