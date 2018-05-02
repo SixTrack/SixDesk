@@ -20,10 +20,14 @@
 20 3 * * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinc ; /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.sh >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
 40 3 * * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinctest ; /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.sh >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
 #
-# list studies in spooldirs that could be deleted and notify users (based on dir itself):
+# list studies in spooldirs that could be deleted and notify users (based on <workspace>_<study> dir itself):
 0 4 1 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinc ; /afs/cern.ch/user/s/sixtadm/boinc_soft/listDeleteStudies.sh >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
 0 5 1 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinctest ; /afs/cern.ch/user/s/sixtadm/boinc_soft/listDeleteStudies.sh >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
 #
 # list studies in spooldirs that could be deleted and notify users (based on <workspace>_<study>/work dir):
-0 4 15 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinc ; /afs/cern.ch/user/s/sixtadm/boinc_soft/listDeleteStudies.sh >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
-0 5 15 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinctest ; /afs/cern.ch/user/s/sixtadm/boinc_soft/listDeleteStudies.sh >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
+0 4 11 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinc ; /afs/cern.ch/user/s/sixtadm/boinc_soft/listDeleteStudies.sh work >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
+0 5 11 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinctest ; /afs/cern.ch/user/s/sixtadm/boinc_soft/listDeleteStudies.sh work >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
+#
+# list studies in spooldirs that could be deleted and notify users (based on <workspace>_<study>/results dir):
+0 4 21 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinc ; /afs/cern.ch/user/s/sixtadm/boinc_soft/listDeleteStudies.sh results >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
+0 5 21 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinctest ; /afs/cern.ch/user/s/sixtadm/boinc_soft/listDeleteStudies.sh results >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1

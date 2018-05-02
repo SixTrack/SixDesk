@@ -5,7 +5,7 @@
 # to be run in:
 #     /afs/cern.ch/work/b/boinc/boinc
 oldN=30 # days
-threshOccupancy=0.5 # [GB]
+threshOccupancy=1.0 # [GB]
 BOINCspoolDir=$PWD
 SCRIPTDIR=`dirname $0`
 SCRIPTDIR="`cd ${SCRIPTDIR} ; pwd`"
@@ -28,11 +28,8 @@ function treatSingleDir(){
 }
 
 trap "echo \" ...ending at \`date\` .\" " exit
+echo ""
 echo " starting `basename $0` at `date` ..."
-lUseWork=true
-if [ $# == 1 ] ; then
-    lUseWork=false
-fi
 
 # prepare delete dir
 [ -d delete ] || mkdir delete
@@ -46,12 +43,20 @@ echo " checking BOINC spooldir ${BOINCspoolDir} ..."
 #    ask confirmation to user
 now=`date +"%F_%H-%M-%S"`
 # find old directories (based on <workspace>_<studyName>/work/)
-if ${lUseWork} ; then
-    echo " find old directories based on <workspace>_<studyName>/work/ ..."
-    allStudies=`find . -maxdepth 2 -type d -name work -ctime +${oldN}`
-    for currCase in ${allStudies} ; do
-	treatSingleDir ${currCase%/work}
-    done
+if [ -n "$1" ] ; then
+    case "$1" in
+	work | results )
+	    echo " find old directories based on <workspace>_<studyName>/$1/ ..."
+	    allStudies=`find . -maxdepth 2 -type d -name $1 -ctime +${oldN}`
+	    for currCase in ${allStudies} ; do
+		treatSingleDir ${currCase%/$1}
+	    done
+	    ;;
+	* )
+	    echo " wrong input: $1 [work|results]"
+	    exit 1
+	    ;;
+    esac
 else
     echo " find old directories based on <workspace>_<studyName> only ..."
     allStudies=`find . -maxdepth 1 -type d -ctime +${oldN} | grep -v -e upload -e delete`
