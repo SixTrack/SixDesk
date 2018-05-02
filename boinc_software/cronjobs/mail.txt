@@ -2,14 +2,15 @@ Dear SixDesk user <SixDeskUser>,
 
 Please find in attachment a list of buffer directories in the BOINC spooldir
    <spooldir>
-older than <xxx> days which belong to you. These directories have been
-used ONLY as BOINC buffers, i.e. to submit work units to BOINC and collect
+older than <xxx> days which belong to you. These directories are located
+on the work.boinc volume on AFS and have been used ONLY as buffers,
+i.e. to submit workunits (WUs) to BOINC and collect
 results as they are produced by BOINC volunteers.
 
 If you think that you will no longer need these directories (e.g. because
-the study is complete), then I could remove them, freeing disk space and
-improving the performance of the system. To do so, after you had a look at
-the list in attachment, please upload it to
+the study is complete), then I could remove them, freeing <diskSpace> GB of
+disk space and improving the performance of the system. To do so, after
+ you had a look at the list in attachment, please upload it to
    <spooldir>/delete
 and I will take care of cleaning. To upload the list, you can use scp, i.e.:
 scp <fileList> <SixDeskUser>@lxplus.cern.ch:<spooldir>/delete
@@ -20,8 +21,15 @@ results), then please remove them from the list in the file, either heading
 a '#' char to the name of the directory or deleting the corresponding line
 in the file.
 
-I remain at your disposal for any questions.
+Please bear in mind that keeping the work.boinc volume clean and light
+in space is extremely important, in order to ease submission of jobs
+of other people, and ultimately your future jobs. Moreover, please keep
+in mind that when you retrieve results with run_results, the downloaded
+results are not removed from this workspace but stored in the processed/
+subfolder, to keep results in case of problems with the jobs database.
+Hence, it is important to keep the work.boinc volume clean and light.
 
+I remain at your disposal for any questions.
 Thanks for your cooperation,
 Alessio (via a crontab job)
 
@@ -30,9 +38,13 @@ Once you upload the list, it may take up to 24h before deleting actually
 takes place.
 
 NB: please be reminded that the TOTAL disk space available on the AFS
-volume work.boinc (where the BOINC spooldir is located) is 100GB.
-This value is a total one; hence, the occupancy by all users is summed up.
+volume work.boinc is 100GB. This value is a total one; hence, the occupancy
+by all users is summed up.
+
+NB: the scp command may raise an error message about permissions. This
+is due to ssh and acl groups not fully talking to each other. In general,
+it not real. If you want to be sure, just log in to lxplus and
+check that the scp command went fine.
 
 NB: Please find below the breakdown of the space taken by your directories in
 the quoted BOINC spooldir:
-

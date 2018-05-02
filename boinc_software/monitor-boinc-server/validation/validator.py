@@ -33,6 +33,7 @@ class RESULT():
         self.tClaimed=None       # CPU time claimed by client
         self.tF10=None           # CPU time read in fort.10
         self.credit=None
+        self.turnx=None
         
 class LOGEVENT():
     def __init__(self):
@@ -257,29 +258,46 @@ def parseLoggedEvent20170704(lineData):
             newLogEvent.addResultConditional(idRes1,idHst1)
             newLogEvent.addResultConditional(idRes2,idHst2)
             # eg: 2017-07-04 19:56:08.2581   RES[149569733 149569734] WU=72413400 HST[10415533 10297391] compare_results; MATCH m=1e+05 p=30 turnx=         0 cred=    0.00 T1=      5.4 K T2=      0.6 K outlier 1 v: 40517 40517
-            # eg: 017-07-04 19:56:08.4662   RES[149717544 149717545] WU#72482856 HOST[10452636 10388131] compare_results: DIFFER 12 -4.0104658251517122e-001 -2.8893227142302180e-001 m=1e+06 p=0 T:      26.0      23.0 V: 40517 40517
+            # eg: 2017-07-04 19:56:08.4662   RES[149717544 149717545] WU#72482856 HOST[10452636 10388131] compare_results: DIFFER 12 -4.0104658251517122e-001 -2.8893227142302180e-001 m=1e+06 p=0 T:      26.0      23.0 V: 40517 40517
             newLogEvent.addWUIDConditional(int(columns[4][3:]))
             if (columns[8]=='MATCH' or columns[9]=='MATCH'):
                 # matching results, eg:
                 #       2017-07-04 14:00:47.1051   RES[148321221 149863527] WU=70126007 HST[10345457 9930009] compare_results; MATCH m=1e+05 0 p=30 turnx=   6000000 cred=   12.00 T1=    3214.2 claim=0.00 K T2=    4012.6 0.00 K 0 v: 40517 40517
-                iColTurnx=columns.index('turnx=')
-                if (int(columns[iColTurnx+1])==0):
+                [iColTurnx]=[iCol for iCol in range(len(columns)) if 'turnx=' in columns[iCol]]
+                if (columns[iColTurnx]=='turnx='):
+                    turnx=int(columns[iColTurnx+1])
+                else:
+                    turnx=float(columns[iColTurnx].split('=')[1])
+                iRes1=newLogEvent.findResult(idRes1)
+                iRes2=newLogEvent.findResult(idRes2)
+                if (turnx==0):
                     # zero turnx
-                    iRes1=newLogEvent.findResult(idRes1)
                     newLogEvent.results[iRes1].status['turnx0']=True
-                    iRes2=newLogEvent.findResult(idRes2)
                     newLogEvent.results[iRes2].status['turnx0']=True
                     # keep track of times:
-                    iColT1=columns.index('T1=')
-                    newLogEvent.results[iRes1].tF10=float(columns[iColT1+1])
-                    iColT2=columns.index('T2=')
-                    newLogEvent.results[iRes2].tF10=float(columns[iColT2+1])
-                    if (columns[iColT1+2].startswith('claim=') or columns[iColT1+2]=='K'):
+                    [iColT1]=[iCol for iCol in range(len(columns)) if 'T1=' in columns[iCol]]
+                    [iColT2]=[iCol for iCol in range(len(columns)) if 'T2=' in columns[iCol]]
+                    if (columns[iColT1]=='T1='):
+                        newLogEvent.results[iRes1].tF10=float(columns[iColT1+1])
+                        t1d=2
+                    else:
+                        newLogEvent.results[iRes1].tF10=float(columns[iColT1].split('=')[1])
+                        t1d=1
+                    if (columns[iColT2]=='T2='):
+                        newLogEvent.results[iRes2].tF10=float(columns[iColT2+1])
+                        t2d=2
+                    else:
+                        newLogEvent.results[iRes2].tF10=float(columns[iColT2].split('=')[1])
+                        t1d=2
+                    if (columns[iColT1+t1d].startswith('claim=') or columns[iColT1+t1d]=='K'):
                         # cannot actually
                         continue
                     else:
-                        newLogEvent.results[iRes1].tClaimed=float(columns[iColT1+2])
-                        newLogEvent.results[iRes2].tClaimed=float(columns[iColT2+2])
+                        newLogEvent.results[iRes1].tClaimed=float(columns[iColT1+t1d])
+                        newLogEvent.results[iRes2].tClaimed=float(columns[iColT2+t2d])
+                else:
+                    newLogEvent.results[iRes1].turnx=turnx
+                    newLogEvent.results[iRes2].turnx=turnx
                 continue
             elif (columns[8]=='DIFFER' or columns[9]=='DIFFER'):
                 # diffing results, eg:
@@ -413,6 +431,14 @@ def parseLoggedEvent20170704(lineData):
                     # no such file or dir
                     newLogEvent.results[eRes].status['errno=2']=True
 #                    newLogEvent.results[eRes].fileLocation=columns[7]
+                elif ( columns[6]=="case" and columns[7]=="of" and columns[8]=="zero" and columns[9]=="turns" ):
+                    # eg: 2017-07-06 07:33:04.5570 [CRITICAL]  [RESULT#148184775 148184776] compare_results: case of zero turns pos= 1501 0 60 0 turns: 0 0 version: 40517 0
+
+                    newLogEvent.results[eRes].status['turnx0']=True
+                    idRes=int(columns[4].split(']')[0])
+                    newLogEvent.addResultConditional(idRes,None)
+                    eRes=newLogEvent.findResult(idRes)
+                    newLogEvent.results[eRes].status['turnx0']=True
                 else:
                     print ' unknown data set (5):',columns
             else:
@@ -529,12 +555,22 @@ def computeLogHistograms(logEvents,plots,dt=3600):
         if (tmpKey=='all'):
             continue
         tmpTimeStamps=[]
-        for tmpLogEvent in logEvents:
-            for tmpRes in tmpLogEvent.results:
-                if ( tmpRes.status[tmpKey] ):
-                    tmpTimeStamps.append( tmpLogEvent.timeStamp )
+        if ( RESULT().status.has_key(tmpKey) ):
+            tmpWeights=None
+            for tmpLogEvent in logEvents:
+                for tmpRes in tmpLogEvent.results:
+                    if ( tmpRes.status[tmpKey] ):
+                        tmpTimeStamps.append( tmpLogEvent.timeStamp )
+        elif (RESULT().__dict__.has_key(tmpKey)):
+            tmpWeights=[]
+            for tmpLogEvent in logEvents:
+                for tmpRes in tmpLogEvent.results:
+                    if ( tmpRes.__dict__[tmpKey] is not None ):
+                        tmpTimeStamps.append( tmpLogEvent.timeStamp )
+                        tmpWeights.append(tmpRes.__dict__[tmpKey])
+
         if (len(tmpTimeStamps)>0):
-            histograms[tmpKey], tmpbins = np.histogram(to_timestamp(tmpTimeStamps), bins=bins)
+            histograms[tmpKey], tmpbins = np.histogram(to_timestamp(tmpTimeStamps), bins=bins, weights=tmpWeights)
         else:
             # null histogram
             histograms[tmpKey]=np.array([0.0 for iBin in range(len(bins)-1)])
@@ -587,6 +623,7 @@ def plotLogHistograms(histograms,centers,binWidths,plots,oFilePrefix='current',l
     
     # create plot
     for tmpPlotName,tmpPlotSeries in plots.iteritems():
+        lFirst=True
         ax1=plt.gca()
         ax1.set_title('Treated results as from Validator log')
         timeSpan=centers[-1]-centers[0]
@@ -604,25 +641,31 @@ def plotLogHistograms(histograms,centers,binWidths,plots,oFilePrefix='current',l
         ax1.xaxis.set_major_formatter(xfmt)
         ax1.set_xlabel('time')
         ax1.grid()
-        ax1.set_ylabel('#results [per hour]')
         ax1.set_yscale('log')
         ax1.grid( True, which='major', linestyle='-', linewidth=0.2 )
         ax1.grid( True, which='minor', linestyle='--', linewidth=0.2 )
         for tmpKey in sorted(tmpPlotSeries.keys()):
             if (histograms.has_key(tmpKey)):
                 if(len(histograms[tmpKey])>0):
+                    if(lFirst):
+                        if (tmpPlotSeries[tmpKey].has_key('ylabel')):
+                            ax1.set_ylabel(tmpPlotSeries[tmpKey]['ylabel'])
+                        else:
+                            ax1.set_ylabel('#results [per hour]')
+                        lFirst=False
+                    ax1.plot( from_timestamp(centers), np.divide(histograms[tmpKey],binWidths), tmpPlotSeries[tmpKey]['color'], label=tmpPlotSeries[tmpKey]['label'], markeredgewidth=0.0 )
                     labels = ax1.get_xticklabels()
                     plt.setp(labels, rotation=90)
-                    ax1.plot( from_timestamp(centers), np.divide(histograms[tmpKey],binWidths), tmpPlotSeries[tmpKey]['color'], label=tmpPlotSeries[tmpKey]['label'], markeredgewidth=0.0 )
                 else:
                     print ' ...skipping plotting histogram %s as no points have been found'%(tmpKey)
             else:
                 print ' ...skipping plotting histogram %s as no points have been found'%(tmpKey)
         handles, labels = ax1.get_legend_handles_labels()
-        ax1.legend(handles, labels, loc='upper center',bbox_to_anchor=(1.2,0.65))
         if (oFilePrefix is None):
+            ax1.legend(handles, labels, loc='upper center',bbox_to_anchor=(1.05,0.65))
             plt.show()
         else:
+            ax1.legend(handles, labels, loc='upper center',bbox_to_anchor=(1.2,0.65))
             if (lDate):
                 timeStr=datetime.datetime.now().strftime('_%Y-%m-%d_%H-%M-%S')
             else:
@@ -631,6 +674,7 @@ def plotLogHistograms(histograms,centers,binWidths,plots,oFilePrefix='current',l
             print ' saving plot in %s ...'%(oFileName)
             plt.savefig(oFileName,bbox_inches='tight')
         plt.close()
+        ax1.clear()
     return True
 
 def dumpHistograms(histograms,bins,centers,binWidths,oFileName):
@@ -670,7 +714,10 @@ def loadHistograms(iFileName):
             if (lFirstData):
                 bins.append(datetime.datetime.strptime('%s %s'%(data[0],data[1]),validatorTimeStampFormat))
                 lFirstData=False
-            bins.append(datetime.datetime.strptime('%s %s'%(data[2],data[3]),validatorTimeStampFormat))
+            try:
+                bins.append(datetime.datetime.strptime('%s %s'%(data[2],data[3]),validatorTimeStampFormat))
+            except:
+                bins.append(datetime.datetime.strptime('%s %s'%(data[2],data[3]),validatorTimeStampFormat[:-3]))
             centers.append(datetime.datetime.strptime('%s %s'%(data[4],data[5]),validatorTimeStampFormat))
             binWidths.append(float(data[6]))
             for iKey in range(len(histKeys)):
@@ -768,19 +815,19 @@ def dumpHostStatistics(hosts,oFileName):
     return True
 
 if (__name__=='__main__'):
-    oNameTag='current'
+    oNameTag='20180101'
     # parsing of log files:
     logFileNames=[
-#        'archive/sixtrack_validator.log-20170401.gz'
-#        'archive/sixtrack_validator.log-20170501.gz'
-#        'archive/sixtrack_validator.log-2017-05-pent.gz'
-#        'archive/sixtrack_validator.log-20170601.gz'
-#        'archive/sixtrack_validator.log.June24.gz'
-#        'archive/sixtrack_validator.log-20170701.gz'
+#        'archive/sixtrack_validator.log-20170401.gz',
+#        'archive/sixtrack_validator.log-20170501.gz',
+#        'archive/sixtrack_validator.log-2017-05-pent.gz',
+#        'archive/sixtrack_validator.log-20170601.gz',
+#        'archive/sixtrack_validator.log.June24.gz',
+#        'archive/sixtrack_validator.log-20170701.gz',
 #        'archive/sixtrack_validator.log-20170704.gz'
 #        'archive/sixtrack_validator.log-current.gz'
-#        'archive/sixtrack_validator.log-%s.gz'%(oNameTag)
-        'sixtrack_validator.log.gz'
+        'archive/sixtrack_validator.log-%s.gz'%(oNameTag)
+#        'sixtrack_validator.log.gz'
     ]
     lLogFiles=True   # parse log files
     nMaxIter=1000000
@@ -798,7 +845,7 @@ if (__name__=='__main__'):
 #       'archive/histograms_20170701.dat',
 #       'archive/histograms_20170704.dat'
 #       'archive/histograms_current.dat'
-        'archive/histograms_%s.dat'%(oNameTag)
+       'archive/histograms_%s.dat'%(oNameTag)
         ]
     histOFileName='archive/histograms_%s.dat'%(oNameTag)
     lReadHistsFromFile=False
@@ -813,25 +860,26 @@ if (__name__=='__main__'):
     lDate=False # date will appear in name of .png file
     plotsLogEventsVsTime={
         'overview': {
-            'all'          : {'color':'ks-','label': 'all' },
-            'valid'        : {'color':'go-','label':'valid'},
-            'invalid'      : {'color':'ro-','label':'invalid'},
-            'inconclusive' : {'color':'bo-','label':'inconclusive'},
-            'unknown'      : {'color':'mo-','label':'unknown'}
+            'all'          : {'color':'ks-','label': 'all','lsummary':True},
+            'valid'        : {'color':'go-','label':'valid','lsummary':True},
+            'invalid'      : {'color':'ro-','label':'invalid','lsummary':True},
+            'inconclusive' : {'color':'bo-','label':'inconclusive','lsummary':True},
+            'unknown'      : {'color':'mo-','label':'unknown','lsummary':True}
             },
         'errors': {
-            'all'          : {'color':'ks-','label': 'all' },
-            'nullF10'      : {'color':'ro-','label':'NULL fort.10'},
-            'badFLOPr'     : {'color':'co-','label':'bad FLOP ratio'},
-            'errno=24'     : {'color':'mo-','label':'errno=24'},
-            'errno=2'      : {'color':'yo-','label':'errno=2'},
-            'errno=-108'   : {'color':'bo-','label':'errno=-108'}
+            'all'          : {'color':'ks-','label': 'all','lsummary':True},
+            'nullF10'      : {'color':'ro-','label':'NULL fort.10','lsummary':True},
+            'badFLOPr'     : {'color':'co-','label':'bad FLOP ratio','lsummary':True},
+            'errno=24'     : {'color':'mo-','label':'errno=24','lsummary':True},
+            'errno=2'      : {'color':'yo-','label':'errno=2','lsummary':True},
+            'errno=-108'   : {'color':'bo-','label':'errno=-108','lsummary':True}
         }
     }
 
     # stuff dependent on version of validator
     if (lValidator20170704):
-        plotsLogEventsVsTime['errors']['turnx0']={'color':'go-','label':'turnx=0'}
+        plotsLogEventsVsTime['errors']['turnx0']={'color':'go-','label':'turnx=0','lsummary':True}
+        plotsLogEventsVsTime['performance']={'turnx':{'color':'ro-','label':'turnx','lsummary':False,'ylabel':'turnx'}}
         histograms1D={
             'CPUtime_client': {
                 'tClaimed'     : {'color':'red','label': 'claimed', 'data': np.array([]) }
@@ -907,8 +955,14 @@ if (__name__=='__main__'):
     print ' ...summary of histograms:'
     allResults=sum(histogramsLogEventsVsTime['all'])
     for tmpKey in sorted(histogramsLogEventsVsTime.keys()):
-        totResults=sum(histogramsLogEventsVsTime[tmpKey])
-        print ' ...found %9i "%15s" results in total (%6.2f%%)!'%(totResults,tmpKey,totResults*100.0/allResults)
+        lPrint=False
+        for tmpSet in plotsLogEventsVsTime.values():
+            if (tmpSet.has_key(tmpKey)):
+                lPrint=tmpSet[tmpKey]['lsummary']
+                break
+        if lPrint:
+            totResults=sum(histogramsLogEventsVsTime[tmpKey])
+            print ' ...found %9i "%15s" results in total (%6.2f%%)!'%(totResults,tmpKey,totResults*100.0/allResults)
     if (nInhibits>0):
         print ' ...found %9i "%15s" results in total (%6.2f%% - not regular sequence of RESULTS#/HOST# or results not stored correctly)'%(nInhibits,'inhibited',nInhibits*100.0/allResults)
     if (nWrong>0):

@@ -152,17 +152,21 @@ if [ $long -eq 1 ] ;then
   fi
 fi
 
-sixdeskmess -1 "copying database to /tmp/${LOGNAME}/work, to speed up processing"
-rm -rf /tmp/${LOGNAME}/work
-[ -d /tmp/${LOGNAME}/work ] || mkdir -p /tmp/${LOGNAME}/work
-cp -rp $sixdeskwork/* /tmp/${LOGNAME}/work
-cd /tmp/${LOGNAME}/work
+sixdeskmess -1 "copying database to ${tmpNodeDir}/work, to speed up processing"
+rm -rf ${tmpNodeDir}/work
+mkdir -p ${tmpNodeDir}/work
+cp -rp $sixdeskwork/* ${tmpNodeDir}/work
+cd ${tmpNodeDir}/work
 
 # make backup of present DB
 [ -d backup ] || mkdir backup
+export GLOBIGNORE='backup'
 cp -r * backup
+export GLOBIGNORE=
 # collect missing directories
 rm -f missingDirs.txt
+# collect damaged directories
+rm -f damagedDirs.txt
 
 echo ""
 printf "=%.0s" {1..80}
@@ -183,6 +187,8 @@ for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
             # - remove lines without a Runnam
 	    grep '%' ${dbFile} > ${dbFile}_temp
 	    rm ${dbFile}_temp
+	    # - sanitize file from non-ASCI chars
+	    sed -i '/[^[:print:]]/d' ${dbFile}
 	done
     fi
 done
@@ -200,7 +206,7 @@ for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
 	checkDBnLines true true
 	if ! ${lequal} ; then
 	    # - remove double entries in each file
-	    sixdeskmess  1 "   ...removing double entries in each file..."
+            sixdeskmess  1 "   ...removing double entries in each file..."
 	    for dbFile in ${dbInc} ${dbCom} ${dbAll} ; do
 		sixdeskmess  1 "      ...considering DB file ${dbFile} ..."
 		cat ${dbFile} | sort -u > ${dbFile}_temp
@@ -292,7 +298,7 @@ if ! ${lequal} ; then
     awk '{print ($1)}' ${dbAll} | sort | uniq -c | awk '{if ($1>1) {print ($2)}}' > double.lis
     while read aRunnam ; do
 	sixdeskmess  1 "found duplicate Runnam ${aRunnam}"
-	allTaskIDs=`grep ${aRunnam} ${dbAll} | cut -d\  -f2-`
+	allTaskIDs=`grep "^${aRunnam} " ${dbAll} | cut -d\  -f2- | sort -u`
 	allTaskIDs=( ${allTaskIDs} )
 	sed -i -e "/${aRunnam}/d" ${dbAll}
 	echo "${aRunnam} ${allTaskIDs[@]} " >> ${dbAll}
@@ -331,7 +337,7 @@ if ! ${lequal} ; then
 	! [ -e ${platForms[$ii]}jobs/${fileSuffixes[$ii]} ] || searchFiles="${searchFiles} ${platForms[$ii]}jobs/${fileSuffixes[$ii]}"
     done
     while read aRunnam ; do
-	allTaskIDs=`grep ${aRunnam} ${searchFiles} | cut -d\  -f2-`
+	allTaskIDs=`grep "^${aRunnam} " ${searchFiles} | cut -d\  -f2-`
 	allTaskIDs=( ${allTaskIDs} )
 	echo "${aRunnam} ${allTaskIDs[@]} " >> ${dbAll}
 	sixdeskmess  1 " added Runnam ${aRunnam} missing in ${dbAll} - taskids: ${allTaskIDs[@]}"
@@ -359,26 +365,19 @@ echo ""
 for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
     tmpCheckFile=${platForms[$ii]}jobs/${fileSuffixes[$ii]}
     if [ -s ${tmpCheckFile} ] ; then
-	sixdeskmess -1 "...checking against ${tmpCheckFile}"
-	cat taskids ${tmpCheckFile} | awk '{print ($1)}' | sort | uniq -c | awk '{if ($1==1) {print ($0)}}' > missing_taskids_temp
-	while read aline ; do
-	    data=( ${aline} )
-	    Runnam=${data[0]}
-	    taskid=${data[1]}
-	    inTaskIds=`grep ${Runnam} taskids`
-	    inTaskIds2=`echo "${inTaskIds}" | grep ${taskid}`
+	sixdeskmess -1 "...checking against ${tmpCheckFile} ..."
+	sixdeskmess -1 "   this operation might take few minutes, depending on how many tasks you have in taskids - be patient..."
+	cat taskids ${tmpCheckFile} | awk '{print ($1)}' | sort | uniq -c | awk '{if ($1==1) {print ($2)}}' > missing_taskids_temp
+	while read Runnam ; do
+	    inTaskIds=`grep "^${Runnam} " taskids`
 	    if [ -z "${inTaskIds}" ] ; then
+		inTaskIds2=`grep "^${Runnam} " ${tmpCheckFile}`
 		# the taskid is present in the platform listing but not in taskids - add it
 		sixdeskmess -1 "...missing ${Runnam} in taskids - adding it ..."
-		echo "${aline}" >> taskids
-	    elif [ -z "${inTaskIds2}" ] ; then
-		# the taskid is present in the platform listing and in taskids, but
-		#     not with the specified taskid - add it
-		sixdeskmess -1 "...${Runnam} is present in taskids but not as ${taskid} - adding it ..."
-		sed -i -e "/^${inTaskIds}/d" taskids
-		echo "${inTaskIds} ${taskid} " >> taskids
+		echo "${inTaskIds2}" >> taskids
 	    fi
-	done < ${missing_taskids_temp} 
+	done < missing_taskids_temp
+        rm -f missing_taskids_temp
     fi
 done
 
@@ -431,6 +430,17 @@ then
 #MACRO mymess
 
 fi
+if [ ! -e $sixdeskjobs_logs/fort.3 ] ;then
+    sixdeskmess -1 "No SIXTRACK control file (fort.3): Run stopped"
+#MACRO myunlock $sixdeskstudy
+    sixdesklockdir=$sixdeskstudy
+    sixdeskunlock
+#MACRO myunlock
+#MACRO myexit 7
+    sixdeskexitparam=7
+    sixdeskexit
+#MACRO myexit
+fi
 i=$ista
 while test "$i" -le "$iend" 
 do
@@ -468,7 +478,6 @@ do
     nobetas=`cat $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues | wc -w`
     if test "$nobetas" -ne 14
     then 
-
 #MACRO mymess 0 betavalues has only $nobetas words!!! Should be 14!
       sixdeskmesslevel=0
       sixdeskmess -1 "betavalues has only $nobetas words!!! Should be 14!"
@@ -480,14 +489,37 @@ do
       sixdesklockdir=$sixdeskstudy
       sixdeskunlock
 #MACRO myunlock
-
-
 #MACRO myexit 98
       sixdeskexitparam=98
       sixdeskexit
 #MACRO myexit
-
     fi
+    if [ ! -e "$dir16"/fort.2_"$i".gz ] ;then
+        sixdeskmess -1 "No SIXTRACK geometry file (fort.2): Run stopped"
+#MACRO myunlock $sixdeskstudy
+        sixdesklockdir=$sixdeskstudy
+        sixdeskunlock
+#MACRO myunlock
+#MACRO myexit 6
+        sixdeskexitparam=6
+        sixdeskexit
+#MACRO myexit
+    fi
+    if [ ! -e "$dir16"/fort.8_"$i".gz ] ;then
+
+        sixdeskmess -1 "No SIXTRACK misalignment file (fort.8): dummy file created"
+
+        touch "$dir16"/fort.8_${i}
+        gzip "$dir16"/fort.8_${i}
+    fi
+    if [ ! -e "$dir16"/fort.16_"$i".gz ] ;then
+
+        sixdeskmess -1 "No SIXTRACK error file (fort.16): dummy file created"
+
+        touch "$dir16"/fort.16_${i}
+        gzip "$dir16"/fort.16_${i}
+    fi
+    #
     #
     #run for longterm
     #
@@ -537,95 +569,27 @@ do
 #MACRO myrundir
  
           #
-          if [ ! -d "$tree"/"$Rundir" ] ;then
-            echo "$Rundir is MISSING!!!"
-          fi
-          #
-          if [ ! -e "$dir16"/fort.2_"$i".gz ] ;then
-
-#MACRO mymess 0 No SIXTRACK geometry file (fort.2): Run stopped
-            sixdeskmesslevel=0
-            sixdeskmess -1 "No SIXTRACK geometry file (fort.2): Run stopped"
-#MACRO mymess
-
-
-#MACRO myunlock $sixdeskjobs_logs
-            ###sixdesklockdir=$sixdeskjobs_logs
-            ###sixdeskunlock
-#MACRO myunlock
-
-
-#MACRO myunlock $sixdeskstudy
-            sixdesklockdir=$sixdeskstudy
-            sixdeskunlock
-#MACRO myunlock
-
-
-#MACRO myexit 6
-            sixdeskexitparam=6
-            sixdeskexit
-#MACRO myexit
-
-          fi
-          if [ ! -e $sixdeskjobs_logs/fort.3 ] ;then
-
-#MACRO mymess 0 No SIXTRACK control file (fort.3): Run stopped
-            sixdeskmesslevel=0
-            sixdeskmess -1 "No SIXTRACK control file (fort.3): Run stopped"
-#MACRO mymess
-
-
-#MACRO myunlock $sixdeskjobs_logs
-            ###sixdesklockdir=$sixdeskjobs_logs
-            ###sixdeskunlock
-#MACRO myunlock
-
-
-#MACRO myunlock $sixdeskstudy
-            sixdesklockdir=$sixdeskstudy
-            sixdeskunlock
-#MACRO myunlock
-
-
-#MACRO myexit 7
-            sixdeskexitparam=7
-            sixdeskexit
-#MACRO myexit
-
-          fi
-          if [ ! -e "$dir16"/fort.8_"$i".gz ] ;then
-
-#MACRO mymess 0 No SIXTRACK misalignment file (fort.8): dummy file created
-            sixdeskmesslevel=0
-            sixdeskmess -1 "No SIXTRACK misalignment file (fort.8): dummy file created"
-#MACRO mymess
-
-            touch "$tree"/"$Rundir"/fort.8
-            gzip "$tree"/"$Rundir"/fort.8
-          fi
-          if [ ! -e "$dir16"/fort.16_"$i".gz ] ;then
-
-#MACRO mymess 0 No SIXTRACK error file (fort.16): dummy file created
-            sixdeskmesslevel=0
-            sixdeskmess -1 "No SIXTRACK error file (fort.16): dummy file created"
-#MACRO mymess
-
-            touch "$tree"/"$Rundir"/fort.16
-            gzip "$tree"/"$Rundir"/fort.16
-          fi
-          #
-# Now try the FIX!
-          if test ! -d $tree/$Rundir 
-          then
-            echo "Something really bad, $Rundir does NOT exist!!!"
-	    echo "$Rundir" >> missingDirs.txt
+          if [ ! -d ${tree}/${Rundir} ] ;then
+              echo "Something really bad, $Rundir does NOT exist!!!"
+	      echo "$Rundir" >> missingDirs.txt
+          else
+              damaged=false
+              for iFort in 2 3 8 16 ; do
+                  if ! [ -s ${tree}/${Rundir}/fort.${iFort}.gz ] ; then
+                      echo "Something really bad, ${tree}/${Rundir}/fort.${iFort}.gz does NOT exist!!!"
+                      damaged=true
+                  fi
+                  if ${damaged} ; then
+                      echo "${Rundir}" >> damagedDirs.txt
+                  fi
+              done
           fi
 # Now add the taskid if missing
-          grep "$Runnam " taskids
+          grep "^${Runnam} " taskids
           if test $? -ne 0
           then
-            echo "$Runnam is MISSING"
-            echo "$Runnam " >> taskids
+            echo "${Runnam} is MISSING"
+            echo "${Runnam} " >> taskids
           fi  
           k=`expr $k + $kstep`
         done
@@ -645,10 +609,14 @@ done
 
 cp -pr * $sixdeskwork/
 cd $sixdeskhome
-rm -rf /tmp/${LOGNAME}/work
+rm -rf ${tmpNodeDir}/work
 
 if [ -s $sixdeskwork/missingDirs.txt ] ; then
-    sixdeskmess -1 "missing dirs! please see missingDirs.txt"
+    sixdeskmess -1 "missing dirs! please see $sixdeskwork/missingDirs.txt"
+fi
+
+if [ -s $sixdeskwork/damagedDirs.txt ] ; then
+    sixdeskmess -1 "damaged dirs! please see $sixdeskwork/damagedDirs.txt"
 fi
 
 #MACRO myunlock $sixdeskjobs_logs

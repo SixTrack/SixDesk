@@ -43,6 +43,8 @@ function how_to_use() {
    -l      use fort.3.local. This file will be added to the list of necessary
                input files only in case this flag will be issued.
    -g      use a git sparse checkout to initialise workspace (takes disk space)
+   -c      take into account also scan_definitions file. This option is available
+               only in conjunction with -n
    -P      python path
    -v      verbose (OFF by default)
 
@@ -208,18 +210,21 @@ lcrwSpace=false
 loverwrite=true
 lverbose=false
 llocalfort3=false
+lScanDefs=false
 lunlock=false
 lgit=false
 currPlatform=""
 currStudy=""
 tmpPythonPath=""
+origRepoForSetup='https://github.com/amereghe/SixDesk.git'
+origBranchForSetup=`git --git-dir=${SCRIPTDIR}/../.git branch | grep '*' | awk '{print ($NF)}'`
 
 # variables set based on parsing fort.3.local
 
 nActions=0
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":hsvld:ep:P:nN:Ug" opt ; do
+while getopts  ":hsvlcd:ep:P:nN:Ug" opt ; do
     case $opt in
 	h)
 	    how_to_use
@@ -257,6 +262,10 @@ while getopts  ":hsvld:ep:P:nN:Ug" opt ; do
 	l)
 	    # use fort.3.local
 	    llocalfort3=true
+	    ;;
+	c)
+	    # use scan_definitions
+	    lScanDefs=true
 	    ;;
 	P)
 	    # the user is requesting a specific path to python
@@ -316,7 +325,21 @@ if ${llocalfort3} ; then
     echo ""
     echo "--> User requested inclusion of fort.3.local"
     echo ""
-    necessaryInputFiles=( sixdeskenv sysenv fort.3.local )
+    necessaryInputFiles=( "${necessaryInputFiles[@]} fort.3.local" )
+fi
+if ${lScanDefs} ; then
+    if ${lcptemplate} ; then
+        echo ""
+        echo "--> User requested inclusion of scan_definitions"
+        echo ""
+        necessaryInputFiles=( "${necessaryInputFiles[@]} scan_definitions" )
+    else
+        echo ""
+        echo "--> Inclusion of scan_definitions avaiable only in case of copy"
+        echo "-->    of template files. De-activating it."
+        echo ""
+        lScanDefs=false
+    fi
 fi
 
 # ------------------------------------------------------------------------------
@@ -334,6 +357,8 @@ if [ ! -s ${SCRIPTDIR}/bash/dot_profile ] ; then
 fi
 # - load environment
 source ${SCRIPTDIR}/bash/dot_profile
+# - stuff specific to node where user is running:
+sixdeskSetLocalNodeStuff
 
 # - set up new workspace
 if ${lcrwSpace} ; then
@@ -448,9 +473,9 @@ else
     sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s ${necessaryInputFiles[@]}
     if [ $? -gt 0 ] ; then
         sixdeskmess -1 "not all necessary files are in $envFilesPath dir:"
-        for tmpFile in ${necessaryInputFiles[@]} ; do
-            sixdeskmess -1 "file ${tmpFile} : `\ls -ltrh $envFilesPath`"
-        done
+        sixdeskmess -1 "missing files: ${necessaryInputFiles[@]}"
+        sixdeskmess -1 "status of dir:"
+        \ls -ltrh $envFilesPath
 	sixdeskexit 4
     fi
 
@@ -576,13 +601,15 @@ fi
 sixdeskunlockAll
 
 if ! ${lcptemplate} ; then
-    
-    # - kinit, to renew kerberos ticket
-    sixdeskRenewKerberosToken
+
+    if ${lKerberos} ; then
+        # - kinit, to renew kerberos ticket
+        sixdeskRenewKerberosToken
+    fi
     
     # - fs listquota
     echo ""
-    if [ `echo "${sixdesktrack}" | cut -c-4` == "/afs" ] ; then
+    if [[ "${sixdesktrack}" == "/afs"* ]] ; then
 	sixdeskmess -1 " --> fs listquota ${sixdesktrack}:"
 	tmpLines=`fs listquota ${sixdesktrack}`
 	echo "${tmpLines}"
@@ -592,8 +619,8 @@ if ! ${lcptemplate} ; then
 	    sixdeskmess -1 "WARNING: your quota is above 90%!! pay attention to occupancy of the current study, in case of submission..."
 	fi
     else
-	sixdeskmess -1 " --> df -Th:"
-	\df -Th
+	sixdeskmess -1 " --> df -Th ${sixdesktrack}:"
+	\df -Th ${sixdesktrack}
 	sixdeskmess -1 " the above output is at your convenience, for you to check disk space"
     fi
 

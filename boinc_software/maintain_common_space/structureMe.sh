@@ -76,18 +76,22 @@ EOF
 	fi
 	git submodule update --init --recursive
 	cd utilities/externals/SixDeskDB
+	[ -n "${__commitSDBid}" ] || __commitSDBid='master'
 	git checkout ${__commitSDBid}
-	if [ "${__commitSDBid}" == "master" ] ; then
-	    git pull
-	fi
 	cd ${__origDir}
     fi
     if ${lScripts} ; then
 	# make fortran exes for checking fort.10
-	cd ${__Dir}
-	cd utilities/fortran
+	cd ${__Dir}/utilities/fortran
 	make
 	ls -ltrh
+	cd ${__origDir}
+	# make documentation
+        if [ -d ${__Dir}/utilities/doc ] ; then
+	    cd ${__Dir}/utilities/doc
+	    make
+	    ls -ltrh
+        fi
 	cd ${__origDir}
 	# echo commits/logs
 	echo ""
@@ -121,6 +125,10 @@ function checkDir(){
     cd ${__Dir}/utilities/fortran
     ls -ltrh
     cd ${__origDir}
+    # documentation
+    cd ${__Dir}/utilities/doc
+    ls -ltrh
+    cd ${__origDir}
     # checkout of SixDB
     cd ${__Dir}/utilities/externals/SixDeskDB/
     git log --max-count=1
@@ -139,15 +147,15 @@ SixDeskVer=(
     'test'
 )
 originRepo=(
-    'https://github.com/amereghe/SixDesk.git'
-    'https://github.com/amereghe/SixDesk.git'
-    'https://github.com/amereghe/SixDesk.git'
-    'https://github.com/amereghe/SixDesk.git'
+     'https://github.com/amereghe/SixDesk.git'
+     'https://github.com/amereghe/SixDesk.git'
+     'https://github.com/amereghe/SixDesk.git'
+     'https://github.com/amereghe/SixDesk.git'
 )
 branch=(
     'isolateScripts'
-    '0383d07e534b6adca1e042dcee502507281a72c0'
-    '0383d07e534b6adca1e042dcee502507281a72c0'
+    'pro'
+    'old'
     'sixtracktest'
 )
 commitID=(
@@ -157,10 +165,10 @@ commitID=(
     ''
 )
 commitSixDB=(
-    'b7c99755018267bcf20e769ea93d7719e7207643'
-    '372a0daec619c5b8ed337c2bd484684ae58d6a8c'
-    '372a0daec619c5b8ed337c2bd484684ae58d6a8c'
-    'b7c99755018267bcf20e769ea93d7719e7207643'
+     ''
+     ''
+     '372a0daec619c5b8ed337c2bd484684ae58d6a8c'
+     ''
 )
 
 for (( ii=0; ii<${#SixDeskVer[@]}; ii++ )) ; do
