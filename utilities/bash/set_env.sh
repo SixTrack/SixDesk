@@ -22,11 +22,18 @@ function how_to_use() {
                    you can also specify the scratch name with the workspace, eg:
            -N scratch0/wTest
                    the scratch can be omitted - it will be simply ignored;
-                   the workspace will be populated with template files as either
-                       from the current scripts or as checked-out from the git repo:
+                   the workspace will be populated with template files as from
+                       the current scripts
+EOF
+    if ${lGitIsThere} ; then
+        cat <<EOF
+                       or as checked-out from the git repo:
            ${origRepoForSetup}
                        branch:
            ${origBranchForSetup}
+EOF
+    fi
+    cat <<EOF
    -U      unlock dirs necessary to the script to run
            PAY ATTENTION when using this option, as no check whether the lock
               belongs to this script or not is performed, and you may screw up
@@ -190,13 +197,15 @@ fi
 # - infos about current repo
 export REPOPATH=`dirname ${SCRIPTDIR}`
 if [ `which git 2>/dev/null | wc -l` -eq 1 ] ; then
+    lGitIsThere=true
     cd ${REPOPATH}
+    # origRepoForSetup='https://github.com/amereghe/SixDesk.git'
     origRepoForSetup=`git remote show origin | grep Fetch | awk '{print ($NF)}'`
+    # origBranchForSetup='newWorkspace'
     origBranchForSetup=`git branch | grep '^*' | awk '{print ($2)}'`
     cd - 2>&1 > /dev/null
 else
-    origRepoForSetup='https://github.com/amereghe/SixDesk.git'
-    origBranchForSetup='newWorkspace'
+    lGitIsThere=false
 fi
 
 # - necessary input files
@@ -216,12 +225,8 @@ lgit=false
 currPlatform=""
 currStudy=""
 tmpPythonPath=""
-origRepoForSetup='https://github.com/amereghe/SixDesk.git'
-origBranchForSetup=`git --git-dir=${SCRIPTDIR}/../.git branch | grep '*' | awk '{print ($NF)}'`
 
 # variables set based on parsing fort.3.local
-
-nActions=0
 
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":hsvlcd:ep:P:nN:Ug" opt ; do
@@ -233,23 +238,26 @@ while getopts  ":hsvlcd:ep:P:nN:Ug" opt ; do
 	s)
 	    # set study (new/update/switch)
 	    lset=true
-	    let nActions+=1
 	    ;;
 	d)
 	    # load existing study
 	    lload=true
 	    currStudy="${OPTARG}"
-	    let nActions+=1
 	    ;;
 	n) 
 	    # copy input files from template dir
 	    lcptemplate=true
-	    let nActions+=1
 	    ;;
 	N)
 	    # create workspace
 	    lcrwSpace=true
 	    wSpaceName="${OPTARG}"
+	    # use fort.3.local
+	    llocalfort3=true
+	    # use scan_definitions
+	    lScanDefs=true
+	    # copy input files from template dir
+	    lcptemplate=true
 	    ;;
 	e)
 	    # do not overwrite
@@ -281,7 +289,11 @@ while getopts  ":hsvlcd:ep:P:nN:Ug" opt ; do
 	    ;;
         g)
             # use git sparse checkout to set-up workspace
-            lgit=true
+            if ${lGitIsThere} ; then
+                lgit=true
+            else
+                echo " --> git is NOT there: ignoring -g option"
+            fi
             ;;
 	:)
 	    how_to_use
@@ -302,9 +314,17 @@ if ! ${lset} && ! ${lload} && ! ${lcptemplate} && ! ${lunlock} && ! ${lcrwSpace}
     how_to_use
     echo "No action specified!!! aborting..."
     exit
-elif [ ${nActions} -gt 1 ] ; then
+elif ${lset} && ${lload} ; then
     how_to_use
-    echo "Please choose only one action!!! aborting..."
+    echo "Cannot set and load study at the same time!!! aborting..."
+    exit
+elif ${lcptemplate} && ${lset} ; then
+    how_to_use
+    echo "Cannot copy templates and set study at the same time!!! aborting..."
+    exit
+elif ${lcptemplate} && ${lload} ; then
+    how_to_use
+    echo "Cannot copy templates and load study at the same time!!! aborting..."
     exit
 fi
 # - clean options in case of brand new study
@@ -372,8 +392,8 @@ if ${lcrwSpace} ; then
     else
 	mkdir -p ${wSpaceName}
 	cd ${wSpaceName}
-	if ${lgit} && [ `which git 2>/dev/null | wc -l` -eq 1 ] ; then
-	    sixdeskmess -1 "--> using git to initialise sixjobs"
+	if ${lgit} ; then
+	    sixdeskmess -1 "--> using git to initialise sixjobs dir - repo: ${origRepoForSetup} - branch: ${origBranchForSetup}"
 	    git init
 	    git config core.sparseCheckout true
 	    cat > .git/info/sparse-checkout <<EOF
@@ -397,7 +417,7 @@ EOF
     fi
     # do we really need this link?
     [[ "${wSpaceName}" != *"scratch"* ]] || ln -s ${wSpaceName}
-    if [ ${nActions} -eq 0 ] ; then
+    if ! ${lset} && ! ${lload} && ! ${lcptemplate} && ! ${lunlock} ; then
 	sixdeskmess -1 "requested only initialising workspace. Exiting..."
 	exit 0
     fi
