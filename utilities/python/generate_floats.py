@@ -119,12 +119,11 @@ def extremesInt( xstart, xstop, xdelta ):
     xstop_f =xstop_f.ljust(ll,'0')
     xdelta_f=xdelta_f.ljust(ll,'0')
     # - remove useless zeros:
-    if ( len(xstart_f)>0 and len(xstop_f)>0 and len(xdelta_f)>0 ):
-        while( xstart_f[-1]=='0' and xstop_f[-1]=='0' and xdelta_f[-1]=='0' ):
-            xstart_f=xstart_f[:-1]
-            xstop_f =xstop_f[:-1]
-            xdelta_f=xdelta_f[:-1]
-            ll=ll-1
+    while( len(xstart_f)>0 and len(xstop_f)>0 and len(xdelta_f)>0 and xstart_f[-1]=='0' and xstop_f[-1]=='0' and xdelta_f[-1]=='0' ):
+        xstart_f=xstart_f[:-1]
+        xstop_f =xstop_f[:-1]
+        xdelta_f=xdelta_f[:-1]
+        ll=ll-1
         
     # build actual integer-made numbers:
     istart=int(xstart_i+xstart_f)
