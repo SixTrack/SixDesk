@@ -218,7 +218,7 @@ if ( __name__ == "__main__" ):
     if ( len(sys.argv)>5 ):
         lForceIntegers=sys.argv[5].lower()=="true"
     else:
-        lForceIntegers=True
+        lForceIntegers=False
         
     if ( lIntegerBased ):
 
@@ -226,7 +226,7 @@ if ( __name__ == "__main__" ):
         if ( len(sys.argv)>6 ):
             lRemoveTrailingZeros=sys.argv[6].lower()=="true"
         else:
-            lRemoveTrailingZeros=True
+            lRemoveTrailingZeros=False
         
         # acquire values
         istart, istop, idelta, ll = extremesInt( xstart, xstop, xdelta )
@@ -244,7 +244,7 @@ if ( __name__ == "__main__" ):
             print 'end loop:', istart, istop, idelta, ll
     else:
         if ( len(sys.argv)>6 ):
-            prec=sys.argv[6]
+            prec=float(sys.argv[6])
         else:
             prec=1.0E-15
         # make them float, in case
