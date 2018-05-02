@@ -804,7 +804,7 @@ sixdeskDefinePythonPath(){
 	export PATH=${1}:${PATH}
 	sixdeskmess 2 "Setting python to ${1} in PATH env var"
     fi
-    sixdeskmess -1 "--> python set to: `which python` - version: `python --version`"
+    sixdeskmess -1 "Python set to: `which python` - version: `python --version 2>&1`"
 }
 sixdeskGetCurretPaths(){
     tmpDir=`readlink -f $PWD`
