@@ -402,7 +402,8 @@ sixjobs/mask/*
 sixjobs/sixdeskTaskIds/*
 sixjobs/studies/*
 EOF
-	    git remote add -f origin ${origRepoForSetup}
+	    git remote add origin ${origRepoForSetup}
+            git fetch origin ${origBranchForSetup}
 	    git checkout ${origBranchForSetup}
 	else
 	    origDir=${REPOPATH}/sixjobs
@@ -466,14 +467,32 @@ sixdesklockAll
 
 if ${lcptemplate} ; then
 
-    sixdeskmess -1 "copying here template files for brand new study"
-    sixdeskmess -1 "template input files from ${SCRIPTDIR}/templates/input"
+    if ${lgit} ; then
+        sixdeskmess -1 "--> using git to get input files in sixjobs - repo: ${origRepoForSetup} - branch: ${origBranchForSetup}"
+        presDir=$PWD
+        cd ../
+        git branch > /dev/null 2>&1
+        if [ $? -ne 0 ] ; then
+            # set up git repo
+	    git init
+	    git remote add origin ${origRepoForSetup}
+        fi
+	git config core.sparseCheckout true
+        echo "sixjobs/*" >> .git/info/sparse-checkout
+        git fetch origin ${origBranchForSetup}
+        git checkout ${origBranchForSetup}
+        cd ${presDir}
 
-    for tmpFile in ${necessaryInputFiles[@]} ; do
-	# preserve original time stamps
-	cp -p ${SCRIPTDIR}/templates/input/${tmpFile} .
-	sixdeskmess 2 "${tmpFile}"
-    done
+    else
+        sixdeskmess -1 "copying here template files for brand new study"
+        sixdeskmess -1 "template input files from ${SCRIPTDIR}/templates/input"
+
+        for tmpFile in ${necessaryInputFiles[@]} ; do
+	    # preserve original time stamps
+	    cp -p ${SCRIPTDIR}/templates/input/${tmpFile} .
+	    sixdeskmess 2 "${tmpFile}"
+        done
+    fi
 
     # get current paths:
     sixdeskGetCurretPaths
