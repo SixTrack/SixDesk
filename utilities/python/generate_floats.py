@@ -226,7 +226,7 @@ if ( __name__ == "__main__" ):
         if ( len(sys.argv)>6 ):
             lRemoveTrailingZeros=sys.argv[6].lower()=="true"
         else:
-            lRemoveTrailingZeros=False
+            lRemoveTrailingZeros=True
         
         # acquire values
         istart, istop, idelta, ll = extremesInt( xstart, xstop, xdelta )
