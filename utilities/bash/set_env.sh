@@ -23,14 +23,17 @@ function how_to_use() {
            -N scratch0/wTest
                    the scratch can be omitted - it will be simply ignored;
                    the workspace will be populated with template files as from
-                       the current scripts
 EOF
     if ${lGitIsThere} ; then
         cat <<EOF
-                       or as checked-out from the git repo:
-           ${origRepoForSetup}
+                       the current scripts or as checked-out from the git repo:
+                            ${origRepoForSetup}
                        branch:
-           ${origBranchForSetup}
+                            ${origBranchForSetup}
+EOF
+    else
+        cat <<EOF
+                       the current scripts;
 EOF
     fi
     cat <<EOF
@@ -402,7 +405,7 @@ if ${lcrwSpace} ; then
 	mkdir -p ${wSpaceName}
 	cd ${wSpaceName}
 	if ${lgit} ; then
-	    sixdeskmess -1 "--> using git to initialise sixjobs dir - repo: ${origRepoForSetup} - branch: ${origBranchForSetup}"
+	    sixdeskmess -1 "Using git to initialise sixjobs dir - repo: ${origRepoForSetup} - branch: ${origBranchForSetup}"
 	    git init
 	    git config core.sparseCheckout true
 	    cat > .git/info/sparse-checkout <<EOF
@@ -415,7 +418,7 @@ EOF
             git checkout ${origBranchForSetup}
 	else
 	    origDir=${REPOPATH}/sixjobs
-	    sixdeskmess -1 "--> initialising sixjobs from ${origDir}"
+	    sixdeskmess -1 "Initialising sixjobs from ${origDir}"
 	    cp -r ${origDir} .
 	fi
 	cd - 2>&1 > /dev/null
@@ -476,7 +479,7 @@ sixdesklockAll
 if ${lcptemplate} ; then
 
     if ${lgit} ; then
-        sixdeskmess -1 "--> using git to get input files in sixjobs - repo: ${origRepoForSetup} - branch: ${origBranchForSetup}"
+        sixdeskmess -1 "Using git to get input files in sixjobs - repo: ${origRepoForSetup} - branch: ${origBranchForSetup}"
         presDir=$PWD
         cd ../
         git branch > /dev/null 2>&1
@@ -487,12 +490,10 @@ if ${lcptemplate} ; then
         fi
 	git config core.sparseCheckout true
         if [ `grep 'sixjobs/\*' .git/info/sparse-checkout 2> /dev/null | wc -l` -eq 0 ] ; then
-            sixdeskmess -1 "merda di paperino!"
             echo 'sixjobs/*' >> .git/info/sparse-checkout
             git fetch origin ${origBranchForSetup}
             git checkout ${origBranchForSetup}
         else
-            sixdeskmess -1 "merda di pippo!"
             rm -f ${necessaryInputFiles[@]}
             git fetch origin ${origBranchForSetup}
             git reset --hard
@@ -665,7 +666,7 @@ if ! ${lcptemplate} ; then
     # - fs listquota
     echo ""
     if [[ "${sixdesktrack}" == "/afs"* ]] ; then
-	sixdeskmess -1 " --> fs listquota ${sixdesktrack}:"
+	sixdeskmess -1 "fs listquota ${sixdesktrack}:"
 	tmpLines=`fs listquota ${sixdesktrack}`
 	echo "${tmpLines}"
 	#   check, and in case raise a warning
@@ -674,7 +675,7 @@ if ! ${lcptemplate} ; then
 	    sixdeskmess -1 "WARNING: your quota is above 90%!! pay attention to occupancy of the current study, in case of submission..."
 	fi
     else
-	sixdeskmess -1 " --> df -Th ${sixdesktrack}:"
+	sixdeskmess -1 "df -Th ${sixdesktrack}:"
 	\df -Th ${sixdesktrack}
 	sixdeskmess -1 " the above output is at your convenience, for you to check disk space"
     fi
