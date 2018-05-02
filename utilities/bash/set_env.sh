@@ -17,7 +17,7 @@ function how_to_use() {
    -n              retrieve input files (${necessaryInputFiles[@]}) from template dir
                        to prepare a brand new study. The template files will
                        OVERWRITE the local ones. The template dir is:
-           ${SCRIPTDIR}/templates/input
+           ${templateInputFilesPath}
    -N <workspace>  create and initialise a new workspace in the current dir;
                    you can also specify the scratch name with the workspace, eg:
            -N scratch0/wTest
@@ -192,6 +192,8 @@ if [ -z "${SCRIPTDIR}" ] ; then
     SCRIPTDIR="`cd ${SCRIPTDIR};pwd`"
     export SCRIPTDIR=`dirname ${SCRIPTDIR}`
 fi
+templateInputFilesPath="${SCRIPTDIR}/../sixjobs"
+templateInputFilesPath="`cd ${templateInputFilesPath};pwd`"
 # ------------------------------------------------------------------------------
 
 # - infos about current repo
@@ -327,11 +329,18 @@ elif ${lcptemplate} && ${lload} ; then
     echo "Cannot copy templates and load study at the same time!!! aborting..."
     exit
 fi
-# - clean options in case of brand new study
-if ${lcptemplate} ; then
+# - de-activate currPlatform in case it is not used
+if ${lcptemplate} || ${lcrwSpace} ; then
     if [ -n "${currPlatform}" ] ; then
-	echo "--> brand new study: -p option with argument ${currPlatform} is switched off."
+	echo "--> copy templates / creation of workspace: -p option with argument ${currPlatform} is switched off."
 	currPlatform=""
+    fi
+fi
+# - check copy templates:
+if ${lcptemplate} ; then
+    if ${lgit} ; then
+        lScanDefs=true
+        llocalfort3=true
     fi
 fi
 # - options
@@ -477,18 +486,26 @@ if ${lcptemplate} ; then
 	    git remote add -f origin ${origRepoForSetup}
         fi
 	git config core.sparseCheckout true
-        echo "sixjobs/*" >> .git/info/sparse-checkout
-        git fetch origin ${origBranchForSetup}
-        git checkout ${origBranchForSetup}
+        if [ `grep 'sixjobs/\*' .git/info/sparse-checkout 2> /dev/null | wc -l` -eq 0 ] ; then
+            sixdeskmess -1 "merda di paperino!"
+            echo 'sixjobs/*' >> .git/info/sparse-checkout
+            git fetch origin ${origBranchForSetup}
+            git checkout ${origBranchForSetup}
+        else
+            sixdeskmess -1 "merda di pippo!"
+            rm -f ${necessaryInputFiles[@]}
+            git fetch origin ${origBranchForSetup}
+            git reset --hard
+        fi
         cd ${presDir}
 
     else
         sixdeskmess -1 "copying here template files for brand new study"
-        sixdeskmess -1 "template input files from ${SCRIPTDIR}/templates/input"
+        sixdeskmess -1 "template input files from ${templateInputFilesPath}"
 
         for tmpFile in ${necessaryInputFiles[@]} ; do
 	    # preserve original time stamps
-	    cp -p ${SCRIPTDIR}/templates/input/${tmpFile} .
+	    cp -p ${templateInputFilesPath}/${tmpFile} .
 	    sixdeskmess 2 "${tmpFile}"
         done
     fi
@@ -510,10 +527,10 @@ else
     # - make sure we have sixdeskenv/sysenv/fort.3.local files
     sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s ${necessaryInputFiles[@]}
     if [ $? -gt 0 ] ; then
-        sixdeskmess -1 "not all necessary files are in $envFilesPath dir:"
-        sixdeskmess -1 "missing files: ${necessaryInputFiles[@]}"
-        sixdeskmess -1 "status of dir:"
-        \ls -ltrh $envFilesPath
+        sixdeskmess -1 "not all necessary input files are in $envFilesPath dir:"
+        for necInpFile in ${necessaryInputFiles[@]} ; do
+            sixdeskInspectPrerequisites true $envFilesPath -s ${necInpFile}
+        done
 	sixdeskexit 4
     fi
 
