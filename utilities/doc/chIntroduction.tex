@@ -1,4 +1,45 @@
 \chapter{Introduction} \label{Intro}
+\SIXTRACK{}~\cite{SixTrack_user_manual,SixPub,sixtrackWeb} is a tracking
+code for simulating transverse and longitudinal single particle beam dynamics.
+Tracking is treated in a full six--dimensional way, including synchrotron
+motion, in a symplectic manner. \SIXTRACK{} is widely used at CERN for
+predicting dynamic aperture in large storage
+rings~\cite{DynApeStudiesGiovannozzi2015} like the Large Hadron Collider
+(LHC)~\cite{NomLHCdesignRepoV1} or its upgrade as foreseen by the
+High Luminosity LHC Project (HL-LHC)~\cite{HLLHC_book,HLLHCtechDesRepo}.
+
+The code was extended~\cite{SixTrackForCollimation} to predict the
+performance of a collimation system in terms of loss pattern and cleaning
+inefficiency. Hence, \SIXTRACK{} is routinely used nowadays also
+for addressing the performance of existing cleaning systems,
+like those of the LHC~\cite{LHCCollSys} or of the Relativistic
+Heavy Ion Collider (RHIC) at BNL~\cite{RHICcollSys}, or new ones.
+
+The code is in continuous development~\cite{HLLHCTrackWS,Amereghe6TColl},
+not only to improve the accuracy of the tracking models, but also including
+the dynamics introduced by novel accelerator technologies, like electron
+lenses or powered wires for the compensation of beam--beam long range effects
+or christal collimation.
+
+The accelerator dynamic aperture is studied scanning
+the beam phase space in presence of non-linear forces, like the kicks
+introduced by long range beam--beam interactions or multipolar components
+of magnetic fields. Moreover, the scan could be also performed varying
+the machine configurations. The
+\SIXDESK{}~\cite{SixDesk_original,SixDesk_updated} environment gives the
+users of \SIXTRACK{} a mean to handle the large amount of files to be treated.
+
+\section{Overview} \label{Overview}
+\begin{enumerate}
+\item prepare the \emph{input files}, i.e.~\texttt{sixdeskenv},
+\texttt{sysenv} and \texttt{fort.3.local}
+\item \SIXTRACK{} generate file describing the \emph{accelerator geometry}
+  with \MADX{} (\texttt{fort.2},\texttt{fort.8},
+  \texttt{fort.16}); then, run \SIXTRACK{}; then, collect results
+  (\texttt{fort.10}) and analyse them via \SIXDB{};
+\item inner loops (i.e.~controlled by \texttt{sixdeskenv}) and outer loops
+  (i.e.~controlled by \texttt{scan\_definitions});
+\end{enumerate}
 
 \section{Work Flow}
 Show workflow of production of results, both for BOINC (including ``processed''
@@ -9,6 +50,15 @@ Retrieval of results depends on the submission platform:
 \item \texttt{run\_results}: BOINC
 \item \texttt{run\_status}: HTCondor, HTBoinc
 \end{itemize}
+
+\section{Input Files}
+\begin{description}
+\item[\texttt{sixdeskenv}]
+\item[\texttt{sysenv}]
+\item[\texttt{fort.3.local}]
+\end{description}
+Geometry files: \texttt{fort.2}, \texttt{fort.8}, \texttt{fort.16}.
+    
 
 \section{The BOINC Platform for Volunteering Computing}
 BOINC vs local batch system (e.g.~HTCondor)
