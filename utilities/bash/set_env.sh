@@ -402,9 +402,8 @@ sixjobs/mask/*
 sixjobs/sixdeskTaskIds/*
 sixjobs/studies/*
 EOF
-	    git remote add origin ${origRepoForSetup}
-            git fetch origin ${origBranchForSetup}
-	    git checkout ${origBranchForSetup}
+	    git remote add -f origin ${origRepoForSetup}
+            git checkout ${origBranchForSetup}
 	else
 	    origDir=${REPOPATH}/sixjobs
 	    sixdeskmess -1 "--> initialising sixjobs from ${origDir}"
@@ -475,7 +474,7 @@ if ${lcptemplate} ; then
         if [ $? -ne 0 ] ; then
             # set up git repo
 	    git init
-	    git remote add origin ${origRepoForSetup}
+	    git remote add -f origin ${origRepoForSetup}
         fi
 	git config core.sparseCheckout true
         echo "sixjobs/*" >> .git/info/sparse-checkout
