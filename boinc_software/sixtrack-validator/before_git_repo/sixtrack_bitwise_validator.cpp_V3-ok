@@ -1,0 +1,174 @@
+// This file is part of BOINC.
+// http://boinc.berkeley.edu
+// Copyright (C) 2008 University of California
+//
+// BOINC is free software; you can redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+//
+// BOINC is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with BOINC.  If not, see <http://www.gnu.org/licenses/>.
+
+// A sample validator that requires a majority of results to be
+// bitwise identical.
+// This is useful only if either
+// 1) your application does no floating-point math, or
+// 2) you use homogeneous redundancy
+
+#include <unistd.h>
+#define TSLEEP 5      // seconds to sleep after failure to open file
+
+#include "config.h"
+#include "util.h"
+#include "error_numbers.h"
+#include "sched_util.h"
+#include "sched_msgs.h"
+#include "validate_util.h"
+#include "md5_file.h"
+
+using std::string;
+using std::vector;
+
+struct FILE_CKSUM {
+	FILE *fp;
+};
+
+struct FILE_CKSUM_LIST {
+    vector<FILE *> fp;   // list of MD5s of files
+    ~FILE_CKSUM_LIST(){}
+};
+
+bool files_match(FILE_CKSUM_LIST& f1, FILE_CKSUM_LIST& f2) {
+
+    int c1, c2;
+    int ipos, jpos;
+    unsigned int n = 0;
+    //printf("files_match: %d %d\n",f1.fp.size(),f2.fp.size());
+    for (int i=0; i<f1.fp.size(); i++){
+	rewind(f1.fp[i]);
+	for(int j=0; j<f2.fp.size(); j++){
+	   rewind(f2.fp[j]);
+	   ipos = jpos = 0;
+           do {
+		while(!isdigit(c1 = getc(f1.fp[i])) && (c1 != EOF)) ipos++;
+		while(!isdigit(c2 = getc(f2.fp[j])) && (c2 != EOF)) jpos++;
+		if(c1 != c2 ) {
+                        log_messages.printf(MSG_DEBUG,
+			"[RESULT#- -] files differ:  %c %c %d %d\n",(char)c1,(char)c2,ipos,jpos);
+			return false;
+                }
+		//if((n%1000) == 0) printf("files_match      n = %d %c\n",n,(char)c1);
+		n++;
+           } while (c1 != EOF || c2 != EOF);
+        }
+    }
+
+    log_messages.printf(MSG_DEBUG,"[RESULT#- -] files_match:  n: %d\n",n);
+
+    return true;
+}
+
+int init_result(RESULT& result, void*& data) {
+    int retval;
+    FILE_CKSUM_LIST* fcl = new FILE_CKSUM_LIST;
+    vector<FILE_INFO> files;
+    char md5_buf[MD5_LEN];
+    char buf[256];
+    double nbytes;
+	int ii;
+
+    retval = get_output_file_infos(result, files);
+    if (retval) {
+        log_messages.printf(MSG_CRITICAL,
+            "[RESULT#%d %s] check_set: can't get output filenames\n",
+            result.id, result.name
+        );
+        return retval;
+    }
+
+    for (unsigned int i=0; i<files.size(); i++) {
+        FILE_INFO& fi = files[i];
+	FILE * fpx;
+        if (fi.no_validate) continue;
+        //strcpy(buf,(const char *) fi.path.c_str());
+        //printf("open name: %s %d %d\n",fi.path.c_str(),i,files.size());
+	ii = 0;
+        fpx = fopen(fi.path.c_str(),"r");
+//        while( ((fpx = fopen(fi.path.c_str(),"r")) == NULL) & (ii < 10)) { sleep(TSLEEP); ii++; }
+//        if((fpx = fopen(fi.path.c_str(),"r")) == NULL) {
+        if(fpx == NULL) {
+
+            log_messages.printf(MSG_CRITICAL,
+		"[RESULT#%d %s] Couldn't open %s file %d out of %d errno=%d %s\n",
+                    result.id, result.name, fi.path.c_str(),i,files.size(),errno,strerror(errno));
+
+            return ERR_OPENDIR;
+        }
+	fcl->fp.push_back(fpx);
+
+/*        retval = md5_file(fi.path.c_str(), md5_buf, nbytes);
+          if (retval) {
+            if (fi.optional) {
+                strcpy(md5_buf, "");
+                    // indicate file is missing; not the same as md5("")
+            } else {
+                log_messages.printf(MSG_CRITICAL,
+                    "[RESULT#%d %s] Couldn't open %s\n",
+                    result.id, result.name, fi.path.c_str()
+                );
+                return retval;
+            }
+        }
+        fcl->files.push_back(string(md5_buf));
+*/
+    }
+    data = (void*) fcl;
+    return 0;
+}
+
+int compare_results(
+    RESULT & /*r1*/, void* data1,
+    RESULT const& /*r2*/, void* data2,
+    bool& match
+) {
+    FILE_CKSUM_LIST* f1 = (FILE_CKSUM_LIST*) data1;
+    FILE_CKSUM_LIST* f2 = (FILE_CKSUM_LIST*) data2;
+
+    match = files_match(*f1, *f2);
+    return 0;
+}
+
+int cleanup_result(RESULT const& result, void* data) {
+    FILE_CKSUM_LIST* fi = (FILE_CKSUM_LIST*) data;
+    int i;
+	if( fi == NULL) return(0);
+
+	log_messages.printf(MSG_DEBUG," cleanup_result start");
+
+    for (int i=0; i<(*fi).fp.size(); i++){
+
+	if((*fi).fp[i] != NULL) {
+   	    if(fclose((*fi).fp[i]) > 0) {
+               log_messages.printf(MSG_CRITICAL," error on closing, errno=%d %s",errno,strerror(errno));
+/*		"[RESULT#%d %s] Couldn't close %s file %d out of %d errno=%d %s\n",
+                    result.id, result.name, (*fi).fp[i].path.c_str(),i,(*fi).fp.size(),errno,strerror(errno));
+*/          }
+        }
+    }
+    delete (FILE_CKSUM_LIST*) data;
+	log_messages.printf(MSG_DEBUG," cleanup_result end\n");
+    return 0;
+}
+
+double compute_granted_credit(WORKUNIT& wu, vector<RESULT>& results) {
+//    return median_mean_credit(wu, results);
+    return  stddev_credit(wu, results);
+}
+
+const char *BOINC_RCSID_7ab2b7189c = "$Id: sample_bitwise_validator.cpp 17966 2009-05-01 18:25:17Z davea $";

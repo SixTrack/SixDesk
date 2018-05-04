@@ -2,14 +2,14 @@ FLUCTUATION
 100000 1 7 3
 NEXT
 %TUNETUNE VARIATION----------------------------------------------------------
-%TUNE         mq.11l1.b2  %tunex
-%TUNE         mq.12l1.b2  %tuney
+%TUNE         mq.7l3.b2..1  %tunex
+%TUNE         mq.8l3.b2..1  %tuney
 %TUNE/          0.
 %TUNE/          
 %TUNENEXT
 %CHROCHROMATICITY CORRECTION------------------------------------------------
-%CHRO         ms.11l1.b2 %chromx
-%CHRO         ms.12l1.b2 %chromy
+%CHRO         ms.11l3.b2 %chromx
+%CHRO         ms.12l3.b2 %chromy
 %CHRONEXT
 %POSTPROCESSING----------------------------------------------------------
 %POS1LHC Dynamic Aperture at Injection Version 5 (1998)

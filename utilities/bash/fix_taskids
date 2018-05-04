@@ -1,0 +1,644 @@
+#!/bin/bash
+#
+
+function checkDBnLines(){
+    # returns lequal
+    local __lprint=$1
+    local __lcheck=$2
+    lequal=false
+    nAll=`wc -l < ${dbAll}`
+    nInc=`wc -l < ${dbInc}`
+    nCom=`wc -l < ${dbCom}`
+    let nChk=${nInc}+${nCom}
+    if ${__lcheck} ; then
+	if [ ${nAll} -ne ${nChk} ] ; then
+	    let nDiff=${nAll}-${nChk}
+	    sixdeskmess -1 "different number of entries in ${dbAll} (${nAll}) and ${dbInc} (${nInc}) plus ${dbCom} (${nCom}) - diff: ${nDiff}"
+	else
+	    sixdeskmess  1 "same number of entries in ${dbAll} (${nAll}) and ${dbInc} (${nInc}) plus ${dbCom} (${nCom})"
+	    lequal=true
+	fi
+    elif ${__lprint} ; then
+	sixdeskmess -1 "number of entries in ${dbAll}/${dbInc}/${dbCom} ${nAll}/${nInc}/${nCom}"
+    fi
+}
+
+function restoreFileFormat(){
+    for tmpCheckFile in ${addWhiteSpaces[@]} ; do
+        # strip all leading/trailing whitespaces + add a whitespace at the end
+	awk '{$NF=$NF" "}1' ${tmpCheckFile} > ${tmpCheckFile}_temp
+	mv ${tmpCheckFile}_temp ${tmpCheckFile}
+    done
+    for tmpCheckFile in ${noWhiteSpaces[@]} ; do
+	# strip all leading/trailing whitespaces (no whitespace at the end)
+	awk '{$NF=$NF}1' ${tmpCheckFile} > ${tmpCheckFile}_temp
+	mv ${tmpCheckFile}_temp ${tmpCheckFile}
+    done
+}
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to scripts (normalised)
+if [ -z "${SCRIPTDIR}" ] ; then
+    SCRIPTDIR=`dirname $0`
+    SCRIPTDIR="`cd ${SCRIPTDIR};pwd`"
+    export SCRIPTDIR=`dirname ${SCRIPTDIR}`
+fi
+# ------------------------------------------------------------------------------
+
+nMaxColumnsThresh=10
+
+source ${SCRIPTDIR}/bash/dot_env
+
+dir16=$sixtrack_input
+
+#MACRO mymess 2 Using sixtrack_input $dir16
+sixdeskmesslevel=2
+sixdeskmess -1 "Using sixtrack_input $dir16"
+#MACRO mymess
+
+if test ! -d "$dir16" 
+then
+
+#MACRO mymess 1 The directory $dir16 does not exist!!!
+  sixdeskmesslevel=1
+  sixdeskmess -1 "The directory $dir16 does not exist!!!"
+#MACRO mymess
+ 
+
+#MACRO myexit 1
+  sixdeskexitparam=1
+  sixdeskexit
+#MACRO myexit
+
+fi
+${SCRIPTDIR}/bash/mad6t.sh -c
+if test $? -ne 0
+then
+
+#MACRO mymess 1 sixtrack_input appears incomplete!!!
+  sixdeskmesslevel=1
+  sixdeskmess -1 "sixtrack_input appears incomplete!!!"
+#MACRO mymess
+
+
+#MACRO myexit 2
+  sixdeskexitparam=2
+  sixdeskexit
+#MACRO myexit
+
+fi
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+mkdir -p $sixdeskjobs_logs
+
+#MACRO mylock $sixdeskjobs_logs
+###sixdesklockdir=$sixdeskjobs_logs
+###sixdesklock
+#MACRO mylock
+
+
+#MACRO mymess 2 Using $sixdeskjobs_logs
+sixdeskmesslevel=2
+sixdeskmess -1 "Using $sixdeskjobs_logs"
+#MACRO mymess
+
+#
+tree=$sixdesktrack
+if test ! -d "$tree/$LHCDesHome"
+then
+  mkdir -p $tree/$LHCDesHome
+fi
+#
+if [ ! -s "$tree/$LHCDesHome/general_input" ];then
+  echo "general_input is missing!!!"
+
+#MACRO myexit 1
+  sixdeskexitparam=1
+  sixdeskexit
+#MACRO myexit
+
+fi
+#
+Ampl=$ns1l"_"$ns2l
+#
+# Amplitude range
+#
+if [ $long -eq 1 ] ;then
+  if [ -z "$Ampl" ] ;then
+
+#MACRO mymess 0 Define Ampl for longterm tracking ...
+    sixdeskmesslevel=0
+    sixdeskmess -1 "Define Ampl for longterm tracking ..."
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskstudy
+    sixdesklockdir=$sixdeskstudy
+    sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myexit 2
+    sixdeskexitparam=2
+    sixdeskexit
+#MACRO myexit
+
+  fi
+fi
+
+sixdeskmess -1 "copying database to ${tmpNodeDir}/work, to speed up processing"
+rm -rf ${tmpNodeDir}/work
+mkdir -p ${tmpNodeDir}/work
+cp -rp $sixdeskwork/* ${tmpNodeDir}/work
+cd ${tmpNodeDir}/work
+
+# make backup of present DB
+[ -d backup ] || mkdir backup
+export GLOBIGNORE='backup'
+cp -r * backup
+export GLOBIGNORE=
+# collect missing directories
+rm -f missingDirs.txt
+# collect damaged directories
+rm -f damagedDirs.txt
+
+echo ""
+printf "=%.0s" {1..80}
+echo ""
+echo "plaforms DB"
+printf '.%.0s' {1..80}
+echo ""
+
+# -----------------------------------------------------------------
+sixdeskmess -1 "checking integrity of single DB files of each platform ..."
+for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
+    if [ -d ${platForms[$ii]}jobs ] ; then
+	for tmpCheckFile in ${fileSuffixes[$ii]} incomplete_${fileSuffixes[$ii]} completed_${fileSuffixes[$ii]} ; do
+  	    # eg: boincjobs/incomplete_tasks
+	    dbFile=${platForms[$ii]}jobs/${tmpCheckFile}
+	    [ -e ${dbFile} ] || touch ${dbFile}
+	    sixdeskmess  1 "...considering DB file ${dbFile} ..."
+            # - remove lines without a Runnam
+	    grep '%' ${dbFile} > ${dbFile}_temp
+	    rm ${dbFile}_temp
+	    # - sanitize file from non-ASCI chars
+	    sed -i '/[^[:print:]]/d' ${dbFile}
+	done
+    fi
+done
+
+# -----------------------------------------------------------------
+sixdeskmess -1 "checking duplicates in DB files of each platform ..."
+for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
+    if [ -d ${platForms[$ii]}jobs ] ; then
+	dbAll=${platForms[$ii]}jobs/${fileSuffixes[$ii]}
+	dbInc=${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]}
+	dbCom=${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]}
+	[ -e ${dbAll} ] || touch ${dbAll}
+	[ -e ${dbInc} ] || touch ${dbInc}
+	[ -e ${dbCom} ] || touch ${dbCom}
+	checkDBnLines true true
+	if ! ${lequal} ; then
+	    # - remove double entries in each file
+            sixdeskmess  1 "   ...removing double entries in each file..."
+	    for dbFile in ${dbInc} ${dbCom} ${dbAll} ; do
+		sixdeskmess  1 "      ...considering DB file ${dbFile} ..."
+		cat ${dbFile} | sort -u > ${dbFile}_temp
+		mv ${dbFile}_temp ${dbFile}
+	    done
+	    checkDBnLines true true
+	fi
+	if ! ${lequal} ; then
+	    # - remove double entries in completed/incomplete lists from list of completed ids
+	    sixdeskmess 1 "   ...removing double entries among ${dbInc} and ${dbCom} from ${dbCom} ..."
+	    cat ${dbInc} ${dbCom} | sed 's: *$::' | sort | uniq -c | awk '{if ($1>1) {print (substr($0,9))}}' > doubles.lis
+	    while read aline ; do
+		grep -v "${aline}" ${dbCom} > ${dbCom}_temp
+		mv ${dbCom}_temp ${dbCom}
+	    done < doubles.lis
+	    checkDBnLines true true
+	    # clean
+	    rm -f doubles.lis
+	fi
+	if ! ${lequal} ; then
+	    # - remove double entries among the three files
+	    sixdeskmess  1 "   ...adding missing entries in ${dbAll} or in ${dbInc}"
+	    cat ${dbInc} ${dbCom} | sed 's: *$::' | sort -u > treated.lis
+	    cat ${dbAll} | sed 's: *$::' | sort -u > all.lis
+	    diff all.lis treated.lis > diffs.txt
+	    #   . add missing ids to list of all
+	    grep '^> ' diffs.txt | awk '{print (substr($0,3))}' >> ${dbAll}
+	    #   . add missing ids to list of incompletes
+	    grep '^< ' diffs.txt | awk '{print (substr($0,3))}' >> ${dbInc}
+	    checkDBnLines true true
+	    # clean
+	    rm -f treated.lis all.lis diffs.txt
+	fi
+    fi
+done
+
+# -----------------------------------------------------------------
+sixdeskmess -1 "restoring format of DB files of each platform ..."
+for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
+    if [ -d ${platForms[$ii]}jobs ] ; then
+	addWhiteSpaces=( ${platForms[$ii]}jobs/${fileSuffixes[$ii]} ${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]} )
+	noWhiteSpaces=( ${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]} )
+	restoreFileFormat
+    fi
+done
+
+echo ""
+printf "=%.0s" {1..80}
+echo ""
+echo "main DB"
+printf '.%.0s' {1..80}
+echo ""
+
+# -----------------------------------------------------------------
+# check that taskids file does not have problematic lines
+#    with plenty of jobnames and taksids all collapsed in one, very long
+sixdeskmess -1 "checking presence of problematic lines in taskids file..."
+nMaxColumns=`awk '{if (NF>max){max=NF}}END{print (max)}' taskids`
+if [ ${nMaxColumns} -gt ${nMaxColumnsThresh} ] ; then
+    sixdeskmess -1 "...taskids file has at least a row with ${nMaxColumnsTaskIDs} columns (gt ${nMaxColumnsThresh})"
+    sixdeskmess -1 "   I will proceed with splitting"
+    awk -v "studyName=$LHCDescrip" '{for (ii=1;ii<=NF;ii++) {if (index($ii,studyName)==1) {printf ("%s \n",buffer); buffer=$ii} else if (NF==1) {buffer=$ii;} else {buffer=buffer" "$ii;}}}END{printf ("%s \n",buffer)}' taskids > taskids_fixed
+    mv taskids_fixed taskids
+else
+    sixdeskmess  2 "...taskids file has at most ${nMaxColumnsTaskIDs} columns - all fine!"
+fi
+
+dbAll=taskids
+dbInc=incomplete_cases
+dbCom=completed_cases
+
+# -----------------------------------------------------------------
+sixdeskmess -1 "checking integrity of files of main DB ..."
+for dbFile in ${dbAll} ${dbInc} ${dbCom} ; do
+    [ -e ${dbFile} ] || touch ${dbFile}
+    sixdeskmess  1 "...considering DB file ${dbFile} ..."
+    # - remove lines without a Runnam
+    grep '%' ${dbFile} > ${dbFile}_temp
+    mv ${dbFile}_temp ${dbFile}
+done
+
+# -----------------------------------------------------------------
+sixdeskmess -1 "checking duplicates in files of main DB ..."
+checkDBnLines true true
+if ! ${lequal} ; then
+    # - remove double entries in each file
+    sixdeskmess  1 "   ...removing double entries in each file..."
+    sixdeskmess  1 "      ...considering DB file ${dbAll} ..."
+    awk '{print ($1)}' ${dbAll} | sort | uniq -c | awk '{if ($1>1) {print ($2)}}' > double.lis
+    while read aRunnam ; do
+	sixdeskmess  1 "found duplicate Runnam ${aRunnam}"
+	allTaskIDs=`grep "^${aRunnam} " ${dbAll} | cut -d\  -f2- | sort -u`
+	allTaskIDs=( ${allTaskIDs} )
+	sed -i -e "/${aRunnam}/d" ${dbAll}
+	echo "${aRunnam} ${allTaskIDs[@]} " >> ${dbAll}
+    done < double.lis
+    for dbFile in ${dbInc} ${dbCom} ; do
+	sixdeskmess  1 "      ...considering DB file ${dbFile} ..."
+	cat ${dbFile} | sort -u > ${dbFile}_temp
+	mv ${dbFile}_temp ${dbFile}
+    done
+    checkDBnLines true true
+    # clean
+    rm -f double.lis
+fi
+if ! ${lequal} ; then
+    # - remove double entries in completed/incomplete lists from list of completed ids
+    sixdeskmess 1 "   ...removing double entries among ${dbInc} and ${dbCom} from ${dbCom} ..."
+    cat ${dbInc} ${dbCom} | sed 's: *$::' | sort | uniq -c | awk '{if ($1>1) {print (substr($0,9))}}' > doubles.lis
+    while read aline ; do
+	grep -v "${aline}" ${dbCom} > ${dbCom}_temp
+	mv ${dbCom}_temp ${dbCom}
+    done < doubles.lis
+    checkDBnLines true true
+    # clean
+    rm -f doubles.lis
+fi
+if ! ${lequal} ; then
+    # - remove double entries among the three files
+    sixdeskmess  1 "   ...adding missing entries in ${dbAll} or in ${dbInc}"
+    cat ${dbInc} ${dbCom} | sed 's: *$::' | sort -u > treated.lis
+    awk '{print ($1)}' ${dbAll} | sed 's: *$::' | sort -u > all.lis
+    diff all.lis treated.lis > diffs.txt
+    #   . add missing ids to list of all
+    grep '^> ' diffs.txt | awk '{print (substr($0,3))}' > idsMisAll.lis
+    searchFiles=""
+    for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
+	! [ -e ${platForms[$ii]}jobs/${fileSuffixes[$ii]} ] || searchFiles="${searchFiles} ${platForms[$ii]}jobs/${fileSuffixes[$ii]}"
+    done
+    while read aRunnam ; do
+	allTaskIDs=`grep "^${aRunnam} " ${searchFiles} | cut -d\  -f2-`
+	allTaskIDs=( ${allTaskIDs} )
+	echo "${aRunnam} ${allTaskIDs[@]} " >> ${dbAll}
+	sixdeskmess  1 " added Runnam ${aRunnam} missing in ${dbAll} - taskids: ${allTaskIDs[@]}"
+    done < idsMisAll.lis
+    #   . add missing ids to list of incompletes
+    grep '^< ' diffs.txt | awk '{print (substr($0,3))}' >> ${dbInc}
+    checkDBnLines true true
+    # clean
+    rm -f treated.lis all.lis diffs.txt idsMisAll.lis
+fi
+
+# -----------------------------------------------------------------
+sixdeskmess -1 "restoring format of files of main DB ..."
+addWhiteSpaces=( ${dbAll} )
+noWhiteSpaces=( ${dbInc} ${dbCom} )
+restoreFileFormat
+
+echo ""
+printf "=%.0s" {1..80}
+echo ""
+echo "checking taskids of main DB against tasks/jobs of platform DBs ..."
+printf '.%.0s' {1..80}
+echo ""
+
+for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
+    tmpCheckFile=${platForms[$ii]}jobs/${fileSuffixes[$ii]}
+    if [ -s ${tmpCheckFile} ] ; then
+	sixdeskmess -1 "...checking against ${tmpCheckFile} ..."
+	sixdeskmess -1 "   this operation might take few minutes, depending on how many tasks you have in taskids - be patient..."
+	cat taskids ${tmpCheckFile} | awk '{print ($1)}' | sort | uniq -c | awk '{if ($1==1) {print ($2)}}' > missing_taskids_temp
+	while read Runnam ; do
+	    inTaskIds=`grep "^${Runnam} " taskids`
+	    if [ -z "${inTaskIds}" ] ; then
+		inTaskIds2=`grep "^${Runnam} " ${tmpCheckFile}`
+		# the taskid is present in the platform listing but not in taskids - add it
+		sixdeskmess -1 "...missing ${Runnam} in taskids - adding it ..."
+		echo "${inTaskIds2}" >> taskids
+	    fi
+	done < missing_taskids_temp
+        rm -f missing_taskids_temp
+    fi
+done
+
+echo ""
+printf "=%.0s" {1..80}
+echo ""
+echo "main loop"
+printf '.%.0s' {1..80}
+echo ""
+
+#
+# main loop
+#
+if test $long -eq 1
+then
+
+#MACRO mymess 0 Main loop (long) for Study $LHCDescrip, Seeds $ista to $iend
+  sixdeskmesslevel=0
+  sixdeskmess -1 "Main loop (long) for Study $LHCDescrip, Seeds $ista to $iend"
+#MACRO mymess
+
+
+#MACRO mytunes
+  sixdesktunes
+#MACRO mytunes
+
+
+#MACRO mymess 0 Amplitudes $ns1l to $ns2l by $nsincl, Angles $kinil, $kendl, $kmaxl by $kstep
+  sixdeskmesslevel=0
+  sixdeskmess -1 "Amplitudes $ns1l to $ns2l by $nsincl, Angles $kinil, $kendl, $kmaxl by $kstep"
+#MACRO mymess
+
+elif test $short -eq 1 -o $da -eq 1
+then
+
+#MACRO mymess 0 Main loop (short/da) for Study $LHCDescrip, Seeds $ista to $iend
+  sixdeskmesslevel=0
+  sixdeskmess -1 "Main loop (short/da) for Study $LHCDescrip, Seeds $ista to $iend"
+#MACRO mymess
+
+
+#MACRO mytunes
+  sixdesktunes
+#MACRO mytunes
+
+
+#MACRO mymess 0 Amplitudes $ns1s to $ns2s by $nss, Angles $kini, $kend, $kmax by $kstep
+  sixdeskmesslevel=0
+  sixdeskmess -1 "Amplitudes $ns1s to $ns2s by $nss, Angles $kini, $kend, $kmax by $kstep"
+#MACRO mymess
+
+fi
+if [ ! -e $sixdeskjobs_logs/fort.3 ] ;then
+    sixdeskmess -1 "No SIXTRACK control file (fort.3): Run stopped"
+#MACRO myunlock $sixdeskstudy
+    sixdesklockdir=$sixdeskstudy
+    sixdeskunlock
+#MACRO myunlock
+#MACRO myexit 7
+    sixdeskexitparam=7
+    sixdeskexit
+#MACRO myexit
+fi
+i=$ista
+while test "$i" -le "$iend" 
+do
+  # And now we have a new loop over the tunescans
+  itunexx=$itunex
+  ituneyy=$ituney
+  while test "$itunexx" -le "$itunex1" -a "$ituneyy" -le "$ituney1"
+  do
+    # returns sixdesktunes and tunexx/tuneyy, computed from itunexx/ituneyy,
+    #    using xlen/ylen
+    sixdeskPrepareTunes
+
+#MACRO mymess 0 Tunescan $sixdesktunes
+    sixdeskmesslevel=0
+    sixdeskmess -1 "Tunescan $sixdesktunes"
+#MACRO mymess
+
+    # compute inttunexx and inttuneyy
+
+#MACRO myinttunes
+    sixdeskinttunes
+#MACRO myinttunes
+
+    #
+    if [ ! -d "$tree/$LHCDesHome/$i/simul/$sixdesktunes" ]; then  
+       echo "Tunes directory is missing!!!"
+
+#MACRO myexit 2
+       sixdeskexitparam=2
+       sixdeskexit
+#MACRO myexit
+
+    fi  
+    # Check betavalues
+    nobetas=`cat $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues | wc -w`
+    if test "$nobetas" -ne 14
+    then 
+#MACRO mymess 0 betavalues has only $nobetas words!!! Should be 14!
+      sixdeskmesslevel=0
+      sixdeskmess -1 "betavalues has only $nobetas words!!! Should be 14!"
+#MACRO mymess
+
+      rm -f $tree/$LHCDesHome/$i/simul/$sixdesktunes/betavalues
+
+#MACRO myunlock $sixdeskstudy
+      sixdesklockdir=$sixdeskstudy
+      sixdeskunlock
+#MACRO myunlock
+#MACRO myexit 98
+      sixdeskexitparam=98
+      sixdeskexit
+#MACRO myexit
+    fi
+    if [ ! -e "$dir16"/fort.2_"$i".gz ] ;then
+        sixdeskmess -1 "No SIXTRACK geometry file (fort.2): Run stopped"
+#MACRO myunlock $sixdeskstudy
+        sixdesklockdir=$sixdeskstudy
+        sixdeskunlock
+#MACRO myunlock
+#MACRO myexit 6
+        sixdeskexitparam=6
+        sixdeskexit
+#MACRO myexit
+    fi
+    if [ ! -e "$dir16"/fort.8_"$i".gz ] ;then
+
+        sixdeskmess -1 "No SIXTRACK misalignment file (fort.8): dummy file created"
+
+        touch "$dir16"/fort.8_${i}
+        gzip "$dir16"/fort.8_${i}
+    fi
+    if [ ! -e "$dir16"/fort.16_"$i".gz ] ;then
+
+        sixdeskmess -1 "No SIXTRACK error file (fort.16): dummy file created"
+
+        touch "$dir16"/fort.16_${i}
+        gzip "$dir16"/fort.16_${i}
+    fi
+    #
+    #
+    #run for longterm
+    #
+    if [ "$long" -eq 1 ] ;then
+    # Now we have the new code to do integer arithmetic on amplitudes
+
+#MACRO myamps
+      sixdeskamps
+#MACRO myamps
+
+      while test "$ampstart" -lt "$ampfinish"
+      do
+        fampstart=`gawk 'END{fnn='$ampstart'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
+        fampstart=`echo $fampstart | sed -e's/0*$//'`
+        fampstart=`echo $fampstart | sed -e's/\.$//'`
+        ampend=`expr "$ampstart" + "$ampincl"`
+        fampend=`gawk 'END{fnn='$ampend'/1000.;printf ("%.3f\n",fnn)}' /dev/null`
+        fampend=`echo $fampend | sed -e's/0*$//'`
+        fampend=`echo $fampend | sed -e's/\.$//'`
+        Ampl="$fampstart"_"$fampend" 
+
+#MACRO mymess 0 Loop over amplitudes: $Ampl $ns1l $ns2l $nsincl
+        sixdeskmesslevel=0
+        sixdeskmess -1 "Loop over amplitudes: $Ampl $ns1l $ns2l $nsincl"
+#MACRO mymess
+
+
+#MACRO mymess 0 $ampstart $ampfinish $ampincl $fampstart $fampend
+        sixdeskmesslevel=0
+        sixdeskmess -1 "$ampstart $ampfinish $ampincl $fampstart $fampend"
+#MACRO mymess
+
+        k=$kinil
+        AngleStep=`gawk 'END{a=90/('$kmaxl'+1);print a}' /dev/null`
+        while test "$k" -le "$kendl"
+        do
+          Angle=`gawk 'END{a='$AngleStep'*'$k';print a}' /dev/null`
+          kang=`gawk 'END{kang='$k'/('$kmaxl'+1);print kang}' /dev/null`
+          echo $k, $kinil, $kmaxl, $kendl, $Angle, $AngleStep
+          ###Rundir=$LHCDesHome/$i/simul/$sixdesktunes/$Ampl/e$turnsle/$Angle
+          Runnam=$LHCDesName"%"${i}"%s%"$sixdesktunes"%"$Ampl"%"$turnsle"%"$Angle
+
+#MACRO myrundir $Runnam Rundir
+          runnamename=$Runnam
+          sixdeskrundir
+          Rundir=$rundirname
+#MACRO myrundir
+ 
+          #
+          if [ ! -d ${tree}/${Rundir} ] ;then
+              echo "Something really bad, $Rundir does NOT exist!!!"
+	      echo "$Rundir" >> missingDirs.txt
+          else
+              damaged=false
+              for iFort in 2 3 8 16 ; do
+                  if ! [ -s ${tree}/${Rundir}/fort.${iFort}.gz ] ; then
+                      echo "Something really bad, ${tree}/${Rundir}/fort.${iFort}.gz does NOT exist!!!"
+                      damaged=true
+                  fi
+                  if ${damaged} ; then
+                      echo "${Rundir}" >> damagedDirs.txt
+                  fi
+              done
+          fi
+# Now add the taskid if missing
+          grep "^${Runnam} " taskids
+          if test $? -ne 0
+          then
+            echo "${Runnam} is MISSING"
+            echo "${Runnam} " >> taskids
+          fi  
+          k=`expr $k + $kstep`
+        done
+        # end of loop over angles
+        ampstart=`expr $ampstart + $ampincl`
+      done
+      # end of loop over amplitudes
+    fi
+    itunexx=`expr $itunexx + $ideltax`
+    ituneyy=`expr $ituneyy + $ideltay`
+  done
+  # end of loop over tunescans
+  let i=i+1
+done
+#
+# end main loop
+
+cp -pr * $sixdeskwork/
+cd $sixdeskhome
+rm -rf ${tmpNodeDir}/work
+
+if [ -s $sixdeskwork/missingDirs.txt ] ; then
+    sixdeskmess -1 "missing dirs! please see $sixdeskwork/missingDirs.txt"
+fi
+
+if [ -s $sixdeskwork/damagedDirs.txt ] ; then
+    sixdeskmess -1 "damaged dirs! please see $sixdeskwork/damagedDirs.txt"
+fi
+
+#MACRO myunlock $sixdeskjobs_logs
+###sixdesklockdir=$sixdeskjobs_logs
+###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO mymess 0 Completed normally
+sixdeskmesslevel=0
+sixdeskmess -1 "Completed normally"
+#MACRO mymess
+
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+

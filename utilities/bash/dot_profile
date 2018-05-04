@@ -1,0 +1,1546 @@
+#!/bin/bash
+
+export fileSuffixes=( 'tasks' 'jobs' 'jobs' )
+
+# A set of Subroutines called by Macros for the SixDesk environment
+sixdeskmess(){
+    # levels:
+    # -1: desperate (echo whatever is user's selection)
+    #  0: minimal echo
+    #  1: verbose
+    #  2: debugging
+    local __sixdeskmesslevel
+    local __sixdesklevel
+    local __message
+    local __additionalCommand
+    local __ladditionalCommand=false
+    # backward compatibility on nameshort
+    if [ -z "${sixdesknameshort}" ] ; then
+	export sixdesknameshort=`basename $0 | cut -b 1-15`
+    fi
+    
+    if [ $# -eq 0 ] ; then
+	if [ -z "${sixdeskmesslevel}" ] ; then
+	    __sixdeskmesslevel=-1
+	else
+	    __sixdeskmesslevel=${sixdeskmesslevel}
+	fi
+	__message=${sixdeskmess}
+    elif [ $# -eq 1 ]; then
+	__sixdeskmesslevel=${1}
+	__message=${sixdeskmess}
+    elif [ $# -eq 2 ] ; then
+	__sixdeskmesslevel=${1}
+	__message=${2}
+    elif [ $# -eq 3 ] ; then
+	__sixdeskmesslevel=${1}
+	__message=${2}
+	__additionalCommand=${3}
+	__ladditionalCommand=true
+    else
+	echo ${sixdeskname}
+	echo "SERIOUS ERROR! sixdeskmess requires between 0 and 2 arguments - you gave $#"
+	exit 1
+    fi
+    
+    if  [ -z "${sixdesklevel}" ] || [ ${__sixdeskmesslevel} -le ${sixdesklevel} ] ; then
+	local __sixdesktime=$(date "+%a %d/%m/%y %T ")
+	echo "${__sixdesktime} ${sixdesknameshort} ${__message}"
+	if ${__ladditionalCommand} ; then
+	    ${__additionalCommand}
+	fi
+    fi
+}
+sixdeskmktmp()
+{
+# Assumes that the directory (if specified) exists
+  if test "$sixdesktmpdirarg" = ""
+  then
+    sixdesktmpdirarg="$PWD"
+  else
+    sixdeskfirst=`echo $sixdesktmpdirarg | cut -c1`
+    if test "$sixdeskfirst" != "/"
+    then
+      sixdesktmpdirarg=$PWD/$sixdesktmpdirarg
+    fi
+  fi
+  sixdesktmp=`mktemp -q $sixdesktmpdirarg/$sixdesktmpname.$sixdeskname.$sixdeskhostname.XXXXXX`
+  chmod 644 $sixdesktmp
+  if test $? -ne 0
+  then
+
+#MACRO mymess 0 sixdeskmktmp mktemp failed to produce a temporary file!!!
+    sixdeskmess -1 "sixdeskmktmp mktemp failed to produce a temporary file!!!"
+#MACRO mymess
+
+
+#MACRO myexit 99
+    sixdeskexitparam=99
+    sixdeskexit
+#MACRO myexit
+
+  fi
+  chmod 644 $sixdesktmp
+}
+sixdeskmktmpdir()
+{
+# Now does a mkdir -p in case the specified directory does not exist
+  # e.g. /tmp/mcintosh
+  if [ $# -ge 1 ] ; then
+    sixdesktmpdirname=$1
+  fi
+  if [ $# -eq 2 ] ; then
+    sixdesktmpdirarg=$2
+  fi
+  if test "$sixdesktmpdirarg" = ""
+  then
+    sixdesktmpdirarg="$PWD"
+  else
+    sixdeskfirst=`echo $sixdesktmpdirarg | cut -c1`
+    if test "$sixdeskfirst" != "/"
+    then
+      sixdesktmpdirarg=$PWD/$sixdesktmpdirarg
+    fi
+    mkdir -p $sixdesktmpdirarg
+    if test $? -ne 0
+    then
+
+#MACRO mymess 0 sixdeskmktmpdir: mkdir failed to make $sixdesktmpdirarg!!!
+      sixdeskmess -1 "sixdeskmktmpdir: mkdir failed to make $sixdesktmpdirarg!!!"
+#MACRO mymess
+
+
+#MACRO myexit 99
+      sixdeskexitparam=99
+      sixdeskexit
+#MACRO myexit
+
+    fi
+  fi
+  sixdesktmpdir=`mktemp -q -d $sixdesktmpdirarg/$sixdesktmpdirname.$sixdeskname.$sixdeskhostname.XXXXXX`
+  if test $? -ne 0
+  then
+
+#MACRO mymess 0 sixdeskmktmpdir: mktemp failed to produce a temporary directory!!!
+    sixdeskmess -1 "sixdeskmktmpdir: mktemp failed to produce a temporary directory!!!"
+#MACRO mymess
+
+
+#MACRO myexit 99
+    sixdeskexitparam=99
+    sixdeskexit
+#MACRO myexit
+
+  fi
+  chmod 755 $sixdesktmpdir
+}
+sixdeskexit()
+{
+  sixdeskunlockAll
+  if [ $# -eq 1 ] ; then
+      sixdeskexitparam=$1
+  fi
+  if [ $sixdeskexitparam -eq 0 ] ; then
+      sixdeskmess -1 "Completed normally."
+  else
+      sixdeskmess -1 "Premature end."
+  fi
+  trap "" EXIT
+  exit "$sixdeskexitparam"
+}
+function sixdeskunlockAll(){
+  # list of locked dirs is in $SIXDESKLOCKED (string)
+  if [ -n "$SIXDESKLOCKED" ] ; then
+      sixdeskmess 1 "sixdeskexit: Freeing lock(s) $SIXDESKLOCKED!!!"
+  fi
+  for tmpDir in "$SIXDESKLOCKED" ; do
+      sixdeskunlock $tmpDir
+  done
+  # list of locked dirs is in $lockingDirs (array)
+  for tmpDir in ${lockingDirs[@]} ; do
+      sixdeskunlock $tmpDir
+  done
+}
+sixdeskunlock()
+{
+  if [ $# -eq 1 ] ; then
+      sixdesklockdir=$1
+  fi
+  if test "$sixdesklockdir" = ""
+  then
+    sixdesklockdir="$PWD"
+  else
+    sixdeskfirst=`echo $sixdesklockdir | cut -c1`
+    if test "$sixdeskfirst" != "/"
+    then
+      sixdesklockdir=$PWD/$sixdesklockdir
+    fi
+  fi
+  if test -f "$sixdesklockdir/sixdesklock"
+  then
+
+#MACRO mymess 2 Freeing lock $sixdesklockdir
+    sixdeskmess 1 "Freeing lock $sixdesklockdir"
+#MACRO mymess
+
+
+#MACRO mymess 2 held by `cat $sixdesklockdir/sixdesklock`
+    sixdeskmess 1 "held by `cat $sixdesklockdir/sixdesklock`"
+#MACRO mymess
+
+    chmod 644 $sixdesklockdir/sixdesklock
+
+ #MACRO mymess 0 Lock $sixdesklockdir unlocked
+    if [ -z ${sixdesklevel} ] ; then
+	sixdeskmess -1 "Lock $sixdesklockdir unlocked"
+    else
+	if [ ${sixdesklevel} -gt 0 ]; then
+	    sixdeskmess -1 "Lock $sixdesklockdir unlocked"
+	else
+	    sixdeskmess -1 "[UNLOCKED]     ${sixdesklockdir}"
+	fi	      
+    fi    
+#MACRO mymess
+
+  else
+
+#MACRO mymess 0 sixdeskunlock: The lock $sixdesklockdir does NOT exist!!!
+    sixdeskmess -1 "sixdeskunlock: The lock $sixdesklockdir does NOT exist!!!"
+#MACRO mymess
+
+  fi
+  SIXDESKLOCKED=`echo "$SIXDESKLOCKED" | sed -e's?'"$sixdesklockdir "'??'`
+}
+function sixdesklockAll(){
+  # list of locked dirs is in $lockingDirs (array)
+  for tmpDir in ${lockingDirs[@]} ; do
+      [ -d $tmpDir ] || mkdir -p $tmpDir
+      sixdesklock $tmpDir
+  done
+}
+sixdesklock()
+{
+  if [ $# -eq 1 ] ; then
+      sixdesklockdir=$1
+  fi
+  if test "$sixdesklockdir" = ""
+  then
+    sixdesklockdir="$PWD"
+  else
+    sixdeskfirst=`echo $sixdesklockdir | cut -c1`
+    if test "$sixdeskfirst" != "/"
+    then
+      sixdesklockdir=$PWD/"$sixdesklockdir"
+    fi
+  fi
+  if test ! -d "$sixdesklockdir"
+  then
+
+#MACRO mymess 0 sixdesklock: The requested lock directory $sixdesklockdir does not exist!!!
+    sixdeskmess -1 "sixdesklock: The requested lock directory $sixdesklockdir does not exist!!!"
+#MACRO mymess
+
+
+#MACRO myexit 99
+    sixdeskexitparam=99
+    sixdeskexit
+#MACRO myexit
+
+  fi
+  lockstat=0
+  if test "$SIXDESKLOCKED" != ""
+  then
+    echo "$SIXDESKLOCKED" | grep "$sixdesklockdir " > /dev/null 2>&1
+    if test $? -eq 0
+    then
+
+#MACRO mymess 0 sixdesklock: The lock $sixdesklockdir is already locked!!!
+      sixdeskmess -1 "sixdesklock: The lock $sixdesklockdir is already locked!!!"
+#MACRO mymess
+
+      lockstat=1
+    fi
+  fi
+  if test "$lockstat" -eq 0
+  then
+
+#MACRO mymess 2 sixdesklock: Obtaining lock $sixdesklockdir
+    sixdeskmess 1 "sixdesklock: Obtaining lock $sixdesklockdir"
+#MACRO mymess
+
+    sixdeskgotit="false"
+    sixdeskwait="false"
+    lessmess=0
+    while test "$sixdeskgotit" = "false"
+    do
+      if test ! -s $sixdesklockdir/sixdesklock
+      then
+        touch $sixdesklockdir/sixdesklock
+        chmod 644 $sixdesklockdir/sixdesklock
+      fi
+      if test -w $sixdesklockdir/sixdesklock
+      then
+        sixdeskkey="$0 on `hostname` at `date` by proc $$"
+        echo "$sixdeskkey" > $sixdesklockdir/sixdesklock
+        if test $? -eq 0
+        then
+          sixdeskval=`cat $sixdesklockdir/sixdesklock`
+          if test "$sixdeskval" = "$sixdeskkey"
+          then
+            chmod 444 $sixdesklockdir/sixdesklock
+            sixdeskval=`cat $sixdesklockdir/sixdesklock`
+            if test "$sixdeskval" = "$sixdeskkey"
+            then
+              sixdeskgotit="true"
+              export SIXDESKLOCKED="$SIXDESKLOCKED""$sixdesklockdir "
+            else
+              chmod 644 $sixdesklockdir/sixdesklock
+            fi
+          fi
+        fi
+      fi
+      if test "$sixdeskgotit" = "false"
+      then
+        if test "$lessmess" -eq 0
+        then
+
+#MACRO mymess 1 The directory $sixdesklockdir is currently locked by
+          sixdeskmess -1 "The directory $sixdesklockdir is currently locked by"
+#MACRO mymess
+
+
+#MACRO mymess 1 script `cat $sixdesklockdir/sixdesklock`
+          sixdeskmess -1 "script `cat $sixdesklockdir/sixdesklock`"
+#MACRO mymess
+
+        fi
+        if test "$sixdeskwait" = "false"
+        then
+          if test "$lessmess" -eq 0
+          then
+            sixdeskwait="true"  
+
+#MACRO mymess 1 This script $0 will just wait for it to become free.
+            sixdeskmess -1 "This script $0 will just wait for it to become free."
+#MACRO mymess
+
+
+#MACRO mymess 1 If this situation continues for ever then it may be false.
+            sixdeskmess -1 "If this situation continues for ever then it may be false."
+#MACRO mymess
+
+
+#MACRO mymess 1 You may have CTRL_C/killed a script and left the lock locked.
+            sixdeskmess -1 "You may have CTRL_C/killed a script and left the lock locked."
+#MACRO mymess
+
+
+#MACRO mymess 1 Some other error like a missing file may also cause a script to die
+            sixdeskmess -1 "Some other error like a missing file may also cause a script to die"
+#MACRO mymess
+
+
+#MACRO mymess 1 To reset the lock just issue an unlock $sixdesklockdir command
+            sixdeskmess -1 "To reset the lock just issue an unlock $sixdesklockdir command"
+#MACRO mymess
+
+            lessmess=1
+          fi
+        fi
+        delay=`date +%S`
+        delay=`expr $delay + 5`
+
+#MACRO mymess 2 Sleeping $delay seconds
+        sixdeskmess -1 "Sleeping $delay seconds"
+#MACRO mymess
+
+        sleep $delay
+      else
+
+#MACRO mymess 0 Lock $sixdesklockdir locked
+	  if [ -z ${sixdesklevel} ] ; then
+	      sixdeskmess -1 "Lock $sixdesklockdir locked"
+	  else
+	      if [ ${sixdesklevel} -gt 0 ]; then
+		  sixdeskmess -1 "Lock $sixdesklockdir locked"
+	      else
+		  sixdeskmess -1 "[LOCKED]       ${sixdesklockdir}"
+	      fi	      
+	  fi
+#MACRO mymess
+
+      fi
+    done
+  fi
+}
+sixdeskchecklock()
+{
+    # $1: dir where to check
+    local __dirToCheck=$1
+    if [ ! -d ${__dirToCheck} ] ; then
+	sixdeskmess -1 "The directory ${__dirToCheck} does not exist!!!"
+    elif [ ! -f ${__dirToCheck}/sixdesklock ] ; then
+	sixdeskmess -1 "The lockfile ${__dirToCheck}/sixdesklock does not exist!!!"
+    elif [ ! -w ${__dirToCheck}/sixdesklock ] ; then
+	sixdeskmess -1 "The directory ${__dirToCheck} is currently locked by"
+        sixdeskmess -1 "script `cat ${__dirToCheck}/sixdesklock`"
+    else
+	sixdeskmess -1 "The directory ${__dirToCheck} is currently unlocked"
+	sixdeskmess -1 "last lock: `ls -l ${__dirToCheck}/sixdesklock`"
+	sixdeskmess -1 "`cat ${__dirToCheck}/sixdesklock`"
+    fi
+}
+sixdesktunes(){
+    # Takes tunex, tuney, tunex1, tuney1, deltax, deltay
+    # and produces
+    # itunex, ituney, itunex1, ituney1, ideltax, ideltay
+    # it produces also xlen and ylen (ie length of fractional part)
+    # reworked by A.Mereghetti, 2016-07-19
+
+
+    sixdeskexitparam=12
+    
+    if [ -z "$tunex1" ] ; then
+	tunex1=$tunex
+	deltax=0.0
+    fi
+    if [ -z "$tuney1" ] ; then
+	tuney1=$tuney
+	deltay=0.0
+    fi
+    if [ "$deltax" == "0.0" ] && [ "$deltay" == "0.0" ] ; then
+	deltax=$tunex
+	deltay=$tuney
+    fi
+
+    # x plane
+    # - sanity checks (ie absence of "." or "." being first/last char):
+    tunex=$(sixdeskAddDotFloat $tunex)
+    tunex1=$(sixdeskAddDotFloat $tunex1)
+    deltax=$(sixdeskAddDotFloat $deltax)
+    # - strip away useless "0" chars
+    tunex=$(sixdeskFixZerosFloat $tunex)
+    tunex1=$(sixdeskFixZerosFloat $tunex1)
+    deltax=$(sixdeskFixZerosFloat $deltax)
+    # - get fractional and integer parts of tunes
+    local __itunex=`echo "$tunex" | cut -d\. -f1`
+    local __ftunex=`echo "$tunex" | cut -d\. -f2`
+    local __itunex1=`echo "$tunex1" | cut -d\. -f1`
+    local __ftunex1=`echo "$tunex1" | cut -d\. -f2`
+    local __ideltax=`echo "$deltax" | cut -d\. -f1`
+    local __fdeltax=`echo "$deltax" | cut -d\. -f2`
+    # - get longest fractional part (meaningful!)
+    xlen=`printf "$__ftunex\n$__ftunex1\n$__fdeltax\n" | awk '{print (length($1))}' | sort -g | tail -n1`
+    # - get integer algebra
+    local __llen=`echo "$__ftunex $xlen" | awk '{print ($2-length($1))}'`
+    itunex="$__itunex$__ftunex"
+    if [ $__llen -gt 0 ] ; then
+	itunex="$itunex`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
+    local __llen=`echo "$__ftunex1 $xlen" | awk '{print ($2-length($1))}'`
+    itunex1="$__itunex1$__ftunex1"
+    if [ $__llen -gt 0 ] ; then
+	itunex1="$itunex1`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
+    local __llen=`echo "$__fdeltax $xlen" | awk '{print ($2-length($1))}'`
+    ideltax="$__ideltax$__fdeltax"
+    if [ $__llen -gt 0 ] ; then
+	ideltax="$ideltax`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
+    # remove leading 0s
+    ideltax=`echo $ideltax | sed 's/^[0]*//'`
+
+    # y plane
+    # - sanity checks (ie absence of "." or "." being first/last char):
+    tuney=$(sixdeskAddDotFloat $tuney)
+    tuney1=$(sixdeskAddDotFloat $tuney1)
+    deltay=$(sixdeskAddDotFloat $deltay)
+    # - strip away useless "0" chars
+    tuney=$(sixdeskFixZerosFloat $tuney)
+    tuney1=$(sixdeskFixZerosFloat $tuney1)
+    deltay=$(sixdeskFixZerosFloat $deltay)
+    # - get fractional and integer parts of tunes
+    local __ituney=`echo "$tuney" | cut -d\. -f1`
+    local __ftuney=`echo "$tuney" | cut -d\. -f2`
+    local __ituney1=`echo "$tuney1" | cut -d\. -f1`
+    local __ftuney1=`echo "$tuney1" | cut -d\. -f2`
+    local __ideltay=`echo "$deltay" | cut -d\. -f1`
+    local __fdeltay=`echo "$deltay" | cut -d\. -f2`
+    # - get longest fractional part (meaningful!)
+    ylen=`printf "$__ftuney\n$__ftuney1\n$__fdeltay\n" | awk '{print (length($1))}' | sort -g | tail -n1`
+    # - get integer algebra
+    local __llen=`echo "$__ftuney $ylen" | awk '{print ($2-length($1))}'`
+    ituney="$__ituney$__ftuney"
+    if [ $__llen -gt 0 ] ; then
+	ituney="$ituney`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
+    local __llen=`echo "$__ftuney1 $ylen" | awk '{print ($2-length($1))}'`
+    ituney1="$__ituney1$__ftuney1"
+    if [ $__llen -gt 0 ] ; then
+	ituney1="$ituney1`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
+    local __llen=`echo "$__fdeltay $ylen" | awk '{print ($2-length($1))}'`
+    ideltay="$__ideltay$__fdeltay"
+    if [ $__llen -gt 0 ] ; then
+	ideltay="$ideltay`printf "0%.0s" $( seq 1 $__llen)`"
+    fi
+    # remove leading 0s
+    ideltay=`echo $ideltay | sed 's/^[0]*//'`
+
+    # some consistency checks
+    if [ $itunex1 -lt $itunex ] ; then
+	sixdeskmess -1 "sixdesktunes: tunex1 $tunex1 .lt. tunex $tunex!!!"
+	sixdeskexit
+    elif [ $itunex1 -ne $itunex ] && [ $ideltax -eq 0 ] ; then
+	sixdeskmess -1 "sixdesktunes: deltax .eq. 0 !!!"
+	sixdeskexit
+    fi
+    if [ $ituney1 -lt $ituney ] ; then
+	sixdeskmess -1 "sixdesktunes: tuney1 $tuney1 .lt. tuney $tuney!!!"
+	sixdeskexit
+    elif [ $ituney1 -ne $ituney ] && [ $ideltay -eq 0 ] ; then
+	sixdeskmess -1 "sixdesktunes: deltay .eq. 0 !!!"
+	sixdeskexit
+    fi
+
+    # notify user
+    if [ $ideltax -eq $itunex ] && [ $ideltay -eq $ituney ] ; then
+	# only one point
+	sixdeskmess 1 "sixdesktunes: Tune ${tunex}_${tuney}"
+    else
+	# full scan
+	sixdeskmess 1 "sixdesktunes: Tunescan (${tunex},${tuney}) to (${tunex1},${tuney1}) by (${deltax}, ${deltay})"
+    fi
+}
+sixdeskPrepareTunes(){
+    # by A.Mereghetti, 2016-07-19
+    # converts itunexx/ituneyy into tunexx/tuneyy + generate string of tune
+    local __lnew=$1
+    local __lerr=0
+    if [ $# -eq 0 ] ; then
+	# old call
+	tunexx=$(sixdeskPrepareTune $itunexx $xlen)
+	tuneyy=$(sixdeskPrepareTune $ituneyy $ylen)
+    fi
+    multipleTrials "sixdesktunes=\"\${tunexx}_\${tuneyy}\"; local __string1=\`echo \${sixdesktunes} | cut -d\_ -f1\`; local __string2=\`echo \${sixdesktunes} | cut -d\_ -f2\`" "[ -n \"\${__string1}\" ] && [ -n \"\${__string2}\" ]" "problem with generating tunes string"
+    let __lerr+=$?
+    return $__lerr
+}
+sixdeskPrepareTune(){
+    # by A.Mereghetti, 2017-02-06
+    # converts itunezz into tunezz
+    local __itunezz=$1
+    local __flen=$2
+    __tunezz=`echo "$__itunezz" | awk -v "flen=$__flen" '{lstring=length($1); fpart=substr($1,lstring-flen+1,flen); ipart=substr($1,1,lstring-flen); print (ipart"."fpart)}'`
+    __tunezz=$(sixdeskFixZerosFloat $__tunezz)
+    echo "${__tunezz}"
+}
+sixdeskAddDotFloat(){
+    # by A.Mereghetti, 2016-07-20
+    # add trailing "." in case it is not there
+    local __input="$1"
+    local __result=`echo "$__input" | awk '{lstring=length($1); dpos=index($1,"."); if (dpos==0) print ($1"."); else print ($1);}'`
+    echo "$__result"
+}
+sixdeskFixZerosFloat(){
+    # by A.Mereghetti, 2016-07-20
+    # remove useless trailing/heading "0", but leave one before/after "." in case this is first/last char
+    local __input="$1"
+    local __result=`echo "$__input" | sed -e's?0*$??' | sed -e's?^0??' | awk '{lstring=length($1); dpos=index($1,"."); if (dpos==1) print("0"$1); else print($1);}' | awk '{lstring=length($1); dpos=index($1,"."); if (dpos==lstring) print($1"0"); else print($1);}'`
+    echo "$__result"
+}
+sixdeskinttunes(){
+    inttunexx=$(sixdeskinttune ${tunexx})
+    inttuneyy=$(sixdeskinttune ${tuneyy})
+}
+sixdeskinttune(){
+    # get integer part of tune, with a dot afterwards
+    # in case the integer part is not in the orignal value, 0 is staken
+    # 2017-04-07, A.Mereghetti: use bash builtin functionalities
+    local __inttune=${1//\.*/\.}
+    if [ "${__inttune}" == "." ] ; then
+	__inttune="0."
+    fi
+    echo "${__inttune}"
+}
+sixdeskamps()
+{
+  # Generate the integer amplitude equivalents, and update fampstart
+  # ns1l
+  junk=`echo $ns1l | grep '\.'`
+  if test $? -ne 0
+  then
+    ampstart=$ns1l"000"
+  else
+    ins1l=`echo "$ns1l" | cut -d"." -f1`
+    fns1l=`echo "$ns1l" | cut -d"." -f2`
+    ins1l=$ins1l"000"
+    fns1l=`echo $fns1l"000" | cut -c1-3`
+    ampstart=`expr $ins1l + $fns1l`
+  fi
+  # ns2l
+  junk=`echo $ns2l | grep '\.'`
+  if test $? -ne 0
+  then
+    ampfinish=$ns2l"000"
+  else
+    ins2l=`echo "$ns2l" | cut -d"." -f1`
+    fns2l=`echo "$ns2l" | cut -d"." -f2`
+    ins2l=$ins2l"000"
+    fns2l=`echo $fns2l"000" | cut -c1-3`
+    ampfinish=`expr $ins2l + $fns2l`
+  fi
+  # nsincl
+  junk=`echo $nsincl | grep '\.'`
+  if test $? -ne 0
+  then
+    ampincl=$nsincl"000"
+  else
+    insincl=`echo "$nsincl" | cut -d"." -f1`
+    fnsincl=`echo "$nsincl" | cut -d"." -f2`
+    insincl=$insincl"000"
+    fnsincl=`echo $fnsincl"000" | cut -c1-3`
+    ampincl=`expr $insincl + $fnsincl`
+  fi
+  if test $ampstart -ge 99999 -o $ampfinish -ge 99999 -o $ampincl -ge 99999
+  then
+
+#MACRO mymess 0 sixdeskamps: Problem with amplitude definitions, $ns1l, $ns2l, $nsincl
+    sixdeskmess -1 "sixdeskamps: Problem with amplitude definitions, $ns1l, $ns2l, $nsincl"
+#MACRO mymess
+
+
+#MACRO myexit 13
+    sixdeskexitparam=13
+    sixdeskexit
+#MACRO myexit
+
+  fi
+
+#MACRO mymess 0 sixdeskamps: Amps $ampstart to $ampfinish by $ampincl
+  sixdeskmess -1 "sixdeskamps: Amps $ampstart to $ampfinish by $ampincl"
+#MACRO mymess
+
+}
+sixdeskAllFloats(){
+    # A.Mereghetti, 2017-04-08
+    # new function, to generate an array of floating point values
+    local __precision=1.0E-15
+    local __xMin=$1
+    local __xMax=$2
+    local __xDelta=$3
+    # - preliminary checks - to be moved to check_env.sh
+    if [ -z "${__xMax}" ] || [ -z "${__xDelta}" ] ; then
+	__xMax=${__xMin}
+	__xDelta=${__xMin}
+    fi
+    # - get all values
+    python ${SCRIPTDIR}/python/generate_floats.py ${__xMin} ${__xMax} ${__xDelta} ${__precision}
+}
+sixdeskFixDotFloat(){
+    # A.Mereghetti, 2017-04-08
+    # new function, to get always a dotted number (eg fortran input)
+    if [ "${1:0:1}" == "." ] ; then
+	# echo 0.xxxx
+	echo "0${1}"
+    elif [ "${1:(-1)}" == "." ] ; then
+	# echo xxxx.0
+	echo "${1}0"
+    elif [ `expr index "$1" .` -eq 0 ] ; then
+	# echo xxxx.0
+	echo "${1}.0"
+    else
+	# regular output
+	echo "${1}"
+    fi
+}
+sixdeskAllTunes(){
+    # A.Mereghetti, 2017-04-08
+    # new function, to generate all tune values
+    # - tunesXX: returned array of hor tune values
+    # - tunesYY: returned array of ver tune values
+    # - inttunesXX: returned array of integer part of hor tunes
+    # - inttunesYY: returned array of integer part of ver tunes
+    # hor:
+    tunesXX=""
+    inttunesXX=""
+    local __tunesXX=$(sixdeskAllFloats $tunex $tunex1 $deltax)
+    for tmptn in ${__tunesXX} ; do
+	tunesXX="${tunesXX} $(sixdeskFixDotFloat ${tmptn})"
+	inttunesXX="${inttunesXX} $(sixdeskinttune ${tmptn})"
+    done
+    tunesXX=( ${tunesXX} )
+    inttunesXX=( ${inttunesXX} )
+    # ver:
+    tunesYY=""
+    inttunesYY=""
+    local __tunesYY=$(sixdeskAllFloats $tuney $tuney1 $deltay)
+    for tmptn in ${__tunesYY} ; do
+	tunesYY="${tunesYY} $(sixdeskFixDotFloat ${tmptn})"
+	inttunesYY="${inttunesYY} $(sixdeskinttune ${tmptn})"
+    done
+    tunesYY=( ${tunesYY} )
+    inttunesYY=( ${inttunesYY} )
+}
+sixdeskAllAmplitudes(){
+    # A.Mereghetti, 2017-04-08
+    # new function, to generate all amplitude steps
+    allAmplitudeSteps=""
+    fAmpStarts=""
+    fAmpEnds=""
+    ampstart=""
+    ampfinish=""
+    local __iLast=0
+
+    # get all amplitude points
+    local __allAmplitudes=$(sixdeskAllFloats $ns1l $ns2l $nsincl)
+    __allAmplitudes=( ${__allAmplitudes} )
+
+    # get all amplitude intervals
+    let __iAmpliMax=${#__allAmplitudes[@]}-1
+    for (( iAmpli=0; iAmpli<${__iAmpliMax}; iAmpli++ )) ; do
+	# prepare amplitude string
+	let jAmpli=${iAmpli}+1
+	multipleTrials "Ampl=\"\${__allAmplitudes[\${iAmpli}]}_\${__allAmplitudes[\${jAmpli}]}\"; local __string1=\`echo \${Ampl} | cut -d\_ -f1\`; local __string2=\`echo \${Ampl} | cut -d\_ -f2\`;" "[ -n \"\${__string1}\" ] && [ -n \"\${__string2}\" ]" "problem with generating amplitudes string"
+	if [ $? -eq 0 ] ; then
+	    allAmplitudeSteps="${allAmplitudeSteps} ${Ampl}"
+	    fAmpStarts="${fAmpStarts} ${__allAmplitudes[${iAmpli}]}"
+	    fAmpEnds="${fAmpEnds} ${__allAmplitudes[${jAmpli}]}"
+	fi
+    done
+
+    allAmplitudeSteps=( ${allAmplitudeSteps} )
+    fAmpStarts=( ${fAmpStarts} )
+    fAmpEnds=( ${fAmpEnds} )
+    ampstart=${fAmpStarts[0]}
+    let __iLast=${#fAmpEnds[@]}-1
+    ampfinish=${fAmpEnds[${__iLast}]}
+}
+sixdeskAllAngles(){
+    # A.Mereghetti, 2017-04-10
+    # new function, to generate all angles
+    local __kmin=$1
+    local __kend=$2
+    local __kmax=$3
+    local __kstep=$4
+    local __ampstart=$5
+    local __ampfinish=$6
+    local __lbackcomp=$7
+    local __lReduceAngsWithAmplitude=$8
+    local __totAngle=$9
+    local __factor=${10}
+
+    # generated arrays:
+    KKs=""
+    Angles=""
+    kAngs=""
+    KKs_ampl="0" 
+
+    # generate regular angle steps:
+    if ${__lReduceAngsWithAmplitude}; then
+        for (( iAmple=0; iAmple<${#fAmpEnds[@]}; iAmple++ )) ; do
+            if (( $(echo "${reduce_angs_with_amplitude} ${fAmpEnds[${iAmple}]}" | awk '{print ($1 < $2)}') )); then
+                local __angles_nb=$(echo ${fAmpEnds[${iAmple}]} ${ampfinish} ${__kmax} | awk '{printf ("%.f", ($1/$2*$3))}')
+            else
+                local __angles_nb=$(echo ${reduce_angs_with_amplitude} ${ampfinish} ${__kmax} | awk '{printf ("%.f", ($1/$2*$3))}')
+            fi
+
+            if [ ${__angles_nb} -eq 0 ];then
+                __angles_nb=1
+            fi
+
+            for (( kk=1; kk<=${__angles_nb}; kk++ )) ; do
+	        KKs="${KKs} ${kk}"
+                local __tmpAngle=`echo ${totAngle} ${kk} ${__angles_nb} | awk '{print ($1*$2/($3+1))}'`
+	        Angles="${Angles} ${__tmpAngle}"  
+	        if ${__lbackcomp} ; then
+	            local __kang=`echo ${kk} ${__angles_nb} | awk '{print ($1/($2+1))}'`
+	        else
+	            local __kang=`echo ${kk} ${__angles_nb} | awk '{printf ("%.16E",$1/($2+1))}'`
+	        fi
+	        kAngs="${kAngs} ${__kang}"
+            done
+            let nTotAngles+=${__angles_nb}
+            KKs_ampl+=( ${nTotAngles} )
+        done
+    else
+        if ${__lbackcomp} ; then
+            local __angleStep=`echo ${__totAngle} ${__kmax} | awk '{print ($1/($2+1))}'`
+        else
+            local __angleStep=`echo ${__totAngle} ${__kmax} | awk '{printf ("%.16E",$1/($2+1))}'`
+        fi
+
+        for (( kk=${__kmin}; kk<=${__kend}; kk+=${__kstep} )) ; do
+	    KKs="${KKs} ${kk}"
+	    local __tmpAngle=`echo ${kk} ${__angleStep} | awk '{print ($1*$2)}'`
+	    Angles="${Angles} ${__tmpAngle}"
+	    if ${__lbackcomp} ; then
+	        local __kang=`echo ${kk} ${__kmax} | awk '{print ($1/($2+1))}'`
+	    else
+	        local __kang=`echo ${kk} ${__kmax} | awk '{printf ("%.16E",$1/($2+1))}'`
+	    fi
+	  kAngs="${kAngs} ${__kang}"
+        done
+        KKs_ampl=( ${KKs_ampl} ${__kend} )
+    fi
+
+    # make arrays
+    KKs=( ${KKs} )
+    Angles=( ${Angles} )
+    kAngs=( ${kAngs} )
+}
+sixdeskrundir()
+{
+    if [ $# -eq 1 ] ; then
+	local __lbackcomp=$1
+    else
+	local __lbackcomp=true
+    fi
+    rundirname=$(sixdeskFromJobNameToJobDir ${runnamename} ${__lbackcomp})
+}
+sixdeskDefinePythonPath(){
+    if [ $# -eq 1 ] ; then
+	export PATH=${1}:${PATH}
+	sixdeskmess 2 "Setting python to ${1} in PATH env var"
+    fi
+    sixdeskmess -1 "--> python set to: `which python` - version: `python --version`"
+}
+sixdeskDefineUserTree(){
+    # define the tree in the userspace
+    
+    # input variables are the starting points:
+    # $1: root dir (ie $basedir in sixdeskenv)
+    # $2: scratch dir (ie $scratchdir in sixdeskenv)
+    # $3: workspace name (ie $workspace in sixdeskenv)
+
+    # basic paths (back-compatibility)
+    [ -n "${basedir}" ] || export basedir=$1               # eg /afs/cern.ch/user/$initial/$LOGNAME
+    [ -n "${scratchdir}" ] || export scratchdir=$2            # eg $basedir/scratch0
+    [ -n "${trackdir}" ] || export trackdir=$scratchdir/$3  # eg $scratchdir/w2
+    [ -n "${sixdeskhome}" ] || export sixdeskhome=$basedir/$3/sixjobs # eg $trackdir/sixjobs
+    [ -n "${sixdeskhomeStudies}" ] || export sixdeskhomeStudies=$sixdeskhome/studies
+
+    # 
+    [ -n "${sixtrack_input}" ] || export sixtrack_input=$scratchdir/sixtrack_input/$workspace/$LHCDescrip
+    [ -n "${sixdesklogs}" ] || export sixdesklogs=$scratchdir/sixdesklogs/$workspace
+    [ -n "${sixdesklogdir}" ] || export sixdesklogdir=$sixdesklogs/$LHCDescrip
+    [ -n "${cronlogs}" ] || export cronlogs=$scratchdir/cronlogs/$workspace
+    [ -n "${cronlogdir}" ] || export cronlogdir=$cronlogs/$LHCDescrip
+    [ -n "${sixdesktrack}" ] || export sixdesktrack=$trackdir/track
+    [ -n "${sixdesktrackStudy}" ] || export sixdesktrackStudy=$sixdesktrack/$LHCDescrip
+    [ -n "${sixdeskwork}" ] || export sixdeskwork=$scratchdir/work/$workspace/$LHCDescrip
+    [ -n "${sixdeskjobs}" ] || export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
+    [ -n "${sixdeskjobs_logs}" ] || export sixdeskjobs_logs=$sixdeskjobs/jobs_logs
+    [ -n "${sixdeskstudy}" ] || export sixdeskstudy=$sixdeskhomeStudies/$LHCDescrip
+}
+sixDeskDefineMADXTree(){
+    local __SCRIPTDIR=$1
+    # The following version of mad-X is used by the mad6t jobs.
+    # All now call a madx executable so -X is no longer required.
+#    export MADX_PATH="/afs/cern.ch/user/m/mad/bin"
+    # Doesn't seem to work!
+    #export MADX="madx_pro"
+    # and the MUST? use for Massimo
+    #export MADX="madx_dev"
+    # and the new default
+#    export MADX="madx"
+    [ -n "${maskFilesPath}" ] || export maskFilesPath=$sixdeskhome/mask
+    [ -n "${controlFilesPath}" ] || export controlFilesPath=$sixdeskhome/control_files
+    [ -n "${lsfFilesPath}" ] || export lsfFilesPath=$__SCRIPTDIR/templates/lsf
+}
+sixdeskDefinePointTree(){
+    # $1: $LHCDesName
+    # $2: MadX seed
+    # $3: tag (see sixdeskrundir)
+    # $4: $sixdesktunes
+    # $5: $Ampl
+    # $6: turn exponent
+    # $7: angle
+    # $8: $kk
+    # $9: tree to $LHCDesName
+
+    # returned variables
+    Runnam=""
+    Rundir=""
+    RundirFullPath=""
+    actualDirName=""
+    actualDirNameFullPath=""
+
+    # temporary variables
+    local __lerr=0
+    local __errMess="sixdeskDefinePointTree - $1 - $2 - $3 - $4 - $5 - $6 - $7 - $8 - $9"
+
+    # -- Runnam
+    multipleTrials "local __Runnam=${1}%${2}%${3}%${4}%${5}%${6}%${7}; sixdeskSanitizeString \"\${__Runnam}\" Runnam" "[ -n \"\${Runnam}\" ]" "Problem at Runnam - ${__errMess}"
+    let __lerr+=$?
+
+    # -- Rundir
+    if [ -z "$6" ] ; then
+	runnamename="${1}%${2}%${3}%${4}%${5}%${6}%${7}"
+    else
+	runnamename="${1}%${2}%${3}%${4}%${5}%e${6}%${7}"
+    fi
+    multipleTrials "sixdeskrundir false; local __Rundir=\${rundirname}; sixdeskSanitizeString \"\${__Rundir}\" Rundir" "[ -n \"\${Rundir}\" ]" "Problem at Rundir - ${__errMess}"
+    let __lerr+=$?
+    multipleTrials "local __RundirFullPath=$9/$Rundir ; sixdeskSanitizeString \"\${__RundirFullPath}\" RundirFullPath" "[ -n \"\${RundirFullPath}\" ]" "Problem at RundirFullPath - ${__errMess}"
+    let __lerr+=$?
+
+    # -- actualDirName
+    if [ -z "$6" ] ; then
+	runnamename="${1}%${2}%${3}%${4}%${5}%${6}%.${8}"
+    else
+	runnamename="${1}%${2}%${3}%${4}%${5}%e${6}%.${8}"
+    fi
+    multipleTrials "sixdeskrundir false; local __actualDirName=\${rundirname}; sixdeskSanitizeString \"\${__actualDirName}\" actualDirName" "[ -n \"\${actualDirName}\" ]" "Problem at actualDirName - ${__errMess}"
+    let __lerr+=$?
+    multipleTrials "local __actualDirNameFullPath=$9/$actualDirName ; sixdeskSanitizeString \"\${__actualDirNameFullPath}\" actualDirNameFullPath" "[ -n \"\${actualDirNameFullPath}\" ]" "Problem at actualDirNameFullPath - ${__errMess}"
+    let __lerr+=$?
+
+    return $__lerr
+}
+# manipulation of point name
+sixdeskSmashJobName(){
+    MADseedFromName=`echo "$1" | cut -d\% -f2`
+    tunesFromName=`echo "$1" | cut -d\% -f4`
+    amplisFromName=`echo "$1" | cut -d\% -f5`
+    exponentFromName=`echo "$1" | cut -d\% -f6`
+    angleFromName=`echo "$1" | cut -d\% -f7`
+}
+sixdeskGetNFieldsFromJobName(){
+    local __Runnam=$1
+    local __result=`echo "${__Runnam}" | awk 'BEGIN{FS="%"}{print (NF)}'`
+    eval "$2=${__result}"
+}
+sixdeskCheckNFieldsFromJobName(){
+    local __Runnam=$1
+    local __lerr=0
+    local __Nfields
+    sixdeskGetNFieldsFromJobName "${__Runnam}" __NFields
+    if [ ${__NFields} -ne 7 ] ; then
+	      sixdeskmess -1 "Not valid format of point in scan; ${__Runnam}"
+	      sixdeskmess -1 "It should be made up of 7 fields separated by a '%' char"
+        sixdeskmess -1 "1. LHCDesName;"
+        sixdeskmess -1 "2. MadX seed;"
+        sixdeskmess -1 "3. tag (s/t/m/d);"
+        sixdeskmess -1 "4. tunes;"
+        sixdeskmess -1 "5. amplitude range;"
+        sixdeskmess -1 "6. turn exponent;"
+        sixdeskmess -1 "7. angle"
+	      __lerr=1
+    fi
+    return ${__lerr}
+}
+sixdeskFromJobNameToJobDir(){
+    if [ $# -eq 2 ] ; then
+	local __lbackcomp=$2
+    else
+	local __lbackcomp=true
+    fi
+    rundirname0=$1
+    rundirname1=${rundirname0//\%/\/}
+    if ${__lbackcomp} ; then
+	rundirname1=`echo "$rundirname1" | awk 'BEGIN{FS="/";OFS="/"}{$6="e"$6; print}'`
+    fi
+    rundirname2=${rundirname1//\/s\//\/simul\/}
+    rundirname3=${rundirname2//\/t\//\/trans\/}
+    rundirname4=${rundirname3//\/m\//\/momen\/}
+    rundirname5=${rundirname4//\/d\//\/da\/}
+    # remove trailing slashes
+    rundirname5=`echo "${rundirname5}" | sed 's:/*$::'`
+    echo ${rundirname5}
+}
+sixdeskFromJobDirToJobName(){
+    if [ $# -eq 2 ] ; then
+	local __lbackcomp=$2
+    else
+	local __lbackcomp=true
+    fi
+    rundirname0=$1
+    rundirname1=${rundirname0//\/da\//\/d\/}
+    rundirname2=${rundirname1//\/momen\//\/m\/}
+    rundirname3=${rundirname2//\/trans\//\/t\/}
+    rundirname4=${rundirname3//\/simul\//\/s\/}
+    # remove trailing slashes
+    rundirname4=`echo "${rundirname4}" | sed 's:/*$::'`
+    if ${__lbackcomp} ; then
+	rundirname4=`echo "$rundirname4" | awk 'BEGIN{FS="/";OFS="/"}{gsub(/e/,"",$6); print}'`
+    fi
+    rundirname5=${rundirname4//\//\%}
+    echo ${rundirname5}
+}
+sixdeskDefineWorkUnitName(){
+    # $1: workspace name (ie $workspace)
+    # $2: name of job (ie $Runnam)
+    # $3: task ID (ie $sixdesktaskid)
+    local __lerr=0
+    multipleTrials "sixdeskTaskName=\"`echo \"${1}_${2}\" | awk 'BEGIN{FS=\"%\"; OFS=\"__\"}{\$3=\$3; print}'`\"" "[ -n \"\${sixdeskTaskName}\" ]"
+    let __lerr+=$?
+    multipleTrials "workunitName=\"${sixdeskTaskName}_1_sixvf_${3}\"" "[ -n \"\${workunitName}\" ]"
+    let __lerr+=$?
+    return $__lerr
+}
+sixdeskDefineMegaZipName(){
+    local __workSpaceName=$1
+    local __studyName=$2
+    local __megaZipName="${LOGNAME}_${__workSpaceName}_${__studyName}_`date "+%Y-%m-%d_%H-%M-%S"`.zip"
+    eval  "$3=${__megaZipName}"
+}
+sixdeskGetTaskIDfromWorkUnitName(){
+    sixdesktaskid=`echo "$1" | awk 'BEGIN{FS="_";}{print ($NF)}'`
+}
+sixdeskAngleStep(){
+    local __totAngle=$1
+    local __kmax=$2
+    local __lbackcomp=$3
+    if ${__lbackcomp} ; then
+	AngleStep=`gawk -v "totAngle=${__totAngle}" -v "kmax=${__kmax}" 'END{print (totAngle/(kmax+1))}' /dev/null`
+    else
+	AngleStep=`gawk -v "totAngle=${__totAngle}" -v "kmax=${__kmax}" 'END{printf ("%.16E",totAngle/(kmax+1))}' /dev/null`
+    fi
+}
+sixdeskAngle(){
+    Angle=`gawk -v "angleStep=$1" -v "kk=$2" 'END{print (angleStep*kk)}' /dev/null`
+}
+sixdeskkang(){
+    local __kk=$1
+    local __kmax=$2
+    local __lbackcomp=$3
+    if ${__lbackcomp} ; then
+	kang=`gawk -v "kk=${__kk}" -v "kmax=${__kmax}" 'END{print (kk/(kmax+1))}' /dev/null`
+    else
+	kang=`gawk -v "kk=${__kk}" -v "kmax=${__kmax}" 'END{printf ("%.16E",kk/(kmax+1))}' /dev/null`
+    fi
+}
+sixdeskRatio(){
+    local __kang=$1
+    local __lbackcomp=$2
+    if ${__lbackcomp} ; then
+	local __hpi=1.570796
+    else
+	local __hpi=1.5707963267948966
+    fi
+    ratio=`gawk -v "kang=${__kang}" -v "hpi=${__hpi}" 'END{tan=sin(hpi*kang)/cos(hpi*kang); if (tan<0) {tan=-tan}; if (tan<1.0E-15) {tan=0.0}; ratio=tan**2; print ratio}' /dev/null`
+}
+sixdeskax0(){
+    local __ratio=$6
+    local __square=$8
+    local __lbackcomp=${11}
+    if ${__lbackcomp} ; then
+	local __hpi=1.5707963268
+    else
+	local __hpi=1.5707963267948966
+    fi
+    if [ $__square -eq 0 ] ; then
+	ax0t=`gawk -v "factor=$1" -v "beta_x=$2" -v "beta_x2=$3" -v "ratio=$__ratio" -v "kang=$7" -v "hpi=${__hpi}" 'END{print(factor*(sqrt(beta_x)+sqrt(beta_x2*ratio))*cos(hpi*kang))}' /dev/null`
+    else
+	if [ $__ratio -le "$one" ] ;then
+	    ax0t=`gawk -v "factor=$1" -v "beta_x=$2" -v "beta_x2=$3" -v "ratio=$__ratio" 'END{print(factor*(sqrt(beta_x)+sqrt(beta_x2*ratio)))}' /dev/null`
+	else
+	    ax0t=`gawk -v "factor=$1" -v "beta_y=$4" -v "beta_y2=$5" -v "ratio=$__ratio" -v "kang=$7" -v "hpi=${__hpi}" 'END{print(factor*(sqrt(beta_y2/ratio)+sqrt(beta_y))*cos(hpi*kang)/sin(hpi*kang))}' /dev/null`
+	fi
+    fi
+    ax0=`gawk -v "ax0t=${ax0t}" -v "ns=$9"    'END{ax0=ax0t*ns;print ax0}' /dev/null`
+    ax1=`gawk -v "ax0t=${ax0t}" -v "ne=${10}" 'END{ax1=ax0t*ne;print ax1}' /dev/null`
+}
+
+function parseBetaValues(){
+
+    local __betaWhere=$1
+
+    # check that the betavalues file contains all the necessary values
+    nBetas=`cat $__betaWhere/betavalues | wc -w`
+    if [ $nBetas -ne 14 ] ; then
+        sixdeskmess -1 "betavalues has $nBetas words!!! Should be 14!"
+	exit
+    fi
+
+    # check that the beta values are not NULL and notify user
+    beta_x=`gawk '{print $1}' $__betaWhere/betavalues`
+    beta_x2=`gawk '{print $2}' $__betaWhere/betavalues`
+    beta_y=`gawk '{print $3}' $__betaWhere/betavalues`
+    beta_y2=`gawk '{print $4}' $__betaWhere/betavalues`
+    if test "$beta_x" = "" -o "$beta_y" = "" -o "$beta_x2" = "" -o "beta_y2" = "" ; then
+        # clean up for a retry by removing old betavalues
+	# anyway, this run was not ok...
+        sixdeskmess -1 "One or more betavalues are NULL !!!"
+        sixdeskmess -1 "Look in $sixdeskjobs_logs to see SixTrack input and output."
+        sixdeskmess -1 "Check the file lin_old which contains the SixTrack fort.6 output."
+	exit
+    fi
+    sixdeskmess  1 "Betavalues:"
+    sixdeskmess  1 "beta_x[2] $beta_x $beta_x2 - beta_y[2] $beta_y $beta_y2"
+
+    # notify user other variables
+    fhtune=`gawk '{print $5}' $__betaWhere/betavalues`
+    fvtune=`gawk '{print $6}' $__betaWhere/betavalues`
+    fchromx=`gawk '{print $7}' $__betaWhere/betavalues`
+    fchromy=`gawk '{print $8}' $__betaWhere/betavalues`
+    fclosed_orbit=`gawk '{print $9" "$10" "$11" "$12" "$13" "$14}' $__betaWhere/betavalues`
+    sixdeskmess  1 "Chromaticity: $fchromx $fchromy"
+    sixdeskmess  1 "Tunes: $fhtune $fvtune"
+    sixdeskmess  1 "Closed orbit: $fclosed_orbit"
+
+}
+
+sixdeskCreateUserTree(){
+    if [ ! -d $sixdeskhomeStudies ] ; then
+	mkdir $sixdeskhomeStudies
+    fi
+}
+sixdeskSetExes(){
+    local __lerr=0
+    [ -n "${sixdeskpath}" ] || export sixdeskpath=/afs/cern.ch/group/si/slap/bin/sixdesk
+    [ -n "${SIXTRACKEXE}" ] || export SIXTRACKEXE=$newBuildPathDef/${appName}
+    [ -n "${SIXTRACKBNLEXE}" ] || export SIXTRACKBNLEXE=$sixdeskpath/exes/SixTrack_bnl_pro
+    [ -n "${SIXTRACKDAEXE}" ] || export SIXTRACKDAEXE=$sixdeskpath/exes/SixTrack_crlibm_da_lf95v4200
+    return ${__lerr}
+}
+sixdeskSetPlatForm(){
+    local __platform=$1
+    if [ -n "${__platform}" ] ; then
+	# platform as requested by user (no matter if in sixdeskenv or via terminal line option)
+	export sixdeskplatform=`echo "$__platform" | tr '[A-Z]' '[a-z]'`
+	if [ "$sixdeskplatform" != "boinc" ] && [ "$sixdeskplatform" != "lsf" ] && [ "$sixdeskplatform" != "htcondor" ] ; then
+	    sixdeskmess -1 "unknown platform: ${sixdeskplatform}"
+	    return 1
+	fi
+    else
+	# set default platform
+	export sixdeskplatform="htcondor"
+    fi
+    [ -n "${sixdeskjobs}" ] || export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
+    [ -n "${sixdeskjobs_logs}" ] || export sixdeskjobs_logs=$sixdeskjobs/jobs_logs
+    if [ "$BNL" != "" ] ; then
+	[ -n "${sixdeskbnlin}" ] || export sixdeskbnlin="fort.54"
+	[ -n "${bnlfilenames}" ] || export bnlfilenames="beambeam-output.dat beambeamlostID.dat SixTwiss.dat checkdist.dat"
+	[ -n "${bnlfortnames}" ] || export bnlfortnames="fort.52 fort.53 fort.51 fort.97"
+	if [ "$sixdeskplatform" == "boinc" ] ; then
+	    [ -n "${sixdeskbnlout}" ] || export sixdeskbnlout="fort.10"
+	elif [ "$sixdeskplatform" == "cpss" ] ; then
+	    [ -n "${sixdeskbnlout}" ] || export sixdeskbnlout=$bnlfortnames
+	elif [ "$sixdeskplatform" == "lsf" ] ; then
+	    [ -n "${sixdeskbnlout}" ] || export sixdeskbnlout=$bnlfilenames
+	fi
+    fi
+    return 0
+}
+
+sixDeskCheckAppName(){
+    local __appname=$1
+    local __lerr=1
+    local __recognisedAppNames=( `\ls -p ${newBuildPathDef} | grep -v /` )
+    if [ -n "${__appname}" ] ; then
+	# appName defined by user
+	__appname=`echo ${__appname} | tr '[A-Z]' '[a-z]'`
+	for __tmpRecognisedAppName in ${__recognisedAppNames[@]} ; do
+	    if [ "${__appname}" == "${__tmpRecognisedAppName}" ] ; then
+		__lerr=0
+		break
+	    fi
+	done
+	if [ ${__lerr} -ne 0 ] ; then
+	    sixdeskmess -1 "Un-recognised appName: \"${__appname}\"!"
+	    sixdeskmess -1 "Valid appNames are:"
+	    for __tmpRecognisedAppName in ${__recognisedAppNames[@]} ; do
+		sixdeskmess -1 " --> ${__tmpRecognisedAppName}"
+	    done
+	    sixdeskmess -1 "setting appName to default ${appNameDef}"
+	    export appName=${appNameDef}
+	fi
+	if [ "${__appname}" == "sixtracktest" ] ; then
+	    export sixdeskboinctest=true
+	else
+	    export sixdeskboinctest=false
+	fi
+    else
+	# appName assigned by default
+	if [ -z "${sixdeskboinctest}" ] || ! ${sixdeskboinctest} ; then
+	    export appName=sixtrack
+	    export sixdeskboinctest=false
+	else
+	    export appName=sixtracktest
+	    export sixdeskboinctest=true
+	fi
+	__lerr=0
+    fi
+    return ${__lerr}
+}
+
+sixdeskSetQueue(){
+    # check that a proper queue has been chosen:
+    # . LSF: test 8nm 1nh 8nh 1nd 2nd 1nw 2nw (see http://lsf-rrd.cern.ch/lrf-lsf/)
+    # . HTCONDOR: espresso (20min) microcentury (1h) longlunch (2h) workday (8h) tomorrow (1d) testmatch (3d) nextweek (1w) (see http://batchdocs.web.cern.ch/batchdocs/local/lsfmigratepractical.html)
+    # verify lsf var is properly set
+    if [ -z "${!1}" ] ; then
+	# assign a default value
+	eval "${1}=8nh"
+    else
+	case ${!1} in
+            8nm | 1nh | 8nh | 1nd | 2nd | 1nw | 2nw )
+		sixdeskmess 2 "LSF queue (sixdeskenv): ${!1}"
+		;;
+	    *)
+		# set default queue
+		eval "${1}=8nh"
+		sixdeskmess 2 "LSF queue (default): ${!1}"
+		;;
+	esac
+    fi
+    # verify htcondor var is set:
+    if [ -n "${!2}" ] ; then
+	case ${!2} in
+            espresso | microcentury | workday | tomorrow | testmatch | 1nextweek )
+		sixdeskmess 2 "HTCONDOR queue (sixdeskenv): ${!2}"
+		;;
+	    *)
+		# set default queue
+		eval "${2}=''"
+		;;
+	esac
+    fi
+    if [ -z "${!2}" ] ; then
+	# assign a default value based on the lsf value
+	case ${!1} in
+            8nm )
+		eval "${2}=espresso"
+		;;
+	    1nh )
+		eval "${2}=microcentury"
+		;;
+	    8nh )
+		eval "${2}=workday"
+		;;
+	    1nd )
+		eval "${2}=tomorrow"
+		;;
+	    2nd )
+    		eval "${2}=testmatch"
+		;;
+	    1nw )
+    		eval "${2}=nextweek"
+		;;
+	    2nw )
+		eval "${2}=nextweek"
+		;;
+	esac
+	sixdeskmess 2 "HTCONDOR queue (sixdeskenv - from LSF-equivalent): ${!2}"
+    fi
+    export ${1}
+    export ${2}
+}
+
+sixDeskSetBOINCVars(){
+    [ -n "$sixdeskpts" ] || export sixdeskpts=boinc:users
+    [ -n "${boincdir}" ] || export boincdir=/afs/cern.ch/work/b/boinc
+    [ -n "${sixdeskboincdirname}" ] || export sixdeskboincdirname="${workspace}_${LHCDescrip}"
+    if ${sixdeskboinctest} ; then
+	# overwrite definition of sixdeskboincdir with what is proper for sixtracktest
+ 	export sixdeskboincdir=$boincdir/boinctest/$sixdeskboincdirname
+    elif [ -z "${sixdeskboincdir}" ] ; then
+	# overwrite definition of sixdeskboincdir only if user did not specify anything
+ 	export sixdeskboincdir=$boincdir/boinc/$sixdeskboincdirname
+    fi
+    [ -n "${sixdeskparts}" ] || export sixdeskparts=`expr $sixdeskpairs \* 2`
+    if [ -z "${sixdeskturns}" ] ; then
+	if [ $short -eq 1 -o $da -eq 1 ] ; then
+	    [ -n "${sixdeskturns}" ] || export  sixdeskturns=$turnss
+	elif [ $long -eq 1 ] ; then
+	    [ -n "${sixdeskturns}" ] || export sixdeskturns=$turnsl
+	fi
+	if [ "$BNL" != "" ] ; then
+	    [ -n "${sixdeskturns}" ] || export sixdeskturns=$bnlturns
+	fi
+    fi
+    if [ -z "${sixdeskfpopse}" ] ; then
+	sixdeskfpopse=`expr $sixdeskturns \* $sixdeskparts`
+	#sixdeskfpopse=`expr $sixdeskfpopse \* 2`
+	#sixdeskfpopse=`expr $sixdeskfpopse / 3`
+	sixdeskfpopse=`expr $sixdeskfpopse / 2`
+	#sixdeskfpopse=`expr $sixdeskfpopse \* 3`
+	sixdeskfpopse=$sixdeskfpopse"000000"
+    fi
+
+    # --------------------------------------------------------------------------
+    # from uploadWorkunit
+    # The workunit will only be sent to clients with at least this much
+    # available RAM. If exceeded the workunit will be aborted.
+    # Measured in bytes.
+    [ -n "${memBound}" ] || export memBound=100000000
+    
+    # An upper bound on the amount of disk space required to process the
+    # workunit. The workunit will only be sent to clients with at least this
+    # much available disk space. If exceeded the workunit will be aborted.
+    # Measured in bytes.
+    # diskBound=200,000,000  ~200MB
+    [ -n "${diskBound}" ] || export diskBound=200000000
+    
+    # An upper bound on the time (in seconds) between sending a result to a
+    # client and receiving a reply. If the client doesn't respond within this
+    # interval, the server 'gives up' on the result and generates a new result,
+    # to be assigned to another client. Don't set this too low. 
+    # 20 times the "normal" execution time will probably be a good value.
+    # about 30 days
+    [ -n "${delayBound}" ] || export delayBound=2400000
+    
+    # The number of redundant calculations. Set to two or more to achieve
+    # redudancy.
+    [ -n "${redundancy}" ] || export redundancy=2
+    
+    # The number of copies of the workunit to issue to clients. Must be at
+    # least the number of redundant calculations or higher if a loss of results
+    # is expected or if the result should to be obtained fast.
+    [ -n "${copies}" ] || export copies=2
+    
+    # The number of errors from clients before the workunit is declared to have
+    # an error.
+    [ -n "${errors}" ] || export errors=5
+    
+    # The total number of clients to issue the workunit to before it is declared
+    # to have an error.
+    [ -n "${numIssues}" ] || export numIssues=5
+
+    # The total number of returned results without a concensus is found before
+    # the workunit is declared to have an error.
+    [ -n "${resultsWithoutConcensus}" ] || export resultsWithoutConcensus=3
+
+    # Getting the fpops estimate and multiplying it with 10 to get the bound.
+    # Multiply by 4 for the moment but watch for complaints!
+    # Try 6 for pentium 4
+    [ -n "${fpopsEstimate}" ] || export fpopsEstimate=`expr $sixdeskfpopse \* 6`
+    [ -n "${fpopsBound}" ] || export fpopsBound=`expr $fpopsEstimate \* 1000`
+    
+    # --------------------------------------------------------------------------
+    # for megaZip
+    [ -n "${megaZipPath}" ] || export megaZipPath=$boincdir/boinc/upload
+    
+    # --------------------------------------------------------------------------
+    # for work folder in work.boinc AFS spooldir
+    [ -n "${AFSworkSpooldirDef}" ] || export AFSworkSpooldirDef=$sixdeskboincdir/work
+    [ -n "${AFSworkSpooldir}" ] || export AFSworkSpooldir=${AFSworkSpooldirDef}
+}
+
+function sixDeskReSetWorkSpoolDir(){
+    AFSworkSpooldir=${1}/`date "+%Y-%m-%d_%H-%M-%S"`
+    AFSworkSpooldir=`mktemp -d ${AFSworkSpooldir}_XXX`
+}
+
+sixdeskSetCPSSVars(){
+    # sixdeskprog/uploadProgram Variables
+    # sixdeskProgramName, sixdeskFileName, sixdeskTargetFileName
+    # sixdeskVersion, sixdeskAuthor, sixdeskDescription
+    [ -n "${sixdeskexec}" ] || export sixdeskexec="$sixdeskpath/exes/SixTrack_4411_crlibm_bnl_ifort_icpss.exe"
+    [ -n "${sixdeskOsMin}" ] || export sixdeskOsMin="5.0"
+    [ -n "${sixdeskOsMax}" ] || export sixdeskOsMax="9.9"
+    [ -n "${sixdeskCpuSpeedMin}" ] || export sixdeskCpuSpeedMin="100"
+    [ -n "${sixdeskclientv}" ] || export sixdeskclientv=2.5
+    [ -n "${sixdeskProgramName}" ] || export sixdeskProgramName="Sixtrack V4211 Tilt Lost CRLIBM CR BNL"
+    [ -n "${sixdeskFileName}" ] || export sixdeskFileName="$sixdeskexec"
+    [ -n "${sixdeskTargetFileName}" ] || export sixdeskTargetFileName="sixtrack.exe"
+    [ -n "${sixdeskVersion}" ] || export sixdeskVersion="4.2.11 BNL"
+    [ -n "${sixdeskAuthor}" ] || export sixdeskAuthor="Frank Schmidt & Eric McIntosh"
+    [ -n "${sixdeskProgramDescription}" ] || export sixdeskProgramDescription="Lahey 7.1 Sixtrack[CR] with crlibm made fom .s"
+    # sixdeskgroup/createTaskGroup Variables
+    # sixdeskTaskGroupName, sixdeskTaskGroupDescription,
+    # sixdeskStatus, sixdeskPriority, sixdeskComments
+    [ -n "${sixdeskTaskGroupName}" ] || export sixdeskTaskGroupName=$LOGNAME"_"$workspace"_"$LHCDescrip
+    [ -n "${sixdeskTaskGroupDescription}" ] || export sixdeskTaskGroupDescription=$workspace"_"$LHCDescrip
+    [ -n "${sixdeskStatus}" ] || export sixdeskStatus="Active"
+    [ -n "${sixdeskPriority}" ] || export sixdeskPriority="Normal"
+    [ -n "${sixdeskComments}" ] || export sixdeskComments="$LHCDescrip"
+}
+sixdeskSetOtherVars(){
+    # Turn ON/OFF CASTOR........... true or false 
+    [ -n "${sixdeskcastor}" ] || export sixdeskcastor="true"
+    # Not really needed anymore but must be non-zero!
+    [ -n "${sixdeskcr}" ] || export sixdeskcr=1 
+    [ -n "${LHCDesName}" ] || export LHCDesName=$LHCDescrip
+}
+sixdeskGetFileName(){
+    local __fileName
+    __fileName=$(basename "$1")
+    __fileName="${__fileName%.*}"
+    eval "$2=$__fileName"
+}
+function __inspectPrerequisite(){
+    local __lverbose=$1
+    local __test=$2
+    local __entry=$3
+    local __lerr=0
+    
+    test $__test ${__entry}
+    if [ $? -ne 0 ] ; then
+	let __lerr+=1
+	if ${__lverbose} ; then
+	    sixdeskmess -1 "${__entry} NOT there!"
+	fi
+    else
+	if ${__lverbose} ; then
+	    sixdeskmess 1 "${__entry} EXISTs!"
+	fi
+    fi
+    return $__lerr
+}
+
+function sixdeskInspectPrerequisites(){
+    local __lverbose=$1
+    local __path=$2
+    local __test=$3
+    shift 3
+    local __entries=$@
+    local __lerr=0
+    if [ $# -eq 0 ] ; then
+	__inspectPrerequisite ${__lverbose} ${__test} ${__path}
+	let __lerr+=$?
+    else
+	for tmpEntry in ${__entries} ; do
+	    __inspectPrerequisite ${__lverbose} ${__test} ${__path}/${tmpEntry}
+	    let __lerr+=$?
+	done
+    fi
+    return $__lerr
+}
+
+function sixdeskSanitizeString(){
+    # A.Mereghetti, 2016-12-07
+    # for the moment, remove empty spaces, tab and newline chars
+    __cleanArg=`echo "$1" | sed -e 's/\ //g' -e 's/\t//g' -e 's/\n//g'`
+    eval "$2=${__cleanArg}"
+}
+
+function sixdeskSendNotifMail(){
+    local __emailSubj=$1
+    local __receiverNames="amereghe"
+    # do bother user only in case of a real error
+    if [ -n "${__emailSubj}" ] ; then
+	if [ `echo ${__emailSubj} | grep -e "Error" -e "ERROR" -e "error" -e "Fatal" -e "FATAL" -e "fatal" | wc -l` -gt 0 ] ; then
+	    # email subject contains error/fatal: add user to list of recipients
+	    __receiverNames="${__receiverNames} $LOGNAME"
+	fi
+    fi
+
+    # send emails (attachments are generated by sixdeskEchoEnvVars)
+    local __attachments=`\ls -1 ${tmpNodeDir}/envs*txt 2> /dev/null`
+    local __dirName=envs_${LOGNAME}_`date +"%F_%H-%M-%S"`
+    mkdir ${tmpNodeDir}/${__dirName}
+    cp ${tmpNodeDir}/envs*txt ${tmpNodeDir}/${__dirName}
+    zip -j ${tmpNodeDir}/${__dirName}.zip ${tmpNodeDir}/${__dirName}/* > /dev/null 2>&1
+    emailSubject="intercepting problem in SixDesk: ${__emailSubj}"
+    local __recipients=`echo "${__receiverNames}" | awk '{for (ii=1;ii<=NF;ii++) {printf("%s@cern.ch ",$ii)}}'`
+    echo "${sixdeskmess}" | mail -a ${tmpNodeDir}/${__dirName}.zip -s "${emailSubject}" ${__recipients}
+
+    # clean
+    rm -rf ${tmpNodeDir}/${__dirName}*
+}
+
+function sixdeskEchoEnvVars(){
+    if [ -n "$1" ] ; then
+	compgen -v | while read line; do all=$line"[*]"; echo $line=${!all}; done > $1
+    else
+	compgen -v | while read line; do all=$line"[*]"; echo $line=${!all}; done
+    fi
+}
+function multipleTrials(){
+    local __command="$1"
+    local __test="$2"
+    if [ $# -ge 3 ] ; then
+	local __errMess=$3
+    else
+	local __errMess="Failing command \"${__command}\""
+    fi
+    if [ $# -ge 4 ] ; then
+	local __delay=$4
+    else
+	local __delay=3
+    fi
+    if [ $# -ge 5 ] ; then
+	local __iCountMax=$5
+    else
+	local __iCountMax=10
+    fi
+    local __lsuccess=false
+
+    # initialise cycle
+    local __iCount=1
+    local __lok=false
+    local __lprobl=false
+    local __lerr=0
+    # cycle
+    while [ $__iCount -le $__iCountMax ] ; do
+	if [ $__iCount -ge 2 ] ; then
+            sixdeskmess 1 "multipleTrials - trial n. ${__iCount} - sleeping ${__delay} seconds"
+	    sleep ${__delay}
+	fi
+	eval "${__command}"
+	if eval "${__test}" ; then
+	    __lok=true
+	    break
+	fi
+	__lprobl=true
+	# get ready to report a problem
+	sixdeskmess -1 "${__errMess} - trial n. ${__iCount}!"
+	sixdeskEchoEnvVars ${tmpNodeDir}/envs_${__iCount}.txt
+	let __iCount+=1
+    done
+    if ${__lprobl} ; then
+	if ${__lok} ; then
+	    sixdeskmess -1 "Warning - ${__errMess} - but manged to survive at iteration n. ${__iCount}!"
+	else
+            sixdeskmess="Error - ${__errMess} - reached max acceptable repetitions (ie ${__iCountMax})!"
+	    sixdeskmess -1 
+	    sixdeskSendNotifMail "${sixdeskmess}"
+	    let __lerr+=1
+	fi
+        rm ${tmpNodeDir}/envs_*.txt
+    elif ${__lsuccess}; then
+	sixdeskmess 1 "success!"
+    fi
+    return $__lerr
+}
+function sixdeskRenewKerberosToken(){
+    if [ $# -eq 1 ] ; then
+	local __lKlist=$1
+    else
+	local __lKlist=true
+    fi
+    sixdeskmess -1 " --> kinit;"
+    multipleTrials "kinit -R ; local __exit_status=\$?" "[ \$__exit_status -eq 0 ]"
+    if [ $? -gt 0 ] ; then
+	sixdeskmess -1 "--> kinit -R failed - AFS/Kerberos credentials expired??? aborting..."
+	exit
+    else
+	if ${__lKlist} ; then
+	    sixdeskmess -1 " --> klist output after kinit -R:"
+	    klist
+	fi
+    fi
+}
+function sixdeskSetLocalNodeStuff(){
+    if [[ `uname -n` == "lxplus"* ]] ; then
+        # set some default stuff for lxplus
+        export newBuildPathDef=/afs/cern.ch/project/sixtrack/build
+        export appNameDef=sixtrack
+        export platForms=( 'boinc' 'lsf' 'htcondor' )
+        export lKerberos=true
+        export lAFS=true
+        export tmpNodeDir=/tmp/${LOGNAME}
+        # source path to python2.7 and other utilities
+	local __sourceEnv=/cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc49-opt/setup.sh
+	source ${__sourceEnv}
+    elif [[ `uname -n` == *".cern.ch" ]] ; then
+        # set some default stuff for a local machine in CERN domain
+        export newBuildPathDef=/afs/cern.ch/project/sixtrack/build
+        export appNameDef=sixtrack
+        export platForms=( 'boinc' 'lsf' 'htcondor' )
+        export lKerberos=true
+        export lAFS=true
+        export tmpNodeDir=/tmp/
+    else
+        # set some default stuff for a local machine
+        sixdeskmess -1 "No default for local machine `uname -n` - please update set_env.sh and re-run"
+        exit 1
+    fi
+}
+function sixdeskCompareVersions(){
+    # 0: true ; 1: false
+    echo $1 $2 | awk '{print ($1>=$2)}'
+}

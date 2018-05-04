@@ -1,4 +1,0 @@
-#!/bin/sh
-
-pdflatex "\newcommand{\filename}{"$1"} \input{DAsurv.tex}"
-rm DAsurv.log DAsurv.aux
