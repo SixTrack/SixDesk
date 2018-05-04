@@ -1,0 +1,217 @@
+#!/bin/bash
+# This scripts checks all cases using the work/taskid file
+# and correct the completed/incomplete_cases files.
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to scripts (normalised)
+if [ -z "${SCRIPTDIR}" ] ; then
+    SCRIPTDIR=`dirname $0`
+    SCRIPTDIR="`cd ${SCRIPTDIR};pwd`"
+    export SCRIPTDIR=`dirname ${SCRIPTDIR}`
+fi
+# ------------------------------------------------------------------------------
+
+source ${SCRIPTDIR}/bash/dot_env
+# Now first report current situation
+
+#MACRO mymess 0 Correcting Study $LHCDescrip
+sixdeskmesslevel=0
+sixdeskmess -1 "Correcting Study $LHCDescrip"
+#MACRO mymess
+
+
+#MACRO mylock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdesklock
+#MACRO mylock
+
+
+#MACRO mylock $sixdeskwork
+###sixdesklockdir=$sixdeskwork
+###sixdesklock
+#MACRO mylock
+
+cases=0
+if test -f $sixdeskwork/taskids
+then
+  cases=`wc -l "$sixdeskwork/taskids"`
+  cases=`echo "$cases" | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+icases=0
+if test -s $sixdeskwork/incomplete_cases
+then
+  icases=`wc -l $sixdeskwork/incomplete_cases`
+  icases=`echo $icases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+ccases=0
+if test -s $sixdeskwork/completed_cases
+then
+  ccases=`wc -l $sixdeskwork/completed_cases`
+  ccases=`echo $ccases | sed -e 's? *\([0-9]*\).*?\1?'`
+fi
+
+#MACRO mymess 0 Before found $cases cases, $ccases complete ($icases incomplete)
+sixdeskmesslevel=0
+sixdeskmess -1 "Before found $cases cases, $ccases complete ($icases incomplete)"
+#MACRO mymess
+
+mkdir -p $sixdeskwork/backup
+touch incomplete_cases
+touch completed_cases
+touch myincomplete_cases
+touch mycompleted_cases
+touch $sixdeskwork/taskids
+cp $sixdeskwork/completed_cases $sixdeskwork/backup
+cp $sixdeskwork/mycompleted_cases $sixdeskwork/backup
+cp $sixdeskwork/incomplete_cases $sixdeskwork/backup
+cp $sixdeskwork/myincomplete_cases $sixdeskwork/backup
+for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
+    if [ -d ${platForms[$ii]}jobs ] ; then
+	mkdir -p $sixdeskwork/${platForms[$ii]}jobs/backup
+	for tmpFile in incomplete_${fileSuffixes[$ii]} completed_${fileSuffixes[$ii]} ; do
+	    cp $sixdeskwork/${platForms[$ii]}jobs/${tmpFile}  $sixdeskwork/${platForms[$ii]}jobs/backup
+	done
+    fi
+done
+
+#MACRO mymktmpdir tmp /tmp/$LOGNAME
+sixdesktmpdirname=tmp
+sixdesktmpdirarg=/tmp/$LOGNAME
+sixdeskmktmpdir
+tmp=$sixdesktmpdir
+#MACRO mymktmp
+
+cd $tmp
+touch $sixdeskwork/taskids
+cp $sixdeskwork/taskids .
+while read aline
+do
+  Runnam=`echo $aline | cut -d " " -f1`
+
+#MACRO myrundir $Runnam Rundir
+  runnamename=$Runnam
+  sixdeskrundir
+  Rundir=$rundirname
+#MACRO myrundir
+
+  where=$sixdesktrack/$Rundir
+  missing=0
+  echo "Processing $Runnam in $Rundir"
+  if test "$da" -ne 0
+  then
+    if test ! -s $where/fort.18.gz
+    then
+
+#MACRO mymess 0 $Runnam fort.18.gz is MISSING in $Rundir !!!
+      sixdeskmesslevel=0
+      sixdeskmess -1 "$Runnam fort.18.gz is MISSING in $Rundir !!!"
+#MACRO mymess
+
+      missing="1"
+    fi
+  else
+   if test "$BNL" = ""
+    then
+      if test ! -s $where/fort.10.gz
+      then
+
+#MACRO mymess 0 $Runnam fort.10.gz is MISSING for $Runnam !!!
+        sixdeskmesslevel=0
+        sixdeskmess -1 "$Runnam fort.10.gz is MISSING for $Runnam !!!"
+#MACRO mymess
+
+          missing="1"
+      fi
+    else
+      if test ! -s $where/beambeam-output.dat.gz
+      then
+
+#MACRO mymess 0 $Runnam beambeam-output.dat.gz is MISSING for $Runnam !!!
+        sixdeskmesslevel=0
+        sixdeskmess -1 "$Runnam beambeam-output.dat.gz is MISSING for $Runnam !!!"
+#MACRO mymess
+
+        missing="1"
+      fi
+    fi
+  fi
+  if test "$missing" -eq 0
+  then
+    # Really complete
+    echo "$Runnam" >> completed_cases
+    rm -f $where/JOB_NOT_YET_STARTED
+    rm -f $where/JOB_NOT_YET_COMPLETED
+  else
+    # Incomplete
+    echo "$Runnam" >> incomplete_cases
+  fi
+done < taskids
+for tmpFile in completed_cases incomplete_cases ; do
+    if [ -s ${tmpFile} ] ; then
+	cp ${tmpFile} $sixdeskwork/${tmpFile}
+	cp ${tmpFile} $sixdeskwork/my${tmpFile}
+    else
+	rm -f $sixdeskwork/${tmpFile}
+	touch $sixdeskwork/${tmpFile}
+	rm -f $sixdeskwork/my${tmpFile}
+	touch $sixdeskwork/my${tmpFile}
+    fi
+done
+# take care of platform DBs:
+for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
+    if [ -d $sixdeskwork/${platForms[$ii]}jobs ] ; then
+	sixdeskmess -1 "updating ${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]} and ${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]} ..."
+	# --version-sort, to preserve the natural order of numbers with dot
+	join --nocheck-order     <(sort -k1 --version-sort $sixdeskwork/${platForms[$ii]}jobs/${fileSuffixes[$ii]}) <(sort -k1 --version-sort $sixdeskwork/completed_cases) > $sixdeskwork/${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]}
+	join --nocheck-order -v1 <(sort -k1 --version-sort $sixdeskwork/${platForms[$ii]}jobs/${fileSuffixes[$ii]}) <(sort -k1 --version-sort $sixdeskwork/completed_cases) > $sixdeskwork/${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]}
+	cases=0
+	if [ -s $sixdeskwork/${platForms[$ii]}jobs/${fileSuffixes[$ii]} ] ; then
+	    cases=`wc -l < $sixdeskwork/${platForms[$ii]}jobs/${fileSuffixes[$ii]}`
+	fi
+	icases=0
+	if [ -s $sixdeskwork/${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]} ] ; then
+	    icases=`wc -l < $sixdeskwork/${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]}`
+	fi
+	ccases=0
+	if [ -s $sixdeskwork/${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]} ] ; then
+	    ccases=`wc -l < $sixdeskwork/${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]}`
+	fi
+	sixdeskmess -1 "...present status of platform DB: $cases cases, $ccases complete ($icases incomplete)"
+    fi
+done
+
+cd $sixdeskhome
+rm -r $tmp
+# and report status after correction
+cases=0
+if [ -f $sixdeskwork/taskids ] ; then
+  cases=`wc -l < "$sixdeskwork/taskids"`
+fi
+icases=0
+if [ -s $sixdeskwork/incomplete_cases ] ; then
+  icases=`wc -l < $sixdeskwork/incomplete_cases`
+fi
+ccases=0
+if [ -s $sixdeskwork/completed_cases ] ; then
+  ccases=`wc -l < $sixdeskwork/completed_cases`
+fi
+
+#MACRO mymess 0 After checking found $cases cases, $ccases complete ($icases incomplete)
+sixdeskmesslevel=0
+sixdeskmess -1 "After checking found $cases cases, $ccases complete ($icases incomplete)"
+#MACRO mymess
+
+
+#MACRO myunlock $sixdeskwork
+###sixdesklockdir=$sixdeskwork
+###sixdeskunlock
+#MACRO myunlock
+
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+

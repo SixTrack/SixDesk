@@ -1,0 +1,560 @@
+#!/bin/bash
+#
+# Recalls a study to the original workspace,
+# or to a completely different workspace.
+# Uses a workspace backup or a study backup.
+#
+# recall_study backup_studyname 
+# or
+# recall_study backup_workspacename study
+# and we now run in the .. of sixjobs like the recall_workspace
+# but call it from sixjobs or the ..
+# Finally re-instated the remove of existing files for this study
+# as otherwise the afs path cannot be removed but only if cout
+# is not null, if null, we just use absolute path anyway. 
+castorr() 
+{
+
+#MACRO mymess 0 Recalling $cin
+  sixdeskmesslevel=0
+  sixdeskmess -1 "Recalling $cin"
+#MACRO mymess
+
+  castor_recall $cin $cout >> $sixdeskhome/../castor_recall.log 2>&1
+  if test $? -ne 0
+  then
+  if test "$nomessages" = ""
+    then
+
+#MACRO mymess 0 castor_recall failed!! See castor_recall.log.
+      sixdeskmesslevel=0
+      sixdeskmess -1 "castor_recall failed!! See castor_recall.log."
+#MACRO mymess
+
+
+#MACRO myexit 99
+      sixdeskexitparam=99
+      sixdeskexit
+#MACRO myexit
+
+    else
+      echo "castor_recall failed!! See castor_recall.log."
+      exit 99
+    fi
+  fi
+}
+check_dir()
+{
+  if test ! -d $LHCDescrip
+  then
+
+#MACRO mymess 0 Recall of $LHCDescrip in $mystudy has failed!!!
+    sixdeskmesslevel=0
+    sixdeskmess -1 "Recall of $LHCDescrip in $mystudy has failed!!!"
+#MACRO mymess
+
+
+#MACRO mymess 0 See castor_recall.log and inform eric.mcintosh@cern.ch.
+    sixdeskmesslevel=0
+    sixdeskmess -1 "See castor_recall.log and inform eric.mcintosh@cern.ch."
+#MACRO mymess
+
+
+#MACRO myexit 77
+    sixdeskexitparam=77
+    sixdeskexit
+#MACRO myexit
+
+  fi
+}
+
+# ------------------------------------------------------------------------------
+# preliminary to any action
+# ------------------------------------------------------------------------------
+# - get path to scripts (normalised)
+if [ -z "${SCRIPTDIR}" ] ; then
+    SCRIPTDIR=`dirname $0`
+    SCRIPTDIR="`cd ${SCRIPTDIR};pwd`"
+    export SCRIPTDIR=`dirname ${SCRIPTDIR}`
+fi
+# ------------------------------------------------------------------------------
+
+# We have no sixjobs possibly so set nomessages
+  nomessages="true"
+# This should always be defined
+if test "$CASTOR_HOME" = ""
+then
+  echo "The variable CASTOR_HOME is undefined!!!"
+  echo "Do you have a CASTOR account?"
+  exit 2
+fi
+# The backup must be specified
+if test $# -eq 0
+then
+  echo "You must specify the backup name in workspace_backups"
+  exit 3
+fi
+bname=$1
+cname=$CASTOR_HOME/workspace_backups
+echo $bname | grep "%" > /dev/null 2>&1
+if test $? -ne 0
+then
+  echo "The backup name does not have a '%'...!!!"
+  exit 33
+fi
+nsls workspace_backups/$bname > /dev/null 2>&1 
+if test $? -ne 0
+then
+  echo "Specified backup file can not be found!"
+  echo "'nsls workspace_backups' will list all existing CASTOR backups"
+  exit 8
+fi
+bworkspace=`echo $bname | cut -d"%" -f 1`
+bstudy=`echo $bname | cut -d"%" -f 2`
+bdate=`echo $bname | cut -d"%" -f 3`
+if test "$bdate" = ""
+then
+  # We are recalling a study from a workspace backup
+  # So we need to have a study
+  if test $# -ne 2
+  then
+    echo "You must specify a study to recall from a workspace backup!!!"
+    exit 9
+  else
+    bdate=$bstudy
+    bstudy=$2
+  fi 
+fi
+sixdesklogdir="."
+# go to .. if necessary
+if test "`basename $PWD`" = "sixjobs"
+then
+  cd ..
+  echo "Done a cd to .. of sixjobs" >> sixdesk.log
+fi
+currentws="`basename $PWD`"
+# does it exist
+if test ! -h ~/$currentws
+then
+  echo "Link in $HOME to $currentws does not exist!!!"
+  echo "Link in $HOME to $currentws does not exist!!!" >> sixdesk.log
+  exit 11
+fi
+echo "Recalling Study $bstudy from Backup $bname to Workspace $currentws"
+echo "Recalling Study $bstudy from Backup $bname to Workspace $currentws" >> sixdesk.log
+# Workspace may be empty or not
+if test ! -d sixjobs
+then
+  echo "Recalling sixjobs first"
+  echo "Recalling sixjobs first" >> sixdesk.log
+  cin=$cname/$bname/sixjobs
+  cout=.
+  castor_recall $cin $cout >> castor_recall.log 2>&1
+  if test $? -ne 0
+  then
+    echo "castor_recall failed!! See castor_recall.log."
+    echo "castor_recall failed!! See castor_recall.log." >> sixdesk.log
+    exit 1
+  fi
+  if test -d "sixjobs"
+  then
+    echo "sixjobs recalled successfully."
+  else
+    echo "Problem with recall of sixjobs!!!"
+    echo "Problem with recall of sixjobs!!!" >> sixdesk.log
+    echo "Please check the castor_recall.log"
+    exit 9
+  fi
+  # and it was locked for the backup
+  chmod 644 sixjobs/sixdesklock
+  cd sixjobs
+  # First are we recalling to a different workspace or not........
+  if test "$bworkspace" != "$currentws"
+  then
+    # and now edit ALL the studies/study/sixdeskenv and ./sixdeskenv
+    # to reflect the new workspace
+    sed -e 's/\( *export *workspace=\).*/\1'$currentws'/' sixdeskenv > tmp$$
+    mv tmp$$ sixdeskenv
+    rm -f tmp$$ tmp2$$
+    ls -tr studies > tmp$$
+    while read myitem
+    do
+      if test -d studies/"$myitem"
+      then
+        echo "$myitem" >> tmp2$$
+      fi
+    done < tmp$$
+    rm tmp$$
+    while read mynewstudy
+    do
+      sed -e 's/\( *export *workspace=\).*/\1'$currentws'/' studies/$mynewstudy/sixdeskenv > tmp$$
+      mv tmp$$ studies/$mynewstudy/sixdeskenv
+      # Remove (if they exist) CPSS TaskGroupId/ProgramId no longer valid
+      # as they are for the old workspace
+      rm -f studies/$mynewstudy/ProgramId
+      rm -f studies/$mynewstudy/TaskGroupId
+    done < tmp2$$
+    rm tmp2$$
+  fi
+  # back to .. of sixjobs
+  cd ..
+else
+  echo "Using existing sixjobs"
+fi
+# Now we must have the study in studies!"
+if test ! -d sixjobs/studies/$bstudy
+then
+  echo "There is no studies/$bstudy directory in sixjobs!!!"
+  echo "There is no studies/$bstudy directory in sixjobs!!!" >> sixdesk.log
+  exit 80
+else
+  if test ! -s sixjobs/studies/$bstudy/sixdeskenv -o ! -s sixjobs/studies/$bstudy/sysenv
+  then
+    echo "sixdeskenv and/or sysenv are missing for $bstudy!!!" >> sixdesk.log
+    echo "sixdeskenv and/or sysenv are missing for $bstudy!!!"
+    exit 81
+  fi
+fi
+# and do a ". ./dot_env" to prepare recall of rest of study
+# except I have to simulate because of $1
+if test ! -s ${SCRIPTDIR}/bash/dot_profile
+then
+  echo "dot_profile is missing!!!"
+  exit 1
+fi
+source ${SCRIPTDIR}/bash/dot_profile
+nomessages=""
+# Is this a straight recall to the same place?
+# or are we recalling to a different workspace.
+cout=""
+if test "$currentws" != "$bworkspace"
+then
+  cout="."
+fi
+myworkspace=$currentws
+mystudy=$bstudy
+source ./sixjobs/studies/$bstudy/sixdeskenv
+source ./sixjobs/studies/$bstudy/sysenv
+mysixdesklogdir=$sixdesklogdir
+sixdesklogdir="."
+# and this should be redundant!
+if test "$workspace" != "$myworkspace"
+then
+
+#MACRO mymess 0 BUG there is a workspace mismatch!!!
+  sixdeskmesslevel=0
+  sixdeskmess -1 "BUG there is a workspace mismatch!!!"
+#MACRO mymess
+
+
+#MACRO myexit 11
+  sixdeskexitparam=11
+  sixdeskexit
+#MACRO myexit
+
+fi
+# Check we have a study match if using a study backup
+if test "$bstudy" != "$LHCDescrip"
+then
+
+#MACRO mymess 0 BUG Recalling $bstudy from $bname but the LHCDescrip is $LHCDescrip!!!
+  sixdeskmesslevel=0
+  sixdeskmess -1 "BUG Recalling $bstudy from $bname but the LHCDescrip is $LHCDescrip!!!"
+#MACRO mymess
+
+
+#MACRO myexit 10
+  sixdeskexitparam=10
+  sixdeskexit
+#MACRO myexit
+
+fi
+
+#MACRO mymess 0 Recalling Study $mystudy to $myworkspace
+sixdeskmesslevel=0
+sixdeskmess -1 "Recalling Study $mystudy to $myworkspace"
+#MACRO mymess
+
+if test "$currentws" = "$bworkspace"
+then
+  if test ! -e sixjobs/studies/$LHCDescrip/deleted
+  then
+
+#MACRO mymess 0 This study exists already; we will NOT overwrite it!!!
+    sixdeskmesslevel=0
+    sixdeskmess -1 "This study exists already; we will NOT overwrite it!!!"
+#MACRO mymess
+
+
+#MACRO myexit 11
+    sixdeskexitparam=11
+    sixdeskexit
+#MACRO myexit
+
+  fi
+else
+
+#MACRO mymess 0 Writing study to the new workspace
+  sixdeskmesslevel=0
+  sixdeskmess -1 "Writing study to the new workspace"
+#MACRO mymess
+
+fi
+# Lock the workspace (only one recall at a time)
+
+#MACRO mylock 
+sixdesklockdir=
+sixdesklock
+#MACRO mylock
+
+
+#MACRO mylock sixjobs
+sixdesklockdir=sixjobs
+sixdesklock
+#MACRO mylock
+
+
+#MACRO mymess 0 Starting recall of Study $mystudy to $myworkspace
+sixdeskmesslevel=0
+sixdeskmess -1 "Starting recall of Study $mystudy to $myworkspace"
+#MACRO mymess
+
+# We recall to same place (full path) or we have set cout=.
+# Now the same code should work for same/new workspace
+# We do NOT recall sixjobs as it is assumed to exist
+# or has been created above
+# We do logs, sixtrack_input, track, work.
+cd sixjobs
+sixdesklogdir=".."
+for nextd in logs cronlogs sixtrack_input track work
+do
+
+#MACRO mymess 0 Recalling $nextd at `date +%d%m%y`/`date +%T`
+  sixdeskmesslevel=0
+  sixdeskmess -1 "Recalling $nextd at `date +%d%m%y`/`date +%T`"
+#MACRO mymess
+
+  if test "$nextd" = "logs"
+  then 
+    nsls $cname/$bname/logs/$LHCDescrip.1.tar > /dev/null 2>&1
+    if test $? -eq 0 -a "$mysixdesklogdir" != ""
+    then
+      mkdir -p $mysixdesklogdir
+      cd $mysixdesklogdir
+      cd ..
+      cin=$cname/$bname/logs/$LHCDescrip
+      if test "$cout" != ""
+      then
+        rm -rf $LHCDescrip
+      fi
+      castorr
+      check_dir
+      cd $sixdeskhome
+    else
+
+#MACRO mymess 0 Skipping logs.
+      sixdeskmesslevel=0
+      sixdeskmess -1 "Skipping logs."
+#MACRO mymess
+
+    fi
+  elif test "$nextd" = "cronlogs"
+  then
+    nsls $cname/$bname/cronlogs/$LHCDescrip.1.tar > /dev/null 2>&1
+    if test $? -eq 0 -a "$cronlogdir" != ""
+    then
+      mkdir -p $cronlogdir
+      cd $cronlogdir
+      cd ..
+      cin=$cname/$bname/cronlogs/$LHCDescrip
+      if test "$cout" != ""
+      then
+        rm -rf $LHCDescrip
+      fi
+      castorr
+      check_dir
+      cd $sixdeskhome
+    else
+
+#MACRO mymess 0 Skipping cronlogs
+      sixdeskmesslevel=0
+      sixdeskmess -1 "Skipping cronlogs"
+#MACRO mymess
+
+    fi
+  elif test "$nextd" = "track"
+  then
+    nsls $cname/$bname/track/$LHCDescrip.1.tar > /dev/null
+    if test $? -eq 0
+    then
+      mkdir -p $sixdesktrack/$LHCDescrip
+      cd $sixdesktrack/$LHCDescrip
+      cd ..
+      cin=$cname/$bname/track/$LHCDescrip
+      if test "$cout" != ""
+      then
+        rm -rf $LHCDescrip
+      fi
+      castorr
+      check_dir
+      cd $sixdeskhome
+    else
+
+#MACRO mymess 0 Skipping track
+      sixdeskmesslevel=0
+      sixdeskmess -1 "Skipping track"
+#MACRO mymess
+
+    fi
+  elif test "$nextd" = "sixtrack_input"
+  then
+    nsls $cname/$bname/sixtrack_input/$LHCDescrip.1.tar > /dev/null 2>&1
+    if test $? -eq 0
+    then
+      mkdir -p $sixtrack_input
+      cd $sixtrack_input
+      cd ..
+      cin=$cname/$bname/sixtrack_input/$LHCDescrip
+      if test "$cout" != ""
+      then
+        rm -rf $LHCDescrip
+      fi
+      castorr
+      check_dir
+      cd $sixdeskhome
+    else
+
+#MACRO mymess 0 Skipping sixtrack_input
+      sixdeskmesslevel=0
+      sixdeskmess -1 "Skipping sixtrack_input"
+#MACRO mymess
+
+    fi
+  elif test "$nextd" = "work"
+  then
+    nsls $cname/$bname/work/$LHCDescrip.1.tar > /dev/null 2>&1
+    if test $? -eq 0
+    then 
+      mkdir -p $sixdeskwork
+      cd $sixdeskwork
+      cd ..
+      cin=$cname/$bname/work/$LHCDescrip
+      if test "$cout" != ""
+      then
+        rm -rf $LHCDescrip
+      fi
+      castorr 
+      check_dir
+      cd $sixdeskhome
+    else
+
+#MACRO mymess 0 Skipping work
+      sixdeskmesslevel=0
+      sixdeskmess -1 "Skipping work"
+#MACRO mymess
+
+    fi
+  else
+
+#MACRO mymess 0 BUG!!! Trying to recall unknown data!!!
+    sixdeskmesslevel=0
+    sixdeskmess -1 "BUG!!! Trying to recall unknown data!!!"
+#MACRO mymess
+
+
+#MACRO myexit 99
+    sixdeskexitparam=99
+    sixdeskexit
+#MACRO myexit
+
+  fi
+done
+rm -f $sixdeskstudy/deleted
+# and here we are in sixjobs
+# and unlock study (set by the backup!)
+
+#MACRO myunlock $sixdeskstudy
+sixdesklockdir=$sixdeskstudy
+sixdeskunlock
+#MACRO myunlock
+
+# and sixjobs and workspace
+# and try full path (for SIXDESKLOCKED......)
+
+#MACRO myunlock $sixdeskhome
+sixdesklockdir=$sixdeskhome
+sixdeskunlock
+#MACRO myunlock
+
+# the workspace itself
+wspath=`dirname $sixdeskhome`
+
+#MACRO myunlock $wspath
+sixdesklockdir=$wspath
+sixdeskunlock
+#MACRO myunlock
+
+# and now try creating the links (faster and avoids sixdesk.log messages)
+ln -sf $sixtrack_input sixtrack_input
+ln -sf $sixdesktrack/$LHCDescrip track
+ln -sf $sixdeskwork work
+ln -sf $sixdeskstudy study
+# and try all the logfiles
+ln -sf "$mysixdesklogdir"/sixdesk.log sixdesk.log
+ln -sf "$mysixdesklogdir"/sixdeskerror.log sixdeskerror.log
+ln -sf "$mysixdesklogdir"/restart.log restart.log
+ln -sf $cronlogdir/cron_results.log cron_results.log
+ln -sf $cronlogs cronlogs
+# and finally?! update the fort.2|8|16 links in the track tree
+if test "$bworkspace" != "$currentws"
+then
+
+#MACRO mymess 0 Updating the input links fort.2|8|16
+  sixdeskmesslevel=0
+  sixdeskmess -1 "Updating the input links fort.2|8|16"
+#MACRO mymess
+
+
+#MACRO mylock $sixdeskstudy
+  sixdesklockdir=$sixdeskstudy
+  sixdesklock
+#MACRO mylock
+
+  while read aline
+  do
+    Runnam=`echo $aline | cut -d " " -f1`
+
+#MACRO myrundir $Runnam Rundir
+    runnamename=$Runnam
+    sixdeskrundir
+    Rundir=$rundirname
+#MACRO myrundir
+
+    where=$sixdesktrack/$Rundir
+    seed=`echo $Runnam | cut -d% -f2`
+    cd $where
+    ln -sf $sixtrack_input/fort.2_${seed}.gz fort.2.gz
+    ln -sf $sixtrack_input/fort.8_${seed}.gz fort.8.gz
+    ln -sf $sixtrack_input/fort.16_${seed}.gz fort.16.gz
+    cd $sixdeskhome
+  done < $sixdeskwork/taskids
+
+#MACRO myunlock $sixdeskstudy
+  sixdesklockdir=$sixdeskstudy
+  sixdeskunlock
+#MACRO myunlock
+
+fi
+#
+
+#MACRO mymess 0 Recall of $mystudy to $myworkspace finished at `date +%d%m%y`/`date +%T`
+sixdeskmesslevel=0
+sixdeskmess -1 "Recall of $mystudy to $myworkspace finished at `date +%d%m%y`/`date +%T`"
+#MACRO mymess
+
+
+#MACRO myexit 0
+sixdeskexitparam=0
+sixdeskexit
+#MACRO myexit
+
