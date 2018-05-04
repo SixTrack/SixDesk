@@ -1,7 +1,7 @@
 #!make
 
-PROJ=/data/boinc/software/boinc/boinc
-SIXT=/data/boinc/project/sixtrack/sixtrack-assimilator
+PROJ=/share/boinc/software/boinc/boinc
+SIXT=/usr/local/boinc/project/sixtrack/sixtrack-assimilator
 
 INCL=-I$(PROJ) -I$(PROJ)/lib -I$(PROJ)/db -I$(PROJ)/sched -I/usr/include/mysql
 LIBD=-rdynamic -L/usr/lib64/mysql -lmysqlclient -lcrypt -lnsl -lm -lssl -lcrypto -ldl -lz

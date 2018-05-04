@@ -2,7 +2,7 @@
 
 # by A.Mereghetti
 
-serverStatusReport=https://lhcathome.cern.ch/sixtrack/server_status.php
+serverStatusReport=https://lhcathome.cern.ch/lhcathome/server_status.php
 
 # time stamp
 rightNow=`date +"%F %T"`

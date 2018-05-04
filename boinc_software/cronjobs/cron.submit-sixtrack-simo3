@@ -25,11 +25,11 @@ spooldirUpload=$spooldir/upload
 
 # The relative path of the workunit template file from the config dir.
 # this template will present Sixin.zip as the input file
-WU_template=templates/sixtracktest_wu_template.xml
+WU_template=templates/sixtrack_wu_template.xml
 
 # The relative path of the result template file from the config dir.
 # this template will bring back also the Sixout.zip results
-result_template_SixOutZip=templates/sixtrack_zip_res_template.xml
+result_template_SixOutZip=templates/sixtrack_res_template.xml
 
 # default app name
 applicationDef=sixtrack
@@ -163,41 +163,40 @@ run_spool(){ # max_jobs_to_submit, max_jobs_perStudy, specific_study
     fi
 
     # main loop
-    echo "${allWorkDirs}" | (
-	while read workdir ; do
-	    local complete_perStudy=0
-	    #check for desc files in the current work dir, and subfolders
-	    find "$workdir" -maxdepth 2 -type f -name '*.desc' | (
-	        while read descfile ; do
-		    #process the desc files
-	            origPath=`dirname ${descfile}`
-		    if submit_descfile "$descfile" ; then
-			logstudy "Submitted $WUname"
-			#stop after max_jobs (0=unlimited)
-			if ${lMaxJobs} ; then
-			    complete=$(( $complete + 1 ))
-			    if [ $complete -ge $max_jobs ] ; then
-                                log "reached ${max_jobs} in total"
-				break 2
-			    fi
-			fi
-			if ${lMaxJobsPerStudy} ; then
-			    complete_perStudy=$(( ${complete_perStudy} + 1 ))
-			    if [ ${complete_perStudy} -ge ${max_jobs_perStudy} ] ; then
-                                # continue with next study
-                                log "reached ${max_jobs_perStudy} in ${workdir}"
-				break 1
-			    fi
-			fi
-		    else
-			logstudy "Problem submitting $WUname"
+    for workdir in ${allWorkDirs} ; do
+        ! ${lMaxJobsPerStudy} || local __StudyComplete=0
+	#check for desc files in the current work dir, and subfolders
+	if ${lMaxJobsPerStudy} ; then
+	    local allDescs=`find "$workdir" -maxdepth 2 -type f -name '*.desc' | head -n ${max_jobs_perStudy}`
+	else
+	    local allDescs=`find "$workdir" -maxdepth 2 -type f -name '*.desc'`
+	fi
+	for descfile in ${allDescs} ; do
+	    #process the desc files
+	    origPath=`dirname ${descfile}`
+            ! ${lMaxJobsPerStudy} || let __StudyComplete+=1
+	    if submit_descfile "$descfile" ; then
+		logstudy "Submitted $WUname"
+		#stop after max_jobs (0=unlimited)
+		if ${lMaxJobs} ; then
+		    complete=$(( $complete + 1 ))
+		    if [ $complete -ge $max_jobs ] ; then
+                        log "reached ${max_jobs} in total"
+			break 2
 		    fi
-	        done
-	    )
-            # remove temp dirs in work
-            find ${workdir} -mindepth 1 -maxdepth 1 -type d -empty -delete -print | log
+		fi
+	    else
+		logstudy "Problem submitting $WUname"
+	    fi
 	done
-    )
+	if [ -n "${allDescs}" ] ; then
+	    if ${lMaxJobsPerStudy} ; then
+                if [ ${__StudyComplete} -eq ${max_jobs_perStudy} ] ; then
+		    log "limit to ${max_jobs_perStudy} reached for ${workdir}"
+	        fi
+            fi
+	fi
+    done
 }
 
 submit_descfile(){ 
@@ -228,7 +227,7 @@ submit_descfile(){
 	fi
 
         #overriding delay bound
-        WUdelayBound=$(cat $boincdir/suggested_deadline)
+        WUdelayBound="$WUdelayBoundDef"
 	
 
 #copyfiles
@@ -422,6 +421,7 @@ maxjobs=0
 maxjobs_perStudy=0
 keepzip=0
 studyName=""
+WUdelayBoundDef=574334 # [s]
 
 while getopts ":hn:m:d:k"  OPT
 do
@@ -445,6 +445,11 @@ cd $boincdir
 
 getlock
 #Klog
+
+# preliminary: remove temp dirs in work older than 1d
+log find ${spooldir} -mindepth 3 -maxdepth 3 -mtime +1 -type d -empty -delete -print
+find ${spooldir} -mindepth 3 -maxdepth 3 -mtime +1 -type d -empty -delete -print | log
+
 log run_spool $maxjobs $maxjobs_perStudy $studyName
 run_spool $maxjobs $maxjobs_perStudy $studyName
 

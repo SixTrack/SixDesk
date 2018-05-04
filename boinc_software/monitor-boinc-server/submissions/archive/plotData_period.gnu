@@ -5,9 +5,9 @@ reset
 # ------------------------------------------------------------------------------
 
 # files
-grepFiles='201[7-8]-??/submit*.dat'
+grepFiles='2018-??/submit*.dat'
 iFileName='submitAll.dat'
-grepFilesAssimilated='201[7-8]-??/assimilate*.dat'
+grepFilesAssimilated='2018-??/assimilate*.dat'
 iFileNameAssimilated='assimilateAll.dat'
 
 # last 24h
@@ -20,9 +20,9 @@ tStep=1*3600
 # time interval
 # AM -> tMin='2017-05-23T00:00:00'
 # AM -> tMin='2017-06-15T00:00:00'
-tMin='2017-12-10T00:00:00'
+tMin='2018-03-01T00:00:00'
 # AM -> tMax='2017-08-25T00:00:00'
-tStep=3600*24
+tStep=3600*6
 
 # typical enlarged window size: 1900,400
 # trigger use of png or interactive windows: 0: png, 1: interactive
