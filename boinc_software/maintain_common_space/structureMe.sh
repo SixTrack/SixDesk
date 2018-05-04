@@ -82,10 +82,16 @@ EOF
     fi
     if ${lScripts} ; then
 	# make fortran exes for checking fort.10
-	cd ${__Dir}
-	cd utilities/fortran
+	cd ${__Dir}/utilities/fortran
 	make
 	ls -ltrh
+	cd ${__origDir}
+	# make documentation
+        if [ -d ${__Dir}/utilities/doc ] ; then
+	    cd ${__Dir}/utilities/doc
+	    make
+	    ls -ltrh
+        fi
 	cd ${__origDir}
 	# echo commits/logs
 	echo ""
@@ -117,6 +123,10 @@ function checkDir(){
     cd ${__origDir}
     # compilation of fortran exes
     cd ${__Dir}/utilities/fortran
+    ls -ltrh
+    cd ${__origDir}
+    # documentation
+    cd ${__Dir}/utilities/doc
     ls -ltrh
     cd ${__origDir}
     # checkout of SixDB
