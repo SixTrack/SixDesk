@@ -20,11 +20,35 @@
         <user_friendly_name>Android running on ARM 64-bit arm64-v8a</user_friendly_name>
     </platform>
     <platform>
+        <name>x86-android-linux-gnu</name>
+        <user_friendly_name>Android running on an Intel x86-compatible CPU</user_friendly_name>
+    </platform>
+    <platform>
+        <name>x86_64-android-linux-gnu</name>
+        <user_friendly_name>Android running on an AMD x86_64 or Intel EM64T CPU</user_friendly_name>
+    </platform>
+    <platform>
         <name>aarch64-unknown-linux-gnu</name>
         <user_friendly_name>Linux running on 64-bit ARM</user_friendly_name>
     </platform>
     <platform>
+        <name>arm-unknown-linux-gnueabihf</name>
+        <user_friendly_name>Linux running on ARM, hardware FP</user_friendly_name>
+    </platform>
+    <platform>
+        <name>armv6l-unknown-linux-gnueabihf</name>
+        <user_friendly_name>Linux running on ARM6, hardware FP</user_friendly_name>
+    </platform>
+    <platform>
+        <name>armv7l-unknown-linux-gnueabihf</name>
+        <user_friendly_name>Linux running on ARM7, hardware FP</user_friendly_name>
+    </platform>
+    <platform>
         <name>ppc64-linux-gnu</name>
+        <user_friendly_name>Linux running on a 64-bit PowerPC processor</user_friendly_name>
+    </platform>
+    <platform>
+        <name>powerpc64le-unknown-linux-gnu</name>
         <user_friendly_name>Linux running on a 64-bit PowerPC processor</user_friendly_name>
     </platform>
     <platform>
