@@ -191,6 +191,8 @@ def genIntValues( istart, istop, idelta, ll, sym='.' ):
         if (lDebug):
             print 'gen:',x,output,ll,lForceIntegers
         values.append(output)
+    if lSkipExtremes:
+        values=values[1:-1]
     return values
 
 # ==============================================================================
@@ -207,23 +209,29 @@ if ( __name__ == "__main__" ):
     xstop=sys.argv[2]
     xdelta=sys.argv[3]
 
-    # float-based or int-based loop?
+    # skip extremes?
     if ( len(sys.argv)>4 ):
-        lIntegerBased=sys.argv[4].lower()=="true"
+        lSkipExtremes=sys.argv[4].lower()=="true"
+    else:
+        lSkipExtremes=False
+
+    # float-based or int-based loop?
+    if ( len(sys.argv)>5 ):
+        lIntegerBased=sys.argv[5].lower()=="true"
     else:
         lIntegerBased=True
 
     # dump an integer as .0 or as int?
-    if ( len(sys.argv)>5 ):
-        lForceIntegers=sys.argv[5].lower()=="true"
+    if ( len(sys.argv)>6 ):
+        lForceIntegers=sys.argv[6].lower()=="true"
     else:
         lForceIntegers=False
         
     if ( lIntegerBased ):
 
         # remove trailing zeros
-        if ( len(sys.argv)>6 ):
-            lRemoveTrailingZeros=sys.argv[6].lower()=="true"
+        if ( len(sys.argv)>7 ):
+            lRemoveTrailingZeros=sys.argv[7].lower()=="true"
         else:
             lRemoveTrailingZeros=True
         
@@ -242,8 +250,8 @@ if ( __name__ == "__main__" ):
         if (lDebug):
             print 'end loop:', istart, istop, idelta, ll
     else:
-        if ( len(sys.argv)>6 ):
-            prec=float(sys.argv[6])
+        if ( len(sys.argv)>7 ):
+            prec=float(sys.argv[7])
         else:
             prec=1.0E-15
         # make them float, in case

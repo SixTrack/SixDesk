@@ -33,29 +33,38 @@ directories. The action will create also the following tree structure:
 > cd wMySpace/sixjobs
 > tree -h
 .
-|__ [2.0K]  control_files
+|__ [4.0K]  control_files
 |   |__ [1013]  fort.3.mother1_col
 |   |__ [ 942]  fort.3.mother1_inj
 |   |__ [2.0K]  fort.3.mother2_col
 |   |__ [2.0K]  fort.3.mother2_col_b2
 |   |__ [2.0K]  fort.3.mother2_inj
 |   |__ [2.0K]  fort.3.mother2_inj_b2
-|__ [2.0K]  mask
+|__ [ 475]  fort.3.local
+|__ [4.0K]  mask
 |   |__ [ 39K]  hl10BaseB1.mask
 |   |__ [ 35K]  hl13B1.mask
-|   [   0]  sixdesklock
-|__ [2.0K]  sixdeskTaskIds
-|__ [2.0K]  studies
-    |__ [   0]  sixdesklock
+|__ [ 996]  scan_definitions
+|__ [8.2K]  sixdeskenv
+|__ [ 115]  sixdesklock
+|__ [4.0K]  sixdeskTaskIds
+|__ [4.0K]  studies
+|   |__ [   0]  sixdesklock
+|__ [4.3K]  sysenv
 
-4 directories, 10 files
+4 directories, 14 files
 \end{lstlisting}
-\item go into the \texttt{sixjobs} dir and download templates, e.g.
+As it can be noted, this action takes care also of making available
+to the user \emph{all} template input files (see following item
+for details);
+\item (optional) go into the \texttt{sixjobs} dir and download templates,
+  e.g.
 \begin{lstlisting}
 > cd wMySpace/sixjobs
 > $SixDeskTools/utilities/bash/set_env.sh -n -l -c
 \end{lstlisting}
-This action will generate the \texttt{sixdeskenv}, \texttt{sysenv},
+This action will make available to the user the template
+input files, i.e.~the \texttt{sixdeskenv}, \texttt{sysenv},
 \texttt{fort.3.local} (see Sec.~\ref{fort3local}) and
 \texttt{scan\_definitions} (see Sec.~\ref{ExternalScans}) files.
 This action will also update
@@ -65,9 +74,25 @@ with the correct values for the workspace just set up.
 Please be aware that this operation will overwrite any
 pre-existing file in the \texttt{sixjobs} dir. The templates
 will be downloaded from
-\texttt{\${SixDeskTools}/utilities/templates/input};
+\begin{lstlisting}
+${SixDeskTools}/utilities/templates/input
+\end{lstlisting}
 in this way, templates and scripts are synchronised.
+The \texttt{-l} option triggers the download of the
+\texttt{fort.3.local} (see Sec.~\ref{fort3local}) file, whereas
+the \texttt{-c} option triggers the download of the
+\texttt{scan\_definitions} (see Sec.~\ref{ExternalScans}) file.
+This action is optional, as it is already performed by the
+\texttt{-N} action; nevertheless, it can be performed on its
+own and its usage has been shown.
 \end{enumerate}
+
+When using either of the \texttt{-n} or \texttt{-N} actions,
+if the user requests the \texttt{-g} option, then all the files
+and directories will be downloaded with \texttt{git}. Hence, the
+user can profit from the diffing tools available with \texttt{git};
+on the other hand, the disk usage grows (currently $\sim$50~MB
+globally after either actions).
 
 \section{\texttt{fort.3.local}} \label{fort3local}
 \begin{flushright}
