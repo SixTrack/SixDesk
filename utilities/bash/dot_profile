@@ -625,17 +625,17 @@ sixdeskamps()
 sixdeskAllFloats(){
     # A.Mereghetti, 2017-04-08
     # new function, to generate an array of floating point values
-    local __precision=1.0E-15
     local __xMin=$1
     local __xMax=$2
     local __xDelta=$3
+    local __lSkipExtremes=$4
     # - preliminary checks - to be moved to check_env.sh
     if [ -z "${__xMax}" ] || [ -z "${__xDelta}" ] ; then
 	__xMax=${__xMin}
 	__xDelta=${__xMin}
     fi
     # - get all values
-    python ${SCRIPTDIR}/python/generate_floats.py ${__xMin} ${__xMax} ${__xDelta} ${__precision}
+    python ${SCRIPTDIR}/python/generate_floats.py ${__xMin} ${__xMax} ${__xDelta} ${__lSkipExtremes}
 }
 sixdeskFixDotFloat(){
     # A.Mereghetti, 2017-04-08
@@ -661,10 +661,11 @@ sixdeskAllTunes(){
     # - tunesYY: returned array of ver tune values
     # - inttunesXX: returned array of integer part of hor tunes
     # - inttunesYY: returned array of integer part of ver tunes
+    local __lForceIntegers=False
     # hor:
     tunesXX=""
     inttunesXX=""
-    local __tunesXX=$(sixdeskAllFloats $tunex $tunex1 $deltax)
+    local __tunesXX=$(sixdeskAllFloats $tunex $tunex1 $deltax )
     for tmptn in ${__tunesXX} ; do
 	tunesXX="${tunesXX} $(sixdeskFixDotFloat ${tmptn})"
 	inttunesXX="${inttunesXX} $(sixdeskinttune ${tmptn})"
@@ -674,7 +675,7 @@ sixdeskAllTunes(){
     # ver:
     tunesYY=""
     inttunesYY=""
-    local __tunesYY=$(sixdeskAllFloats $tuney $tuney1 $deltay)
+    local __tunesYY=$(sixdeskAllFloats $tuney $tuney1 $deltay )
     for tmptn in ${__tunesYY} ; do
 	tunesYY="${tunesYY} $(sixdeskFixDotFloat ${tmptn})"
 	inttunesYY="${inttunesYY} $(sixdeskinttune ${tmptn})"
@@ -691,9 +692,10 @@ sixdeskAllAmplitudes(){
     ampstart=""
     ampfinish=""
     local __iLast=0
+    local __lForceIntegers=False
 
     # get all amplitude points
-    local __allAmplitudes=$(sixdeskAllFloats $ns1l $ns2l $nsincl)
+    local __allAmplitudes=$(sixdeskAllFloats $ns1l $ns2l $nsincl )
     __allAmplitudes=( ${__allAmplitudes} )
 
     # get all amplitude intervals
@@ -728,7 +730,6 @@ sixdeskAllAngles(){
     local __lbackcomp=$7
     local __lReduceAngsWithAmplitude=$8
     local __totAngle=$9
-    local __factor=${10}
 
     # generated arrays:
     KKs=""
@@ -740,47 +741,55 @@ sixdeskAllAngles(){
     if ${__lReduceAngsWithAmplitude}; then
         for (( iAmple=0; iAmple<${#fAmpEnds[@]}; iAmple++ )) ; do
             if (( $(echo "${reduce_angs_with_amplitude} ${fAmpEnds[${iAmple}]}" | awk '{print ($1 < $2)}') )); then
+                # varying number of angles
                 local __angles_nb=$(echo ${fAmpEnds[${iAmple}]} ${ampfinish} ${__kmax} | awk '{printf ("%.f", ($1/$2*$3))}')
             else
+                # constant number of angles
                 local __angles_nb=$(echo ${reduce_angs_with_amplitude} ${ampfinish} ${__kmax} | awk '{printf ("%.f", ($1/$2*$3))}')
             fi
 
             if [ ${__angles_nb} -eq 0 ];then
                 __angles_nb=1
             fi
-
-            for (( kk=1; kk<=${__angles_nb}; kk++ )) ; do
-	        KKs="${KKs} ${kk}"
-                local __tmpAngle=`echo ${totAngle} ${kk} ${__angles_nb} | awk '{print ($1*$2/($3+1))}'`
-	        Angles="${Angles} ${__tmpAngle}"  
-	        if ${__lbackcomp} ; then
+            if ${__lbackcomp} ; then
+                for (( kk=1; kk<=${__angles_nb}; kk++ )) ; do
+	            KKs="${KKs} ${kk}"
+                    local __tmpAngle=`echo ${totAngle} ${kk} ${__angles_nb} | awk '{print ($1*$2/($3+1))}'`
+	            Angles="${Angles} ${__tmpAngle}"  
 	            local __kang=`echo ${kk} ${__angles_nb} | awk '{print ($1/($2+1))}'`
-	        else
-	            local __kang=`echo ${kk} ${__angles_nb} | awk '{printf ("%.16E",$1/($2+1))}'`
-	        fi
-	        kAngs="${kAngs} ${__kang}"
-            done
+	            kAngs="${kAngs} ${__kang}"
+                done
+            else
+                KKs="${KKs} $(seq 1 ${__angles_nb})"
+                local __angleStep=`echo ${__totAngle} ${__angles_nb} | awk '{print ($1/($2+1))}'`
+                Angles="${Angles} $(sixdeskAllFloats 0 ${__totAngle} ${__angleStep} True)" 
+                local __kAngleStep=`echo ${__angles_nb} | awk '{printf ("%.18f",1.0/($1+1))}'`
+                kAngs="${kAngs} $(sixdeskAllFloats 0.0 1.0 ${__kAngleStep} True)"
+            fi
             let nTotAngles+=${__angles_nb}
             KKs_ampl+=( ${nTotAngles} )
         done
     else
         if ${__lbackcomp} ; then
             local __angleStep=`echo ${__totAngle} ${__kmax} | awk '{print ($1/($2+1))}'`
+            for (( kk=${__kmin}; kk<=${__kend}; kk+=${__kstep} )) ; do
+	        KKs="${KKs} ${kk}"
+	        local __tmpAngle=`echo ${kk} ${__angleStep} | awk '{print ($1*$2)}'`
+	        Angles="${Angles} ${__tmpAngle}"
+	        if ${__lbackcomp} ; then
+	            local __kang=`echo ${kk} ${__kmax} | awk '{print ($1/($2+1))}'`
+	        else
+	            local __kang=`echo ${kk} ${__kmax} | awk '{printf ("%.16E",$1/($2+1))}'`
+	        fi
+	        kAngs="${kAngs} ${__kang}"
+            done
         else
-            local __angleStep=`echo ${__totAngle} ${__kmax} | awk '{printf ("%.16E",$1/($2+1))}'`
+            KKs="${KKs} $(seq 1 ${__kmax})"
+            local __angleStep=`echo ${__totAngle} ${__kmax} | awk '{print ($1/($2+1))}'`
+            Angles="${Angles} $(sixdeskAllFloats 0 ${__totAngle} ${__angleStep} True)" 
+            local __kAngleStep=`echo ${__kmax} | awk '{printf ("%.18f",1.0/($1+1))}'`
+            kAngs="${kAngs} $(sixdeskAllFloats 0.0 1.0 ${__kAngleStep} True)"
         fi
-
-        for (( kk=${__kmin}; kk<=${__kend}; kk+=${__kstep} )) ; do
-	    KKs="${KKs} ${kk}"
-	    local __tmpAngle=`echo ${kk} ${__angleStep} | awk '{print ($1*$2)}'`
-	    Angles="${Angles} ${__tmpAngle}"
-	    if ${__lbackcomp} ; then
-	        local __kang=`echo ${kk} ${__kmax} | awk '{print ($1/($2+1))}'`
-	    else
-	        local __kang=`echo ${kk} ${__kmax} | awk '{printf ("%.16E",$1/($2+1))}'`
-	    fi
-	  kAngs="${kAngs} ${__kang}"
-        done
         KKs_ampl=( ${KKs_ampl} ${__kend} )
     fi
 
@@ -803,35 +812,64 @@ sixdeskDefinePythonPath(){
 	export PATH=${1}:${PATH}
 	sixdeskmess 2 "Setting python to ${1} in PATH env var"
     fi
-    sixdeskmess -1 "--> python set to: `which python` - version: `python --version`"
+    sixdeskmess -1 "Python set to: `which python` - version: `python --version 2>&1`"
+}
+sixdeskGetCurretPaths(){
+    tmpDir=`readlink -f $PWD`
+    tmpDir=`dirname ${tmpDir}`
+    tmpWorkspace=`basename ${tmpDir}`
+    if [[ "${tmpDir}" == *"scratch"* ]] ; then
+        # scratchdir IS in the path
+        tmpDir=`dirname ${tmpDir}`
+        tmpScratchName=`basename ${tmpDir}`
+        tmpDir=`dirname ${tmpDir}`
+        tmpBaseDir=${tmpDir}
+        tmpScratchDir=\$basedir/${tmpScratchName}
+        tmpTrackDir=\$scratchdir/\$workspace
+        tmpSixtrackInput=\$scratchdir/sixtrack_input/\$workspace/\$LHCDescrip
+        tmpSixdeskWork=\$scratchdir/work/\$workspace/\$LHCDescrip
+        tmpCronLogs=\$scratchdir/cronlogs/\$workspace
+        tmpSixdeskLogs=\$scratchdir/sixdesklogs/\$workspace
+    else
+        # scratchdir is NOT in the path
+        tmpDir=`dirname ${tmpDir}`
+        tmpBaseDir=${tmpDir}
+        tmpScratchDir=\$basedir/\$workspace
+        tmpTrackDir=\$basedir/\$workspace
+        tmpSixtrackInput=\$scratchdir/sixtrack_input/\$LHCDescrip
+        tmpSixdeskWork=\$scratchdir/work/\$LHCDescrip
+        tmpCronLogs=\$scratchdir/cronlogs
+        tmpSixdeskLogs=\$scratchdir/sixdesklogs
+    fi
 }
 sixdeskDefineUserTree(){
     # define the tree in the userspace
+
+    # get current paths
+    sixdeskGetCurretPaths
     
-    # input variables are the starting points:
-    # $1: root dir (ie $basedir in sixdeskenv)
-    # $2: scratch dir (ie $scratchdir in sixdeskenv)
-    # $3: workspace name (ie $workspace in sixdeskenv)
-
     # basic paths (back-compatibility)
-    [ -n "${basedir}" ] || export basedir=$1               # eg /afs/cern.ch/user/$initial/$LOGNAME
-    [ -n "${scratchdir}" ] || export scratchdir=$2            # eg $basedir/scratch0
-    [ -n "${trackdir}" ] || export trackdir=$scratchdir/$3  # eg $scratchdir/w2
-    [ -n "${sixdeskhome}" ] || export sixdeskhome=$basedir/$3/sixjobs # eg $trackdir/sixjobs
-    [ -n "${sixdeskhomeStudies}" ] || export sixdeskhomeStudies=$sixdeskhome/studies
+    [ -n "${workspace}" ] || export workspace=${tmpWorkspace}
+    [ -n "${basedir}" ] || export basedir=${tmpBaseDir}
+    [ -n "${scratchdir}" ] || export scratchdir=${tmpScratchDir}
+    [ -n "${trackdir}" ] || export trackdir=${tmpTrackDir}
+    [ -n "${sixtrack_input}" ] || export sixtrack_input=${tmpSixtrackInput}
+    [ -n "${sixdeskwork}" ] || export sixdeskwork=${tmpSixdeskWork}
 
-    # 
-    [ -n "${sixtrack_input}" ] || export sixtrack_input=$scratchdir/sixtrack_input/$workspace/$LHCDescrip
-    [ -n "${sixdesklogs}" ] || export sixdesklogs=$scratchdir/sixdesklogs/$workspace
-    [ -n "${sixdesklogdir}" ] || export sixdesklogdir=$sixdesklogs/$LHCDescrip
-    [ -n "${cronlogs}" ] || export cronlogs=$scratchdir/cronlogs/$workspace
-    [ -n "${cronlogdir}" ] || export cronlogdir=$cronlogs/$LHCDescrip
+    # dependent paths
+    [ -n "${sixdeskhome}" ] || export sixdeskhome=${basedir}/${workspace}/sixjobs
+    [ -n "${sixdeskhomeStudies}" ] || export sixdeskhomeStudies=${sixdeskhome}/studies
+    [ -n "${sixdeskstudy}" ] || export sixdeskstudy=$sixdeskhomeStudies/$LHCDescrip
     [ -n "${sixdesktrack}" ] || export sixdesktrack=$trackdir/track
     [ -n "${sixdesktrackStudy}" ] || export sixdesktrackStudy=$sixdesktrack/$LHCDescrip
-    [ -n "${sixdeskwork}" ] || export sixdeskwork=$scratchdir/work/$workspace/$LHCDescrip
+
+    # logs/jobs paths
+    [ -n "${sixdesklogs}" ] || export sixdesklogs=${tmpSixdeskLogs}
+    [ -n "${sixdesklogdir}" ] || export sixdesklogdir=$sixdesklogs/$LHCDescrip
+    [ -n "${cronlogs}" ] || export cronlogs=${tmpCronLogs}
+    [ -n "${cronlogdir}" ] || export cronlogdir=$cronlogs/$LHCDescrip
     [ -n "${sixdeskjobs}" ] || export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
     [ -n "${sixdeskjobs_logs}" ] || export sixdeskjobs_logs=$sixdeskjobs/jobs_logs
-    [ -n "${sixdeskstudy}" ] || export sixdeskstudy=$sixdeskhomeStudies/$LHCDescrip
 }
 sixDeskDefineMADXTree(){
     local __SCRIPTDIR=$1
@@ -1543,4 +1581,24 @@ function sixdeskSetLocalNodeStuff(){
 function sixdeskCompareVersions(){
     # 0: true ; 1: false
     echo $1 $2 | awk '{print ($1>=$2)}'
+}
+function sixdeskConfirmExit(){
+    local __iExit=-1
+    while [ ${__iExit} -lt 0 ] ; do
+        sixdeskmess -1 "Continue? [y/n]"
+        read answer
+        case ${answer} in
+	    [yY] | [yY][Ee][Ss] )
+	        sixdeskmess -1 "Continuing..."
+                __iExit=0
+                ;;
+	    [nN] | [n|N][O|o] )
+                sixdeskmess -1  "Interrupted"
+                __iExit=1
+                ;;
+	    *) sixdeskmess -1 "Invalid input!"
+	       ;;
+        esac
+    done
+    return ${__iExit}
 }
