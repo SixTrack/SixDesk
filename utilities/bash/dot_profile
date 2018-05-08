@@ -622,21 +622,6 @@ sixdeskamps()
 #MACRO mymess
 
 }
-sixdeskAllFloats(){
-    # A.Mereghetti, 2017-04-08
-    # new function, to generate an array of floating point values
-    local __xMin=$1
-    local __xMax=$2
-    local __xDelta=$3
-    local __lSkipExtremes=$4
-    # - preliminary checks - to be moved to check_env.sh
-    if [ -z "${__xMax}" ] || [ -z "${__xDelta}" ] ; then
-	__xMax=${__xMin}
-	__xDelta=${__xMin}
-    fi
-    # - get all values
-    python ${SCRIPTDIR}/python/generate_floats.py ${__xMin} ${__xMax} ${__xDelta} ${__lSkipExtremes}
-}
 sixdeskFixDotFloat(){
     # A.Mereghetti, 2017-04-08
     # new function, to get always a dotted number (eg fortran input)
@@ -665,7 +650,7 @@ sixdeskAllTunes(){
     # hor:
     tunesXX=""
     inttunesXX=""
-    local __tunesXX=$(sixdeskAllFloats $tunex $tunex1 $deltax )
+    local __tunesXX=$(python ${SCRIPTDIR}/python/generate_floats.py $tunex $tunex1 $deltax --forceIntegers --removeTrailZeros)
     for tmptn in ${__tunesXX} ; do
 	tunesXX="${tunesXX} $(sixdeskFixDotFloat ${tmptn})"
 	inttunesXX="${inttunesXX} $(sixdeskinttune ${tmptn})"
@@ -675,7 +660,7 @@ sixdeskAllTunes(){
     # ver:
     tunesYY=""
     inttunesYY=""
-    local __tunesYY=$(sixdeskAllFloats $tuney $tuney1 $deltay )
+    local __tunesYY=$(python ${SCRIPTDIR}/python/generate_floats.py $tuney $tuney1 $deltay --forceIntegers --removeTrailZeros)
     for tmptn in ${__tunesYY} ; do
 	tunesYY="${tunesYY} $(sixdeskFixDotFloat ${tmptn})"
 	inttunesYY="${inttunesYY} $(sixdeskinttune ${tmptn})"
@@ -695,7 +680,7 @@ sixdeskAllAmplitudes(){
     local __lForceIntegers=False
 
     # get all amplitude points
-    local __allAmplitudes=$(sixdeskAllFloats $ns1l $ns2l $nsincl )
+    local __allAmplitudes=$(python ${SCRIPTDIR}/python/generate_floats.py $ns1l $ns2l $nsincl --forceIntegers --removeTrailZeros)
     __allAmplitudes=( ${__allAmplitudes} )
 
     # get all amplitude intervals
@@ -737,8 +722,8 @@ sixdeskAllAngles(){
     kAngs=""
     KKs_ampl="0" 
 
-    # generate regular angle steps:
     if ${__lReduceAngsWithAmplitude}; then
+        # generate scaled angle steps
         for (( iAmple=0; iAmple<${#fAmpEnds[@]}; iAmple++ )) ; do
             if (( $(echo "${reduce_angs_with_amplitude} ${fAmpEnds[${iAmple}]}" | awk '{print ($1 < $2)}') )); then
                 # varying number of angles
@@ -761,15 +746,21 @@ sixdeskAllAngles(){
                 done
             else
                 KKs="${KKs} $(seq 1 ${__angles_nb})"
-                local __angleStep=`echo ${__totAngle} ${__angles_nb} | awk '{print ($1/($2+1))}'`
-                Angles="${Angles} $(sixdeskAllFloats 0 ${__totAngle} ${__angleStep} True)" 
-                local __kAngleStep=`echo ${__angles_nb} | awk '{printf ("%.18f",1.0/($1+1))}'`
-                kAngs="${kAngs} $(sixdeskAllFloats 0.0 1.0 ${__kAngleStep} True)"
+                local __gridN=${__angles_nb}
+                let __gridN+=1
+                Angles="${Angles} $(python ${SCRIPTDIR}/python/generate_floats.py 1 ${__angles_nb} 1 --skipExtremes --gridN ${__gridN} --gridMax ${__totAngle} --forceIntegers --removeTrailZeros )"
+                # __kAngs will always be in (0,1)
+                kAngs="${kAngs} $(python ${SCRIPTDIR}/python/generate_floats.py 1 ${__angles_nb} 1 --skipExtremes --gridN ${__gridN} --forceIntegers --removeTrailZeros )"
             fi
             let nTotAngles+=${__angles_nb}
             KKs_ampl+=( ${nTotAngles} )
         done
+        # make arrays
+        KKs=( ${KKs} )
+        Angles=( ${Angles} )
+        kAngs=( ${kAngs} )
     else
+        # generate regular angle steps
         if ${__lbackcomp} ; then
             local __angleStep=`echo ${__totAngle} ${__kmax} | awk '{print ($1/($2+1))}'`
             for (( kk=${__kmin}; kk<=${__kend}; kk+=${__kstep} )) ; do
@@ -784,19 +775,19 @@ sixdeskAllAngles(){
 	        kAngs="${kAngs} ${__kang}"
             done
         else
-            KKs="${KKs} $(seq 1 ${__kmax})"
-            local __angleStep=`echo ${__totAngle} ${__kmax} | awk '{print ($1/($2+1))}'`
-            Angles="${Angles} $(sixdeskAllFloats 0 ${__totAngle} ${__angleStep} True)" 
-            local __kAngleStep=`echo ${__kmax} | awk '{printf ("%.18f",1.0/($1+1))}'`
-            kAngs="${kAngs} $(sixdeskAllFloats 0.0 1.0 ${__kAngleStep} True)"
+            KKs="${KKs} $(seq ${__kmin} ${__kstep} ${__kend})"
+            local __gridN=${__kmax}
+            let __gridN+=1
+            Angles="${Angles} $(python ${SCRIPTDIR}/python/generate_floats.py ${__kmin} ${__kend} ${__kstep} --gridN ${__gridN} --gridMax ${__totAngle} --forceIntegers --removeTrailZeros )"
+            # __kAngs will always be in (0,1)
+            kAngs="${kAngs} $(python ${SCRIPTDIR}/python/generate_floats.py ${__kmin} ${__kend} ${__kstep} --gridN ${__gridN} --forceIntegers --removeTrailZeros )"
         fi
-        KKs_ampl=( ${KKs_ampl} ${__kend} )
+        # make arrays
+        KKs=( ${KKs} )
+        Angles=( ${Angles} )
+        kAngs=( ${kAngs} )
+        KKs_ampl=( ${KKs_ampl} ${#kAngs[@]} )
     fi
-
-    # make arrays
-    KKs=( ${KKs} )
-    Angles=( ${Angles} )
-    kAngs=( ${kAngs} )
 }
 sixdeskrundir()
 {
