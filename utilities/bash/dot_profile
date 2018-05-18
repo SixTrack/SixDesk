@@ -1135,13 +1135,19 @@ sixdeskSetExes(){
 }
 sixdeskSetPlatForm(){
     local __platform=$1
+    local __lerr=0
+    local __origPlatForm=${sixdeskplatform}
     if [ -n "${__platform}" ] ; then
 	# platform as requested by user (no matter if in sixdeskenv or via terminal line option)
 	export sixdeskplatform=`echo "$__platform" | tr '[A-Z]' '[a-z]'`
 	if [ "$sixdeskplatform" != "boinc" ] && [ "$sixdeskplatform" != "lsf" ] && [ "$sixdeskplatform" != "htcondor" ] ; then
 	    sixdeskmess -1 "unknown platform: ${sixdeskplatform}"
-	    return 1
-	fi
+	    let __lerr+=1
+        fi
+        if [ -n "${__origPlatForm}" ] ; then
+            [ -z "${sixdeskjobs}" ] || export sixdeskjobs=${sixdeskjobs/${__origPlatForm}/${sixdeskplatform}}
+            [ -z "${sixdeskjobs_logs}" ] || export sixdeskjobs_logs=${sixdeskjobs_logs/${__origPlatForm}/${sixdeskplatform}}
+        fi
     else
 	# set default platform
 	export sixdeskplatform="htcondor"
@@ -1160,7 +1166,7 @@ sixdeskSetPlatForm(){
 	    [ -n "${sixdeskbnlout}" ] || export sixdeskbnlout=$bnlfilenames
 	fi
     fi
-    return 0
+    return ${__lerr}
 }
 
 sixDeskCheckAppName(){
