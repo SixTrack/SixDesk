@@ -1,5 +1,60 @@
 import sys
 
+def start():
+
+    lGrid=False
+    gridMin=0.0
+    gridMax=1.0
+    gridN=1
+    
+    import argparse
+
+    parser = argparse.ArgumentParser(prog='generate_floats.py', usage=' %(prog)s <xmin> <xmax> <xstep> [options]', description='''
+ by A.Mereghetti
+ with relevant modifications by A. Mereghetti
+ 
+ Script for generating numerical series
+''' )
+
+    # positional arguments
+    parser.add_argument('xstart', metavar='xstart', help='first value')
+    parser.add_argument('xstop' , metavar='xstop' , help='last value')
+    parser.add_argument('xdelta', metavar='xdelta', help='delta')
+
+    # optional arguments
+    parser.add_argument('--skipExtremes', action='store_true', help="skip extremes;")
+    parser.add_argument('--floatBased', action='store_true', help="algorithm based on true floats;")
+    parser.add_argument('--forceIntegers', action='store_true', help="possible integers are printed as such;")
+    parser.add_argument('--removeTrailZeros', action='store_true', help="remove (useless) trailing zeros;")
+    parser.add_argument('--prec', action='store', type=float, nargs=1, help="precision (true float-based algorithm);")
+    parser.add_argument('--debug', action='store_true', help="print (additional) debug messages;")
+    parser.add_argument('--invertExtremes', action='store_true', help="invert extremes and not step;")
+    parser.add_argument('--gridMin', action='store', type=float, nargs=1, help="grid mode - lower extreme of range;")
+    parser.add_argument('--gridMax', action='store', type=float, nargs=1, help="grid mode - highest extreme of range;")
+    parser.add_argument('--gridN', action='store', type=int, nargs=1, help="grid mode - total number of points in grid;")
+
+    args=parser.parse_args()
+
+    if args.prec is None:
+        prec=1.0E-15
+    else:
+        prec=args.prec[0]
+
+    if ( args.gridN is not None ):
+        # requesting grid mode implies at least the number of points
+        lGrid=True
+        gridN=args.gridN[0]
+        if ( args.gridMin is not None ):
+            gridMin=args.gridMin[0]
+        if ( args.gridMax is not None ):
+            gridMax=args.gridMax[0]
+    elif not ( args.gridMin is None and args.gridMax is None and args.gridN is None ):
+        # incomplete grid request
+        print 'incomplete grid request - please type in at least number of steps'
+        sys.exit()
+
+    return args.xstart, args.xstop, args.xdelta, args.skipExtremes, args.floatBased, args.forceIntegers, args.removeTrailZeros, prec, args.debug, args.invertExtremes, lGrid, gridMin, gridMax, gridN
+
 # ==============================================================================
 # floating-point based
 # ==============================================================================
@@ -183,7 +238,7 @@ def genIntValues( istart, istop, idelta, ll, sym='.' ):
                 output+=tmp[:-ll]+sym+tmp[-ll:]
             if ( lForceIntegers and output[-ll:]==''.ljust(ll,'0') ):
                 output=output[:len(output)-(ll+1)] # skip also the sym
-            if ( lRemoveTrailingZeros and sym in output ):
+            if ( lRemoveTrailZeros and sym in output ):
                 while( output[-1]=='0' ):
                     output=output[:-1]
         else:
@@ -200,42 +255,46 @@ def genIntValues( istart, istop, idelta, ll, sym='.' ):
 # ==============================================================================
 
 if ( __name__ == "__main__" ):
-    # some flags
-    lDebug=False
-    lInvertExtremes=False
 
-    # terminal-line input parameters
-    xstart=sys.argv[1]
-    xstop=sys.argv[2]
-    xdelta=sys.argv[3]
+    # terminal line input paramters
+    xstart, xstop, xdelta, lSkipExtremes, lFloatBased, lForceIntegers, lRemoveTrailZeros, prec, lDebug, lInvertExtremes, lGrid, gridMin, gridMax, gridN = start()
 
-    # skip extremes?
-    if ( len(sys.argv)>4 ):
-        lSkipExtremes=sys.argv[4].lower()=="true"
-    else:
-        lSkipExtremes=False
-
-    # float-based or int-based loop?
-    if ( len(sys.argv)>5 ):
-        lIntegerBased=sys.argv[5].lower()=="true"
-    else:
-        lIntegerBased=True
-
-    # dump an integer as .0 or as int?
-    if ( len(sys.argv)>6 ):
-        lForceIntegers=sys.argv[6].lower()=="true"
-    else:
-        lForceIntegers=False
+    if ( lFloatBased ):
         
-    if ( lIntegerBased ):
-
-        # remove trailing zeros
-        if ( len(sys.argv)>7 ):
-            lRemoveTrailingZeros=sys.argv[7].lower()=="true"
+        # make them float
+        if ( lGrid ):
+            gridStep=abs(gridMax-gridMin)/gridN
+            xstart=gridMin+int(xstart)*gridStep
+            xstop=gridMin+int(xstop)*gridStep
+            xdelta=int(xdelta)*gridStep
         else:
-            lRemoveTrailingZeros=True
-        
+            xstart=float(xstart)
+            xstop=float(xstop)
+            xdelta=float(xdelta)
+            prec=float(prec)
+        if (lDebug):
+            print 'floats:',xstart,xstop,xdelta,prec
+        # sanity checks
+        xstart, xstop, xdelta = checkValues( xstart, xstop, xdelta, prec )
+        if (lDebug):
+            print 'after sanity checks:',xstart,xstop,xdelta,prec
+        # loop
+        values = genValues( xstart, xstop, xdelta, prec )
+        for value in values:
+            print value
+        if (lDebug):
+            print 'end loop:',xstart,xstop,xdelta,prec
+
+    else:
+
         # acquire values
+        if ( lGrid ):
+            ll=15
+            tmpFmt="%."+str(ll)+"f"
+            gridStep=abs(gridMax-gridMin)/gridN
+            xstart=tmpFmt%(gridMin+int(xstart)*gridStep)
+            xstop=tmpFmt%(gridMin+int(xstop)*gridStep)
+            xdelta=tmpFmt%(int(xdelta)*gridStep)
         istart, istop, idelta, ll = extremesInt( xstart, xstop, xdelta )
         if (lDebug):
             print 'ints:', istart, istop, idelta, ll
@@ -249,25 +308,3 @@ if ( __name__ == "__main__" ):
             print value
         if (lDebug):
             print 'end loop:', istart, istop, idelta, ll
-    else:
-        if ( len(sys.argv)>7 ):
-            prec=float(sys.argv[7])
-        else:
-            prec=1.0E-15
-        # make them float, in case
-        xstart=float(xstart)
-        xstop=float(xstop)
-        xdelta=float(xdelta)
-        prec=float(prec)
-        if (lDebug):
-            print 'floats:',xstart,xstop,xdelta,prec
-        # sanity checks
-        xstart, xstop, xdelta = checkValues( xstart, xstop, xdelta, prec )
-        if (lDebug):
-            print 'after sanity checks:',xstart,xstop,xdelta,prec
-        # loop
-        values = genValues( xstart, xstop, xdelta, prec )
-        for value in values:
-            print value
-        if (lDebug):
-            print 'end loop:',xstart,xstop,xdelta,prec
