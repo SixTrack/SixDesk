@@ -16,7 +16,7 @@ export pmass=938.272013
 # export pmass=938.271998
 
 # New bunch_charge variable for fort.3.mother1_[col/inj]
-export bunch_charge=1.1500e+11
+export bunch_charge=2.200e+11
 
 # The name of the "study" .le. 16 characters ([a-z A-Z 0-9 + - _ . ,]
 # It must NOT contain a "%" (replacing "#") nor "_""_"
@@ -122,12 +122,11 @@ export iend=$iendmad
 export kstep=1
 
 #normalized emittance
-export emit=3.75
+export emit=2.5
 export emit_beam=$emit
 
 # Crossing angle for substitution in mask and mother file
-# uncomment it, to make it operational
-# export xing=185
+export xing=255
 
 # e0 gamma
 if test $runtype = "inj"
