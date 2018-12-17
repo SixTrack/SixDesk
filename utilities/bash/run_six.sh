@@ -847,7 +847,7 @@ $errors
 $numIssues
 $resultsWithoutConcensus
 $appName
-$appNum
+$appVer
 EOF
 	    let __lerr+=$?
   	    # - update MegaZip file:
