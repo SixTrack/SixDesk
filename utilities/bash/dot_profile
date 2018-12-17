@@ -1,6 +1,7 @@
 #!/bin/bash
 
 export fileSuffixes=( 'tasks' 'jobs' 'jobs' )
+export BOINCversions=( 4630 50000 50101 )
 
 # A set of Subroutines called by Macros for the SixDesk environment
 sixdeskmess(){
@@ -1231,6 +1232,20 @@ sixDeskCheckApp(){
 	fi
 	export appVer=
 	__lerr=0
+    fi
+    return ${__lerr}
+}
+
+sixdeskCheckAppVerBOINC(){
+    local __lerr=1
+    for tmpVer in ${BOINCversions[@]} ; do
+	if [ ${appVer} -eq ${tmpVer} ] ; then
+	    __lerr=0
+	    break
+	fi
+    done
+    if [ ${__lerr} -ne 0 ] ; then
+	sixdeskmess -1 "Version ${appVer} NOT available in BOINC!"
     fi
     return ${__lerr}
 }

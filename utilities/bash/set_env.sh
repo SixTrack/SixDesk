@@ -618,6 +618,12 @@ else
     if [ $? -ne 0 ] ; then
 	sixdeskexit 10
     fi
+    if [ "$sixdeskplatform" == "boinc" ] && [ -n "${appVer}" ] ; then
+	sixdeskCheckAppVerBOINC
+	if [ $? -ne 0 ] ; then
+	    sixdeskexit 12
+	fi
+    fi
 
     # - set python path
     if [ -n "${tmpPythonPath}" ] ; then
