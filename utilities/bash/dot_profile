@@ -1128,7 +1128,13 @@ sixdeskCreateUserTree(){
 sixdeskSetExes(){
     local __lerr=0
     [ -n "${sixdeskpath}" ] || export sixdeskpath=/afs/cern.ch/group/si/slap/bin/sixdesk
-    [ -n "${SIXTRACKEXE}" ] || export SIXTRACKEXE=$newBuildPathDef/${appName}
+    if [ -z "${SIXTRACKEXE}" ] ; then
+	if [ -n "${appVer}" ] ; then
+            export SIXTRACKEXE=${newBuildPathDef}/${appVer}/${appName}
+        else
+            export SIXTRACKEXE=${newBuildPathDef}/${appName}
+        fi
+    fi
     [ -n "${SIXTRACKBNLEXE}" ] || export SIXTRACKBNLEXE=$sixdeskpath/exes/SixTrack_bnl_pro
     [ -n "${SIXTRACKDAEXE}" ] || export SIXTRACKDAEXE=$sixdeskpath/exes/SixTrack_crlibm_da_lf95v4200
     return ${__lerr}
@@ -1163,35 +1169,56 @@ sixdeskSetPlatForm(){
     return 0
 }
 
-sixDeskCheckAppName(){
-    local __appname=$1
-    local __lerr=1
-    local __recognisedAppNames=( `\ls -p ${newBuildPathDef} | grep -v /` )
-    if [ -n "${__appname}" ] ; then
+sixDeskCheckApp(){
+    local __lerr=0
+    if [ -n "${appName}" ] ; then
 	# appName defined by user
-	__appname=`echo ${__appname} | tr '[A-Z]' '[a-z]'`
+	export appName=`echo ${appName} | tr '[A-Z]' '[a-z]'`
+	local __recognisedAppNames=( `\ls -p ${newBuildPathDef} | grep -v /` )
+	__lerr=1
 	for __tmpRecognisedAppName in ${__recognisedAppNames[@]} ; do
-	    if [ "${__appname}" == "${__tmpRecognisedAppName}" ] ; then
+	    if [ "${appName}" == "${__tmpRecognisedAppName}" ] ; then
 		__lerr=0
 		break
 	    fi
 	done
 	if [ ${__lerr} -ne 0 ] ; then
-	    sixdeskmess -1 "Un-recognised appName: \"${__appname}\"!"
+	    sixdeskmess -1 "Un-recognised appName: \"${appName}\"!"
 	    sixdeskmess -1 "Valid appNames are:"
 	    for __tmpRecognisedAppName in ${__recognisedAppNames[@]} ; do
-		sixdeskmess -1 " --> ${__tmpRecognisedAppName}"
+		sixdeskmess -1 " ${__tmpRecognisedAppName}"
 	    done
 	    sixdeskmess -1 "setting appName to default ${appNameDef}"
 	    export appName=${appNameDef}
+	    __lerr=0
 	fi
-	if [ "${__appname}" == "sixtracktest" ] ; then
+	if [ "${appName}" == "sixtracktest" ] ; then
 	    export sixdeskboinctest=true
 	else
 	    export sixdeskboinctest=false
 	fi
+	if [ -n "${appVer}" ] ; then
+	    local __recognisedAppVers=( `\ls -p ${newBuildPathDef} | grep /` )
+	    __lerr=1
+	    for __tmpRecognisedAppVer in ${__recognisedAppVers[@]} ; do
+		if [ "${appVer}/" == "${__tmpRecognisedAppVer}" ] ; then
+		    __lerr=0
+		    break
+		fi
+	    done
+	    if [ ${__lerr} -ne 0 ] ; then
+		sixdeskmess -1 "Un-recognised appVer: \"${appVer}\"!"
+		sixdeskmess -1 "Valid appVers are:"
+		for __tmpRecognisedAppVer in ${__recognisedAppVers[@]} ; do
+		    sixdeskmess -1 " ${__tmpRecognisedAppVer}"
+		done
+		sixdeskmess -1 "setting appVer to default ${appVerDef}"
+		export appVer=${appVerDef}
+		__lerr=0
+	    fi
+	fi
     else
-	# appName assigned by default
+	# appName/appVer assigned by default
 	if [ -z "${sixdeskboinctest}" ] || ! ${sixdeskboinctest} ; then
 	    export appName=sixtrack
 	    export sixdeskboinctest=false
@@ -1199,6 +1226,7 @@ sixDeskCheckAppName(){
 	    export appName=sixtracktest
 	    export sixdeskboinctest=true
 	fi
+	export appVer=
 	__lerr=0
     fi
     return ${__lerr}
@@ -1557,6 +1585,7 @@ function sixdeskSetLocalNodeStuff(){
         # set some default stuff for lxplus
         export newBuildPathDef=/afs/cern.ch/project/sixtrack/build
         export appNameDef=sixtrack
+        export appVerDef=
         export platForms=( 'boinc' 'lsf' 'htcondor' )
         export lKerberos=true
         export lAFS=true
@@ -1568,6 +1597,7 @@ function sixdeskSetLocalNodeStuff(){
         # set some default stuff for a local machine in CERN domain
         export newBuildPathDef=/afs/cern.ch/project/sixtrack/build
         export appNameDef=sixtrack
+        export appVerDef=
         export platForms=( 'boinc' 'lsf' 'htcondor' )
         export lKerberos=true
         export lAFS=true
