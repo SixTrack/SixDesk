@@ -1128,6 +1128,12 @@ sixdeskSetExes(){
     fi
     [ -n "${SIXTRACKBNLEXE}" ] || export SIXTRACKBNLEXE=$sixdeskpath/exes/SixTrack_bnl_pro
     [ -n "${SIXTRACKDAEXE}" ] || export SIXTRACKDAEXE=$sixdeskpath/exes/SixTrack_crlibm_da_lf95v4200
+    for __tmpExe in ${SIXTRACKEXE} ${SIXTRACKBNLEXE} ${SIXTRACKDAEXE} ; do
+	if [ ! -x ${__tmpExe} ] ; then
+            sixdeskmess -1 "${__tmpExe} is not executable! Please check path/permissions."
+	    let __lerr+=1
+	fi
+    done
     return ${__lerr}
 }
 sixdeskSetPlatForm(){
