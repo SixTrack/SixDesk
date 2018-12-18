@@ -1,7 +1,6 @@
 #!/bin/bash
 
 export fileSuffixes=( 'tasks' 'jobs' 'jobs' )
-export BOINCversions=( 4630 50101 )
 
 # A set of Subroutines called by Macros for the SixDesk environment
 sixdeskmess(){
@@ -1237,15 +1236,24 @@ sixDeskCheckApp(){
 }
 
 sixdeskCheckAppVerBOINC(){
-    local __lerr=1
-    for tmpVer in ${BOINCversions[@]} ; do
-	if [ ${appVer} -eq ${tmpVer} ] ; then
-	    __lerr=0
-	    break
+    local __lerr=0
+    if [ ! -e ${newBuildPathDef}/${appName}_BOINC_versions.txt ] ; then
+	sixdeskmess -1 "File ${appName}_BOINC_versions.txt not present in ${newBuildPathDef}!"
+	sixdeskmess -1 "Cannot determine if ${appVer} is available on BOINC or not!"
+	__lerr=1
+    else
+	local __BOINCversions=`grep -v '#' ${newBuildPathDef}/${appName}_BOINC_versions.txt`
+	__BOINCversions=( ${__BOINCversions} )
+	__lerr=1
+	for tmpVer in ${__BOINCversions[@]} ; do
+	    if [ ${appVer} -eq ${tmpVer} ] ; then
+		__lerr=0
+		break
+	    fi
+	done
+	if [ ${__lerr} -ne 0 ] ; then
+	    sixdeskmess -1 "Version ${appVer} NOT available in BOINC!"
 	fi
-    done
-    if [ ${__lerr} -ne 0 ] ; then
-	sixdeskmess -1 "Version ${appVer} NOT available in BOINC!"
     fi
     return ${__lerr}
 }
@@ -1602,7 +1610,7 @@ function sixdeskSetLocalNodeStuff(){
     if [[ `uname -n` == "lxplus"* ]] ; then
         # set some default stuff for lxplus
         export newBuildPathDef=/afs/cern.ch/project/sixtrack/build
-        export appNameDef=sixtrack
+        export appNameDef=sixtracktest
         export appVerDef=
         export platForms=( 'boinc' 'lsf' 'htcondor' )
         export lKerberos=true
@@ -1614,7 +1622,7 @@ function sixdeskSetLocalNodeStuff(){
     elif [[ `uname -n` == *".cern.ch" ]] || [ -n "`netstat | grep -i cern.ch`" ] ; then
         # set some default stuff for a local machine in CERN domain
         export newBuildPathDef=/afs/cern.ch/project/sixtrack/build
-        export appNameDef=sixtrack
+        export appNameDef=sixtracktest
         export appVerDef=
         export platForms=( 'boinc' 'lsf' 'htcondor' )
         export lKerberos=true
