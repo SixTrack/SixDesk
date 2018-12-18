@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export fileSuffixes=( 'tasks' 'jobs' 'jobs' )
-export BOINCversions=( 4630 50000 50101 )
+export BOINCversions=( 4630 50101 )
 
 # A set of Subroutines called by Macros for the SixDesk environment
 sixdeskmess(){
