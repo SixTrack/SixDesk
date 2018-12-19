@@ -30,6 +30,7 @@ the machine configurations. The
 users of \SIXTRACK{} a mean to handle the large amount of files to be treated.
 
 \section{Overview} \label{Overview}
+Logics behind DA scans.
 \begin{enumerate}
 \item prepare the \emph{input files}, i.e.~\texttt{sixdeskenv},
 \texttt{sysenv} and \texttt{fort.3.local}
@@ -52,13 +53,139 @@ Retrieval of results depends on the submission platform:
 \end{itemize}
 
 \section{Input Files}
-\begin{description}
-\item[\texttt{sixdeskenv}]
-\item[\texttt{sysenv}]
-\item[\texttt{fort.3.local}]
-\end{description}
-Geometry files: \texttt{fort.2}, \texttt{fort.8}, \texttt{fort.16}.
-    
+\label{Sec:InputFiles}
+\begin{table}[h]
+\begin{center}
+    \caption{Regular SixTrack input files for DA scans.}
+    \label{tab:6TinpFiles}
+    \begin{tabular}{|l|l|}
+    \hline
+    \rowcolor{blue!30}
+    \textbf{File} & \textbf{Description} \\
+    \hline
+    \texttt{fort.2} & machine lattice and the nominal powering of magnets \\
+    \hline
+    \texttt{fort.3} & global simulation parameters and definition of special elements \\
+    \hline
+    \texttt{fort.8} & misalignments and tilt angles to be assigned to machine elements \\
+    \hline
+    \texttt{fort.16} & multipole errors to be assigned to magnetic elements \\
+    \hline
+    \end{tabular}
+\end{center}
+\end{table}
+In order to perform a Dynamic Aperture (DA) study, SixTrack must be
+provided with three geometry files~\cite{SixTrack_user_manual},
+i.e.~files that describe the geometry and settings of the machine lattice.
+A further input file, i.e.~\texttt{fort.3}~\cite{SixTrack_user_manual},
+is needed to set global simulation parameters of the SixTrack job and
+control special elements (e.g.~beam-beam elements, wires,
+e-lenses, etc\ldots).
+A summary table is found in Tab.~\ref{tab:6TinpFiles}.
+
+\begin{table}[h]
+\begin{center}
+    \caption{Input files for DA (inner) scans.}
+    \label{tab:InnerScanInputFiles}
+    \begin{tabular}{|l|l|}
+    \hline
+    \rowcolor{blue!30}
+    \textbf{File} & \textbf{Description} \\
+    \hline
+    \texttt{sixdeskenv} & main simulation parameters, scan ranges and some environment parameters \\
+    \hline
+    \texttt{sysenv} & additional environment variables \\
+    \hline
+    \texttt{fort.3.local} & additional parameters for each SixTrack job \\
+    \hline
+    \end{tabular}
+\end{center}
+\end{table}
+Internal scans of DA (see Sec.~\ref{Overview}) are controlled by means of two input
+files, i.e.~\texttt{sideskenv} and \texttt{sysenv}. A third input file,
+\texttt{fort.3.local}, can be used to add simulation parameters to
+the \texttt{fort.3} file. This file is optional. Outer scans of DA (see
+Sec.~\ref{Overview}) are controlled by further input files (see
+Sec.~\ref{ExternalScans}).
+A summary table is found in Tab.~\ref{tab:InnerScanInputFiles}.
+
+\subsection{\texttt{sixdeskenv}}\label{Sec:InputFiles:sixdeskenv}
+This file contains main simulation parameters, scan ranges and some environment
+parameters.
+
+\subsection{\texttt{sysenv}}\label{Sec:InputFiles:sysenv}
+This file contains less relevant environment variables.
+They are summarised in Tab.~\ref{tab:sysenv}.
+\begin{table}[h]
+\begin{center}
+    \caption{User-defined parameters of the \texttt{sysenv} file.}
+    \label{tab:sysenv}
+    \begin{tabular}{|p{3cm}|p{12cm}|}
+    \hline
+    \rowcolor{blue!30}
+    \textbf{Name} & \textbf{Description} \\
+    \hline
+    \texttt{appName} & name of the executable.
+    If left blank, it defaults to \texttt{sixtracktest} (see Sec.~\ref{Sec:SixTrackExes}).
+    It is mandatory if the user wants to specify \texttt{appVer}. \\
+    & e.g.~\texttt{export appName=sixtracktest} \\
+    \hline
+    \texttt{appVer} & version of the executable.
+    If left blank, it defaults to latest version (see Sec.~\ref{Sec:SixTrackExes}).
+    If not left blank, \texttt{appName} must be set either. \\
+    & e.g.~\texttt{export appVer=50101} \\
+    \hline
+    \texttt{SIXTRACKEXE} & full path to sixtrack executable.
+    Used only by HTCondor and single turn jobs, ignored by BOINC
+    (see Sec.~\ref{Sec:SixTrackExes}). \\
+    & e.g.~\texttt{export SIXTRACKEXE=\$sixdeskpath/exes/\$appName} \\
+    \hline
+    \end{tabular}
+\end{center}
+\end{table}
+
+\subsubsection{SixTrack Executable}\label{Sec:SixTrackExes}
+In case of a job submitted to BOINC, a volunteer receives
+a copy of the executable together with the input
+files. In order to be trustable, the executable must be signed.
+Hence, no custmo-made executable can be sent to volunteers, and
+only executable prepared on purpose are made available to users.
+Therefore, in case of running jobs on BOINC, it is important
+that the user specifies which application to use and which version,
+via the \texttt{appName} and \texttt{appVer} variable. If left
+blank, SixDesk will set automatically the two in order to have
+the latest version of SixTrack / SixTrackTest.
+
+The \texttt{appName} and \texttt{appVer} variables can be used
+also for single turn jobs (run on the login node on lxplus)
+and for jobs run on HTCondor; in this way, no matter the platform,
+the user has to deal with the same interface. Nevertheless,
+the user is given the possibility to specify the full path to
+the requested SixTrack executable, but, as already mentioned, the
+path will be used only for single turn jobs and HTCondor jobs and
+\emph{ignored} in case of BOINC.
+
+Therefore, it is recommended to \emph{not define at all}
+the variable \texttt{SIXTRACKEXE} and to \emph{leave blank}
+the variables \texttt{appName} and \texttt{appVer} and let
+SixDesk define them. In this case, SixDesk will set
+\begin{lstlisting}
+SIXTRACKEXE = ${newBuildPathDef}/${appNameDef}
+\end{lstlisting}
+If the user defines \texttt{appName}, then SixDesk will set
+\begin{lstlisting}
+SIXTRACKEXE = ${newBuildPathDef}/${appName}
+\end{lstlisting}
+If the user also defines \texttt{appVer}, then SixDesk will set
+\begin{lstlisting}
+SIXTRACKEXE = ${newBuildPathDef}/${appVer}/${appName}
+\end{lstlisting}
+The existence of \texttt{\${SIXTRACKEXE}} is anyway checked.
+In case of lxplus:
+\begin{lstlisting}
+newBuildPathDef = /afs/cern.ch/project/sixtrack/build
+appNameDef = sixtracktest
+\end{lstlisting}
 
 \section{The BOINC Platform for Volunteering Computing}
 BOINC vs local batch system (e.g.~HTCondor)
