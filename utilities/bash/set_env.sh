@@ -553,15 +553,15 @@ else
 
     # - additional files:
     if [ -n "${additionalFilesInp6T}" ] ; then
-        sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s ${additionalFilesInp6T}
+        sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s "${additionalFilesInp6T}"
         if [ $? -gt 0 ] ; then
             sixdeskmess -1 "not all additional input files for sixtrack are in $envFilesPath dir:"
-            for tmpFile in ${additionalFilesInp6T} ; do
+            for tmpFile in "${additionalFilesInp6T}" ; do
                 sixdeskInspectPrerequisites true $envFilesPath -s ${tmpFile}
             done
 	    sixdeskexit 13
         fi
-        for tmpFile in ${additionalFilesInp6T} ; do
+        for tmpFile in "${additionalFilesInp6T}" ; do
             sixdeskmess -1 "user requested additional input file ${tmpFile} for sixtrack jobs"
         done
     fi
@@ -618,7 +618,7 @@ else
             # additional files:
             if [ -n "${additionalFilesInp6T}" ] ; then
                 sixdeskmess -1 "taking care of additional files for sixtrack jobs"
-                for tmpFile in ${additionalFilesInp6T} ; do
+                for tmpFile in "${additionalFilesInp6T}" ; do
 	            cp ${envFilesPath}/${tmpFile} studies/
                 done
             fi
@@ -631,7 +631,7 @@ else
             # additional files:
             if [ -n "${additionalFilesInp6T}" ] ; then
                 sixdeskmess -1 "taking care of additional files for sixtrack jobs"
-                for tmpFile in ${additionalFilesInp6T} ; do
+                for tmpFile in "${additionalFilesInp6T}" ; do
 	            cp ${envFilesPath}/${tmpFile} .
                 done
             fi
