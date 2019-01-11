@@ -551,6 +551,21 @@ else
     # - set further envs
     setFurtherEnvs
 
+    # - additional files:
+    if [ -n "${additionalFilesInp6T}" ] ; then
+        sixdeskInspectPrerequisites ${lverbose} $envFilesPath -s ${additionalFilesInp6T}
+        if [ $? -gt 0 ] ; then
+            sixdeskmess -1 "not all additional input files for sixtrack are in $envFilesPath dir:"
+            for tmpFile in ${additionalFilesInp6T} ; do
+                sixdeskInspectPrerequisites true $envFilesPath -s ${tmpFile}
+            done
+	    sixdeskexit 13
+        fi
+        for tmpFile in ${additionalFilesInp6T} ; do
+            sixdeskmess -1 "user requested additional input file ${tmpFile} for sixtrack jobs"
+        done
+    fi
+
     # - define user tree
     sixdeskDefineUserTree
 
@@ -600,12 +615,26 @@ else
             for tmpFile in htcondor/htcondor_run_six.sub htcondor/htcondor_job.sh ; do
                 [ -e ${sixdeskwork}/`basename ${tmpFile}` ] || cp -p ${SCRIPTDIR}/templates/${tmpFile} ${sixdeskwork}
             done
+            # additional files:
+            if [ -n "${additionalFilesInp6T}" ] ; then
+                sixdeskmess -1 "taking care of additional files for sixtrack jobs"
+                for tmpFile in ${additionalFilesInp6T} ; do
+	            cp ${envFilesPath}/${tmpFile} studies/
+                done
+            fi
 	elif ${lload} ; then
 	    cp ${envFilesPath}/sixdeskenv .
 	    cp ${envFilesPath}/sysenv .
 	    if ${llocalfort3} ; then
 		cp ${envFilesPath}/fort.3.local .
 	    fi
+            # additional files:
+            if [ -n "${additionalFilesInp6T}" ] ; then
+                sixdeskmess -1 "taking care of additional files for sixtrack jobs"
+                for tmpFile in ${additionalFilesInp6T} ; do
+	            cp ${envFilesPath}/${tmpFile} .
+                done
+            fi
 	    sixdeskmess -1 "Switched to study $LHCDescrip"
 	fi
     fi
