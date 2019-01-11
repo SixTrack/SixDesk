@@ -33,6 +33,8 @@ result_template_SixOutZip=templates/sixtracktest_res_template.xml
 
 # default app name
 applicationDef=sixtracktest
+# default app ver
+appVerDef=50101
 
 
 #Define finctions
@@ -255,7 +257,6 @@ submit_descfile(){
 	    return 1
 	fi
 
-
 create_cmd="$boincdir/bin/create_work 		   \
  -config_dir $boincdir 				   \
  -appname $WUapplication		           \
@@ -272,6 +273,7 @@ create_cmd="$boincdir/bin/create_work 		   \
  -max_error_results $WUerrors 			   \
  -max_total_results $WUnumIssues 		   \
  -max_success_results $WUresultsWithoutConcensus   \
+ -app_version_num ${WUappNum}                      \
  $zipfile"
 
         echo "Running ${create_cmd}" | sed -e's/[ \t]\+/ /g' | log
@@ -358,6 +360,7 @@ prepareinputfile(){
 
 parse_descfile(){
         WUapplication=${applicationDef}
+	WUappNum=${appVerDef}
 	read WUinputName
 	read WUfpopsEstimate
 	read WUfpopsBound
@@ -375,6 +378,11 @@ parse_descfile(){
 	    else
 		warn "Problem with format of $(basename $1)"
 		return 1
+	    fi
+	fi
+	if read junk ; then 
+	    if [ -n "${junk}" ] ; then
+		WUappNum=${junk}
 	    fi
 	fi
 }
