@@ -5,7 +5,7 @@
 # synchronising with new scripts + appname
 #
 # app name, used by any platform
-export appName=sixtrack
+export appName=sixtracktest
 # 
 
 # # The path to all scripts etc bin,Bin,scripts, exes, dots
