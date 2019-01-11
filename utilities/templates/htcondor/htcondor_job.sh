@@ -7,6 +7,7 @@
 # please do not tuch these lines
 exe=
 runDirBaseName=
+additionalFilesInp6T=
 # $1 is received from HTCONDOR
 WUdir=$1
 
@@ -25,6 +26,11 @@ rm -f fort.10.gz
 gunzip fort.*.gz
 cp $exe sixtrack
 ls -al
+
+# additional file
+for tmpFil in ${additionalFilesInp6T[@]} ; do
+    cp ${runDirBaseName}/${WUdir}/${tmpFil} .
+done
 
 # actually run
 ./sixtrack | tail -100
