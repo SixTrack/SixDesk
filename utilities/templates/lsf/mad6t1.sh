@@ -44,9 +44,6 @@ if test ! -f fc.3
 then
   touch fc.3
 fi
-if [ -f fc.3.aper ]; then
-  cat fc.3.aper >> fc.3
-fi
 if test -s $sixtrack_input/fort.3.mad
 then
   cp $sixtrack_input/fort.3.mad $sixtrack_input/fort.3.mad.previous
