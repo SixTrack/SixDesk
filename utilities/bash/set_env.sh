@@ -619,7 +619,7 @@ else
             if [ -n "${additionalFilesInp6T}" ] ; then
                 sixdeskmess -1 "taking care of additional files for sixtrack jobs"
                 for tmpFile in "${additionalFilesInp6T}" ; do
-	            cp ${envFilesPath}/${tmpFile} studies/
+	            cp ${envFilesPath}/${tmpFile} studies/${LHCDescrip}
                 done
             fi
 	elif ${lload} ; then
