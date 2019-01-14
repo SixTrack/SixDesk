@@ -209,6 +209,35 @@ Outer scans of DA (see Sec.~\ref{Overview}) are controlled by further input file
 \subsection{\texttt{sixdeskenv}}\label{Sec:InputFiles:sixdeskenv}
 This file contains main simulation parameters, scan ranges and some environment
 parameters.
+They are summarised in Tab.~\ref{tab:sixdeskenv}.
+\begin{table}[h]
+\begin{center}
+    \caption{User-defined parameters of the \texttt{sixdeskenv} file.}
+    \label{tab:sixdeskenv}
+    \begin{tabular}{|p{5cm}|p{10cm}|}
+    \hline
+    \rowcolor{blue!30}
+    \textbf{Name} & \textbf{Description} \\
+    \hline
+    \texttt{additionalFilesOutMAD} & list of \MADX{} output files that
+    should be fed into \SIXTRACK{} jobs in addition to the geometry ones
+    (see Sec.~\ref{Sec:InputFiles}). Please leave blank if not needed;
+    otherwise, please list all filenames (no paths) separate by
+    whitespaces; as it happens for the geometry ones, one file per seed
+    will be generated and gzipped. \\
+    \multicolumn{2}{|r|}{e.g.~\texttt{export additionalFilesOutMAD="fc.3.aper additional.txt"} } \\
+    \hline
+    \texttt{additionalFilesInp6T} & list of additional \SIXTRACK{} input files.
+    Please leave blank if not needed; otherwise, please list all filenames
+    (no paths) separate by whitespaces; every file will be used as it is
+    by all \SIXTRACK{} jobs. The files must be present either in the
+    \texttt{sixjobs} directory or in the respective study subfolder of
+    the \texttt{studies} directory. \\
+    \multicolumn{2}{|r|}{e.g.~\texttt{export additionalFilesInp6T="elens1.dat elens2.dat"} } \\
+    \hline
+    \end{tabular}
+\end{center}
+\end{table}
 
 \subsection{\texttt{sysenv}}\label{Sec:InputFiles:sysenv}
 This file contains additional environment variables.
@@ -223,7 +252,7 @@ They are summarised in Tab.~\ref{tab:sysenv}.
     \textbf{Name} & \textbf{Description} \\
     \hline
     \texttt{appName} & name of the executable.
-    If left blank, it defaults to \texttt{sixtracktest} (see Sec.~\ref{Sec:SixTrackExes}).
+    If left blank, it defaults to \texttt{\whichSixTrackVersion{}} (see Sec.~\ref{Sec:SixTrackExes}).
     It is mandatory if the user wants to specify \texttt{appVer}. \\
     & e.g.~\texttt{export appName=\whichSixTrack{}} \\
     \hline
