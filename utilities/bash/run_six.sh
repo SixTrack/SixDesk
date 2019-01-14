@@ -585,7 +585,7 @@ function submitChromaJobs(){
     
     # additional files
     for tmpFil in ${additionalFilesOutMAD} ; do
-	ln -sf $sixtrack_input/${tmpFil}_$iMad ${tmpFil}
+	ln -sf $sixtrack_input/${tmpFil} ${tmpFil}
     done
     for tmpFil in ${additionalFilesInp6T} ; do
 	ln -sf $sixdeskstudy/${tmpFil} ${tmpFil}
@@ -708,7 +708,7 @@ function submitBetaJob(){
 
     # additional files
     for tmpFil in ${additionalFilesOutMAD} ; do
-	ln -sf $sixtrack_input/${tmpFil}_$iMad ${tmpFil}
+	ln -sf $sixtrack_input/${tmpFil} ${tmpFil}
     done
     for tmpFil in ${additionalFilesInp6T} ; do
 	ln -sf $sixdeskstudy/${tmpFil} ${tmpFil}
