@@ -170,6 +170,8 @@ export tune=0
 # - please separate them by whitespaces;
 # - no relative/full paths
 # - these files will be automatically gzipped (as for fort.2/8/16)
+# - for each file, an instance per MADX seed will be generated
+#   (as for fort.2/8/16)
 export additionalFilesOutMAD=""
 
 # additional input files for sixtrack (not including
@@ -178,6 +180,7 @@ export additionalFilesOutMAD=""
 # - please separate them by whitespaces;
 # - please keep in mind that the files should be in sixjobs
 #   or studies/<studyName> (in case you load a study)
+# - each file will be the same for all the points in the scan
 export additionalFilesInp6T=""
 
 # Multiple tunescans can be specified 
