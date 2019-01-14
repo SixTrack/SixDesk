@@ -2163,7 +2163,7 @@ if ${lgenerate} ; then
     
     # - additional files
     for tmpFil in ${additionalFilesOutMAD} ; do
-        additionalFilesOutMADFullPaths="${additionalFilesOutMADFullPaths} $sixtrack_input/${tmpFil}.gz"
+        additionalFilesOutMADFullPaths="${additionalFilesOutMADFullPaths} $sixtrack_input/${tmpFil}"
         additionalFilesOutMADNames="${additionalFilesOutMADNames} ${tmpFil}.gz"
     done
 fi
