@@ -2455,6 +2455,9 @@ if ${lsubmit} ; then
 	# some set up of htcondor submission scripts
  	sed -i -e "s#^exe=.*#exe=${SIXTRACKEXE}#g" \
 	       -e "s#^runDirBaseName=.*#runDirBaseName=${sixdesktrack}#g" ${sixdeskjobs}/htcondor_job.sh
+        if [ -n "${additionalFilesOutMAD}" ] ; then
+ 	    sed -i "s#^additionalFilesOutMAD=.*#additionalFilesOutMAD=( ${additionalFilesOutMAD} )#g" ${sixdeskjobs}/htcondor_job.sh
+        fi
         if [ -n "${additionalFilesInp6T}" ] ; then
  	    sed -i "s#^additionalFilesInp6T=.*#additionalFilesInp6T=( ${additionalFilesInp6T} )#g" ${sixdeskjobs}/htcondor_job.sh
         fi
