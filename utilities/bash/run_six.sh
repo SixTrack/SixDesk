@@ -517,7 +517,7 @@ function submitChromaJobs(){
 
     local __destination=$1
     local __GLOBIGNORE='fort.[2,8]:fort.16:fort*.3.*:fort.10*:sixdesklock:chromaJob0?:lin*:betaJob'
-    for tmpFil in "${additionalFilesOutMAD} ${additionalFilesInp6T}" ; do
+    for tmpFile in ${additionalFilesOutMAD} ${additionalFilesInp6T} ; do
 	__GLOBIGNORE="${__GLOBIGNORE}:${tmpFile}"
     done
     
@@ -659,7 +659,7 @@ function submitBetaJob(){
     
     local __destination=$1
     local __GLOBIGNORE='fort.[2,8]:fort.16:fort*.3.*:fort.10*:sixdesklock:chromaJob0?:lin*:betaJob'
-    for tmpFil in "${additionalFilesOutMAD} ${additionalFilesInp6T}" ; do
+    for tmpFile in ${additionalFilesOutMAD} ${additionalFilesInp6T} ; do
 	__GLOBIGNORE="${__GLOBIGNORE}:${tmpFile}"
     done
     
