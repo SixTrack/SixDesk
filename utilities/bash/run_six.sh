@@ -517,6 +517,9 @@ function submitChromaJobs(){
 
     local __destination=$1
     local __GLOBIGNORE='fort.[2,8]:fort.16:fort*.3.*:fort.10*:sixdesklock:chromaJob0?:lin*:betaJob'
+    for tmpFile in ${additionalFilesOutMAD} ${additionalFilesInp6T} ; do
+	__GLOBIGNORE="${__GLOBIGNORE}:${tmpFile}"
+    done
     
     # --------------------------------------------------------------------------
     # generate appropriate fort.3 files as: fort.3.tx + fort.3.mad + fort.3.m2
@@ -580,6 +583,14 @@ function submitChromaJobs(){
         touch fort.8
     fi
     
+    # additional files
+    for tmpFil in ${additionalFilesOutMAD} ; do
+	ln -sf $sixtrack_input/${tmpFil} ${tmpFil}
+    done
+    for tmpFil in ${additionalFilesInp6T} ; do
+	ln -sf $sixdeskstudy/${tmpFil} ${tmpFil}
+    done
+    
     # --------------------------------------------------------------------------
     # actually run
     
@@ -598,6 +609,9 @@ function submitChromaJobs(){
     rm -rf chromaJob01
     mkdir chromaJob01
     cp fort.2 fort.3 fort.8 fort.16 fort.10 first_oneturn chromaJob01
+    # additional files
+    cp -f ${additionalFilesOutMAD} chromaJob01
+    cp -f ${additionalFilesInp6T} chromaJob01
     gzip -f chromaJob01/*
     mv fort.10 fort.10_first_oneturn
     # clean dir
@@ -620,6 +634,9 @@ function submitChromaJobs(){
     rm -rf chromaJob02
     mkdir chromaJob02
     cp fort.2 fort.3 fort.8 fort.16 fort.10 second_oneturn chromaJob02
+    # additional files
+    cp -f ${additionalFilesOutMAD} chromaJob02
+    cp -f ${additionalFilesInp6T} chromaJob02
     gzip -f chromaJob02/*
     mv fort.10 fort.10_second_oneturn
     # clean dir
@@ -642,6 +659,9 @@ function submitBetaJob(){
     
     local __destination=$1
     local __GLOBIGNORE='fort.[2,8]:fort.16:fort*.3.*:fort.10*:sixdesklock:chromaJob0?:lin*:betaJob'
+    for tmpFile in ${additionalFilesOutMAD} ${additionalFilesInp6T} ; do
+	__GLOBIGNORE="${__GLOBIGNORE}:${tmpFile}"
+    done
     
     # --------------------------------------------------------------------------
     # generate appropriate fort.3 files as: fort.3.m1 + fort.3.mad + fort.3.m2
@@ -686,6 +706,14 @@ function submitBetaJob(){
         touch fort.8
     fi
 
+    # additional files
+    for tmpFil in ${additionalFilesOutMAD} ; do
+	ln -sf $sixtrack_input/${tmpFil} ${tmpFil}
+    done
+    for tmpFil in ${additionalFilesInp6T} ; do
+	ln -sf $sixdeskstudy/${tmpFil} ${tmpFil}
+    done
+    
     # --------------------------------------------------------------------------
     # actually run
     rm -f fort.10
@@ -700,6 +728,9 @@ function submitBetaJob(){
     rm -rf betaJob
     mkdir betaJob
     cp fort.2 fort.3 fort.8 fort.16 fort.10 lin betaJob
+    # additional files
+    cp -f ${additionalFilesOutMAD} betaJob
+    cp -f ${additionalFilesInp6T} betaJob
     gzip -f betaJob/*
     mv lin lin_old
     cp fort.10 fort.10_old
@@ -805,7 +836,7 @@ function submitCreateFinalFort3DA(){
 function submitCreateFinalInputs(){
     local __lerr=0
 
-    sixdeskmess  1 "Taking care of SIXTRACK fort.2/fort.3/fort.8/fort.16 in $RundirFullPath"
+    sixdeskmess  1 "Taking care of SIXTRACK input files in $RundirFullPath"
 
     # fort.3
     gzip -c $sixdeskjobs_logs/fort.3 > $RundirFullPath/fort.3.gz
@@ -814,6 +845,16 @@ function submitCreateFinalInputs(){
     for iFort in 2 8 16 ; do
 	[ ! -e $RundirFullPath/fort.${iFort}.gz ] || rm -f $RundirFullPath/fort.${iFort}.gz
 	ln -s $sixtrack_input/fort.${iFort}_$iMad.gz $RundirFullPath/fort.${iFort}.gz
+    done
+
+    # additional files
+    for tmpFil in ${additionalFilesOutMAD} ; do
+	[ ! -e $RundirFullPath/${tmpFil}.gz ] || rm -f $RundirFullPath/${tmpFil}.gz
+	ln -s $sixtrack_input/${tmpFil}_$iMad.gz $RundirFullPath/${tmpFil}.gz
+    done
+    for tmpFil in ${additionalFilesInp6T} ; do
+	[ ! -e $RundirFullPath/${tmpFil} ] || rm -f $RundirFullPath/${tmpFil}
+	ln -s $sixdeskstudy/${tmpFil} $RundirFullPath/${tmpFil}
     done
 	
     if [ "$sixdeskplatform" == "boinc" ] ; then
@@ -829,8 +870,13 @@ function submitCreateFinalInputs(){
 	let __lerr+=$?
 	if [ ${__lerr} -eq 0 ] ; then
 	    # - generate zip file
+            #   NB: generate list of additional files
+            local __additionalFilesInp6TFullPaths=""
+            for tmpFil in ${additionalFilesInp6T} ; do
+                __additionalFilesInp6TFullPaths="${__additionalFilesInp6TFullPaths} ${RundirFullPath}/${tmpFil}"
+            done
 	    #   NB: -j option, to store only the files, and not the source paths
-	    multipleTrials "zip -j $RundirFullPath/$workunitName.zip $sixdeskjobs_logs/fort.3 $sixtrack_input/fort.2 $sixtrack_input/fort.8 $sixtrack_input/fort.16 > $RundirFullPath/zip.log 2>&1; local __zip_exit_status=\$? ; grep warning $RundirFullPath/zip.log >/dev/null 2>&1 ; local __zip_warnings=\$? ; rm -f $RundirFullPath/zip.log" "[ \${__zip_exit_status} -eq 0 ] && [ \${__zip_warnings} -eq 1 ]" "Failing to generate .zip file for WU ${workunitName}"
+	    multipleTrials "zip -j $RundirFullPath/$workunitName.zip $sixdeskjobs_logs/fort.3 $sixtrack_input/fort.2 $sixtrack_input/fort.8 $sixtrack_input/fort.16 ${additionalFilesOutMADFullPaths} ${__additionalFilesInp6TFullPaths} > $RundirFullPath/zip.log 2>&1; local __zip_exit_status=\$? ; grep warning $RundirFullPath/zip.log >/dev/null 2>&1 ; local __zip_warnings=\$? ; rm -f $RundirFullPath/zip.log" "[ \${__zip_exit_status} -eq 0 ] && [ \${__zip_warnings} -eq 1 ]" "Failing to generate .zip file for WU ${workunitName}"
 	    let __lerr+=$?
 	    # - generate the workunit description file
 	    #   NB: appName from sysenv (+ sanity checks in dot_profile)
@@ -901,6 +947,23 @@ function fixInputFiles(){
 	    let __iFixed+=1
 	fi
     done
+
+    # additional files:
+    for tmpFil in ${additionalFilesOutMAD} ; do
+	if [ -f $RundirFullPath/${tmpFil}.gz ] ; then
+	    sixdeskmess -1 "...${tmpFil}.gz has problems: recreating it!!!"
+	    ln -s $sixtrack_input/${tmpFil}_$iMad.gz $RundirFullPath/${tmpFil}.gz
+	    let __iFixed+=1
+	fi
+    done
+    for tmpFil in ${additionalFilesInp6T} ; do
+	if [ -f $RundirFullPath/${tmpFil} ] ; then
+	    sixdeskmess -1 "...${tmpFil} has problems: recreating it!!!"
+	    ln -s $sixdeskstudy/${tmpFil} $RundirFullPath/${tmpFil}
+            let __iFixed+=1
+        fi
+    done
+    
     return ${__iFixed}
 }
 
@@ -927,7 +990,7 @@ function checkDirReadyForSubmission(){
     
     sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -d
     let __lerr+=$?
-    sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s fort.2.gz fort.3.gz fort.8.gz fort.16.gz
+    sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s fort.2.gz fort.3.gz fort.8.gz fort.16.gz "${additionalFilesOutMADNames} ${additionalFilesInp6T}"
     let __lerr+=$?
     if [ "$sixdeskplatform" == "lsf" ] ; then
 	sixdeskInspectPrerequisites ${lverbose} $RundirFullPath -s $Runnam.sh
@@ -1853,6 +1916,8 @@ nMaxJobsSubmitBoincDef=7000
 nMaxJobsSubmitBoinc=${nMaxJobsSubmitBoincDef}
 belowPyVersion=3
 multipleTrialLargeWaitingTime=300
+additionalFilesOutMADFullPaths=""
+additionalFilesOutMADNames=""
 
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":aBcCd:fghilm:Mn:N:o:p:P:R:sStUvw" opt ; do
@@ -2095,6 +2160,12 @@ if ${lgenerate} ; then
     #
     sixdeskmess  2 "Using sixtrack_input ${sixtrack_input}"
     sixdeskmess  2 "Using ${sixdeskjobs_logs}"
+    
+    # - additional files
+    for tmpFil in ${additionalFilesOutMAD} ; do
+        additionalFilesOutMADFullPaths="${additionalFilesOutMADFullPaths} $sixtrack_input/${tmpFil}"
+        additionalFilesOutMADNames="${additionalFilesOutMADNames} ${tmpFil}.gz"
+    done
 fi
 if ${lcheck} ; then
     #
@@ -2127,6 +2198,18 @@ if ${lstatus} ; then
     # - actually found:
     nFound=( 0 0 0 0 0 0 )
     foundNames=( 'dirs' 'fort.2.gz' 'fort.3.gz' 'fort.8.gz' 'fort.16.gz' 'fort.10.gz' )
+    
+    # - additional files
+    for tmpFil in ${additionalFilesOutMAD} ; do
+        jj=${#nFound[@]}
+        nFound[$jj]=0
+        foundNames[$jj]="${tmpFil}.gz"
+    done
+    for tmpFil in ${additionalFilesInp6T} ; do
+        jj=${#nFound[@]}
+        nFound[$jj]=0
+        foundNames[$jj]="${tmpFil}"
+    done
 fi
 
 # - unlocking
@@ -2370,8 +2453,14 @@ if ${lsubmit} ; then
 	cp ${SCRIPTDIR}/templates/htcondor/htcondor_job.sh ${sixdeskjobs}/htcondor_job.sh
 	cp ${SCRIPTDIR}/templates/htcondor/htcondor_run_six.sub ${sixdeskjobs}/htcondor_run_six.sub
 	# some set up of htcondor submission scripts
- 	sed -i "s#^exe=.*#exe=${SIXTRACKEXE}#g" ${sixdeskjobs}/htcondor_job.sh
-	sed -i "s#^runDirBaseName=.*#runDirBaseName=${sixdesktrack}#g" ${sixdeskjobs}/htcondor_job.sh
+ 	sed -i -e "s#^exe=.*#exe=${SIXTRACKEXE}#g" \
+	       -e "s#^runDirBaseName=.*#runDirBaseName=${sixdesktrack}#g" ${sixdeskjobs}/htcondor_job.sh
+        if [ -n "${additionalFilesOutMAD}" ] ; then
+ 	    sed -i "s#^additionalFilesOutMAD=.*#additionalFilesOutMAD=( ${additionalFilesOutMAD} )#g" ${sixdeskjobs}/htcondor_job.sh
+        fi
+        if [ -n "${additionalFilesInp6T}" ] ; then
+ 	    sed -i "s#^additionalFilesInp6T=.*#additionalFilesInp6T=( ${additionalFilesInp6T} )#g" ${sixdeskjobs}/htcondor_job.sh
+        fi
 	chmod +x ${sixdeskjobs}/htcondor_job.sh
 	sed -i "s#^executable = .*#executable = ${sixdeskjobs}/htcondor_job.sh#g" ${sixdeskjobs}/htcondor_run_six.sub
 	sed -i "s#^queue dirname from.*#queue dirname from ${sixdeskjobs}/${LHCDesName}.list#g" ${sixdeskjobs}/htcondor_run_six.sub
@@ -2503,6 +2592,10 @@ else
     	    for iFort in ${iForts} ; do
     		gunzip -c $sixtrack_input/fort.${iFort}_$iMad.gz > $sixtrack_input/fort.${iFort}
     	    done
+            # additional files
+            for tmpFil in ${additionalFilesOutMAD} ; do
+                gunzip -c $sixtrack_input/${tmpFil}_$iMad.gz > $sixtrack_input/${tmpFil}
+            done
         fi
     
 	for (( iTuneY=0 ; iTuneY<${#tunesYY[@]} ; iTuneY++ )) ; do
@@ -2611,6 +2704,10 @@ else
     	    for iFort in ${iForts} ; do
     		rm -f $sixtrack_input/fort.${iFort}
     	    done
+            # additional files
+            for tmpFil in ${additionalFilesOutMAD} ; do
+                rm -f $sixtrack_input/${tmpFil}_$iMad
+            done
         fi	    
     done
 fi
