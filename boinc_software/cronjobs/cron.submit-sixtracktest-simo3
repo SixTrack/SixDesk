@@ -34,7 +34,7 @@ result_template_SixOutZip=templates/sixtracktest_res_template.xml
 # default app name
 applicationDef=sixtracktest
 # default app ver
-appVerDef=50101
+appVerDef=50103
 
 
 #Define finctions
