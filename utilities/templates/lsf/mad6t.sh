@@ -8,7 +8,7 @@ export CORR_TEST=%CORR_TEST%
 export fort_34=%FORT_34%
 export MADX_PATH=%MADX_PATH%
 export MADX=%MADX%
-export additionalFilesOutMAD=( %additionalFilesOutMAD% )
+export additionalFilesOutMAD=%additionalFilesOutMAD%
 waitTime=60
 
 echo "sleeping ${waitTime} s..."
@@ -120,7 +120,7 @@ then
   done
 fi
 # additional output files from MADX
-for fil in ${additionalFilesOutMAD[@]} ; do
+for fil in ${additionalFilesOutMAD} ; do
     if [ -s $sixtrack_input/"${fil}_$i.gz" ] ; then
         gunzip $sixtrack_input/"${fil}_$i.gz"
         diff $sixtrack_input/"${fil}_$i" "$fil" > diffs

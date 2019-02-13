@@ -176,9 +176,7 @@ function submit(){
 	    chmod 755 mad6t_"$iMad".sh
 
             # additional files
-            if [ -n "${additionalFilesOutMAD}" ] ; then
-	        sed -i "s?%additionalFilesOutMAD%?${additionalFilesOutMAD}?g" mad6t_"$iMad".sh
-            fi
+	    sed -i "s?^export additionalFilesOutMAD=.*?export additionalFilesOutMAD=\"${additionalFilesOutMAD}\"?g" mad6t_"$iMad".sh
 	    
 	    if ${linter} ; then
 		sixdeskmktmpdir batch ""
