@@ -34,7 +34,7 @@ result_template_SixOutZip=templates/sixtracktest_res_template.xml
 # default app name
 applicationDef=sixtracktest
 # default app ver
-appVerDef=50103
+appVerDef=
 
 
 #Define finctions
@@ -256,6 +256,10 @@ submit_descfile(){
 	    warn " try later"
 	    return 1
 	fi
+        local __tmpWUappNum=""
+        if [ -n "${WUappNum}" ] ; then
+            __tmpWUappNum="-app_version_num ${WUappNum}"
+        fi
 
 create_cmd="$boincdir/bin/create_work 		   \
  -config_dir $boincdir 				   \
@@ -273,7 +277,7 @@ create_cmd="$boincdir/bin/create_work 		   \
  -max_error_results $WUerrors 			   \
  -max_total_results $WUnumIssues 		   \
  -max_success_results $WUresultsWithoutConcensus   \
- -app_version_num ${WUappNum}                      \
+ ${__tmpWUappNum}                                  \
  $zipfile"
 
         echo "Running ${create_cmd}" | sed -e's/[ \t]\+/ /g' | log
