@@ -610,8 +610,8 @@ function submitChromaJobs(){
     mkdir chromaJob01
     cp fort.2 fort.3 fort.8 fort.16 fort.10 first_oneturn chromaJob01
     # additional files
-    cp -f ${additionalFilesOutMAD} chromaJob01
-    cp -f ${additionalFilesInp6T} chromaJob01
+    [ -z "${additionalFilesOutMAD}" ] || cp -f ${additionalFilesOutMAD} chromaJob01
+    [ -z "${additionalFilesInp6T}" ]  || cp -f ${additionalFilesInp6T} chromaJob01
     gzip -f chromaJob01/*
     mv fort.10 fort.10_first_oneturn
     # clean dir
@@ -635,8 +635,8 @@ function submitChromaJobs(){
     mkdir chromaJob02
     cp fort.2 fort.3 fort.8 fort.16 fort.10 second_oneturn chromaJob02
     # additional files
-    cp -f ${additionalFilesOutMAD} chromaJob02
-    cp -f ${additionalFilesInp6T} chromaJob02
+    [ -z "${additionalFilesOutMAD}" ] || cp -f ${additionalFilesOutMAD} chromaJob02
+    [ -z "${additionalFilesInp6T}" ]  || cp -f ${additionalFilesInp6T} chromaJob02
     gzip -f chromaJob02/*
     mv fort.10 fort.10_second_oneturn
     # clean dir
@@ -729,8 +729,8 @@ function submitBetaJob(){
     mkdir betaJob
     cp fort.2 fort.3 fort.8 fort.16 fort.10 lin betaJob
     # additional files
-    cp -f ${additionalFilesOutMAD} betaJob
-    cp -f ${additionalFilesInp6T} betaJob
+    [ -z "${additionalFilesOutMAD}" ] || cp -f ${additionalFilesOutMAD} betaJob
+    [ -z "${additionalFilesInp6T}" ]  || cp -f ${additionalFilesInp6T} betaJob
     gzip -f betaJob/*
     mv lin lin_old
     cp fort.10 fort.10_old
