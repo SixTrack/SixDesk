@@ -8,7 +8,7 @@ export CORR_TEST=%CORR_TEST%
 export fort_34=%FORT_34%
 export MADX_PATH=%MADX_PATH%
 export MADX=%MADX%
-export additionalFilesOutMAD=( %additionalFilesOutMAD% )
+export additionalFilesOutMAD=%additionalFilesOutMAD%
 
 echo "Calling madx version $MADX in $MADX_PATH"
 $MADX_PATH/$MADX < $junktmp/$filejob."$i" > $filejob.out."$i"
@@ -159,7 +159,7 @@ then
   done
 fi
 # additional output files from MADX
-for fil in ${additionalFilesOutMAD[@]} ; do
+for fil in ${additionalFilesOutMAD} ; do
     if [ -s $sixtrack_input/"${fil}_$i.gz" ] ; then
         gunzip $sixtrack_input/"${fil}_$i.gz"
         diff $sixtrack_input/"${fil}_$i" "$fil" > diffs
@@ -170,6 +170,11 @@ for fil in ${additionalFilesOutMAD[@]} ; do
             cat diffs
             cat diffs >> $sixtrack_input/WARNINGS
         fi
+    fi
+    if [ -s "${fil}" ] ; then
+        touch $sixtrack_input/WARNINGS
+        echo "An empty ${fil}_${i} has been produced!"
+        echo "An empty ${fil}_${i} has been produced!" >> $sixtrack_input/WARNINGS
     fi
     gzip -c "${fil}" > ${sixtrack_input}/${fil}_${i}.gz
 done

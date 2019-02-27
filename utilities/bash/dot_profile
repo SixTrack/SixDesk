@@ -1118,7 +1118,7 @@ sixdeskCreateUserTree(){
 }
 sixdeskSetExes(){
     local __lerr=0
-    [ -n "${sixdeskpath}" ] || export sixdeskpath=/afs/cern.ch/group/si/slap/bin/sixdesk
+    [ -n "${sixdeskpath}" ] || export sixdeskpath=/afs/cern.ch/project/slap/bin/sixdesk
     if [ -z "${SIXTRACKEXE}" ] ; then
 	if [ -n "${appVer}" ] ; then
             export SIXTRACKEXE=${newBuildPathDef}/${appVer}/${appName}
