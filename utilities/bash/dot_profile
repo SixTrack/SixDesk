@@ -1118,7 +1118,7 @@ sixdeskCreateUserTree(){
 }
 sixdeskSetExes(){
     local __lerr=0
-    [ -n "${sixdeskpath}" ] || export sixdeskpath=/afs/cern.ch/group/si/slap/bin/sixdesk
+    [ -n "${sixdeskpath}" ] || export sixdeskpath=/afs/cern.ch/project/slap/bin/sixdesk
     [ -n "${SIXTRACKEXE}" ] || export SIXTRACKEXE=$newBuildPathDef/${appName}
     [ -n "${SIXTRACKBNLEXE}" ] || export SIXTRACKBNLEXE=$sixdeskpath/exes/SixTrack_bnl_pro
     [ -n "${SIXTRACKDAEXE}" ] || export SIXTRACKDAEXE=$sixdeskpath/exes/SixTrack_crlibm_da_lf95v4200
