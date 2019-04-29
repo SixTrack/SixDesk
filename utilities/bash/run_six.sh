@@ -597,6 +597,17 @@ function submitChromaJobs(){
     # - first job
     sixdeskmess  1 "Running the first one turn job for chromaticity"
     cat fort.3.t1 fort.3.mad fort.3.m2 > fort.3
+    if ${llocalfort3} ; then
+	# insert fort.3.local just before ENDE in fortl.3.mask
+	local __posENDE=`grep -n ENDE fort.3 | cut -d \: -f1`
+	local __nLines=`wc -l fort.3 | awk '{print ($1)}'`
+	let nHead=${__posENDE}-1
+	let nTail=${__nLines}-${__posENDE}+1
+	head -n ${nHead} fort.3 > fort.3.temp
+	echo "${fort3localLines}" >> fort.3.temp
+	tail -n ${nTail} fort.3 >> fort.3.temp
+	mv fort.3.temp fort.3
+    fi
     rm -f fort.10
     $SIXTRACKEXE > first_oneturn
     if test $? -ne 0 -o ! -s fort.10 ; then
@@ -622,6 +633,17 @@ function submitChromaJobs(){
     # - second job
     sixdeskmess  1 "Running the second one turn job for chromaticity"
     cat fort.3.t2 fort.3.mad fort.3.m2 > fort.3
+    if ${llocalfort3} ; then
+	# insert fort.3.local just before ENDE in fortl.3.mask
+	local __posENDE=`grep -n ENDE fort.3 | cut -d \: -f1`
+	local __nLines=`wc -l fort.3 | awk '{print ($1)}'`
+	let nHead=${__posENDE}-1
+	let nTail=${__nLines}-${__posENDE}+1
+	head -n ${nHead} fort.3 > fort.3.temp
+	echo "${fort3localLines}" >> fort.3.temp
+	tail -n ${nTail} fort.3 >> fort.3.temp
+	mv fort.3.temp fort.3
+    fi
     rm -f fort.10
     $SIXTRACKEXE > second_oneturn
     if test $? -ne 0 -o ! -s fort.10 ; then
@@ -695,6 +717,17 @@ function submitBetaJob(){
         -e 's/%DIFF/\/DIFF/g' \
         -e 's/%DIF1/\//g' $sixdeskjobs_logs/fort.3.mother2 > fort.3.m2
     cat fort.3.m1 fort.3.mad fort.3.m2 > fort.3
+    if ${llocalfort3} ; then
+	# insert fort.3.local just before ENDE in fortl.3.mask
+	local __posENDE=`grep -n ENDE fort.3 | cut -d \: -f1`
+	local __nLines=`wc -l fort.3 | awk '{print ($1)}'`
+	let nHead=${__posENDE}-1
+	let nTail=${__nLines}-${__posENDE}+1
+	head -n ${nHead} fort.3 > fort.3.temp
+	echo "${fort3localLines}" >> fort.3.temp
+	tail -n ${nTail} fort.3 >> fort.3.temp
+	mv fort.3.temp fort.3
+    fi
     
     # --------------------------------------------------------------------------
     # prepare the other input files
