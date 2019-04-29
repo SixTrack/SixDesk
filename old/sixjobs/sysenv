@@ -1,12 +1,18 @@
 #!/bin/sh
 # February 29, 2012
 # All the variables the user will not normally want to see!
+# path to sixtrack project
+export sixtrackproj=/afs/cern.ch/project/sixtrack
+# path to build dir
+export sixtrackprojbuild=$sixtrackproj/build
 # The path to all scripts etc bin,Bin,scripts, exes, dots
 export sixdeskpath=/afs/cern.ch/group/si/slap/bin/sixdesk
 # The following SixTrack version is used for the one-turn
 # SixTrack run to get the Beta values and for all LSF tasks (except DA)
 # and the BNL EXE which is the same I hope
-export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_pro
+export SIXTRACKEXE=$sixtrackprojbuild/sixtrack
+# test version
+# export SIXTRACKEXE=$sixtrackprojbuild/sixtracktest
 if test "$BIGNBLZ" != ""
 then
   export SIXTRACKEXE=$sixdeskpath/exes/SixTrack_bignblz_pro
