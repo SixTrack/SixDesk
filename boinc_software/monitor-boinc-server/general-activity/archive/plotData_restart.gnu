@@ -5,7 +5,7 @@ reset
 #   -> new status page has slightly different order of table lines;
 #   -> swapping $10 and $11, and $13 and $14;
 
-restartFile='/home/amereghe/Documents/notebooks/simulations/code development/general notes/boinc/monitoring restarts/restart.txt/restart.txt'
+restartFile='/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/general-activity/restart.txt'
 stuckFile='../assimilatorStuck.txt'
 restaFile='../assimilatorRestart.txt'
 
@@ -43,7 +43,7 @@ rightNowPNG=system('date +"_%F_%H-%M-%S"')
 currTitle='server overview'
 if ( linteractive==0 ) {
 set term png font "Times-Roman, 12" size xSizeWdw,ySizeWdw notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/serverOverview'.rightNowPNG.'.png'
+set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus/serverOverview'.rightNowPNG.'.png'
 } else {
 set term qt 0 title currTitle font "Times-Roman, 12" size xSizeWdw,ySizeWdw
 }
@@ -75,7 +75,7 @@ set y2range [*:*]
 currTitle='credit'
 if ( linteractive==0 ) {
 set term png font "Times-Roman, 12" size xSizeWdw,ySizeWdw notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/creditOverview'.rightNowPNG.'.png'
+set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus/creditOverview'.rightNowPNG.'.png'
 } else {
 set term qt 1 title currTitle font "Times-Roman, 12" size xSizeWdw,ySizeWdw
 }
@@ -96,7 +96,7 @@ plot \
 currTitle='TeraFLOPs'     
 if ( linteractive==0 ) {
 set term png font "Times-Roman, 12" size xSizeWdw,ySizeWdw notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/teraFLOPsOverview'.rightNowPNG.'.png'
+set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus/teraFLOPsOverview'.rightNowPNG.'.png'
 } else {
 set term qt 2 title currTitle font "Times-Roman, 12" size xSizeWdw,ySizeWdw
 }
@@ -117,7 +117,7 @@ unset title
 currTitle='Validation'     
 if ( linteractive==0 ) {
 set term png font "Times-Roman, 12" size xSizeWdw,ySizeWdw notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/validationOverview'.rightNowPNG.'.png'
+set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus/validationOverview'.rightNowPNG.'.png'
 } else {
 set term qt 3 title currTitle font "Times-Roman, 12" size xSizeWdw,ySizeWdw
 }
@@ -138,7 +138,7 @@ unset title
 currTitle='SixTrack app'
 if ( linteractive==0 ) {
 set term png font "Times-Roman, 12" size xSizeWdw,ySizeWdw notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/sixtrackOverview'.rightNowPNG.'.png'
+set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus/sixtrackOverview'.rightNowPNG.'.png'
 } else {
 set term qt 4 title currTitle font "Times-Roman, 12" size xSizeWdw,ySizeWdw
 }
@@ -168,7 +168,7 @@ unset multiplot
 currTitle='sixtracktest app'
 if ( linteractive==0 ) {
 set term png font "Times-Roman, 12" size xSizeWdw,ySizeWdw notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/sixtracktestOverview'.rightNowPNG.'.png'
+set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus/sixtracktestOverview'.rightNowPNG.'.png'
 } else {
 set term qt 5 title currTitle font "Times-Roman, 12" size xSizeWdw,ySizeWdw
 }
