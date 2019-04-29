@@ -164,6 +164,7 @@ run_spool(){ # max_jobs_to_submit, max_jobs_perStudy, specific_study
 
     # main loop
     for workdir in ${allWorkDirs} ; do
+        ! ${lMaxJobsPerStudy} || local __StudyComplete=0
 	#check for desc files in the current work dir, and subfolders
 	if ${lMaxJobsPerStudy} ; then
 	    local allDescs=`find "$workdir" -maxdepth 2 -type f -name '*.desc' | head -n ${max_jobs_perStudy}`
@@ -173,6 +174,7 @@ run_spool(){ # max_jobs_to_submit, max_jobs_perStudy, specific_study
 	for descfile in ${allDescs} ; do
 	    #process the desc files
 	    origPath=`dirname ${descfile}`
+            ! ${lMaxJobsPerStudy} || let __StudyComplete+=1
 	    if submit_descfile "$descfile" ; then
 		logstudy "Submitted $WUname"
 		#stop after max_jobs (0=unlimited)
@@ -189,10 +191,10 @@ run_spool(){ # max_jobs_to_submit, max_jobs_perStudy, specific_study
 	done
 	if [ -n "${allDescs}" ] ; then
 	    if ${lMaxJobsPerStudy} ; then
-		log "limit to ${max_jobs_perStudy} reached for ${workdir}"
-	    fi
-            # remove temp dirs in work
-            find ${workdir} -mindepth 1 -maxdepth 1 -type d -empty -delete -print | log
+                if [ ${__StudyComplete} -eq ${max_jobs_perStudy} ] ; then
+		    log "limit to ${max_jobs_perStudy} reached for ${workdir}"
+	        fi
+            fi
 	fi
     done
 }
@@ -443,6 +445,11 @@ cd $boincdir
 
 getlock
 #Klog
+
+# preliminary: remove temp dirs in work older than 1d
+log find ${spooldir} -mindepth 3 -maxdepth 3 -mtime +1 -type d -empty -delete -print
+find ${spooldir} -mindepth 3 -maxdepth 3 -mtime +1 -type d -empty -delete -print | log
+
 log run_spool $maxjobs $maxjobs_perStudy $studyName
 run_spool $maxjobs $maxjobs_perStudy $studyName
 

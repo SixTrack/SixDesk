@@ -11,6 +11,55 @@
 # See if we have any results or report on a specific task
 #
 
+function how_to_use() {
+    cat <<EOF
+
+   `basename $0` [option] [<study_name>] [<platform>]
+   to retrieve boinc results
+
+   options (optional)
+   -d      study name (when running many jobs in parallel)
+           NB: this option has been implemented to keep the same
+               interface as for other main scripts. In case the
+               first optional argument is given, that one will
+               overwrite the value of this option;
+   -U      unlock dirs necessary to the script to run
+           PAY ATTENTION when using this option, as no check whether the lock
+              belongs to this script or not is performed, and you may screw up
+              processing of another script
+   -B      break backward-compatibility
+           for the moment, this sticks only to job names
+   -n      renew kerberos token every n jobs (default: ${NrenewKerberosDef})
+   -o      define output (preferred over the definition of sixdesklevel in sixdeskenv)
+               0: only error messages and basic output 
+               1: full output
+               2: extended output for debugging
+
+EOF
+}
+
+function check_output_option(){
+    local __selected_output_valid
+    __selected_output_valid=false
+    
+    case ${OPTARG} in
+    ''|*[!0-2]*) __selected_output_valid=false ;;
+    *)           __selected_output_valid=true  ;;
+    esac
+
+    if ! ${__selected_output_valid}; then
+	echo "ERROR: Option -o requires the following arguments:"
+	echo "    0: only error messages and basic output [default]"
+	echo "    1: full output"
+	echo "    2: extended output for debugging"
+	exit
+    else
+	loutform=true
+	sixdesklevel_option=${OPTARG}
+    fi
+    
+}
+
 # ------------------------------------------------------------------------------
 # preliminary to any action
 # ------------------------------------------------------------------------------
@@ -22,7 +71,110 @@ if [ -z "${SCRIPTDIR}" ] ; then
 fi
 # ------------------------------------------------------------------------------
 
-source ${SCRIPTDIR}/bash/dot_env
+lbackcomp=true
+lunlockRunStatus=false
+NrenewKerberosDef=2000
+NrenewKerberos=${NrenewKerberosDef}
+optArgCurrStudy="-s"
+doNotOverwrite="-e"
+optArgCurrPlatForm=""
+unlockSetEnv=""
+loutform=false
+
+# get options (heading ':' to disable the verbose error handling)
+while getopts  ":hBo:n:d:U" opt ; do
+    case $opt in
+	h)
+	    how_to_use
+	    exit 1
+	    ;;
+	B)
+	    # use whatever breaks backward compatibility
+	    lbackcomp=false
+	    ;;
+	n)
+	    # renew kerberos token every N jobs
+	    NrenewKerberos=${OPTARG}
+	    # check it is actually a number
+	    let NrenewKerberos+=0
+	    if [ $? -ne 0 ] 2>/dev/null; then
+		how_to_use
+		echo "-n argument option is not a number!"
+		exit 1
+	    fi
+	    ;;
+	o)
+	    # output option
+	    check_output_option
+	    ;;	
+	d)
+	    # the user is requesting a specific study
+	    optArgCurrStudy="-d ${OPTARG}"
+	    ;;
+	U)
+	    # unlock currently locked folder
+	    lunlockRunStatus=true
+	    unlockSetEnv="-U"
+	    ;;
+	:)
+	    how_to_use
+	    echo "Option -$OPTARG requires an argument."
+	    exit 1
+	    ;;
+	\?)
+	    how_to_use
+	    echo "Invalid option: -$OPTARG"
+	    exit 1
+	    ;;
+    esac
+done
+shift "$(($OPTIND - 1))"
+
+# - load environment
+#   NB: workaround to get getopts working properly in sourced script
+OPTIND=1
+
+# optional arguments
+if [ -n "$1" ] ; then
+    optArgCurrStudy="-d $1"
+fi
+if [ -n "$2" ] ; then
+    optArgCurrPlatForm="-p $2"
+fi
+
+
+# Even if called with a Study ($1) and a Platform ($2)
+# we can now use dot_env
+echo ""
+printf "=%.0s" {1..80}
+echo ""
+echo "--> sourcing set_env.sh"
+printf '.%.0s' {1..80}
+echo ""
+source ${SCRIPTDIR}/bash/set_env.sh ${optArgCurrStudy} ${optArgCurrPlatForm} ${unlockSetEnv} ${doNotOverwrite}
+printf "=%.0s" {1..80}
+echo ""
+echo ""
+
+# locking dirs
+lockingDirs=( $sixdeskstudy )
+
+if ${loutform} ; then
+    sixdesklevel=${sixdesklevel_option}
+fi
+
+# unlock
+if ${lunlockRunStatus} ; then
+    sixdeskunlockAll
+fi
+
+# setting traps
+trap "sixdeskexit  199" EXIT
+
+#   . break backward compatibility
+if ! ${lbackcomp} ; then
+    sixdeskmess -1 " --> flag for backward compatibility de-activated, as requested by user!"
+fi
 
 #MACRO mymess 0 Checking Study $LHCDescrip
 sixdeskmesslevel=0

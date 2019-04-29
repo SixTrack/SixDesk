@@ -1,0 +1,20 @@
+\chapter{Giudelines and Common Pitfalls} \label{Guidelines}
+
+\section{Choice of Platform}
+HTCondor is convenient when:
+\begin{enumerate}
+\item results should be collected quickly. This can be the case when
+  the user has short time to collect data or the simulation set-up
+  is being defined. In the second case, indeed, one does not want to wait
+  too long for proceeding;
+\item short or few jobs per study. This can be the case when re-submission
+  of selected cases is necessary, e.g.~to complete a study when few points
+  in the scan are missing;
+\end{enumerate}  
+
+The BOINC platform for volunteer computing is convenient in case of
+large simulation campaigns, i.e.~when simulations are long or they
+are in high number (e.g.~hundreds of thousands of jobs).
+
+Not more than 5 scripts per user running at the same time, for ease
+of functionality of afs.

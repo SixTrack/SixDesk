@@ -18,3 +18,7 @@ for tmpDir in `find . -maxdepth 1 -type d -exec bash -c "echo -ne '{} '; ls '{}'
 	rm -rf ${tmpDir}
     fi
 done
+
+#
+echo "--> remove all empty dirs:"
+find . -type d -empty -print -delete
