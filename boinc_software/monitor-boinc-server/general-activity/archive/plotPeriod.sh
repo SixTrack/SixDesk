@@ -1,6 +1,6 @@
 #!/bin/bash
 
-period='2018-03'
+period='2019-04'
 toolsdir=`dirname $0`
 
 # create temporary period files

@@ -5,9 +5,9 @@ reset
 # ------------------------------------------------------------------------------
 
 # files
-grepFiles='2018-??/submit*.dat'
+grepFiles='2019-??/submit*.dat'
 iFileName='submitAll.dat'
-grepFilesAssimilated='2018-??/assimilate*.dat'
+grepFilesAssimilated='2019-??/assimilate*.dat'
 iFileNameAssimilated='assimilateAll.dat'
 
 # last 24h
@@ -20,9 +20,9 @@ tStep=1*3600
 # time interval
 # AM -> tMin='2017-05-23T00:00:00'
 # AM -> tMin='2017-06-15T00:00:00'
-tMin='2018-03-01T00:00:00'
-# AM -> tMax='2017-08-25T00:00:00'
-tStep=3600*6
+tMin='2019-01-01T00:00:00'
+tMax='2019-04-30T23:59:59'
+tStep=3600*24*2
 
 # typical enlarged window size: 1900,400
 # trigger use of png or interactive windows: 0: png, 1: interactive
@@ -53,7 +53,11 @@ system( "awk '{if ($1!=\"#\") {print ($6,$4)}}' ".iFileName." | sort -k 1 | awk 
 set xdata time
 set timefmt '%Y-%m-%dT%H:%M:%S'
 set format x '%Y-%m-%d %H:%M'
+# set format x '%Y-%m-%d'
 set xtics rotate by 90 tStep right
+tMin=strptime("%Y-%m-%dT%H:%M:%S",tMin)
+tMax=strptime("%Y-%m-%dT%H:%M:%S",tMax)
+set xrange [tMin:tMax]
 set key outside horizontal
 set grid
 
@@ -89,6 +93,9 @@ plot \
      "< awk '{if ($6==\"giovanno\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'gold'       title 'giovanno',\
      "< awk '{if ($6==\"mcintosh\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'violet'     title 'mcintosh',\
      "< awk '{if ($6==\"skostogl\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'dark-red'   title 'skostogl',\
+     "< awk '{if ($6==\"lcoyle\") {tot+=$4; print ($1,$3,tot)}}'   ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'salmon'      title 'lcoyle',\
+     "< awk '{if ($6==\"mihofer\") {tot+=$4; print ($1,$3,tot)}}'  ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'olive'       title 'mihofer',\
+     "< awk '{if ($6==\"xiaohan\") {tot+=$4; print ($1,$3,tot)}}'  ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'skyblue'     title 'xiaohan',\
      "< awk '{if ($6==\"-\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName        index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'red'        title '-'
 #
 if (lLog==1){
