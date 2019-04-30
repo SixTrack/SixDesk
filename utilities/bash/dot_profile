@@ -1241,6 +1241,9 @@ sixdeskCheckAppVerBOINC(){
 	sixdeskmess -1 "File ${appName}_BOINC_versions.txt not present in ${newBuildPathDef}!"
 	sixdeskmess -1 "Cannot determine if ${appVer} is available on BOINC or not!"
 	__lerr=1
+    elif [ -z "${appVer}" ] ; then
+	__lerr=1
+	sixdeskmess -1 "Please state the app version for BOINC!"
     else
 	local __BOINCversions=`grep -v '#' ${newBuildPathDef}/${appName}_BOINC_versions.txt`
 	__BOINCversions=( ${__BOINCversions} )

@@ -647,7 +647,7 @@ else
     if [ $? -ne 0 ] ; then
 	sixdeskexit 10
     fi
-    if [ "$sixdeskplatform" == "boinc" ] && [ -n "${appVer}" ] ; then
+    if [ "$sixdeskplatform" == "boinc" ] ; then
 	sixdeskCheckAppVerBOINC
 	if [ $? -ne 0 ] ; then
 	    sixdeskexit 12
