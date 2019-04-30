@@ -7,7 +7,8 @@
 # app name, used by any platform
 export appName=sixtracktest
 # app version, used by any platform
-# NB: variable not defined or left empty means latest ver
+# NB: non-BOINC: variable not defined or left empty means latest ver
+# NB: BOINC: variable must always be defined
 export appVer=
 
 # # The path to all scripts etc bin,Bin,scripts, exes, dots
