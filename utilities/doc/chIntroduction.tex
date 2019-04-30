@@ -258,6 +258,7 @@ They are summarised in Tab.~\ref{tab:sysenv}.
     \texttt{appVer} & version of the executable.
     If left blank, it defaults to latest version (see Sec.~\ref{Sec:SixTrackExes}).
     If not left blank, \texttt{appName} must be set either. \\
+    In case of submissions to BOINC, the variable must be set. \\
     & e.g.~\texttt{export appVer=\whichSixTrackVersion{}} \\
     \hline
     \texttt{SIXTRACKEXE} & full path to sixtrack executable.
@@ -281,6 +282,8 @@ that the user specifies which application to use and which version,
 via the \texttt{appName} and \texttt{appVer} variable. If left
 blank, SixDesk will set automatically the two in order to have
 the latest version of SixTrack / SixTrackTest.
+In case of BOINC, this variable must be set by the user, otherwise
+sixdesk will refuse to run.
 
 The \texttt{appName} and \texttt{appVer} variables can be used
 also for single turn jobs (run on the login node on lxplus)
