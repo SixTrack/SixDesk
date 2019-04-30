@@ -1,16 +1,16 @@
 #!/bin/bash
 
-sixtrackProjPath="/share/boinc/project/sixtrack"
-assimilatorLogFileName="log_boincai08/sixtrack_assimilator.log"
+sixtrackProjPath="/usr/local/boinc/project/sixtrack"
+assimilatorLogFileName="log_boincai11/sixtrack_assimilator.log"
 lastMtimeFile='lastMtimeAssimilator.txt'
 logFilesPath="."
 monitorBoincServerDir=$PWD
 
 echo " starting `basename $0` at `date` ..."
 
-presTime=`ssh amereghe@boincai08.cern.ch "cd ${monitorBoincServerDir} ; stat ${sixtrackProjPath}/${assimilatorLogFileName} | grep Modify"`
-# from boincai08 -> cd /afs/cern.ch/user/a/amereghe/Downloads/monitorBoincServer
-# from boincai08 -> presTime=`stat ${sixtrackProjPath}/${assimilatorLogFileName} | grep Modify`
+presTime=`ssh sixtadm@boincai11.cern.ch "cd ${monitorBoincServerDir} ; stat ${sixtrackProjPath}/${assimilatorLogFileName} | grep Modify"`
+# from boincai11 -> cd /afs/cern.ch/user/a/amereghe/Downloads/monitorBoincServer
+# from boincai11 -> presTime=`stat ${sixtrackProjPath}/${assimilatorLogFileName} | grep Modify`
 # parse presTime, removing the fractional part of seconds
 presTime=`echo "${presTime}" | awk '{print ($2,$3)}' | cut -d\. -f1`
 presUpdate=0
@@ -23,7 +23,7 @@ if [ -e ${lastMtimeFile} ] ; then
 	    # first time that the assimilator log does not get updated
 	    echo "assimilator stuck: ${presTime}"
 	    echo "${presTime}" >> ${logFilesPath}/assimilatorStuck.txt
-	    echo "" | mail -s 'assimilator stuck' amereghe@cern.ch
+	    echo "" | mail -s 'assimilator stuck' sixtadm@cern.ch
 	else
 	    echo "assimilator still stuck at `date +%Y-%m-%d\ %H:%M:%S`"
 	fi
