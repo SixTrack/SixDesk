@@ -5,7 +5,7 @@ reset
 #   -> new status page has slightly different order of table lines;
 #   -> swapping $10 and $11, and $13 and $14;
 
-restartFile='/home/amereghe/Documents/notebooks/simulations/code development/general notes/boinc/monitoring restarts/restart.txt/restart.txt'
+restartFile='/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/general-activity/restart.txt'
 stuckFile='../assimilatorStuck.txt'
 restaFile='../assimilatorRestart.txt'
 
@@ -15,12 +15,12 @@ set timefmt '%Y-%m-%d %H:%M:%S'
 # set format x '%Y-%m-%d'
 set format x '%Y-%m-%d %H:%M'
 # set xtics 365.2425 / 12 * 24 * 3600 rotate by 90 right
-set xtics 3600*24*2 rotate by 90 right
+set xtics 3600*12 rotate by 90 right
 set grid xtics lt 0 lw 1
 # tMin=strptime("%Y-%m-%d %H:%M:%S","2017-02-01 00:00:00")
 # tMin=strptime("%Y-%m-%d %H:%M:%S","2017-06-15 00:00:00")
-tMin=strptime("%Y-%m-%d %H:%M:%S","2019-01-01 00:00:00")
-tMax=strptime("%Y-%m-%d %H:%M:%S","2019-04-30 23:59:59")
+tMin=strptime("%Y-%m-%d %H:%M:%S","2019-04-29 00:00:00")
+tMax=strptime("%Y-%m-%d %H:%M:%S","2019-05-20 23:59:59")
 set xrange [tMin:tMax]
 ybar=300
 M=0.1
@@ -29,7 +29,7 @@ M=0.1
 linteractive=0
 lprintDate=0 # 0: no date/time in png name; 1: date/time in png name
 xSizeWdw=1600#regular: 1000
-ySizeWdw=400#regular: 400
+ySizeWdw=600#regular: 400
 
 if ( lprintDate==0 ) {
 rightNowPNG=''
@@ -42,10 +42,10 @@ rightNowPNG=system('date +"_%F_%H-%M-%S"')
 # ------------------------------------------------------------------------------
 currTitle='server overview'
 if ( linteractive==0 ) {
-set term png font "Times-Roman, 12" size xSizeWdw,ySizeWdw notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/serverOverview'.rightNowPNG.'.png'
+set term png size xSizeWdw,ySizeWdw notransparent enhanced
+set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus/serverOverview'.rightNowPNG.'.png'
 } else {
-set term qt 0 title currTitle font "Times-Roman, 12" size xSizeWdw,ySizeWdw
+set term qt 0 title currTitle size xSizeWdw,ySizeWdw
 }
 set multiplot title currTitle
 set key outside horizontal
@@ -74,10 +74,10 @@ set y2range [*:*]
 # credit
 currTitle='credit'
 if ( linteractive==0 ) {
-set term png font "Times-Roman, 12" size xSizeWdw,ySizeWdw notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/creditOverview'.rightNowPNG.'.png'
+set term png size xSizeWdw,ySizeWdw notransparent enhanced
+set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus/creditOverview'.rightNowPNG.'.png'
 } else {
-set term qt 1 title currTitle font "Times-Roman, 12" size xSizeWdw,ySizeWdw
+set term qt 1 title currTitle size xSizeWdw,ySizeWdw
 }
 set title currTitle
 set key outside horizontal
@@ -95,10 +95,10 @@ plot \
 # gigaflops
 currTitle='TeraFLOPs'     
 if ( linteractive==0 ) {
-set term png font "Times-Roman, 12" size xSizeWdw,ySizeWdw notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/teraFLOPsOverview'.rightNowPNG.'.png'
+set term png size xSizeWdw,ySizeWdw notransparent enhanced
+set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus/teraFLOPsOverview'.rightNowPNG.'.png'
 } else {
-set term qt 2 title currTitle font "Times-Roman, 12" size xSizeWdw,ySizeWdw
+set term qt 2 title currTitle size xSizeWdw,ySizeWdw
 }
 set title currTitle
 set key outside horizontal
@@ -116,10 +116,10 @@ unset title
 # WUs waiting for validation
 currTitle='Validation'     
 if ( linteractive==0 ) {
-set term png font "Times-Roman, 12" size xSizeWdw,ySizeWdw notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/validationOverview'.rightNowPNG.'.png'
+set term png size xSizeWdw,ySizeWdw notransparent enhanced
+set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus/validationOverview'.rightNowPNG.'.png'
 } else {
-set term qt 3 title currTitle font "Times-Roman, 12" size xSizeWdw,ySizeWdw
+set term qt 3 title currTitle size xSizeWdw,ySizeWdw
 }
 set title currTitle
 set key outside horizontal
@@ -137,10 +137,10 @@ unset title
 # ------------------------------------------------------------------------------
 currTitle='SixTrack app'
 if ( linteractive==0 ) {
-set term png font "Times-Roman, 12" size xSizeWdw,ySizeWdw notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/sixtrackOverview'.rightNowPNG.'.png'
+set term png size xSizeWdw,ySizeWdw notransparent enhanced
+set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus/sixtrackOverview'.rightNowPNG.'.png'
 } else {
-set term qt 4 title currTitle font "Times-Roman, 12" size xSizeWdw,ySizeWdw
+set term qt 4 title currTitle size xSizeWdw,ySizeWdw
 }
 set multiplot # title currTitle
 set key outside horizontal
@@ -167,10 +167,10 @@ unset multiplot
 # ------------------------------------------------------------------------------
 currTitle='sixtracktest app'
 if ( linteractive==0 ) {
-set term png font "Times-Roman, 12" size xSizeWdw,ySizeWdw notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/sixtracktestOverview'.rightNowPNG.'.png'
+set term png size xSizeWdw,ySizeWdw notransparent enhanced
+set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus/sixtracktestOverview'.rightNowPNG.'.png'
 } else {
-set term qt 5 title currTitle font "Times-Roman, 12" size xSizeWdw,ySizeWdw
+set term qt 5 title currTitle size xSizeWdw,ySizeWdw
 }
 set multiplot title currTitle
 set key outside horizontal

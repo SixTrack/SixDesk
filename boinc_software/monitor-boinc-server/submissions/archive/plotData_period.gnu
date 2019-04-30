@@ -20,16 +20,16 @@ tStep=1*3600
 # time interval
 # AM -> tMin='2017-05-23T00:00:00'
 # AM -> tMin='2017-06-15T00:00:00'
-tMin='2019-01-01T00:00:00'
-tMax='2019-04-30T23:59:59'
-tStep=3600*24*2
+tMin='2019-04-29T00:00:00'
+tMax='2019-05-20T23:59:59'
+tStep=3600*12
 
 # typical enlarged window size: 1900,400
 # trigger use of png or interactive windows: 0: png, 1: interactive
 linteractive=0
 lprintDate=0 # 0: no date/time in png name; 1: date/time in png name
 xSizeWdw=1600#regular: 1000
-ySizeWdw=400#regular: 400
+ySizeWdw=600#regular: 400
 lLog=0 # 1: log y-axis; 0: linear y-axis
 
 if ( lprintDate==0 ) {
@@ -63,10 +63,10 @@ set grid
 
 currTitle='submitted WUs'
 if ( linteractive==0 ) {
-set term png font "Times-Roman" size xSizeWdw,ySizeWdw notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/submissionCumulative'.rightNowPNG.'.png'
+set term png size xSizeWdw,ySizeWdw notransparent enhanced
+set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus/submissionCumulative'.rightNowPNG.'.png'
 } else {
-set term qt 10 title currTitle font "Times-Roman" size xSizeWdw,ySizeWdw
+set term qt 10 title currTitle size xSizeWdw,ySizeWdw
 }
 set ylabel 'submitted WUs [10^3]'
 if ( lLog==1 ) {
@@ -106,10 +106,10 @@ unset mytics
      
 currTitle='overview'
 if ( linteractive==0 ) {
-set term png font "Times-Roman" size xSizeWdw,ySizeWdw notransparent enhanced
-set output '/home/amereghe/Downloads/boincStatus/overviewCumulative'.rightNowPNG.'.png'
+set term png size xSizeWdw,ySizeWdw notransparent enhanced
+set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus/overviewCumulative'.rightNowPNG.'.png'
 } else {
-set term qt 11 title currTitle font "Times-Roman" size xSizeWdw,ySizeWdw
+set term qt 11 title currTitle size xSizeWdw,ySizeWdw
 }
 set ylabel 'WUs [10^3]'
 plot \
