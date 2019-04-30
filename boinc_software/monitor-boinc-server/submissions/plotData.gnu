@@ -1,10 +1,11 @@
 # today=system("date +%F")
-today='2019-04-29'
+today='2019-04-30'
 iFileName='submitAll_'.today.'.dat'
 iFileNameAssimilated='assimilateAll_'.today.'.dat'
+oFileName='submitAll_'.today.'.ps'
 
 set terminal postscript enhanced 'Times-Roman, 16'
-set output iFileName.'.ps'
+set output oFileName
 
 tStep=3600
 set xdata time
