@@ -96,6 +96,7 @@ plot \
      "< awk '{if ($6==\"lcoyle\") {tot+=$4; print ($1,$3,tot)}}'   ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'salmon'      title 'lcoyle',\
      "< awk '{if ($6==\"mihofer\") {tot+=$4; print ($1,$3,tot)}}'  ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'olive'       title 'mihofer',\
      "< awk '{if ($6==\"xiaohan\") {tot+=$4; print ($1,$3,tot)}}'  ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'skyblue'     title 'xiaohan',\
+     "< awk '{if ($6==\"dmirarch\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'slategray'   title 'dmirarch',\
      "< awk '{if ($6==\"-\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName        index 0 using 1:($3/1000) with steps lt 1 lw 3 lc rgb 'red'        title '-'
 #
 if (lLog==1){
