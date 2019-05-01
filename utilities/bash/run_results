@@ -1398,6 +1398,8 @@ while getopts  ":hBto:n:d:p:zxUl" opt ; do
 	x)
 	    # run dos2unix on every item in Sixout.zip
 	    ldos2unix=true
+            # this call imply that Sixout.zip should be retrieved		
+	    lretrieveZip=true
 	    ;;
 	    
 	n)
