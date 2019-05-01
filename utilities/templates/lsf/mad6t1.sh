@@ -171,7 +171,7 @@ for fil in ${additionalFilesOutMAD} ; do
             cat diffs >> $sixtrack_input/WARNINGS
         fi
     fi
-    if [ -s "${fil}" ] ; then
+    if ! [ -s "${fil}" ] ; then
         touch $sixtrack_input/WARNINGS
         echo "An empty ${fil}_${i} has been produced!"
         echo "An empty ${fil}_${i} has been produced!" >> $sixtrack_input/WARNINGS
