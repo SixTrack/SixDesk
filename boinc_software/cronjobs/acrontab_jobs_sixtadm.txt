@@ -2,9 +2,9 @@
 # crontab every 12h
 ## Crontab for Sixtrack - append to default BOINC cronjob
 # Puppet Name: worksubmit sixtrack 2
-7,17,27,37,47,57 * * * * boincai11.cern.ch /usr/local/boinc/project/sixtrack/bin/cron.submit-sixtracktest-simo3 -m 1000 > /dev/null 2>&1
+7,17,27,37,47,57 * * * * boincai11.cern.ch /usr/local/boinc/project/sixtrack/bin/cron.submit-sixtracktest-simo3 -m 3000 > /dev/null 2>&1
 # Puppet Name: worksubmit sixtrack
-1,11,21,31,41,51 * * * * boincai11.cern.ch /usr/local/boinc/project/sixtrack/bin/cron.submit-sixtrack-simo3 -m 1000 > /dev/null 2>&1
+1,11,21,31,41,51 * * * * boincai11.cern.ch /usr/local/boinc/project/sixtrack/bin/cron.submit-sixtrack-simo3 -m 3000 > /dev/null 2>&1
 # zip all WUs which were not given back to user
 # crontab every 3h
 30 */3 * * * boincai11.cern.ch cd /share/sixtrack/assimilation ; /usr/local/boinc/project/sixtrack/bin/zip-trashed-WUs.sh > /dev/null 2>&1
@@ -31,3 +31,17 @@
 # list studies in spooldirs that could be deleted and notify users (based on <workspace>_<study>/results dir):
 0 4 21 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinc ; /afs/cern.ch/user/s/sixtadm/boinc_soft/listDeleteStudies.sh results >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
 0 5 21 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinctest ; /afs/cern.ch/user/s/sixtadm/boinc_soft/listDeleteStudies.sh results >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
+#
+#
+# new scripts for monitoring BOINC server:
+# - server status and plotting;
+# - archiving plots/data;
+5,15,25,35,45,55 * * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/general-activity ; ./monitorBoincServer.sh >> monitorBoincServer.log 2>&1
+58 23 * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/general-activity ; ./monitorBoincServerDailyArchive.sh >> monitorBoincServer.log 2>&1 ; rm *dat *pdf
+# - WUs being submitted;
+# - archiving plots/data;
+35 1,7,13,19 * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/submissions ; ./monitorSubmissions.sh >> monitorSubmissions.log 2>&1
+15 0 * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/submissions ; ./monitorSubmissions.sh yesterday >> monitorSubmissions.log 2>&1 ; ./monitorSubmissionsDailyArchive.sh >> monitorSubmissions.log 2>&1
+# assimilator getting stuck
+1,6,11,16,21,26,31,36,41,46,51,56 * * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/general-activity ; ./monitorAssimilatorTimeStamp.sh >> /dev/null 2>&1
+#

@@ -21,15 +21,15 @@
 # - VER/VS: used for signed exes;
 # - VSorig: exes to be signed;
 
-PROJ=/data/boinc/project/sixtrack
-dir_unsigned=/afs/cern.ch/user/k/kyrsjo/public/BOINC-release/execs-v7
-VER=46.30
-VS=4630
-VSorig=4630
-commonFlags="libarchive_bignblz_cr_boinc_api_crlibm_fast_tilt_cmake"
+PROJ=/usr/local/boinc/project/sixtrack
+dir_unsigned=/afs/cern.ch/project/sixtrack/build/50205
+VER=502.05
+VS=50205
+VSorig="${VS}-9c2159c"
+commonFlags="boinc"
 lCheck=false # check evreything is ready for signature
 projXml=../../project.xml
-fullAppName=sixtracktest
+fullAppName=sixtrack
 
 signit()
 {
@@ -69,40 +69,53 @@ signit()
 }
 
 rightNow=`date +"%F_%H-%M-%S"`
-[ -d ${VER} ] || mkdir -p ${VER}
 if ! ${lCheck} ; then
+    [ -d ${VER} ] || mkdir -p ${VER}
     echo "running `basename $0` at ${rightNow}" > README_${VER}_${rightNow}
     echo "unsigned exes from: ${dir_unsigned}" >> README_${VER}_${rightNow}
     echo "version: ${VER} - ${VS} - ${VSorig}" >> README_${VER}_${rightNow}
 fi
 
-#__________________________________________________ linux   64 bit ______________________________________________
-signit x86_64-pc-linux-gnu__sse2        SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_x86_64_64bit                ${fullAppName}_lin64_${VS}_sse2.linux
-signit x86_64-pc-linux-gnu__avx         SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_avx_x86_64_64bit            ${fullAppName}_lin64_${VS}_avx.linux
-#__________________________________________________ linux   32 bit ______________________________________________
-signit i686-pc-linux-gnu__sse2          SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_i686_32bit                  ${fullAppName}_lin32_${VS}_sse2.linux
+# #__________________________________________________ linux   64 bit ______________________________________________
+signit x86_64-pc-linux-gnu__sse2        SixTrack_${VSorig}_${commonFlags}_Linux64_static                       ${fullAppName}_lin64_${VS}_sse2.linux
+signit x86_64-pc-linux-gnu__avx         SixTrack_${VSorig}_${commonFlags}_Linux64_static_avx                   ${fullAppName}_lin64_${VS}_avx.linux
+# #__________________________________________________ linux   32 bit ______________________________________________
+# signit i686-pc-linux-gnu__sse2          SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_i686_32bit                  ${fullAppName}_lin32_${VS}_sse2.linux
 #__________________________________________________ linux   ARM64  ______________________________________________
 # NB: no SSE/AVX/x86 instruction sets - keep generic
-# signit aarch64-android-linux-gnu        SixTrack_${VSorig}_${commonFlags}_Linux_gfortran-6_static_aarch64_64bit             ${fullAppName}_aarch_android_lin64_${VS}.linux
-# signit aarch64-unknown-linux-gnu        SixTrack_${VSorig}_${commonFlags}_Linux_gfortran-6_static_aarch64_64bit             ${fullAppName}_aarch_unknown_lin64_${VS}.linux
-#__________________________________________________ linux   ppc 64 bit le _______________________________________
-# signit ppc64-linux-gnu__sse2            SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_ppc64le_64bit               ${fullAppName}_lin64_ppc64le_${VS}_sse2.exe
-
-
+# signit aarch64-android-linux-gnu        SixTrack_50000_libarchive_stf_cr_boinc_api_crlibm_rn_Linux_gfortran-8_static_aarch64_64bit_double             ${fullAppName}_aarch_android_lin64_${VS}.linux
+# signit aarch64-unknown-linux-gnu        SixTrack_50000_libarchive_stf_cr_boinc_api_crlibm_rn_Linux_gfortran-8_static_aarch64_64bit_double             ${fullAppName}_aarch_unknown_lin64_${VS}.linux
+# #__________________________________________________ linux   ARM32  ______________________________________________
+# # NB: no SSE/AVX/x86 instruction sets - keep generic
+# signit arm-unknown-linux-gnueabihf      SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_armv6l_32bit                ${fullAppName}_arm_unknown_lin32_${VS}.linux
+# signit armv6l-unknown-linux-gnueabihf   SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_armv6l_32bit                ${fullAppName}_arm6_unknown_lin32_${VS}.linux
+# signit armv7l-unknown-linux-gnueabihf   SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_armv6l_32bit                ${fullAppName}_arm7_unknown_lin32_${VS}.linux
+# #__________________________________________________ linux   ppc 64 bit le _______________________________________
+# signit ppc64-linux-gnu                  SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_ppc64le_64bit               ${fullAppName}_lin64_ppc64le_${VS}.exe
+# signit powerpc64le-unknown-linux-gnu    SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_ppc64le_64bit               ${fullAppName}_lin64_ppc64le_${VS}.exe
+# 
+# 
+# #__________________________________________________ android 32bit  ______________________________________________
+# signit x86-android-linux-gnu__sse2      SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_i686_32bit                  ${fullAppName}_and32_${VS}_sse2.linux
+# #__________________________________________________ android 64bit  ______________________________________________
+# signit x86_64-android-linux-gnu__sse2   SixTrack_${VSorig}_${commonFlags}_Linux_gfortran_static_x86_64_64bit                ${fullAppName}_and64_${VS}_sse2.linux
+# 
+# 
 #__________________________________________________ win     64 bit ______________________________________________
-signit windows_x86_64__sse2             SixTrack_${VSorig}_${commonFlags}_Windows_gfortran.exe_static_AMD64_64bit.exe       ${fullAppName}_win64_${VS}_sse2.exe
-signit windows_x86_64__avx              SixTrack_${VSorig}_${commonFlags}_Windows_gfortran.exe_static_avx_AMD64_64bit.exe   ${fullAppName}_win64_${VS}_avx.exe
+signit windows_x86_64__sse2             SixTrack_${VSorig}_${commonFlags}_Win64_static.exe                      ${fullAppName}_win64_${VS}_sse2.exe
+signit windows_x86_64__avx              SixTrack_${VSorig}_${commonFlags}_Win64_static_avx.exe                  ${fullAppName}_win64_${VS}_avx.exe
 #__________________________________________________ win     32 bit ______________________________________________
-signit windows_intelx86__sse2           SixTrack_${VSorig}_${commonFlags}_Windows_gfortran.exe_static_AMD64_32bit.exe       ${fullAppName}_win32_${VS}_sse2.exe
-
-
+signit windows_intelx86__sse2           SixTrack_${VSorig}_${commonFlags}_Win32_static.exe                      ${fullAppName}_win32_${VS}_sse2.exe
+signit windows_intelx86__avx            SixTrack_${VSorig}_${commonFlags}_Win32_static_avx.exe                  ${fullAppName}_win32_${VS}_avx.exe
+# 
+# 
 #__________________________________________________ mac     64 bit ______________________________________________
-signit x86_64-apple-darwin__sse2        SixTrack_${VSorig}_${commonFlags}_Darwin_gfortran_static_x86_64_64bit               ${fullAppName}_darwin_${VS}_sse2.exe
-signit x86_64-apple-darwin__avx         SixTrack_${VSorig}_${commonFlags}_Darwin_gfortran-7_static_avx_x86_64_64bit         ${fullAppName}_darwin_${VS}_avx.exe
+# signit x86_64-apple-darwin__sse2        SixTrack_50000_libarchive_bignblz_cr_boinc_api_crlibm_rn_fast_tilt_cmake_Darwin_gfortran_static_x86_64_64bit_double               ${fullAppName}_darwin_${VS}_sse2.exe
+# signit x86_64-apple-darwin__avx         SixTrack_50000_libarchive_bignblz_cr_boinc_api_crlibm_rn_fast_tilt_cmake_Darwin_gfortran_static_avx_x86_64_64bit_double           ${fullAppName}_darwin_${VS}_avx.exe
 
 
 #__________________________________________________ freeBSD 64 bit ______________________________________________
-# signit x86_64-pc-freebsd__sse2          SixTrack_${VSorig}_${commonFlags}_FreeBSD_gfortran_static_amd64_64bit               ${fullAppName}_freeBSD64_${VS}_sse2.exe
+# signit x86_64-pc-freebsd__sse2          SixTrack_50000_libarchive_stf_cr_boinc_api_crlibm_rn_FreeBSD_gfortran8_static_amd64_64bit_double                                  ${fullAppName}_freeBSD64_${VS}_sse2.exe
 # signit x86_64-pc-freebsd__avx           SixTrack_${VSorig}_${commonFlags}_FreeBSD_gfortran_static_avx_amd64_64bit           ${fullAppName}_freeBSD64_${VS}_avx.exe
 
 
