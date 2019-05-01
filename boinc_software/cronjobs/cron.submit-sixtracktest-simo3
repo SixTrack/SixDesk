@@ -6,6 +6,7 @@
 # Updated 13.12.2013 Nils, changed AFS dir ref
 # Updated 06.10.2016 A.Mereghetti, added megaZip functionality
 # Updated 25.03.2017 A.Mereghetti, SixOut.zip + appname (from .desc)
+# Updated 01.05.2019 A.Mereghetti, appnum + default appNum
 set -e
 
 #Set Variables
@@ -34,8 +35,7 @@ result_template_SixOutZip=templates/sixtracktest_res_template.xml
 # default app name
 applicationDef=sixtracktest
 # default app ver
-appVerDef=
-
+appVerDef=50205
 
 #Define finctions
 abort(){
@@ -448,7 +448,6 @@ k) keepzip=1 ;;
 :|?) error 'Invalid Argument(s)' ; printhelp; exit 0 ;;
 esac
 done
-
 
 log STARTING
 

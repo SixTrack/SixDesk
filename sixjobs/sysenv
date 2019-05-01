@@ -7,8 +7,9 @@
 # app name, used by any platform
 export appName=sixtracktest
 # app version, used by any platform
-# NB: variable not defined or left empty means latest ver
-export appVer=
+# NB: non-BOINC: variable not defined or left empty means latest ver
+#     better anyway to define it
+export appVer=50205
 
 # # The path to all scripts etc bin,Bin,scripts, exes, dots
 # export sixdeskpath=/afs/cern.ch/group/si/slap/bin/sixdesk
