@@ -11,6 +11,7 @@ sixtrackVer=(
     "fullAppName=sixtrack"
     "export appName=sixtrack"
     "export appNameDef=sixtrack"
+    "export appNameDef=sixtrack"
 #    "\\newcommand\{\\whichSixTrack\}\{sixtrack\}"
 )
 sixtracktestVer=(
@@ -18,6 +19,7 @@ sixtracktestVer=(
     "applicationDef=sixtracktest"
     "fullAppName=sixtracktest"
     "export appName=sixtracktest"
+    "export appNameDef=sixtracktest"
     "export appNameDef=sixtracktest"
 #    "\\newcommand\{\\whichSixTrack\}\{sixtracktest\}"
 )
@@ -27,6 +29,7 @@ sedFiles=(
     "boinc_software/sign_exes/gen-apps-structure.sh"
     "sixjobs/sysenv"
     "sixjobs/sixdeskenv"
+    "utilities/bash/dot_profile"
 #    "utilities/doc/sixdesk.tex"
 )
 
