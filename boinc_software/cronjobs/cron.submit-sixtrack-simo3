@@ -377,7 +377,7 @@ parse_descfile(){
 	read WUnumIssues
 	read WUresultsWithoutConcensus
 	if read junk ; then 
-	    if [ "${junk}" == "sixtrack" ] || [ "${junk}" == "sixtracktest" ] ; then
+	    if [ "${junk}" == "sixtracktest" ] ; then
 		WUapplication=${junk}
 	    else
 		warn "Problem with format of $(basename $1)"
