@@ -6,6 +6,7 @@
 # Updated 13.12.2013 Nils, changed AFS dir ref
 # Updated 06.10.2016 A.Mereghetti, added megaZip functionality
 # Updated 25.03.2017 A.Mereghetti, SixOut.zip + appname (from .desc)
+# Updated 01.05.2019 A.Mereghetti, appnum + default appNum
 set -e
 
 #Set Variables
@@ -20,20 +21,21 @@ lockdir=$boincdir/pid_$host
 [ -d $lockdir ] || mkdir $lockdir
 lockfile=$lockdir/$(basename $0).lock
 
-spooldir=/afs/cern.ch/work/b/boinc/boinc
+spooldir=/afs/cern.ch/work/b/boinc/boinctest
 spooldirUpload=$spooldir/upload
 
 # The relative path of the workunit template file from the config dir.
 # this template will present Sixin.zip as the input file
-WU_template=templates/sixtrack_wu_template.xml
+WU_template=templates/sixtracktest_wu_template.xml
 
 # The relative path of the result template file from the config dir.
 # this template will bring back also the Sixout.zip results
-result_template_SixOutZip=templates/sixtrack_res_template.xml
+result_template_SixOutZip=templates/sixtracktest_res_template.xml
 
 # default app name
-applicationDef=sixtrack
-
+applicationDef=sixtracktest
+# default app ver
+appVerDef=50205
 
 #Define finctions
 abort(){
@@ -254,7 +256,10 @@ submit_descfile(){
 	    warn " try later"
 	    return 1
 	fi
-
+        local __tmpWUappNum=""
+        if [ -n "${WUappNum}" ] ; then
+            __tmpWUappNum="-app_version_num ${WUappNum}"
+        fi
 
 create_cmd="$boincdir/bin/create_work 		   \
  -config_dir $boincdir 				   \
@@ -272,6 +277,7 @@ create_cmd="$boincdir/bin/create_work 		   \
  -max_error_results $WUerrors 			   \
  -max_total_results $WUnumIssues 		   \
  -max_success_results $WUresultsWithoutConcensus   \
+ ${__tmpWUappNum}                                  \
  $zipfile"
 
         echo "Running ${create_cmd}" | sed -e's/[ \t]\+/ /g' | log
@@ -358,6 +364,7 @@ prepareinputfile(){
 
 parse_descfile(){
         WUapplication=${applicationDef}
+	WUappNum=${appVerDef}
 	read WUinputName
 	read WUfpopsEstimate
 	read WUfpopsBound
@@ -375,6 +382,11 @@ parse_descfile(){
 	    else
 		warn "Problem with format of $(basename $1)"
 		return 1
+	    fi
+	fi
+	if read junk ; then 
+	    if [ -n "${junk}" ] ; then
+		WUappNum=${junk}
 	    fi
 	fi
 }
@@ -436,7 +448,6 @@ k) keepzip=1 ;;
 :|?) error 'Invalid Argument(s)' ; printhelp; exit 0 ;;
 esac
 done
-
 
 log STARTING
 

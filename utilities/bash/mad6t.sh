@@ -174,6 +174,9 @@ function submit(){
 		-e 's?%MADX%?'$MADX'?g' \
 		-e 's?%SIXTRACK_INPUT%?'$sixtrack_input'?g' $mad6tjob > mad6t_"$iMad".sh
 	    chmod 755 mad6t_"$iMad".sh
+
+            # additional files
+	    sed -i "s?^export additionalFilesOutMAD=.*?export additionalFilesOutMAD=\"${additionalFilesOutMAD}\"?g" mad6t_"$iMad".sh
 	    
 	    if ${linter} ; then
 		sixdeskmktmpdir batch ""
@@ -343,6 +346,28 @@ function check(){
 	    done
 	fi
     done
+    
+    # - additional output files from MADX
+    if [ -n "${additionalFilesOutMAD}" ] ; then
+        sixdeskmess 1 "Checking that all the MADX output files exist (as .gz) for each MADX seed requested..."
+	for tmpFil in "${additionalFilesOutMAD}" ; do
+            nFil=0
+            for (( iMad=${istamad}; iMad<=${iendmad}; iMad++ )) ; do
+	            if [ `ls -1 ${tmpFil}_${iMad}.gz 2> /dev/null | wc -l` -eq 1 ] ; then
+	                let nFil+=1
+	            else
+	                iMadsResubmit="${iMadsResubmit}\n${iMad}"
+	            fi
+            done
+            if [ ${nFil} -ne ${__njobs} ] ; then
+	        sixdeskmess -1 "...discrepancy!!! Found ${nFil} ${tmpFil}_??.gz (expected ${__njobs})"
+	        let __lerr+=1
+            else
+	        sixdeskmess -1 "...found ${nFil} ${tmpFil}_??.gz (as expected)"
+            fi
+	done
+    fi
+
     # - unique list of seeds
     iMadsResubmit=`echo -e "${iMadsResubmit}" | sort -u`
     iMadsResubmit=( ${iMadsResubmit} )

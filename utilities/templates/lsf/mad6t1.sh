@@ -1,4 +1,5 @@
 #!/bin/ksh
+
 export junktmp=%SIXJUNKTMP%
 export i=%SIXI%
 export filejob=%SIXFILEJOB%
@@ -7,6 +8,8 @@ export CORR_TEST=%CORR_TEST%
 export fort_34=%FORT_34%
 export MADX_PATH=%MADX_PATH%
 export MADX=%MADX%
+export additionalFilesOutMAD=%additionalFilesOutMAD%
+
 echo "Calling madx version $MADX in $MADX_PATH"
 $MADX_PATH/$MADX < $junktmp/$filejob."$i" > $filejob.out."$i"
 cp -f $filejob.out."$i" $junktmp
@@ -40,9 +43,6 @@ fi
 if test ! -f fc.3
 then
   touch fc.3
-fi
-if [ -f fc.3.aper ]; then
-  cat fc.3.aper >> fc.3
 fi
 if test -s $sixtrack_input/fort.3.mad
 then
@@ -158,6 +158,26 @@ then
   cp "$fil"_"$i".gz $sixtrack_input
   done
 fi
+# additional output files from MADX
+for fil in ${additionalFilesOutMAD} ; do
+    if [ -s $sixtrack_input/"${fil}_$i.gz" ] ; then
+        gunzip $sixtrack_input/"${fil}_$i.gz"
+        diff $sixtrack_input/"${fil}_$i" "$fil" > diffs
+        if [ $? -ne 0 ] ; then
+            touch $sixtrack_input/WARNINGS
+            echo "A different "$fil"_"$i" has been produced!"
+            echo "$filejob.out.${i} MADX has produced a different "$fil"_"$i"!">> $sixtrack_input/WARNINGS
+            cat diffs
+            cat diffs >> $sixtrack_input/WARNINGS
+        fi
+    fi
+    if [ -s "${fil}" ] ; then
+        touch $sixtrack_input/WARNINGS
+        echo "An empty ${fil}_${i} has been produced!"
+        echo "An empty ${fil}_${i} has been produced!" >> $sixtrack_input/WARNINGS
+    fi
+    gzip -c "${fil}" > ${sixtrack_input}/${fil}_${i}.gz
+done
 # update fort.3.mother1.tmp and fort.3.mother2.tmp
 n=0
 while read line 
