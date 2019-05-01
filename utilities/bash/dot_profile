@@ -1242,8 +1242,13 @@ sixdeskCheckAppVerBOINC(){
 	sixdeskmess -1 "Cannot determine if ${appVer} is available on BOINC or not!"
 	__lerr=1
     elif [ -z "${appVer}" ] ; then
-	__lerr=1
-	sixdeskmess -1 "Please state the app version for BOINC!"
+        local __latestVersion=`grep -v '#' ${newBuildPathDef}/${appName}_BOINC_versions.txt | sort -g | tail -1`
+        if [ -z "${__latestVersion}" ] ; then
+	    __lerr=1
+            sixdeskmess -1 "Unable to determine which is the latest version of ${appName} in ${newBuildPathDef}/${appName}_BOINC_versions.txt"
+        else
+            ${appVer}=${__latestVersion}
+        fi
     else
 	local __BOINCversions=`grep -v '#' ${newBuildPathDef}/${appName}_BOINC_versions.txt`
 	__BOINCversions=( ${__BOINCversions} )
