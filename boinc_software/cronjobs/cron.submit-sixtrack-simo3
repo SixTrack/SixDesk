@@ -24,18 +24,18 @@ lockfile=$lockdir/$(basename $0).lock
 spooldir=/afs/cern.ch/work/b/boinc/boinctest
 spooldirUpload=$spooldir/upload
 
-# The relative path of the workunit template file from the config dir.
-# this template will present Sixin.zip as the input file
-WU_template=templates/sixtracktest_wu_template.xml
-
-# The relative path of the result template file from the config dir.
-# this template will bring back also the Sixout.zip results
-result_template_SixOutZip=templates/sixtracktest_res_template.xml
-
 # default app name
 applicationDef=sixtracktest
 # default app ver
 appVerDef=50205
+
+# The relative path of the workunit template file from the config dir.
+# this template will present Sixin.zip as the input file
+WU_template=templates/${applicationDef}_wu_template.xml
+
+# The relative path of the result template file from the config dir.
+# this template will bring back also the Sixout.zip results
+result_template_SixOutZip=templates/${applicationDef}_res_template.xml
 
 #Define finctions
 abort(){
@@ -377,7 +377,7 @@ parse_descfile(){
 	read WUnumIssues
 	read WUresultsWithoutConcensus
 	if read junk ; then 
-	    if [ "${junk}" == "sixtracktest" ] ; then
+	    if [ "${junk}" == "${applicationDef}" ] ; then
 		WUapplication=${junk}
 	    else
 		warn "Problem with format of $(basename $1)"
