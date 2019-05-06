@@ -29,7 +29,7 @@ VSorig="${VS}-9c2159c"
 commonFlags="boinc"
 lCheck=false # check evreything is ready for signature
 projXml=../../project.xml
-fullAppName=sixtrack
+fullAppName=sixtracktest
 
 signit()
 {

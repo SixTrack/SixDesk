@@ -32,6 +32,7 @@ sedFiles=(
     "utilities/bash/dot_profile"
 #    "utilities/doc/sixdesk.tex"
 )
+lTestIntoMaster=false
 
 if [ ${#sixtrackVer[@]} -ne ${#sixtracktestVer[@]} ] ; then
     echo " sixtrackVer and sixtracktestVer have different lengths! aborting..."
@@ -41,8 +42,13 @@ elif [ ${#sixtrackVer[@]} -ne ${#sedFiles[@]} ] ; then
     exit 1
 else
     for (( ii=0; ii<${#sixtrackVer[@]}; ii++ )) ; do
-        echo " replacing ${sixtracktestVer[$ii]} with ${sixtrackVer[$ii]} in ${sedFiles[$ii]} ..."
-        sed -i "s?${sixtracktestVer[$ii]}?${sixtrackVer[$ii]}?" ${sedFiles[$ii]}
+        if ${lTestIntoMaster} ; then
+            echo " replacing ${sixtracktestVer[$ii]} with ${sixtrackVer[$ii]} in ${sedFiles[$ii]} ..."
+            sed -i "s?${sixtracktestVer[$ii]}?${sixtrackVer[$ii]}?" ${sedFiles[$ii]}
+        else
+            echo " replacing ${sixtrackVer[$ii]} with ${sixtracktestVer[$ii]} in ${sedFiles[$ii]} ..."
+            sed -i "s?${sixtrackVer[$ii]}?${sixtracktestVer[$ii]}?" ${sedFiles[$ii]}
+        fi
     done
 fi
     

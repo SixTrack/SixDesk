@@ -1618,7 +1618,7 @@ function sixdeskSetLocalNodeStuff(){
     if [[ `uname -n` == "lxplus"* ]] ; then
         # set some default stuff for lxplus
         export newBuildPathDef=/afs/cern.ch/project/sixtrack/build
-        export appNameDef=sixtrack
+        export appNameDef=sixtracktest
         export appVerDef=
         export platForms=( 'boinc' 'lsf' 'htcondor' )
         export lKerberos=true
@@ -1630,7 +1630,7 @@ function sixdeskSetLocalNodeStuff(){
     elif [[ `uname -n` == *".cern.ch" ]] || [ -n "`netstat | grep -i cern.ch`" ] ; then
         # set some default stuff for a local machine in CERN domain
         export newBuildPathDef=/afs/cern.ch/project/sixtrack/build
-        export appNameDef=sixtrack
+        export appNameDef=sixtracktest
         export appVerDef=
         export platForms=( 'boinc' 'lsf' 'htcondor' )
         export lKerberos=true

@@ -21,11 +21,11 @@ lockdir=$boincdir/pid_$host
 [ -d $lockdir ] || mkdir $lockdir
 lockfile=$lockdir/$(basename $0).lock
 
-spooldir=/afs/cern.ch/work/b/boinc/boinc
+spooldir=/afs/cern.ch/work/b/boinc/boinctest
 spooldirUpload=$spooldir/upload
 
 # default app name
-applicationDef=sixtrack
+applicationDef=sixtracktest
 # default app ver
 appVerDef=50205
 
