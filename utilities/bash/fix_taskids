@@ -26,12 +26,12 @@ function checkDBnLines(){
 function restoreFileFormat(){
     for tmpCheckFile in ${addWhiteSpaces[@]} ; do
         # strip all leading/trailing whitespaces + add a whitespace at the end
-	awk '{$NF=$NF" "}1' ${tmpCheckFile} > ${tmpCheckFile}_temp
+	gawk '{$NF=$NF" "}1' ${tmpCheckFile} > ${tmpCheckFile}_temp
 	mv ${tmpCheckFile}_temp ${tmpCheckFile}
     done
     for tmpCheckFile in ${noWhiteSpaces[@]} ; do
 	# strip all leading/trailing whitespaces (no whitespace at the end)
-	awk '{$NF=$NF}1' ${tmpCheckFile} > ${tmpCheckFile}_temp
+	gawk '{$NF=$NF}1' ${tmpCheckFile} > ${tmpCheckFile}_temp
 	mv ${tmpCheckFile}_temp ${tmpCheckFile}
     done
 }
@@ -217,7 +217,7 @@ for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
 	if ! ${lequal} ; then
 	    # - remove double entries in completed/incomplete lists from list of completed ids
 	    sixdeskmess 1 "   ...removing double entries among ${dbInc} and ${dbCom} from ${dbCom} ..."
-	    cat ${dbInc} ${dbCom} | sed 's: *$::' | sort | uniq -c | awk '{if ($1>1) {print (substr($0,9))}}' > doubles.lis
+	    cat ${dbInc} ${dbCom} | sed 's: *$::' | sort | uniq -c | gawk '{if ($1>1) {print (substr($0,9))}}' > doubles.lis
 	    while read aline ; do
 		grep -v "${aline}" ${dbCom} > ${dbCom}_temp
 		mv ${dbCom}_temp ${dbCom}
@@ -233,9 +233,9 @@ for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
 	    cat ${dbAll} | sed 's: *$::' | sort -u > all.lis
 	    diff all.lis treated.lis > diffs.txt
 	    #   . add missing ids to list of all
-	    grep '^> ' diffs.txt | awk '{print (substr($0,3))}' >> ${dbAll}
+	    grep '^> ' diffs.txt | gawk '{print (substr($0,3))}' >> ${dbAll}
 	    #   . add missing ids to list of incompletes
-	    grep '^< ' diffs.txt | awk '{print (substr($0,3))}' >> ${dbInc}
+	    grep '^< ' diffs.txt | gawk '{print (substr($0,3))}' >> ${dbInc}
 	    checkDBnLines true true
 	    # clean
 	    rm -f treated.lis all.lis diffs.txt
@@ -264,11 +264,11 @@ echo ""
 # check that taskids file does not have problematic lines
 #    with plenty of jobnames and taksids all collapsed in one, very long
 sixdeskmess -1 "checking presence of problematic lines in taskids file..."
-nMaxColumns=`awk '{if (NF>max){max=NF}}END{print (max)}' taskids`
+nMaxColumns=`gawk '{if (NF>max){max=NF}}END{print (max)}' taskids`
 if [ ${nMaxColumns} -gt ${nMaxColumnsThresh} ] ; then
     sixdeskmess -1 "...taskids file has at least a row with ${nMaxColumnsTaskIDs} columns (gt ${nMaxColumnsThresh})"
     sixdeskmess -1 "   I will proceed with splitting"
-    awk -v "studyName=$LHCDescrip" '{for (ii=1;ii<=NF;ii++) {if (index($ii,studyName)==1) {printf ("%s \n",buffer); buffer=$ii} else if (NF==1) {buffer=$ii;} else {buffer=buffer" "$ii;}}}END{printf ("%s \n",buffer)}' taskids > taskids_fixed
+    gawk -v "studyName=$LHCDescrip" '{for (ii=1;ii<=NF;ii++) {if (index($ii,studyName)==1) {printf ("%s \n",buffer); buffer=$ii} else if (NF==1) {buffer=$ii;} else {buffer=buffer" "$ii;}}}END{printf ("%s \n",buffer)}' taskids > taskids_fixed
     mv taskids_fixed taskids
 else
     sixdeskmess  2 "...taskids file has at most ${nMaxColumnsTaskIDs} columns - all fine!"
@@ -295,7 +295,7 @@ if ! ${lequal} ; then
     # - remove double entries in each file
     sixdeskmess  1 "   ...removing double entries in each file..."
     sixdeskmess  1 "      ...considering DB file ${dbAll} ..."
-    awk '{print ($1)}' ${dbAll} | sort | uniq -c | awk '{if ($1>1) {print ($2)}}' > double.lis
+    gawk '{print ($1)}' ${dbAll} | sort | uniq -c | gawk '{if ($1>1) {print ($2)}}' > double.lis
     while read aRunnam ; do
 	sixdeskmess  1 "found duplicate Runnam ${aRunnam}"
 	allTaskIDs=`grep "^${aRunnam} " ${dbAll} | cut -d\  -f2- | sort -u`
@@ -315,7 +315,7 @@ fi
 if ! ${lequal} ; then
     # - remove double entries in completed/incomplete lists from list of completed ids
     sixdeskmess 1 "   ...removing double entries among ${dbInc} and ${dbCom} from ${dbCom} ..."
-    cat ${dbInc} ${dbCom} | sed 's: *$::' | sort | uniq -c | awk '{if ($1>1) {print (substr($0,9))}}' > doubles.lis
+    cat ${dbInc} ${dbCom} | sed 's: *$::' | sort | uniq -c | gawk '{if ($1>1) {print (substr($0,9))}}' > doubles.lis
     while read aline ; do
 	grep -v "${aline}" ${dbCom} > ${dbCom}_temp
 	mv ${dbCom}_temp ${dbCom}
@@ -328,10 +328,10 @@ if ! ${lequal} ; then
     # - remove double entries among the three files
     sixdeskmess  1 "   ...adding missing entries in ${dbAll} or in ${dbInc}"
     cat ${dbInc} ${dbCom} | sed 's: *$::' | sort -u > treated.lis
-    awk '{print ($1)}' ${dbAll} | sed 's: *$::' | sort -u > all.lis
+    gawk '{print ($1)}' ${dbAll} | sed 's: *$::' | sort -u > all.lis
     diff all.lis treated.lis > diffs.txt
     #   . add missing ids to list of all
-    grep '^> ' diffs.txt | awk '{print (substr($0,3))}' > idsMisAll.lis
+    grep '^> ' diffs.txt | gawk '{print (substr($0,3))}' > idsMisAll.lis
     searchFiles=""
     for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
 	! [ -e ${platForms[$ii]}jobs/${fileSuffixes[$ii]} ] || searchFiles="${searchFiles} ${platForms[$ii]}jobs/${fileSuffixes[$ii]}"
@@ -343,7 +343,7 @@ if ! ${lequal} ; then
 	sixdeskmess  1 " added Runnam ${aRunnam} missing in ${dbAll} - taskids: ${allTaskIDs[@]}"
     done < idsMisAll.lis
     #   . add missing ids to list of incompletes
-    grep '^< ' diffs.txt | awk '{print (substr($0,3))}' >> ${dbInc}
+    grep '^< ' diffs.txt | gawk '{print (substr($0,3))}' >> ${dbInc}
     checkDBnLines true true
     # clean
     rm -f treated.lis all.lis diffs.txt idsMisAll.lis
@@ -367,7 +367,7 @@ for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
     if [ -s ${tmpCheckFile} ] ; then
 	sixdeskmess -1 "...checking against ${tmpCheckFile} ..."
 	sixdeskmess -1 "   this operation might take few minutes, depending on how many tasks you have in taskids - be patient..."
-	cat taskids ${tmpCheckFile} | awk '{print ($1)}' | sort | uniq -c | awk '{if ($1==1) {print ($2)}}' > missing_taskids_temp
+	cat taskids ${tmpCheckFile} | gawk '{print ($1)}' | sort | uniq -c | gawk '{if ($1==1) {print ($2)}}' > missing_taskids_temp
 	while read Runnam ; do
 	    inTaskIds=`grep "^${Runnam} " taskids`
 	    if [ -z "${inTaskIds}" ] ; then

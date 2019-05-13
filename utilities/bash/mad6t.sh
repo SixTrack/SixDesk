@@ -103,7 +103,7 @@ function submit(){
     xing_rad=0
     if [ -n "${xing}" ] ; then 
 	# variable is defined
-	xing_rad=`echo "$xing" | awk '{print ($1*1E-06)}'`
+	xing_rad=`echo "$xing" | gawk '{print ($1*1E-06)}'`
 	sixdeskmess  1 " --> crossing defined: $xing ${xing_rad}"
 	sed -i -e 's?%xing?'$xing_rad'?g' \
   	    -e 's?/ bb_ho5b1_0?bb_ho5b1_0?g' \
@@ -314,14 +314,14 @@ function check(){
 	    sixdeskmess -1 "...found ${nFort} fort.${iFort}_??.gz (as expected)"
 	fi
         # - files are all of comparable dimensions
-	tmpFilesDimensions=`\gunzip -l ${__fileNames} 2> /dev/null | grep -v -e compressed -e totals | awk '{print ($2,$4)}'`
-	tmpFiles=`echo "${tmpFilesDimensions}" | awk '{print ($2)}'`
+	tmpFilesDimensions=`\gunzip -l ${__fileNames} 2> /dev/null | grep -v -e compressed -e totals | gawk '{print ($2,$4)}'`
+	tmpFiles=`echo "${tmpFilesDimensions}" | gawk '{print ($2)}'`
 	tmpFiles=( ${tmpFiles} )
-	tmpDimens=`echo "${tmpFilesDimensions}" | awk '{print ($1)}'`
-	tmpAve=`echo "${tmpDimens}" | awk '{tot+=$1}END{print (tot/NR)}'`
-	tmpSig=`echo "${tmpDimens}" | awk -v "ave=${tmpAve}" '{tot+=($1-ave)**2}END{print (sqrt(tot)/NR)}'`
-	sixdeskmess -1 "   average dimension (uncompressed): `echo ${tmpAve} | awk '{print ($1/1024)}'` kB - sigma: `echo ${tmpSig} | awk '{print ($1/1024)}'` kB"
-	if [ `echo ${tmpAve} | awk '{print ($1==0)}'` -eq 1 ] ; then
+	tmpDimens=`echo "${tmpFilesDimensions}" | gawk '{print ($1)}'`
+	tmpAve=`echo "${tmpDimens}" | gawk '{tot+=$1}END{print (tot/NR)}'`
+	tmpSig=`echo "${tmpDimens}" | gawk -v "ave=${tmpAve}" '{tot+=($1-ave)**2}END{print (sqrt(tot)/NR)}'`
+	sixdeskmess -1 "   average dimension (uncompressed): `echo ${tmpAve} | gawk '{print ($1/1024)}'` kB - sigma: `echo ${tmpSig} | gawk '{print ($1/1024)}'` kB"
+	if [ `echo ${tmpAve} | gawk '{print ($1==0)}'` -eq 1 ] ; then
 	    if [ ${iFort} -eq 8 ] || [ ${iFort} -eq 16 ] ; then
 		# just a warning
 		sixdeskmess -1 "   --> all fort.${iFort} have a NULL dimension!! I guess you did it on purpose..."
@@ -331,13 +331,13 @@ function check(){
 		sixdeskmess -1 "   --> NULL average file dimension!! Maybe something wrong with MADX runs?"
 		let __lerr+=1
 	    fi
-	elif [ `echo ${tmpAve} ${tmpSig} ${__factor} | awk '{print ($2<$1*$3/100)}'` -eq 0 ] ; then
+	elif [ `echo ${tmpAve} ${tmpSig} ${__factor} | gawk '{print ($2<$1*$3/100)}'` -eq 0 ] ; then
 	    sixdeskmess -1 "   --> spread in file dimensions larger than ${__factor} % !! Maybe something wrong with MADX runs?"
 	    let __lerr+=1
 	else
 	    tmpDimens=( ${tmpDimens} )
 	    for (( ii=0; ii<${#tmpDimens[@]}; ii++ )) ; do
-		if [ `echo ${tmpDimens[$ii]} ${tmpAve} ${__factor} | awk '{diff=($1/$2-1); if (diff<0) {diff=-diff} ; print(diff<$3/100)}'` -eq 0 ] ; then
+		if [ `echo ${tmpDimens[$ii]} ${tmpAve} ${__factor} | gawk '{diff=($1/$2-1); if (diff<0) {diff=-diff} ; print(diff<$3/100)}'` -eq 0 ] ; then
 		    sixdeskmess -1 "   --> dimension of file `basename ${tmpFiles[$ii]}` is different from average by more than ${__factor} % !!"
 		    let __lerr+=1
 		    iMad=`basename ${tmpFiles[$ii]} | cut -d\_ -f2 | cut -d\. -f1`

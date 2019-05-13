@@ -632,7 +632,7 @@ then
 
     fi
     # remove the \r's............
-    awk -f ${SCRIPTDIR}/awk/remover.awk $tmp > $results
+    gawk -f ${SCRIPTDIR}/gawk/remover.awk $tmp > $results
     rm $tmp
     tot=`grep TotalTasks $results | sed -e 's/TotalTasks: *//'`
     ready=`grep ResultsReady $results | sed -e 's/ResultsReady: *//'`

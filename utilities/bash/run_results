@@ -249,7 +249,7 @@ function getListNewResults(){
 	sixdeskresults=$sixdesktmp
 #MACRO mymktmp
 	
-	awk -f ${SCRIPTDIR}/awk/remover.awk $tmp > $sixdeskresults
+	gawk -f ${SCRIPTDIR}/gawk/remover.awk $tmp > $sixdeskresults
 	rm $tmp
 	tot=`grep TotalTasks $sixdeskresults | sed -e 's/TotalTasks: *//'`
 	tmpReady=`grep ResultsReady $sixdeskresults | sed -e 's/ResultsReady: *//'`
@@ -270,7 +270,7 @@ function getListNewResults(){
 #MACRO mymktmp
 	
 	echo "$tasks" > $sixdesktasks
-	awk -f ${SCRIPTDIR}/awk/splitter.awk $sixdesktasks > $sixdesktasklist
+	gawk -f ${SCRIPTDIR}/gawk/splitter.awk $sixdesktasks > $sixdesktasklist
 	rm $sixdesktasks 
     elif test $sixdeskplatform = "boinc"
     then
@@ -333,7 +333,7 @@ function getListNewResults(){
 	
 	sed -f ${SCRIPTDIR}/sed/boincnames.sed $tmp > $sixdeskresults
 	rm $tmp
-	tmpReady=`wc -l $sixdeskresults | awk '{print ($1)}'`
+	tmpReady=`wc -l $sixdeskresults | gawk '{print ($1)}'`
 	
 #MACRO mymess 0 $ready Results are available
 	# sixdeskmesslevel=0
@@ -440,7 +440,7 @@ function downloadNewResults(){
 #MACRO mymktmp
 		    
 		    grep " $taskid " $IDS/taskids > $boincdup
-		    mytimes=`wc -l $boincdup | awk '{print ($1)}'`
+		    mytimes=`wc -l $boincdup | gawk '{print ($1)}'`
 		    if test "$mytimes" -gt 1
 		    then
 			
@@ -558,7 +558,7 @@ function downloadNewResults(){
 		    if test "$found" = "true"
 		    then
 			mkdir -p sixtrack
-			awk -f ${SCRIPTDIR}/awk/remover.awk ${__origPath}/${__resName} > sixtrack/fort.10
+			gawk -f ${SCRIPTDIR}/gawk/remover.awk ${__origPath}/${__resName} > sixtrack/fort.10
 			cd sixtrack
 			if test -s ../fort.10.gz
 			then
@@ -609,8 +609,8 @@ function downloadNewResults(){
 				    
 				done < $diffs/diffs
 				rm -r $diffs
-				words=`wc -w fort.10 | awk '{print ($1)}'`
-				lines=`wc -l fort.10 | awk '{print ($1)}'`
+				words=`wc -w fort.10 | gawk '{print ($1)}'`
+				lines=`wc -l fort.10 | gawk '{print ($1)}'`
 				nwords=`expr $sixdeskpairs \* 60`
 				if test "$words" -ne  $nwords -o "$lines" -ne $sixdeskpairs
 				then
@@ -647,8 +647,8 @@ function downloadNewResults(){
 				    sixdeskmess -1 "fort.10 check $vermess"
 #MACRO mymess
 				    
-				    numdiffs=`grep "DIFF fort.10, line" $tmp | wc -l | awk '{print ($1)}'`
-				    numok=`egrep "SAME 22|SAME 23" $tmp | wc -l | awk '{print ($1)}'`
+				    numdiffs=`grep "DIFF fort.10, line" $tmp | wc -l | gawk '{print ($1)}'`
+				    numok=`egrep "SAME 22|SAME 23" $tmp | wc -l | gawk '{print ($1)}'`
 				    numok=`expr "$numok" / 2`
 				    particles=`expr $sixdeskpairs \* 2`
 				    if test "$numok" -ne "$numdiffs" -a "$numdiffs" -ne 0
@@ -727,10 +727,10 @@ function downloadNewResults(){
 			    else 
 				if [ ${sixdesklevel} -gt 1 ] ; then
 				    line1=`head -1 fort.10`
-				    local __messLine1=`echo $line1 | awk '{print ("Maxturn",$1,"Lost",$2,"Qx/Qy",$3,$4)}'`
-				    local __messLine2=`echo $line1 | awk '{print (" 1st Ampx/y",$7,$8,"2nd",$26,$27)}'`
-				    local __messLine3=`echo $line1 | awk '{print ("DP",$9,"Findist",$10,"Maxslope",$11,"Turns",$22,$23)}'`
-				    local __messLine4=`echo $line1 | awk '{print ("CPU",$60,"seconds Version",$52)}'`
+				    local __messLine1=`echo $line1 | gawk '{print ("Maxturn",$1,"Lost",$2,"Qx/Qy",$3,$4)}'`
+				    local __messLine2=`echo $line1 | gawk '{print (" 1st Ampx/y",$7,$8,"2nd",$26,$27)}'`
+				    local __messLine3=`echo $line1 | gawk '{print ("DP",$9,"Findist",$10,"Maxslope",$11,"Turns",$22,$23)}'`
+				    local __messLine4=`echo $line1 | gawk '{print ("CPU",$60,"seconds Version",$52)}'`
 				    sixdeskmess 1 "${__messLine1}"
 				    sixdeskmess 1 "${__messLine2}"
 				    sixdeskmess 1 "${__messLine3}"
@@ -853,7 +853,7 @@ function downloadNewResults(){
 					file $myfil | egrep "CRLF" > /dev/null 2>&1
 					if test $? -ne 0
 					then
-					    awk -f ${SCRIPTDIR}/awk/remover.awk $myfil > $tmp
+					    gawk -f ${SCRIPTDIR}/gawk/remover.awk $myfil > $tmp
 					    mv $tmp $myfil
 					fi
 				    fi
@@ -1001,8 +1001,8 @@ function downloadNewResults(){
 						mv ../w$taskid.tar.gz ../problems
 					    fi
 					else
-					    words=`wc -w fort.10 | awk '{print ($1)}'`
-					    lines=`wc -l fort.10 | awk '{print ($1)}'`
+					    words=`wc -w fort.10 | gawk '{print ($1)}'`
+					    lines=`wc -l fort.10 | gawk '{print ($1)}'`
 					    nwords=`expr $sixdeskpairs \* 60`
 					    if test "$words" -ne  $nwords -o "$lines" -ne $sixdeskpairs
 					    then

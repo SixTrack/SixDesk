@@ -75,7 +75,7 @@ else
 fi
 
 # check it is python 2.7 at least
-pyVer=`python --version 2>&1 | awk '{print ($NF)}'`
+pyVer=`python --version 2>&1 | gawk '{print ($NF)}'`
 if [ `sixdeskCompareVersions ${pyVer} ${requiredPyVersion}` -eq 0 ] ; then
     echo "python version too old: ${pyVer}"
     echo "please use at least ${requiredPyVersion} (included)"

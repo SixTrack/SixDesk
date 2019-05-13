@@ -127,7 +127,7 @@ function consistencyChecks(){
 }
 
 function getInfoFromFort3Local(){
-    export fort3localLines=`awk 'NF' ${envFilesPath}/fort.3.local`
+    export fort3localLines=`gawk 'NF' ${envFilesPath}/fort.3.local`
     local __activeLines=`echo "${fort3localLines}" | grep -v '/'`
     local __firstActiveBlock=`echo "${__activeLines}" | head -1 | cut -c1-4`
     local __otherActiveBlocks=`echo "${__activeLines}" | grep -A1 NEXT | grep -v NEXT | grep -v '^\-\-' | cut -c1-4`
@@ -163,7 +163,7 @@ function setFurtherEnvs(){
     
     if [ -z "${reduce_angs_with_amplitude}" ]; then
         reduce_angs_with_amplitude=0         
-    elif (( $(echo "${reduce_angs_with_amplitude}" | awk '{print ($1 >=0)}') )); then 
+    elif (( $(echo "${reduce_angs_with_amplitude}" | gawk '{print ($1 >=0)}') )); then 
         if [ ${long} -ne 1 ]; then
             sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
 	    sixdeskexit 9
@@ -171,7 +171,7 @@ function setFurtherEnvs(){
             if [ ${kinil} -ne 1 ] || [ ${kendl} -ne ${kmaxl} ] || [ ${kstep} -ne 1 ]; then
                 sixdeskmess -1 "reduced angles with amplitudes available only for kmin=1, kend=kmax and kstep=1"
 		sixdeskexit 10
-            elif (( $(echo "${reduce_angs_with_amplitude} ${ns2l}" | awk '{print ($1 >= $2)}') )); then
+            elif (( $(echo "${reduce_angs_with_amplitude} ${ns2l}" | gawk '{print ($1 >= $2)}') )); then
                 sixdeskmess -1 "reduced angles with amplitudes flag greater than maximum amplitude. Please de-activate the flag"
 		sixdeskexit 11
             else 
@@ -208,9 +208,9 @@ if [ `which git 2>/dev/null | wc -l` -eq 1 ] ; then
     lGitIsThere=true
     cd ${REPOPATH}
     # origRepoForSetup='https://github.com/amereghe/SixDesk.git'
-    origRepoForSetup=`git remote show origin | grep Fetch | awk '{print ($NF)}'`
+    origRepoForSetup=`git remote show origin | grep Fetch | gawk '{print ($NF)}'`
     # origBranchForSetup='newWorkspace'
-    origBranchForSetup=`git branch | grep '^*' | awk '{print ($2)}'`
+    origBranchForSetup=`git branch | grep '^*' | gawk '{print ($2)}'`
     cd - 2>&1 > /dev/null
 else
     lGitIsThere=false
@@ -712,7 +712,7 @@ if ! ${lcptemplate} ; then
 	tmpLines=`fs listquota ${sixdesktrack}`
 	echo "${tmpLines}"
 	#   check, and in case raise a warning
-	fraction=`echo "${tmpLines}" | tail -1 | awk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
+	fraction=`echo "${tmpLines}" | tail -1 | gawk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
 	if [ ${fraction} -gt 90 ] ; then
 	    sixdeskmess -1 "WARNING: your quota is above 90%!! pay attention to occupancy of the current study, in case of submission..."
 	fi

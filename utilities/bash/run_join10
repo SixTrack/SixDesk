@@ -93,7 +93,7 @@ mode=simul
 # Result directory
 let Ampl=${e[$jsta]}-${e[$jend+1]}
 #
-AngleStep=`awk 'END{a=90/('$kmaxl'+1);print a}' /dev/null`
+AngleStep=`gawk 'END{a=90/('$kmaxl'+1);print a}' /dev/null`
 #
 turnmin=$turnse
 turnmax=$turnsemax
@@ -141,7 +141,7 @@ while [ $i -le $iend ] ;do
     fi
     let k=$kinil
     while [ $k -le $kendl ] ;do
-      Angle=`awk 'END{a='$AngleStep'*'$k';print a}' /dev/null`
+      Angle=`gawk 'END{a='$AngleStep'*'$k';print a}' /dev/null`
       let jst=$jsta
       let te=$turnse
       while [ $te -le $turnsemax ] ;do

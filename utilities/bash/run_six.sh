@@ -182,12 +182,12 @@ function preProcessFort3(){
     let __lerr+=$?
     # - second  part
     if [ $reson -eq 1 ] ; then
-	local __Qx=`awk '{print $1}' resonance`
-	local __Qy=`awk '{print $2}' resonance`
-	local __Ax=`awk '{print $3}' resonance`
-	local __Ay=`awk '{print $4}' resonance`
-	local __N1=`awk '{print $5}' resonance`
-	local __N2=`awk '{print $6}' resonance`
+	local __Qx=`gawk '{print $1}' resonance`
+	local __Qy=`gawk '{print $2}' resonance`
+	local __Ax=`gawk '{print $3}' resonance`
+	local __Ay=`gawk '{print $4}' resonance`
+	local __N1=`gawk '{print $5}' resonance`
+	local __N2=`gawk '{print $6}' resonance`
 	sed -e 's/%SUB/''/g' \
 	    -e 's/%Qx/'$__Qx'/g' \
 	    -e 's/%Qy/'$__Qy'/g' \
@@ -310,7 +310,7 @@ function preProcessFort3(){
 	sixdeskmess 1 "using fort.3.local:"
 	echo "${fort3localLines}"
 	local __posENDE=`grep -n ENDE $sixdeskjobs_logs/fortl.3.mask | cut -d \: -f1`
-	local __nLines=`wc -l $sixdeskjobs_logs/fortl.3.mask | awk '{print ($1)}'`
+	local __nLines=`wc -l $sixdeskjobs_logs/fortl.3.mask | gawk '{print ($1)}'`
 	let nHead=${__posENDE}-1
 	let nTail=${__nLines}-${__posENDE}+1
 	head -n ${nHead} $sixdeskjobs_logs/fortl.3.mask > $sixdeskjobs_logs/fortl.3.mask.temp
@@ -600,7 +600,7 @@ function submitChromaJobs(){
     if ${llocalfort3} ; then
 	# insert fort.3.local just before ENDE in fortl.3.mask
 	local __posENDE=`grep -n ENDE fort.3 | cut -d \: -f1`
-	local __nLines=`wc -l fort.3 | awk '{print ($1)}'`
+	local __nLines=`wc -l fort.3 | gawk '{print ($1)}'`
 	let nHead=${__posENDE}-1
 	let nTail=${__nLines}-${__posENDE}+1
 	head -n ${nHead} fort.3 > fort.3.temp
@@ -636,7 +636,7 @@ function submitChromaJobs(){
     if ${llocalfort3} ; then
 	# insert fort.3.local just before ENDE in fortl.3.mask
 	local __posENDE=`grep -n ENDE fort.3 | cut -d \: -f1`
-	local __nLines=`wc -l fort.3 | awk '{print ($1)}'`
+	local __nLines=`wc -l fort.3 | gawk '{print ($1)}'`
 	let nHead=${__posENDE}-1
 	let nTail=${__nLines}-${__posENDE}+1
 	head -n ${nHead} fort.3 > fort.3.temp
@@ -720,7 +720,7 @@ function submitBetaJob(){
     if ${llocalfort3} ; then
 	# insert fort.3.local just before ENDE in fortl.3.mask
 	local __posENDE=`grep -n ENDE fort.3 | cut -d \: -f1`
-	local __nLines=`wc -l fort.3 | awk '{print ($1)}'`
+	local __nLines=`wc -l fort.3 | gawk '{print ($1)}'`
 	let nHead=${__posENDE}-1
 	let nTail=${__nLines}-${__posENDE}+1
 	head -n ${nHead} fort.3 > fort.3.temp
@@ -785,7 +785,7 @@ function submitBetaJob(){
         mychromy=`gawk '{print $2}' $__destination/mychrom`
         htune=`gawk '{print $5}' $__destination/betavalues`
         vtune=`gawk '{print $6}' $__destination/betavalues`
-        closed_orbit=`awk '{print ($9,$10,$11,$12,$13,$14)}' $__destination/betavalues`
+        closed_orbit=`gawk '{print ($9,$10,$11,$12,$13,$14)}' $__destination/betavalues`
         echo "$beta_x $beta_x2 $beta_y $beta_y2 $htune $vtune $mychromx $mychromy $closed_orbit" > $__destination/betavalues
     fi
     
@@ -894,7 +894,7 @@ function submitCreateFinalInputs(){
 	
 	# generate zip/description file
 	# - generate new taskid
-	sixdeskTaskId=`awk '{print ($1+1)}' $sixdeskhome/sixdeskTaskIds/$LHCDescrip/sixdeskTaskId`
+	sixdeskTaskId=`gawk '{print ($1+1)}' $sixdeskhome/sixdeskTaskIds/$LHCDescrip/sixdeskTaskId`
 	echo $sixdeskTaskId > $sixdeskhome/sixdeskTaskIds/$LHCDescrip/sixdeskTaskId
 	sixdesktaskid=boinc$sixdeskTaskId
 	sixdeskmess  1 "sixdesktaskid: $sixdesktaskid - $sixdeskTaskId"
@@ -1142,7 +1142,7 @@ function dot_boinc(){
 	        local __tmpLines=`fs listquota ${AFSworkSpooldir}`
 	        echo "${__tmpLines}"
 	        #   check, and in case re-submit with a slower pace
-	        fraction=`echo "${__tmpLines}" | tail -1 | awk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
+	        fraction=`echo "${__tmpLines}" | tail -1 | gawk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
 	        if [ ${fraction} -ge ${__quotaThresh} ] ; then
 	            sixdeskmess -1 "WARNING: work.boinc quota is >= ${__quotaThresh}%!! Slow down, man..."
 	            sixdeskmess -1 "I will try to re-submit again your job with multiple-trial algorithm with a waiting time of ${multipleTrialLargeWaitingTime} s..."
@@ -1186,7 +1186,7 @@ function condor_sub(){
     if [ ! -e ${sixdeskjobs}/${LHCDesName}.list ] ; then
 	sixdeskmess -1 "List of tasks not there: ${sixdeskjobs}/${LHCDesName}.list"
 	let __lerr+=1
-    elif [ `wc -l ${sixdeskjobs}/${LHCDesName}.list 2> /dev/null | awk '{print ($1)}'` -eq 0 ] ; then
+    elif [ `wc -l ${sixdeskjobs}/${LHCDesName}.list 2> /dev/null | gawk '{print ($1)}'` -eq 0 ] ; then
 	sixdeskmess -1 "Empty list of tasks: ${sixdeskjobs}/${LHCDesName}.list"
 	rm -f ${sixdeskjobs}/${LHCDesName}.list
 	let __lerr+=1
@@ -1195,7 +1195,7 @@ function condor_sub(){
 	iBatch=$((${nQueued}/${nMaxJobsSubmitHTCondor}))
 	if [ ${iBatch} -eq 0 ] ; then
 	    sixdeskmess 1 "checking if there are already some condor clusters from the same workspace/study ..."
-	    i0Batch=`condor_q -wide | grep run_six/${workspace}/${LHCDesName} | awk '{print ($2)}' | cut -d\/ -f4 | sort | tail -1`
+	    i0Batch=`condor_q -wide | grep run_six/${workspace}/${LHCDesName} | gawk '{print ($2)}' | cut -d\/ -f4 | sort | tail -1`
 	    if [ -n "${i0Batch}" ] ; then
 		iBatch=${i0Batch}
 	    fi
@@ -1230,7 +1230,7 @@ function condor_sub(){
 	    clusterID=${clusterID//\ /}
 	    jobIDmax=`echo "${terseString}" | head -1 | cut -d\- -f2 | cut -d\. -f2`
 	    let jobIDmax+=1
-	    nCases=`wc -l ${sixdeskjobs}/${LHCDesName}.list | awk '{print ($1)}'`
+	    nCases=`wc -l ${sixdeskjobs}/${LHCDesName}.list | gawk '{print ($1)}'`
 	    if [ ${jobIDmax} -ne ${nCases} ] ; then
 		sixdeskmess -1 "Something wrong with htcondor submission: I requested ${nCases} to be submitted, and only ${jobIDmax} actually made it!"
 	    fi
@@ -1265,9 +1265,9 @@ function dot_megaZip(){
     sixdeskmess  1 "generating megaZip file ${__megaZipFileName}"
 
     local __iNLT=5000
-    local __nLines=`wc -l ${__megaZipFileList} | awk '{print ($1)}'`
-    local __iiMax=`echo "${__iNLT} ${__nLines}" | awk '{print (int($2/$1+0.001))}'`
-    local __nResiduals=`echo "${__iNLT} ${__nLines} ${__iiMax}" | awk '{print (int($2-$3*$1+0.001))}'`
+    local __nLines=`wc -l ${__megaZipFileList} | gawk '{print ($1)}'`
+    local __iiMax=`echo "${__iNLT} ${__nLines}" | gawk '{print (int($2/$1+0.001))}'`
+    local __nResiduals=`echo "${__iNLT} ${__nLines} ${__iiMax}" | gawk '{print (int($2-$3*$1+0.001))}'`
     for (( ii=1; ii<=${__iiMax} ; ii++ )) ; do
 	let nHead=$ii*${__iNLT}
 	local __tmpLines=`head -n ${nHead} ${__megaZipFileList} | tail -n ${__iNLT}`
@@ -2166,7 +2166,7 @@ fi
 if ! ${lincomplete} ; then
     # NB: for the time being, if submission of incomplete cases is triggered,
     #     then no scan is performed
-    pyVer=`python --version 2>&1 | awk '{print ($NF)}'`
+    pyVer=`python --version 2>&1 | gawk '{print ($NF)}'`
     if [ `sixdeskCompareVersions ${belowPyVersion} ${pyVer}` -eq 0 ] ; then
         echo "python version too new: ${pyVer}"
         echo "please use at most ${belowPyVersion} (excluded)"
@@ -2429,12 +2429,12 @@ if ${lcheck} ; then
 		    let __lerr+=1
 		else
 		    # - check acl rights of current user
-		    aclRights=`fs listacl $sixdeskboincdir | grep $LOGNAME 2> /dev/null | grep -v ":" | awk '{print ($2)}'`
+		    aclRights=`fs listacl $sixdeskboincdir | grep $LOGNAME 2> /dev/null | grep -v ":" | gawk '{print ($2)}'`
 		    if [ "$aclRights" != "rlidwka" ] ; then
 			sixdeskmess -1 "Err of acl rights on $sixdeskboincdir for $LOGNAME: ${aclRights} (expected: rlidwka)"
 			let __lerr+=1
 		    fi
-		    aclRights=`fs listacl $sixdeskboincdir | grep boinc:users 2> /dev/null | awk '{print ($2)}'`
+		    aclRights=`fs listacl $sixdeskboincdir | grep boinc:users 2> /dev/null | gawk '{print ($2)}'`
 		    if [ "$aclRights" != "rl" ] ; then
 			sixdeskmess -1 "Err of acl rights on $sixdeskboincdir for boinc:users ${aclRights} (expected: rl)"
 			let __lerr+=1
@@ -2511,7 +2511,7 @@ fi
 # - restart action
 if ${lrestart} ; then
     if [ `echo "${restartPoint}" | tr [a-z] [A-Z]` == "LAST" ] ; then
-	restartPoint=`tail -1 $sixdeskwork/taskids 2> /dev/null | awk '{print ($1)}'`
+	restartPoint=`tail -1 $sixdeskwork/taskids 2> /dev/null | gawk '{print ($1)}'`
 	if [ -z "${restartPoint}" ] ; then
 	    sixdeskmess -1 "file $sixdeskwork/taskids not present or empty"
 	fi

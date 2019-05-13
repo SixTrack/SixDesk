@@ -430,19 +430,19 @@ sixdesktunes(){
     local __ideltax=`echo "$deltax" | cut -d\. -f1`
     local __fdeltax=`echo "$deltax" | cut -d\. -f2`
     # - get longest fractional part (meaningful!)
-    xlen=`printf "$__ftunex\n$__ftunex1\n$__fdeltax\n" | awk '{print (length($1))}' | sort -g | tail -n1`
+    xlen=`printf "$__ftunex\n$__ftunex1\n$__fdeltax\n" | gawk '{print (length($1))}' | sort -g | tail -n1`
     # - get integer algebra
-    local __llen=`echo "$__ftunex $xlen" | awk '{print ($2-length($1))}'`
+    local __llen=`echo "$__ftunex $xlen" | gawk '{print ($2-length($1))}'`
     itunex="$__itunex$__ftunex"
     if [ $__llen -gt 0 ] ; then
 	itunex="$itunex`printf "0%.0s" $( seq 1 $__llen)`"
     fi
-    local __llen=`echo "$__ftunex1 $xlen" | awk '{print ($2-length($1))}'`
+    local __llen=`echo "$__ftunex1 $xlen" | gawk '{print ($2-length($1))}'`
     itunex1="$__itunex1$__ftunex1"
     if [ $__llen -gt 0 ] ; then
 	itunex1="$itunex1`printf "0%.0s" $( seq 1 $__llen)`"
     fi
-    local __llen=`echo "$__fdeltax $xlen" | awk '{print ($2-length($1))}'`
+    local __llen=`echo "$__fdeltax $xlen" | gawk '{print ($2-length($1))}'`
     ideltax="$__ideltax$__fdeltax"
     if [ $__llen -gt 0 ] ; then
 	ideltax="$ideltax`printf "0%.0s" $( seq 1 $__llen)`"
@@ -467,19 +467,19 @@ sixdesktunes(){
     local __ideltay=`echo "$deltay" | cut -d\. -f1`
     local __fdeltay=`echo "$deltay" | cut -d\. -f2`
     # - get longest fractional part (meaningful!)
-    ylen=`printf "$__ftuney\n$__ftuney1\n$__fdeltay\n" | awk '{print (length($1))}' | sort -g | tail -n1`
+    ylen=`printf "$__ftuney\n$__ftuney1\n$__fdeltay\n" | gawk '{print (length($1))}' | sort -g | tail -n1`
     # - get integer algebra
-    local __llen=`echo "$__ftuney $ylen" | awk '{print ($2-length($1))}'`
+    local __llen=`echo "$__ftuney $ylen" | gawk '{print ($2-length($1))}'`
     ituney="$__ituney$__ftuney"
     if [ $__llen -gt 0 ] ; then
 	ituney="$ituney`printf "0%.0s" $( seq 1 $__llen)`"
     fi
-    local __llen=`echo "$__ftuney1 $ylen" | awk '{print ($2-length($1))}'`
+    local __llen=`echo "$__ftuney1 $ylen" | gawk '{print ($2-length($1))}'`
     ituney1="$__ituney1$__ftuney1"
     if [ $__llen -gt 0 ] ; then
 	ituney1="$ituney1`printf "0%.0s" $( seq 1 $__llen)`"
     fi
-    local __llen=`echo "$__fdeltay $ylen" | awk '{print ($2-length($1))}'`
+    local __llen=`echo "$__fdeltay $ylen" | gawk '{print ($2-length($1))}'`
     ideltay="$__ideltay$__fdeltay"
     if [ $__llen -gt 0 ] ; then
 	ideltay="$ideltay`printf "0%.0s" $( seq 1 $__llen)`"
@@ -531,7 +531,7 @@ sixdeskPrepareTune(){
     # converts itunezz into tunezz
     local __itunezz=$1
     local __flen=$2
-    __tunezz=`echo "$__itunezz" | awk -v "flen=$__flen" '{lstring=length($1); fpart=substr($1,lstring-flen+1,flen); ipart=substr($1,1,lstring-flen); print (ipart"."fpart)}'`
+    __tunezz=`echo "$__itunezz" | gawk -v "flen=$__flen" '{lstring=length($1); fpart=substr($1,lstring-flen+1,flen); ipart=substr($1,1,lstring-flen); print (ipart"."fpart)}'`
     __tunezz=$(sixdeskFixZerosFloat $__tunezz)
     echo "${__tunezz}"
 }
@@ -539,14 +539,14 @@ sixdeskAddDotFloat(){
     # by A.Mereghetti, 2016-07-20
     # add trailing "." in case it is not there
     local __input="$1"
-    local __result=`echo "$__input" | awk '{lstring=length($1); dpos=index($1,"."); if (dpos==0) print ($1"."); else print ($1);}'`
+    local __result=`echo "$__input" | gawk '{lstring=length($1); dpos=index($1,"."); if (dpos==0) print ($1"."); else print ($1);}'`
     echo "$__result"
 }
 sixdeskFixZerosFloat(){
     # by A.Mereghetti, 2016-07-20
     # remove useless trailing/heading "0", but leave one before/after "." in case this is first/last char
     local __input="$1"
-    local __result=`echo "$__input" | sed -e's?0*$??' | sed -e's?^0??' | awk '{lstring=length($1); dpos=index($1,"."); if (dpos==1) print("0"$1); else print($1);}' | awk '{lstring=length($1); dpos=index($1,"."); if (dpos==lstring) print($1"0"); else print($1);}'`
+    local __result=`echo "$__input" | sed -e's?0*$??' | sed -e's?^0??' | gawk '{lstring=length($1); dpos=index($1,"."); if (dpos==1) print("0"$1); else print($1);}' | gawk '{lstring=length($1); dpos=index($1,"."); if (dpos==lstring) print($1"0"); else print($1);}'`
     echo "$__result"
 }
 sixdeskinttunes(){
@@ -725,12 +725,12 @@ sixdeskAllAngles(){
     if ${__lReduceAngsWithAmplitude}; then
         # generate scaled angle steps
         for (( iAmple=0; iAmple<${#fAmpEnds[@]}; iAmple++ )) ; do
-            if (( $(echo "${reduce_angs_with_amplitude} ${fAmpEnds[${iAmple}]}" | awk '{print ($1 < $2)}') )); then
+            if (( $(echo "${reduce_angs_with_amplitude} ${fAmpEnds[${iAmple}]}" | gawk '{print ($1 < $2)}') )); then
                 # varying number of angles
-                local __angles_nb=$(echo ${fAmpEnds[${iAmple}]} ${ampfinish} ${__kmax} | awk '{printf ("%.f", ($1/$2*$3))}')
+                local __angles_nb=$(echo ${fAmpEnds[${iAmple}]} ${ampfinish} ${__kmax} | gawk '{printf ("%.f", ($1/$2*$3))}')
             else
                 # constant number of angles
-                local __angles_nb=$(echo ${reduce_angs_with_amplitude} ${ampfinish} ${__kmax} | awk '{printf ("%.f", ($1/$2*$3))}')
+                local __angles_nb=$(echo ${reduce_angs_with_amplitude} ${ampfinish} ${__kmax} | gawk '{printf ("%.f", ($1/$2*$3))}')
             fi
 
             if [ ${__angles_nb} -eq 0 ];then
@@ -739,9 +739,9 @@ sixdeskAllAngles(){
             if ${__lbackcomp} ; then
                 for (( kk=1; kk<=${__angles_nb}; kk++ )) ; do
 	            KKs="${KKs} ${kk}"
-                    local __tmpAngle=`echo ${totAngle} ${kk} ${__angles_nb} | awk '{print ($1*$2/($3+1))}'`
+                    local __tmpAngle=`echo ${totAngle} ${kk} ${__angles_nb} | gawk '{print ($1*$2/($3+1))}'`
 	            Angles="${Angles} ${__tmpAngle}"  
-	            local __kang=`echo ${kk} ${__angles_nb} | awk '{print ($1/($2+1))}'`
+	            local __kang=`echo ${kk} ${__angles_nb} | gawk '{print ($1/($2+1))}'`
 	            kAngs="${kAngs} ${__kang}"
                 done
             else
@@ -762,15 +762,15 @@ sixdeskAllAngles(){
     else
         # generate regular angle steps
         if ${__lbackcomp} ; then
-            local __angleStep=`echo ${__totAngle} ${__kmax} | awk '{print ($1/($2+1))}'`
+            local __angleStep=`echo ${__totAngle} ${__kmax} | gawk '{print ($1/($2+1))}'`
             for (( kk=${__kmin}; kk<=${__kend}; kk+=${__kstep} )) ; do
 	        KKs="${KKs} ${kk}"
-	        local __tmpAngle=`echo ${kk} ${__angleStep} | awk '{print ($1*$2)}'`
+	        local __tmpAngle=`echo ${kk} ${__angleStep} | gawk '{print ($1*$2)}'`
 	        Angles="${Angles} ${__tmpAngle}"
 	        if ${__lbackcomp} ; then
-	            local __kang=`echo ${kk} ${__kmax} | awk '{print ($1/($2+1))}'`
+	            local __kang=`echo ${kk} ${__kmax} | gawk '{print ($1/($2+1))}'`
 	        else
-	            local __kang=`echo ${kk} ${__kmax} | awk '{printf ("%.16E",$1/($2+1))}'`
+	            local __kang=`echo ${kk} ${__kmax} | gawk '{printf ("%.16E",$1/($2+1))}'`
 	        fi
 	        kAngs="${kAngs} ${__kang}"
             done
@@ -937,7 +937,7 @@ sixdeskSmashJobName(){
 }
 sixdeskGetNFieldsFromJobName(){
     local __Runnam=$1
-    local __result=`echo "${__Runnam}" | awk 'BEGIN{FS="%"}{print (NF)}'`
+    local __result=`echo "${__Runnam}" | gawk 'BEGIN{FS="%"}{print (NF)}'`
     eval "$2=${__result}"
 }
 sixdeskCheckNFieldsFromJobName(){
@@ -968,7 +968,7 @@ sixdeskFromJobNameToJobDir(){
     rundirname0=$1
     rundirname1=${rundirname0//\%/\/}
     if ${__lbackcomp} ; then
-	rundirname1=`echo "$rundirname1" | awk 'BEGIN{FS="/";OFS="/"}{$6="e"$6; print}'`
+	rundirname1=`echo "$rundirname1" | gawk 'BEGIN{FS="/";OFS="/"}{$6="e"$6; print}'`
     fi
     rundirname2=${rundirname1//\/s\//\/simul\/}
     rundirname3=${rundirname2//\/t\//\/trans\/}
@@ -992,7 +992,7 @@ sixdeskFromJobDirToJobName(){
     # remove trailing slashes
     rundirname4=`echo "${rundirname4}" | sed 's:/*$::'`
     if ${__lbackcomp} ; then
-	rundirname4=`echo "$rundirname4" | awk 'BEGIN{FS="/";OFS="/"}{gsub(/e/,"",$6); print}'`
+	rundirname4=`echo "$rundirname4" | gawk 'BEGIN{FS="/";OFS="/"}{gsub(/e/,"",$6); print}'`
     fi
     rundirname5=${rundirname4//\//\%}
     echo ${rundirname5}
@@ -1002,7 +1002,7 @@ sixdeskDefineWorkUnitName(){
     # $2: name of job (ie $Runnam)
     # $3: task ID (ie $sixdesktaskid)
     local __lerr=0
-    multipleTrials "sixdeskTaskName=\"`echo \"${1}_${2}\" | awk 'BEGIN{FS=\"%\"; OFS=\"__\"}{\$3=\$3; print}'`\"" "[ -n \"\${sixdeskTaskName}\" ]"
+    multipleTrials "sixdeskTaskName=\"`echo \"${1}_${2}\" | gawk 'BEGIN{FS=\"%\"; OFS=\"__\"}{\$3=\$3; print}'`\"" "[ -n \"\${sixdeskTaskName}\" ]"
     let __lerr+=$?
     multipleTrials "workunitName=\"${sixdeskTaskName}_1_sixvf_${3}\"" "[ -n \"\${workunitName}\" ]"
     let __lerr+=$?
@@ -1015,7 +1015,7 @@ sixdeskDefineMegaZipName(){
     eval  "$3=${__megaZipName}"
 }
 sixdeskGetTaskIDfromWorkUnitName(){
-    sixdesktaskid=`echo "$1" | awk 'BEGIN{FS="_";}{print ($NF)}'`
+    sixdesktaskid=`echo "$1" | gawk 'BEGIN{FS="_";}{print ($NF)}'`
 }
 sixdeskAngleStep(){
     local __totAngle=$1
@@ -1525,7 +1525,7 @@ function sixdeskSendNotifMail(){
     cp ${tmpNodeDir}/envs*txt ${tmpNodeDir}/${__dirName}
     zip -j ${tmpNodeDir}/${__dirName}.zip ${tmpNodeDir}/${__dirName}/* > /dev/null 2>&1
     emailSubject="intercepting problem in SixDesk: ${__emailSubj}"
-    local __recipients=`echo "${__receiverNames}" | awk '{for (ii=1;ii<=NF;ii++) {printf("%s@cern.ch ",$ii)}}'`
+    local __recipients=`echo "${__receiverNames}" | gawk '{for (ii=1;ii<=NF;ii++) {printf("%s@cern.ch ",$ii)}}'`
     echo "${sixdeskmess}" | mail -a ${tmpNodeDir}/${__dirName}.zip -s "${emailSubject}" ${__recipients}
 
     # clean
@@ -1644,7 +1644,7 @@ function sixdeskSetLocalNodeStuff(){
 }
 function sixdeskCompareVersions(){
     # 0: true ; 1: false
-    echo $1 $2 | awk '{print ($1>=$2)}'
+    echo $1 $2 | gawk '{print ($1>=$2)}'
 }
 function sixdeskConfirmExit(){
     local __iExit=-1

@@ -238,13 +238,13 @@ while getopts  ":MSRBLU:hf:w:s:k:P:" opt ; do
 	P)
 	    # parallel operations
 	    lParallel=true
-	    if [ `echo ${OPTARG} | awk '{print (toupper($1))}'` == "ALL" ] ; then
+	    if [ `echo ${OPTARG} | gawk '{print (toupper($1))}'` == "ALL" ] ; then
 		# a CPU for each study to be treated
 		nCPUs="ALL"
-	    elif [ `echo ${OPTARG} | awk '{print (toupper($1))}'` == "LXPLUS" ] || `echo ${OPTARG} | awk '{print (toupper($1))}'` == "LSF" ] || `echo ${OPTARG} | awk '{print (toupper($1))}'` == "HTCONDOR" ] ; then
+	    elif [ `echo ${OPTARG} | gawk '{print (toupper($1))}'` == "LXPLUS" ] || `echo ${OPTARG} | gawk '{print (toupper($1))}'` == "LSF" ] || `echo ${OPTARG} | gawk '{print (toupper($1))}'` == "HTCONDOR" ] ; then
 		echo "option not yet available! switching to ALL"
 		nCPUs="ALL"
-	    elif [ `echo ${OPTARG} | awk '$1 ~ /^[0-9]+$/' | wc -l` -ne 0 ] ; then
+	    elif [ `echo ${OPTARG} | gawk '$1 ~ /^[0-9]+$/' | wc -l` -ne 0 ] ; then
 		# distribute the studies over $OPTARG CPUs
 		nCPUs=${OPTARG}
 	    else
@@ -357,8 +357,8 @@ if ${lParallel} ; then
     done
 
     # - distribute studies over the files
-    nStudiesPerFile=`echo ${#studies[@]} ${nCPUs} | awk '{print (int($1/$2+0.00001))}'`
-    nExcess=`echo ${#studies[@]} ${nCPUs} | awk '{print (int($1%$2+0.00001))}'`
+    nStudiesPerFile=`echo ${#studies[@]} ${nCPUs} | gawk '{print (int($1/$2+0.00001))}'`
+    nExcess=`echo ${#studies[@]} ${nCPUs} | gawk '{print (int($1%$2+0.00001))}'`
     let nStudiesPerFileExcess=$nStudiesPerFile+1
     nInFile=0
     kk=0
