@@ -815,22 +815,22 @@ sixdeskGetCurretPaths(){
         tmpScratchName=`basename ${tmpDir}`
         tmpDir=`dirname ${tmpDir}`
         tmpBaseDir=${tmpDir}
-        tmpScratchDir=\$basedir/${tmpScratchName}
-        tmpTrackDir=\$scratchdir/\$workspace
-        tmpSixtrackInput=\$scratchdir/sixtrack_input/\$workspace/\$LHCDescrip
-        tmpSixdeskWork=\$scratchdir/work/\$workspace/\$LHCDescrip
-        tmpCronLogs=\$scratchdir/cronlogs/\$workspace
-        tmpSixdeskLogs=\$scratchdir/sixdesklogs/\$workspace
+        tmpScratchDir='$basedir${tmpScratchName}'
+        tmpTrackDir='$scratchdir/$workspace'
+        tmpSixtrackInput='$scratchdir/sixtrack_input/$workspace/$LHCDescrip'
+        tmpSixdeskWork='$scratchdir/work/$workspace/$LHCDescrip'
+        tmpCronLogs='$scratchdir/cronlogs/$workspace'
+        tmpSixdeskLogs='$scratchdir/sixdesklogs/$workspace'
     else
         # scratchdir is NOT in the path
         tmpDir=`dirname ${tmpDir}`
         tmpBaseDir=${tmpDir}
-        tmpScratchDir=\$basedir/\$workspace
-        tmpTrackDir=\$basedir/\$workspace
-        tmpSixtrackInput=\$scratchdir/sixtrack_input/\$LHCDescrip
-        tmpSixdeskWork=\$scratchdir/work/\$LHCDescrip
-        tmpCronLogs=\$scratchdir/cronlogs
-        tmpSixdeskLogs=\$scratchdir/sixdesklogs
+        tmpScratchDir='$basedir/$workspace'
+        tmpTrackDir='$basedir/$workspace'
+        tmpSixtrackInput='$scratchdir/sixtrack_input/$LHCDescrip'
+        tmpSixdeskWork='$scratchdir/work/$LHCDescrip'
+        tmpCronLogs='$scratchdir/cronlogs'
+        tmpSixdeskLogs='$scratchdir/sixdesklogs'
     fi
 }
 sixdeskDefineUserTree(){
@@ -842,22 +842,22 @@ sixdeskDefineUserTree(){
     # basic paths (back-compatibility)
     [ -n "${workspace}" ] || export workspace=${tmpWorkspace}
     [ -n "${basedir}" ] || export basedir=${tmpBaseDir}
-    [ -n "${scratchdir}" ] || export scratchdir=${tmpScratchDir}
-    [ -n "${trackdir}" ] || export trackdir=${tmpTrackDir}
-    [ -n "${sixtrack_input}" ] || export sixtrack_input=${tmpSixtrackInput}
-    [ -n "${sixdeskwork}" ] || export sixdeskwork=${tmpSixdeskWork}
+    [ -n "${scratchdir}" ] || export scratchdir=$(eval echo ${tmpScratchDir})
+    [ -n "${trackdir}" ] || export trackdir=$(eval echo ${tmpTrackDir})
+    [ -n "${sixtrack_input}" ] || export sixtrack_input=$(eval echo ${tmpSixtrackInput})
+    [ -n "${sixdeskwork}" ] || export sixdeskwork=$(eval echo ${tmpSixdeskWork})
 
     # dependent paths
-    [ -n "${sixdeskhome}" ] || export sixdeskhome=${basedir}/${workspace}/sixjobs
+    [[ -z "${sixdeskhome}" || "${sixdeskhome}" == "." ]] && export sixdeskhome=${basedir}/${workspace}/sixjobs
     [ -n "${sixdeskhomeStudies}" ] || export sixdeskhomeStudies=${sixdeskhome}/studies
     [ -n "${sixdeskstudy}" ] || export sixdeskstudy=$sixdeskhomeStudies/$LHCDescrip
     [ -n "${sixdesktrack}" ] || export sixdesktrack=$trackdir/track
     [ -n "${sixdesktrackStudy}" ] || export sixdesktrackStudy=$sixdesktrack/$LHCDescrip
 
     # logs/jobs paths
-    [ -n "${sixdesklogs}" ] || export sixdesklogs=${tmpSixdeskLogs}
+    [ -n "${sixdesklogs}" ] || export sixdesklogs=$(eval echo ${tmpSixdeskLogs})
     [ -n "${sixdesklogdir}" ] || export sixdesklogdir=$sixdesklogs/$LHCDescrip
-    [ -n "${cronlogs}" ] || export cronlogs=${tmpCronLogs}
+    [ -n "${cronlogs}" ] || export cronlogs=$(eval echo ${tmpCronLogs})
     [ -n "${cronlogdir}" ] || export cronlogdir=$cronlogs/$LHCDescrip
     [ -n "${sixdeskjobs}" ] || export sixdeskjobs=$sixdeskwork/$sixdeskplatform"jobs"
     [ -n "${sixdeskjobs_logs}" ] || export sixdeskjobs_logs=$sixdeskjobs/jobs_logs
@@ -873,6 +873,16 @@ sixDeskDefineMADXTree(){
     #export MADX="madx_dev"
     # and the new default
 #    export MADX="madx"
+    if [ -z "${MADX_PATH}" ] ; then
+        mad=$(whcih madx 2>&1)
+        if [ $? -eq 0 ] ; then
+            export MADX_PATH=$(dirname $mad)
+            export MADX=$(basename $mad)
+        else
+            export MADX_PATH="/afs/cern.ch/user/m/mad/bin"
+            export MADX="madx"
+        fi 
+    fi
     [ -n "${maskFilesPath}" ] || export maskFilesPath=$sixdeskhome/mask
     [ -n "${controlFilesPath}" ] || export controlFilesPath=$sixdeskhome/control_files
     [ -n "${lsfFilesPath}" ] || export lsfFilesPath=$__SCRIPTDIR/templates/lsf

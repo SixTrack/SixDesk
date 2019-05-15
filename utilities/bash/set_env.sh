@@ -569,6 +569,9 @@ else
     # - define user tree
     sixdeskDefineUserTree
 
+    # - define some other variables
+    sixdeskSetOtherVars
+
     # - boinc variables
     sixDeskSetBOINCVars
 
