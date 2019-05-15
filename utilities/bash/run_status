@@ -48,14 +48,14 @@ function check_output_option(){
     esac
 
     if ! ${__selected_output_valid}; then
-	echo "ERROR: Option -o requires the following arguments:"
-	echo "    0: only error messages and basic output [default]"
-	echo "    1: full output"
-	echo "    2: extended output for debugging"
-	exit
+        echo "ERROR: Option -o requires the following arguments:"
+        echo "    0: only error messages and basic output [default]"
+        echo "    1: full output"
+        echo "    2: extended output for debugging"
+        exit
     else
-	loutform=true
-	sixdesklevel_option=${OPTARG}
+        loutform=true
+        sixdesklevel_option=${OPTARG}
     fi
     
 }
@@ -84,48 +84,48 @@ loutform=false
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":hBo:n:d:U" opt ; do
     case $opt in
-	h)
-	    how_to_use
-	    exit 1
-	    ;;
-	B)
-	    # use whatever breaks backward compatibility
-	    lbackcomp=false
-	    ;;
-	n)
-	    # renew kerberos token every N jobs
-	    NrenewKerberos=${OPTARG}
-	    # check it is actually a number
-	    let NrenewKerberos+=0
-	    if [ $? -ne 0 ] 2>/dev/null; then
-		how_to_use
-		echo "-n argument option is not a number!"
-		exit 1
-	    fi
-	    ;;
-	o)
-	    # output option
-	    check_output_option
-	    ;;	
-	d)
-	    # the user is requesting a specific study
-	    optArgCurrStudy="-d ${OPTARG}"
-	    ;;
-	U)
-	    # unlock currently locked folder
-	    lunlockRunStatus=true
-	    unlockSetEnv="-U"
-	    ;;
-	:)
-	    how_to_use
-	    echo "Option -$OPTARG requires an argument."
-	    exit 1
-	    ;;
-	\?)
-	    how_to_use
-	    echo "Invalid option: -$OPTARG"
-	    exit 1
-	    ;;
+        h)
+            how_to_use
+            exit 1
+            ;;
+        B)
+            # use whatever breaks backward compatibility
+            lbackcomp=false
+            ;;
+        n)
+            # renew kerberos token every N jobs
+            NrenewKerberos=${OPTARG}
+            # check it is actually a number
+            let NrenewKerberos+=0
+            if [ $? -ne 0 ] 2>/dev/null; then
+                how_to_use
+                echo "-n argument option is not a number!"
+                exit 1
+            fi
+            ;;
+        o)
+            # output option
+            check_output_option
+            ;;  
+        d)
+            # the user is requesting a specific study
+            optArgCurrStudy="-d ${OPTARG}"
+            ;;
+        U)
+            # unlock currently locked folder
+            lunlockRunStatus=true
+            unlockSetEnv="-U"
+            ;;
+        :)
+            how_to_use
+            echo "Option -$OPTARG requires an argument."
+            exit 1
+            ;;
+        \?)
+            how_to_use
+            echo "Invalid option: -$OPTARG"
+            exit 1
+            ;;
     esac
 done
 shift "$(($OPTIND - 1))"
@@ -462,7 +462,7 @@ then
           Rundir=$rundirname
 #MACRO myrundir
 
-	  echo $Runnam $Rundir
+          echo $Runnam $Rundir
 
           where=$sixdesktrack/$Rundir
           missing=0

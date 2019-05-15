@@ -75,57 +75,57 @@ function parseFile(){
     local __allActiveLines=`grep -v '#' ${tmpFile}`
     local __nL=`echo "${__allActiveLines}" | wc -l`
     for (( ii=1; ii<=${__nL} ; ii++ )) ; do
-	local __line=`echo "${__allActiveLines}" | head -n ${ii} | tail -1`
-	local __data=( ${__line} )
-	tmpworkspace="${__data[0]}"
-	checkWS
-	for (( jj=1; jj<${#__data[@]}; jj++ )) ; do
-	    tmpStudy="${__data[$jj]}"
-	    getStudy
-	done
+        local __line=`echo "${__allActiveLines}" | head -n ${ii} | tail -1`
+        local __data=( ${__line} )
+        tmpworkspace="${__data[0]}"
+        checkWS
+        for (( jj=1; jj<${#__data[@]}; jj++ )) ; do
+            tmpStudy="${__data[$jj]}"
+            getStudy
+        done
     done
 }
 
 function checkWS(){
     if [ ! -d ${tmpworkspace} ] ; then
-	how_to_use
-	echo " workspace ${tmpworkspace} not reachable!"
-	exit 1
+        how_to_use
+        echo " workspace ${tmpworkspace} not reachable!"
+        exit 1
     else
-	# remove trailing slashes
-	tmpworkspace=`echo ${tmpworkspace} |  sed 's:/*$::'`
+        # remove trailing slashes
+        tmpworkspace=`echo ${tmpworkspace} |  sed 's:/*$::'`
     fi
 }
 
 function getStudy(){
     if [ -z "${tmpworkspace}" ] ; then
-	how_to_use
-	echo " no workspace specified for study ${tmpStudy}!"
-	exit 1
+        how_to_use
+        echo " no workspace specified for study ${tmpStudy}!"
+        exit 1
     else
-	if [ -z "${tmpStudy}" ] ; then
-	    how_to_use
-	    echo " no study requested!"
-	    exit 1
-	fi
-	# remove trailing slashes
-	local __tmpStudy=`echo ${tmpStudy} |  sed 's:/*$::'`
-	if [ "${__tmpStudy}" == "ALL" ] ; then
-	    local __allStudies=`ls -1d ${tmpworkspace}/studies/*/`
-	    for tmpStudy in ${__allStudies} ; do
-		tmpStudy=`basename ${tmpStudy}`
-		getStudy
-	    done
-	else
-	    studyDir="${tmpworkspace}/studies/${__tmpStudy}"
-	    if [ ! -d ${studyDir} ] ; then
-		echo " study ${tmpStudy} not reachable at ${studyDir}!"
-		exit 1
-	    else
-		workspaces="${workspaces} ${tmpworkspace}"
-		studies="${studies} ${__tmpStudy}"
-	    fi
-	fi
+        if [ -z "${tmpStudy}" ] ; then
+            how_to_use
+            echo " no study requested!"
+            exit 1
+        fi
+        # remove trailing slashes
+        local __tmpStudy=`echo ${tmpStudy} |  sed 's:/*$::'`
+        if [ "${__tmpStudy}" == "ALL" ] ; then
+            local __allStudies=`ls -1d ${tmpworkspace}/studies/*/`
+            for tmpStudy in ${__allStudies} ; do
+                tmpStudy=`basename ${tmpStudy}`
+                getStudy
+            done
+        else
+            studyDir="${tmpworkspace}/studies/${__tmpStudy}"
+            if [ ! -d ${studyDir} ] ; then
+                echo " study ${tmpStudy} not reachable at ${studyDir}!"
+                exit 1
+            else
+                workspaces="${workspaces} ${tmpworkspace}"
+                studies="${studies} ${__tmpStudy}"
+            fi
+        fi
     fi
 }
 
@@ -174,99 +174,99 @@ defaultBackUp="backUp.sh"
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":MSRBLU:hf:w:s:k:P:" opt ; do
     case $opt in
-	M)
-	    lmad=true
-	    tmpCommand="${SCRIPTDIR}/bash/${defaultMadCommand}"
-	    allARGs="${allARGs} -M"
-	    ;;
-	S)
-	    lrunsix=true
-	    tmpCommand="${SCRIPTDIR}/bash/${defaultRunSixCommand}"
-	    allARGs="${allARGs} -S"
-	    ;;
-	R)
-	    lrunres=true
-	    tmpCommand="${SCRIPTDIR}/bash/${defaultRunResults}"
-	    allARGs="${allARGs} -R"
-	    ;;
-	B)
-	    lbackup=true
-	    tmpCommand="${SCRIPTDIR}/bash/${defaultBackUp}"
-	    allARGs="${allARGs} -B"
-	    ;;
-	U)
-	    luser=true
-	    commandLine=$OPTARG
-	    if [ -z "${commandLine}" ] ; then
-		how_to_use
-		echo " empty user command!"
-		exit 1
-	    fi
-	    tmpCommand="eval ${commandLine}"
-	    ;;
-	L)
-	    lZipLog=false
-	    allARGs="${allARGs} -L"
-	    ;;
-	k)
-	    # renew kerberos token
-	    lkinit=true
-	    if [ "$OPTARG" == "R" ] ; then
-		lkrenew=true
-		allARGs="${allARGs} -k R"
-	    elif [ "$OPTARG" != "N" ] ; then
-		how_to_use
-		echo " Invalid argument $OPTARG to -$opt option"
-		exit 1
-	    fi
-	    ;;
-	f)
-	    # get workspaces/studies from file
-	    tmpFile="$OPTARG"
-	    parseFile
-	    ;;
-	w)
-	    # new workspace
-	    tmpworkspace="$OPTARG"
-	    checkWS
-	    ;;
-	s)
-	    # new study
-	    tmpStudy="$OPTARG"
-	    getStudy
-	    ;;
-	P)
-	    # parallel operations
-	    lParallel=true
-	    if [ `echo ${OPTARG} | gawk '{print (toupper($1))}'` == "ALL" ] ; then
-		# a CPU for each study to be treated
-		nCPUs="ALL"
-	    elif [ `echo ${OPTARG} | gawk '{print (toupper($1))}'` == "LXPLUS" ] || `echo ${OPTARG} | gawk '{print (toupper($1))}'` == "LSF" ] || `echo ${OPTARG} | gawk '{print (toupper($1))}'` == "HTCONDOR" ] ; then
-		echo "option not yet available! switching to ALL"
-		nCPUs="ALL"
-	    elif [ `echo ${OPTARG} | gawk '$1 ~ /^[0-9]+$/' | wc -l` -ne 0 ] ; then
-		# distribute the studies over $OPTARG CPUs
-		nCPUs=${OPTARG}
-	    else
-		how_to_use
-		echo "Invalid argument $OPTARG to -$opt option"
-		exit 1
-	    fi
-	    ;;
-	h)
-	    how_to_use
-	    exit 1
-	    ;;
-	:)
-	    how_to_use
-	    echo "Option -$OPTARG requires an argument."
-	    exit 1
-	    ;;
-	\?)
-	    how_to_use
-	    echo "Invalid option: -$OPTARG"
-	    exit 1
-	    ;;
+        M)
+            lmad=true
+            tmpCommand="${SCRIPTDIR}/bash/${defaultMadCommand}"
+            allARGs="${allARGs} -M"
+            ;;
+        S)
+            lrunsix=true
+            tmpCommand="${SCRIPTDIR}/bash/${defaultRunSixCommand}"
+            allARGs="${allARGs} -S"
+            ;;
+        R)
+            lrunres=true
+            tmpCommand="${SCRIPTDIR}/bash/${defaultRunResults}"
+            allARGs="${allARGs} -R"
+            ;;
+        B)
+            lbackup=true
+            tmpCommand="${SCRIPTDIR}/bash/${defaultBackUp}"
+            allARGs="${allARGs} -B"
+            ;;
+        U)
+            luser=true
+            commandLine=$OPTARG
+            if [ -z "${commandLine}" ] ; then
+                how_to_use
+                echo " empty user command!"
+                exit 1
+            fi
+            tmpCommand="eval ${commandLine}"
+            ;;
+        L)
+            lZipLog=false
+            allARGs="${allARGs} -L"
+            ;;
+        k)
+            # renew kerberos token
+            lkinit=true
+            if [ "$OPTARG" == "R" ] ; then
+                lkrenew=true
+                allARGs="${allARGs} -k R"
+            elif [ "$OPTARG" != "N" ] ; then
+                how_to_use
+                echo " Invalid argument $OPTARG to -$opt option"
+                exit 1
+            fi
+            ;;
+        f)
+            # get workspaces/studies from file
+            tmpFile="$OPTARG"
+            parseFile
+            ;;
+        w)
+            # new workspace
+            tmpworkspace="$OPTARG"
+            checkWS
+            ;;
+        s)
+            # new study
+            tmpStudy="$OPTARG"
+            getStudy
+            ;;
+        P)
+            # parallel operations
+            lParallel=true
+            if [ `echo ${OPTARG} | gawk '{print (toupper($1))}'` == "ALL" ] ; then
+                # a CPU for each study to be treated
+                nCPUs="ALL"
+            elif [ `echo ${OPTARG} | gawk '{print (toupper($1))}'` == "LXPLUS" ] || `echo ${OPTARG} | gawk '{print (toupper($1))}'` == "LSF" ] || `echo ${OPTARG} | gawk '{print (toupper($1))}'` == "HTCONDOR" ] ; then
+                echo "option not yet available! switching to ALL"
+                nCPUs="ALL"
+            elif [ `echo ${OPTARG} | gawk '$1 ~ /^[0-9]+$/' | wc -l` -ne 0 ] ; then
+                # distribute the studies over $OPTARG CPUs
+                nCPUs=${OPTARG}
+            else
+                how_to_use
+                echo "Invalid argument $OPTARG to -$opt option"
+                exit 1
+            fi
+            ;;
+        h)
+            how_to_use
+            exit 1
+            ;;
+        :)
+            how_to_use
+            echo "Option -$OPTARG requires an argument."
+            exit 1
+            ;;
+        \?)
+            how_to_use
+            echo "Invalid option: -$OPTARG"
+            exit 1
+            ;;
     esac
 done
 shift "$(($OPTIND - 1))"
@@ -295,18 +295,18 @@ fi
 # ------------------------------------------------------------------------------
 if ${lkinit} ; then
     if ${lkrenew} ; then
-	echo " --> kinit -R beforehand:"
-	kinit -R
+        echo " --> kinit -R beforehand:"
+        kinit -R
     else
-	echo " --> kinit beforehand:"
-	kinit
+        echo " --> kinit beforehand:"
+        kinit
     fi
     if [ $? -gt 0 ] ; then
-	echo "--> kinit failed - AFS/Kerberos credentials expired!!! aborting..."
-	exit 1
+        echo "--> kinit failed - AFS/Kerberos credentials expired!!! aborting..."
+        exit 1
     else
-	echo " --> klist output:"
-	klist
+        echo " --> klist output:"
+        klist
     fi
 fi
 
@@ -320,40 +320,40 @@ if ${lParallel} ; then
     echo " --> requesting parallel jobs!"
     requestedCommand="$allARGs"
     if ${luser} ; then
-	requestedCommand="${requestedCommand} -U \"${commandLine}\""
+        requestedCommand="${requestedCommand} -U \"${commandLine}\""
     fi
     echo "     command: ${requestedCommand}"
     nCPUsOld=${nCPUs}
     if [ ${nCPUs} == "ALL" ] ; then
-	nCPUs=${#studies[@]}
+        nCPUs=${#studies[@]}
     fi
     # a sanity checks
     if [ ${#studies[@]} -lt ${nCPUs} ] ; then
-	nCPUs=${#studies[@]}
+        nCPUs=${#studies[@]}
     fi
     nCPUsSys=`grep -c ^processor /proc/cpuinfo`
     if [ -z "${nCPUsSys}" ] ; then
         # unable to retrieve number of CPUs on current machine
         # setting nCPUs to default value
-	nCPUsSys=${nCPUsDef}
+        nCPUsSys=${nCPUsDef}
     fi
     if [ ${nCPUsSys} -lt ${nCPUs} ]  ; then
-	nCPUs=${nCPUsSys}
+        nCPUs=${nCPUsSys}
     fi
     nCPUsString="nCPUs: ${nCPUs}"
     if [ "${nCPUsOld}" != "${nCPUs}" ] ; then
-	nCPUsString="${nCPUsString} - original request by user: ${nCPUsOld}"
+        nCPUsString="${nCPUsString} - original request by user: ${nCPUsOld}"
     fi
     echo " --> ${nCPUsString};"
 
     # - tmp files, with lists of workspace/studies
     tmpFiles=""
     for (( ii=0; ii<${nCPUs} ; ii++ )) ; do
-	tmpFiles="${tmpFiles} $(mktemp /tmp/`basename $0`.XXXXXXXXX)"
+        tmpFiles="${tmpFiles} $(mktemp /tmp/`basename $0`.XXXXXXXXX)"
     done
     tmpFiles=( ${tmpFiles} )
     for tmpFile in ${tmpFiles[@]} ; do
-	rm -f ${tmpFile}
+        rm -f ${tmpFile}
     done
 
     # - distribute studies over the files
@@ -363,68 +363,68 @@ if ${lParallel} ; then
     nInFile=0
     kk=0
     for (( ii=0 ; ii<${#studies[@]} ; ii++ )) ; do
-	echo "${workspaces[$ii]} ${studies[$ii]}" >> ${tmpFiles[$kk]}
-	let nInFile+=1
-	if [ $kk -lt $nExcess ] ; then
-	    if [ $nInFile -eq $nStudiesPerFileExcess ] ; then
-		let kk+=1
-		nInFile=0
-	    fi
-	else
-	    if [ $nInFile -eq $nStudiesPerFile ] ; then
-		let kk+=1
-		nInFile=0
-	    fi
-	fi
+        echo "${workspaces[$ii]} ${studies[$ii]}" >> ${tmpFiles[$kk]}
+        let nInFile+=1
+        if [ $kk -lt $nExcess ] ; then
+            if [ $nInFile -eq $nStudiesPerFileExcess ] ; then
+                let kk+=1
+                nInFile=0
+            fi
+        else
+            if [ $nInFile -eq $nStudiesPerFile ] ; then
+                let kk+=1
+                nInFile=0
+            fi
+        fi
     done
 
     # - execute parallel tasks
     for tmpFile in ${tmpFiles[@]} ; do
-	if ${luser} ; then
-	    krenew -b -t -- $allARGs -U "${commandLine}" -f $tmpFile
-	else
-	    krenew -b -t -- $allARGs -f $tmpFile
-	fi
+        if ${luser} ; then
+            krenew -b -t -- $allARGs -U "${commandLine}" -f $tmpFile
+        else
+            krenew -b -t -- $allARGs -f $tmpFile
+        fi
     done
 
     # - remove tmp files, after a while
     echo "sleeping ${delayTime} seconds before removing tmp files"
     sleep ${delayTime}
     for tmpFile in ${tmpFiles[@]} ; do
-	rm -f ${tmpFile}
+        rm -f ${tmpFile}
     done
 
 else
 
     # loop through studies one by one
     for (( ii=0 ; ii<${#studies[@]} ; ii++ )) ; do
-	cd ${workspaces[$ii]}
-	[ -d logs ] || mkdir logs
-	__logFile=logs/${studies[$ii]}.log
-	if ${lZipLog} ; then
-   	    if [ -e ${__logFile}.gz ] ; then
-   		gunzip ${__logFile}.gz
-   	    fi
-	fi
-	
-	# actually run the command and make reasonable log file
-	echo -e "\n\n" >> ${__logFile}
-	printf "=%.0s" {1..80} >> ${__logFile}
-	echo "" >> ${__logFile}
-	echo " [START] - `date` - workspace: ${workspaces[$ii]} - study: ${studies[$ii]} - command: ${tmpCommand}" >> ${__logFile}
-	STARTTIME=$(date +%s)
-	eval ${tmpCommand} -d ${studies[$ii]} 2>&1 | tee -a ${__logFile}
-	ENDTIME=$(date +%s)
-	TIMEDELTA=$(($ENDTIME - $STARTTIME))
-	echo " [END]   - `date` - it took ${TIMEDELTA} seconds" >> ${__logFile}
-	
-	if ${lZipLog} ; then
-   	    gzip ${__logFile}
-	fi
-	if [ ${#studies[@]} -gt 1 ] ; then
-	    echo " getting ready for new study..."
-	fi
-	cd - > /dev/null 2>&1
+        cd ${workspaces[$ii]}
+        [ -d logs ] || mkdir logs
+        __logFile=logs/${studies[$ii]}.log
+        if ${lZipLog} ; then
+            if [ -e ${__logFile}.gz ] ; then
+                gunzip ${__logFile}.gz
+            fi
+        fi
+        
+        # actually run the command and make reasonable log file
+        echo -e "\n\n" >> ${__logFile}
+        printf "=%.0s" {1..80} >> ${__logFile}
+        echo "" >> ${__logFile}
+        echo " [START] - `date` - workspace: ${workspaces[$ii]} - study: ${studies[$ii]} - command: ${tmpCommand}" >> ${__logFile}
+        STARTTIME=$(date +%s)
+        eval ${tmpCommand} -d ${studies[$ii]} 2>&1 | tee -a ${__logFile}
+        ENDTIME=$(date +%s)
+        TIMEDELTA=$(($ENDTIME - $STARTTIME))
+        echo " [END]   - `date` - it took ${TIMEDELTA} seconds" >> ${__logFile}
+        
+        if ${lZipLog} ; then
+            gzip ${__logFile}
+        fi
+        if [ ${#studies[@]} -gt 1 ] ; then
+            echo " getting ready for new study..."
+        fi
+        cd - > /dev/null 2>&1
     done
     
 fi

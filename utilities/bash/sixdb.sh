@@ -41,28 +41,28 @@ while getopts  ":hP:d:a:" opt ; do
     case $opt in
         a)
             action="${OPTARG}"
-	    ;;
+            ;;
         d)
             studyName="${OPTARG}"
-	    ;;
-	h)
-	    how_to_use
-	    exit 1
-	    ;;
-	P)
-	    # the user is requesting a specific path to python
-	    pythonPath="${OPTARG}"
-	    ;;
-	:)
-	    how_to_use
-	    echo "Option -$OPTARG requires an argument."
-	    exit 1
-	    ;;
-	\?)
-	    how_to_use
-	    echo "Invalid option: -$OPTARG"
-	    exit 1
-	    ;;
+            ;;
+        h)
+            how_to_use
+            exit 1
+            ;;
+        P)
+            # the user is requesting a specific path to python
+            pythonPath="${OPTARG}"
+            ;;
+        :)
+            how_to_use
+            echo "Option -$OPTARG requires an argument."
+            exit 1
+            ;;
+        \?)
+            how_to_use
+            echo "Invalid option: -$OPTARG"
+            exit 1
+            ;;
     esac
 done
 shift "$(($OPTIND - 1))"

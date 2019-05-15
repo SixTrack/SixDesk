@@ -65,28 +65,28 @@ function basicChecks(){
 
     # - running dir
     if [ "$sixdeskroot" != "sixjobs" ] ; then
-	sixdeskmess -1 "This script must be run in the directory sixjobs!!!"
-	sixdeskexit 1
+        sixdeskmess -1 "This script must be run in the directory sixjobs!!!"
+        sixdeskexit 1
     fi
 
     # - make sure we have a studies directory
     if ${lset} ; then
-	[ -d studies ] || mkdir studies
+        [ -d studies ] || mkdir studies
     elif ${lload} ; then
-	sixdeskInspectPrerequisites ${lverbose} studies -d
+        sixdeskInspectPrerequisites ${lverbose} studies -d
     fi
     if [ $? -gt 0 ] ; then
-	sixdeskexit 2
+        sixdeskexit 2
     fi
 
     # - make sure that, in case of loading, we have the concerned directory in studies:
     if ${lload} ; then
-	sixdeskInspectPrerequisites ${lverbose} ${envFilesPath} -d
-	if [ $? -gt 0 ] ; then
-	    sixdeskmess -1 "Dir containing input files for study $currStudy not found!!!"
-	    sixdeskmess -1 "Expected: ${envFilesPath}"
-	    sixdeskexit 3
-	fi
+        sixdeskInspectPrerequisites ${lverbose} ${envFilesPath} -d
+        if [ $? -gt 0 ] ; then
+            sixdeskmess -1 "Dir containing input files for study $currStudy not found!!!"
+            sixdeskmess -1 "Expected: ${envFilesPath}"
+            sixdeskexit 3
+        fi
     fi
     
 }
@@ -95,34 +95,34 @@ function consistencyChecks(){
 
     # - make sure we are in the correct workspace
     if [ -z "${workspace}" ] ; then
-	sixdeskmess -1 "Workspace not declared in $envFilesPath/sixdeskenv!!!"
-	sixdeskexit 5
+        sixdeskmess -1 "Workspace not declared in $envFilesPath/sixdeskenv!!!"
+        sixdeskexit 5
     fi
     local __cworkspace=`basename $sixdeskwhere`
     if [ "${workspace}" != "${__cworkspace}" ] ; then
-	sixdeskmess -1 "Workspace mismatch: ${workspace} (from sixdeskenv) different from ${__cworkspace} (from current path)!!!"
-	sixdeskmess -1 "Check the workspace definition in $envFilesPath/sixdeskenv."
-	sixdeskexit 6
+        sixdeskmess -1 "Workspace mismatch: ${workspace} (from sixdeskenv) different from ${__cworkspace} (from current path)!!!"
+        sixdeskmess -1 "Check the workspace definition in $envFilesPath/sixdeskenv."
+        sixdeskexit 6
     fi
 
     # - study:
     #   . make sure we have one in sixdeskenv
     if [ -z "${LHCDescrip}" ] ; then
-	sixdeskmess -1 "LHCDescrip not declared in $envFilesPath/sixdeskenv!!!"
-	sixdeskexit 7
+        sixdeskmess -1 "LHCDescrip not declared in $envFilesPath/sixdeskenv!!!"
+        sixdeskexit 7
     fi
     #   . make sure it corresponds to the expected one
     if ${lload} ; then
-	if [ "${LHCDescrip}" != "${currStudy}" ] ; then
-	    sixdeskmess -1 "Study mismatch: ${LHCDescrip} (from sixdeskenv) different from $currStudy (command-line argument)!!!"
-	    sixdeskexit 8
-	fi
+        if [ "${LHCDescrip}" != "${currStudy}" ] ; then
+            sixdeskmess -1 "Study mismatch: ${LHCDescrip} (from sixdeskenv) different from $currStudy (command-line argument)!!!"
+            sixdeskexit 8
+        fi
     fi
 
     # - sixtrack app version
     sixDeskCheckApp
     if [ $? -ne 0 ] ; then
-	sixdeskexit 11
+        sixdeskexit 11
     fi
 }
 
@@ -134,15 +134,15 @@ function getInfoFromFort3Local(){
     local __allActiveBlocks="${__firstActiveBlock} ${__otherActiveBlocks}"
     __allActiveBlocks=( ${__allActiveBlocks} )
     if [ ${#__allActiveBlocks[@]} -gt 0 ] ; then
-	sixdeskmess="active blocks in ${envFilesPath}/fort.3.local:"
-	sixdeskmess
-	for tmpActiveBlock in ${__allActiveBlocks[@]} ; do
-	    sixdeskmess="- ${tmpActiveBlock}"
-	    sixdeskmess
-	done
-	local __nLines=`echo "${__activeLines}" | wc -l`
-	sixdeskmess="for a total of ${__nLines} ACTIVE lines."
-	sixdeskmess
+        sixdeskmess="active blocks in ${envFilesPath}/fort.3.local:"
+        sixdeskmess
+        for tmpActiveBlock in ${__allActiveBlocks[@]} ; do
+            sixdeskmess="- ${tmpActiveBlock}"
+            sixdeskmess
+        done
+        local __nLines=`echo "${__activeLines}" | wc -l`
+        sixdeskmess="for a total of ${__nLines} ACTIVE lines."
+        sixdeskmess
     fi
 }
 
@@ -166,14 +166,14 @@ function setFurtherEnvs(){
     elif (( $(echo "${reduce_angs_with_amplitude}" | gawk '{print ($1 >=0)}') )); then 
         if [ ${long} -ne 1 ]; then
             sixdeskmess -1 "reduced angles with amplitudes available only for long simulations!"
-	    sixdeskexit 9
+            sixdeskexit 9
         else
             if [ ${kinil} -ne 1 ] || [ ${kendl} -ne ${kmaxl} ] || [ ${kstep} -ne 1 ]; then
                 sixdeskmess -1 "reduced angles with amplitudes available only for kmin=1, kend=kmax and kstep=1"
-		sixdeskexit 10
+                sixdeskexit 10
             elif (( $(echo "${reduce_angs_with_amplitude} ${ns2l}" | gawk '{print ($1 >= $2)}') )); then
                 sixdeskmess -1 "reduced angles with amplitudes flag greater than maximum amplitude. Please de-activate the flag"
-		sixdeskexit 11
+                sixdeskexit 11
             else 
                 lReduceAngsWithAmplitude=true
             fi 
@@ -239,62 +239,62 @@ tmpPythonPath=""
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":hsvlcd:ep:P:nN:Ug" opt ; do
     case $opt in
-	h)
-	    how_to_use
-	    exit 1
-	    ;;
-	s)
-	    # set study (new/update/switch)
-	    lset=true
-	    ;;
-	d)
-	    # load existing study
-	    lload=true
-	    currStudy="${OPTARG}"
-	    ;;
-	n) 
-	    # copy input files from template dir
-	    lcptemplate=true
-	    ;;
-	N)
-	    # create workspace
-	    lcrwSpace=true
-	    wSpaceName="${OPTARG}"
-	    # use fort.3.local
-	    llocalfort3=true
-	    # use scan_definitions
-	    lScanDefs=true
-	    # copy input files from template dir
-	    lcptemplate=true
-	    ;;
-	e)
-	    # do not overwrite
-	    loverwrite=false
-	    ;;
-	p)
-	    # the user is requesting a specific platform
-	    currPlatform="${OPTARG}"
-	    ;;
-	l)
-	    # use fort.3.local
-	    llocalfort3=true
-	    ;;
-	c)
-	    # use scan_definitions
-	    lScanDefs=true
-	    ;;
-	P)
-	    # the user is requesting a specific path to python
-	    tmpPythonPath="${OPTARG}"
-	    ;;
-	U)
-	    # unlock currently locked folder (optional action)
-	    lunlock=true
-	    ;;
-	v)
-	    # verbose
-	    lverbose=true
-	    ;;
+        h)
+            how_to_use
+            exit 1
+            ;;
+        s)
+            # set study (new/update/switch)
+            lset=true
+            ;;
+        d)
+            # load existing study
+            lload=true
+            currStudy="${OPTARG}"
+            ;;
+        n) 
+            # copy input files from template dir
+            lcptemplate=true
+            ;;
+        N)
+            # create workspace
+            lcrwSpace=true
+            wSpaceName="${OPTARG}"
+            # use fort.3.local
+            llocalfort3=true
+            # use scan_definitions
+            lScanDefs=true
+            # copy input files from template dir
+            lcptemplate=true
+            ;;
+        e)
+            # do not overwrite
+            loverwrite=false
+            ;;
+        p)
+            # the user is requesting a specific platform
+            currPlatform="${OPTARG}"
+            ;;
+        l)
+            # use fort.3.local
+            llocalfort3=true
+            ;;
+        c)
+            # use scan_definitions
+            lScanDefs=true
+            ;;
+        P)
+            # the user is requesting a specific path to python
+            tmpPythonPath="${OPTARG}"
+            ;;
+        U)
+            # unlock currently locked folder (optional action)
+            lunlock=true
+            ;;
+        v)
+            # verbose
+            lverbose=true
+            ;;
         g)
             # use git sparse checkout to set-up workspace
             if ${lGitIsThere} ; then
@@ -303,16 +303,16 @@ while getopts  ":hsvlcd:ep:P:nN:Ug" opt ; do
                 echo " --> git is NOT there: ignoring -g option"
             fi
             ;;
-	:)
-	    how_to_use
-	    echo "Option -$OPTARG requires an argument."
-	    exit 1
-	    ;;
-	\?)
-	    how_to_use
-	    echo "Invalid option: -$OPTARG"
-	    exit 1
-	    ;;
+        :)
+            how_to_use
+            echo "Option -$OPTARG requires an argument."
+            exit 1
+            ;;
+        \?)
+            how_to_use
+            echo "Invalid option: -$OPTARG"
+            exit 1
+            ;;
     esac
 done
 shift "$(($OPTIND - 1))"
@@ -338,8 +338,8 @@ fi
 # - de-activate currPlatform in case it is not used
 if ${lcptemplate} || ${lcrwSpace} ; then
     if [ -n "${currPlatform}" ] ; then
-	echo "--> copy templates / creation of workspace: -p option with argument ${currPlatform} is switched off."
-	currPlatform=""
+        echo "--> copy templates / creation of workspace: -p option with argument ${currPlatform} is switched off."
+        currPlatform=""
     fi
 fi
 # - check copy templates:
@@ -401,40 +401,40 @@ if ${lcrwSpace} ; then
     sixdeskmess -1 "- current path: $PWD"
     sixdeskmess -1 "- workspace path: ${wSpaceName}"
     if [ -d ${wSpaceName} ] ; then
-	how_to_use
-	sixdeskmess -1 "workspace ${wSpaceName} already exists!"
-	exit 1
+        how_to_use
+        sixdeskmess -1 "workspace ${wSpaceName} already exists!"
+        exit 1
     else
-	mkdir -p ${wSpaceName}
-	cd ${wSpaceName}
-	if ${lgit} ; then
-	    sixdeskmess -1 "Using git to initialise sixjobs dir - repo: ${origRepoForSetup} - branch: ${origBranchForSetup}"
-	    git init
-	    git config core.sparseCheckout true
-	    cat > .git/info/sparse-checkout <<EOF
+        mkdir -p ${wSpaceName}
+        cd ${wSpaceName}
+        if ${lgit} ; then
+            sixdeskmess -1 "Using git to initialise sixjobs dir - repo: ${origRepoForSetup} - branch: ${origBranchForSetup}"
+            git init
+            git config core.sparseCheckout true
+            cat > .git/info/sparse-checkout <<EOF
 sixjobs/control_files/*
 sixjobs/mask/*
 sixjobs/sixdeskTaskIds/*
 sixjobs/studies/*
 EOF
-	    git remote add -f origin ${origRepoForSetup}
+            git remote add -f origin ${origRepoForSetup}
             git checkout ${origBranchForSetup}
-	else
-	    origDir=${REPOPATH}/sixjobs
-	    sixdeskmess -1 "Initialising sixjobs from ${origDir}"
-	    cp -r ${origDir} .
-	fi
-	cd - 2>&1 > /dev/null
-	cd ${wSpaceName}/sixjobs
-	touch sixdesklock
-	touch studies/sixdesklock
-	cd - 2>&1 > /dev/null
+        else
+            origDir=${REPOPATH}/sixjobs
+            sixdeskmess -1 "Initialising sixjobs from ${origDir}"
+            cp -r ${origDir} .
+        fi
+        cd - 2>&1 > /dev/null
+        cd ${wSpaceName}/sixjobs
+        touch sixdesklock
+        touch studies/sixdesklock
+        cd - 2>&1 > /dev/null
     fi
     # do we really need this link?
     [[ "${wSpaceName}" != *"scratch"* ]] || ln -s ${wSpaceName}
     if ! ${lset} && ! ${lload} && ! ${lcptemplate} && ! ${lunlock} ; then
-	sixdeskmess -1 "requested only initialising workspace. Exiting..."
-	exit 0
+        sixdeskmess -1 "requested only initialising workspace. Exiting..."
+        exit 0
     fi
     cd ${wSpaceName}/sixjobs
 fi
@@ -457,8 +457,8 @@ fi
 if ${lunlock} ; then
     sixdeskunlockAll
     if ! ${lset} && ! ${lload} && ! ${lcptemplate} ; then
-	sixdeskmess -1 "requested only unlocking. Exiting..."
-	exit 0
+        sixdeskmess -1 "requested only unlocking. Exiting..."
+        exit 0
     fi
 fi
    
@@ -488,10 +488,10 @@ if ${lcptemplate} ; then
         git branch > /dev/null 2>&1
         if [ $? -ne 0 ] ; then
             # set up git repo
-	    git init
-	    git remote add -f origin ${origRepoForSetup}
+            git init
+            git remote add -f origin ${origRepoForSetup}
         fi
-	git config core.sparseCheckout true
+        git config core.sparseCheckout true
         if [ `grep 'sixjobs/\*' .git/info/sparse-checkout 2> /dev/null | wc -l` -eq 0 ] ; then
             echo 'sixjobs/*' >> .git/info/sparse-checkout
             git fetch origin ${origBranchForSetup}
@@ -508,19 +508,19 @@ if ${lcptemplate} ; then
         sixdeskmess -1 "template input files from ${templateInputFilesPath}"
 
         for tmpFile in ${necessaryInputFiles[@]} ; do
-	    # preserve original time stamps
-	    cp -p ${templateInputFilesPath}/${tmpFile} .
-	    sixdeskmess 2 "${tmpFile}"
+            # preserve original time stamps
+            cp -p ${templateInputFilesPath}/${tmpFile} .
+            sixdeskmess 2 "${tmpFile}"
         done
     fi
 
     # get current paths:
     sixdeskGetCurretPaths
     sed -i -e "s#^export workspace=.*#export workspace=${tmpWorkspace}#" \
-	   -e "s#^export basedir=.*#export basedir=${tmpBaseDir}#" \
-	   -e "s#^export scratchdir=.*#export scratchdir=${tmpScratchDir}#" \
-	   -e "s#^export trackdir=.*#export trackdir=${tmpTrackDir}#" \
-	   -e "s#^export sixtrack_input=.*#export sixtrack_input=${tmpSixtrackInput}#" \
+           -e "s#^export basedir=.*#export basedir=${tmpBaseDir}#" \
+           -e "s#^export scratchdir=.*#export scratchdir=${tmpScratchDir}#" \
+           -e "s#^export trackdir=.*#export trackdir=${tmpTrackDir}#" \
+           -e "s#^export sixtrack_input=.*#export sixtrack_input=${tmpSixtrackInput}#" \
            sixdeskenv
     sed -i -e "s#^export sixdeskwork=.*#export sixdeskwork=${tmpSixdeskWork}#" \
            -e "s#^export cronlogs=.*#export cronlogs=${tmpCronLogs}#" \
@@ -535,14 +535,14 @@ else
         for necInpFile in ${necessaryInputFiles[@]} ; do
             sixdeskInspectPrerequisites true $envFilesPath -s ${necInpFile}
         done
-	sixdeskexit 4
+        sixdeskexit 4
     fi
 
     # - source active sixdeskenv/sysenv
     source ${envFilesPath}/sixdeskenv
     source ${envFilesPath}/sysenv
     if ${llocalfort3} ; then
-	getInfoFromFort3Local
+        getInfoFromFort3Local
     fi
 
     # - perform some consistency checks on parsed info
@@ -559,7 +559,7 @@ else
             for tmpFile in "${additionalFilesInp6T}" ; do
                 sixdeskInspectPrerequisites true $envFilesPath -s ${tmpFile}
             done
-	    sixdeskexit 13
+            sixdeskexit 13
         fi
         for tmpFile in "${additionalFilesInp6T}" ; do
             sixdeskmess -1 "user requested additional input file ${tmpFile} for sixtrack jobs"
@@ -580,35 +580,35 @@ else
     
     # - save input files
     if ${loverwrite} ; then
-	__lnew=false
-	if ${lset} ; then
-	    if ! [ -d ${sixdeskstudy} ] ; then
-		__lnew=true
-		mkdir ${sixdeskstudy}
-	    fi
-	fi
+        __lnew=false
+        if ${lset} ; then
+            if ! [ -d ${sixdeskstudy} ] ; then
+                __lnew=true
+                mkdir ${sixdeskstudy}
+            fi
+        fi
 
         # We now call update_sixjobs in case there were changes
         #    and to create for example the logfile directories
-	source ${SCRIPTDIR}/bash/update_sixjobs
-	if ! ${__lnew} ; then
+        source ${SCRIPTDIR}/bash/update_sixjobs
+        if ! ${__lnew} ; then
             # and now we can check 
-	    source ${SCRIPTDIR}/bash/check_envs
-	fi
-	
-	if ${lset} ; then
-	    cp ${envFilesPath}/sixdeskenv studies/${LHCDescrip}
-	    cp ${envFilesPath}/sysenv studies/${LHCDescrip}
-	    if ${llocalfort3} ; then
-		cp ${envFilesPath}/fort.3.local studies/${LHCDescrip}
-	    fi
-	    if ${__lnew} ; then
-  	        # new study
-		sixdeskmess -1 "Created a NEW study $LHCDescrip"
-	    else
- 	        # updating an existing study
-		sixdeskmess -1 "Updated sixdeskenv/sysenv(/fort.3.local) for $LHCDescrip"
-	    fi
+            source ${SCRIPTDIR}/bash/check_envs
+        fi
+        
+        if ${lset} ; then
+            cp ${envFilesPath}/sixdeskenv studies/${LHCDescrip}
+            cp ${envFilesPath}/sysenv studies/${LHCDescrip}
+            if ${llocalfort3} ; then
+                cp ${envFilesPath}/fort.3.local studies/${LHCDescrip}
+            fi
+            if ${__lnew} ; then
+                # new study
+                sixdeskmess -1 "Created a NEW study $LHCDescrip"
+            else
+                # updating an existing study
+                sixdeskmess -1 "Updated sixdeskenv/sysenv(/fort.3.local) for $LHCDescrip"
+            fi
             # copy necessary .sub/.sh files
             sixdeskmess -1 "if absent, copying necessary .sub/.sh files for MADX run in ${sixtrack_input}"
             sixdeskmess -1 "   and necessary .sub/.sh files for 6T runs in ${sixdeskwork}"
@@ -622,45 +622,45 @@ else
             if [ -n "${additionalFilesInp6T}" ] ; then
                 sixdeskmess -1 "taking care of additional files for sixtrack jobs"
                 for tmpFile in "${additionalFilesInp6T}" ; do
-	            cp ${envFilesPath}/${tmpFile} studies/${LHCDescrip}
+                    cp ${envFilesPath}/${tmpFile} studies/${LHCDescrip}
                 done
             fi
-	elif ${lload} ; then
-	    cp ${envFilesPath}/sixdeskenv .
-	    cp ${envFilesPath}/sysenv .
-	    if ${llocalfort3} ; then
-		cp ${envFilesPath}/fort.3.local .
-	    fi
+        elif ${lload} ; then
+            cp ${envFilesPath}/sixdeskenv .
+            cp ${envFilesPath}/sysenv .
+            if ${llocalfort3} ; then
+                cp ${envFilesPath}/fort.3.local .
+            fi
             # additional files:
             if [ -n "${additionalFilesInp6T}" ] ; then
                 sixdeskmess -1 "taking care of additional files for sixtrack jobs"
                 for tmpFile in "${additionalFilesInp6T}" ; do
-	            cp ${envFilesPath}/${tmpFile} .
+                    cp ${envFilesPath}/${tmpFile} .
                 done
             fi
-	    sixdeskmess -1 "Switched to study $LHCDescrip"
-	fi
+            sixdeskmess -1 "Switched to study $LHCDescrip"
+        fi
     fi
 
     # - overwrite platform
     if [ -n "${currPlatform}" ] ; then
-	platform=$currPlatform
+        platform=$currPlatform
     fi
     sixdeskSetPlatForm $platform
     if [ $? -ne 0 ] ; then
-	sixdeskexit 10
+        sixdeskexit 10
     fi
     if [ "$sixdeskplatform" == "boinc" ] ; then
-	sixdeskCheckAppVerBOINC
-	if [ $? -ne 0 ] ; then
-	    sixdeskexit 12
-	fi
+        sixdeskCheckAppVerBOINC
+        if [ $? -ne 0 ] ; then
+            sixdeskexit 12
+        fi
     fi
 
     # - set python path
     if [ -n "${tmpPythonPath}" ] ; then
-	# overwrite what was stated in sixdeskenv/sysenv
-	pythonPath=${tmpPythonPath}
+        # overwrite what was stated in sixdeskenv/sysenv
+        pythonPath=${tmpPythonPath}
     fi
     sixdeskDefinePythonPath ${pythonPath}
 
@@ -670,7 +670,7 @@ else
     WTEXT="[${workspace}]"
     BTEXT="no BNL flag"
     if [ "$BNL" != "" ] ; then
-	BTEXT="BNL flag active"
+        BTEXT="BNL flag active"
     fi
     NTEXT="[$sixdeskhostname]"
     if [ -n "${appVer}" ] ; then
@@ -689,11 +689,11 @@ else
     echo
     
     if [ -e "$sixdeskstudy"/deleted ] ; then
-	if ${loverwrite} ; then
-	    rm -f "$sixdeskstudy"/deleted
-	else
-	    sixdeskmess -1 "Warning! Study `basename $sixdeskstudy` has been deleted!!! Please restore it explicitely"
-	fi
+        if ${loverwrite} ; then
+            rm -f "$sixdeskstudy"/deleted
+        else
+            sixdeskmess -1 "Warning! Study `basename $sixdeskstudy` has been deleted!!! Please restore it explicitely"
+        fi
     fi
 
 fi
@@ -711,18 +711,18 @@ if ! ${lcptemplate} ; then
     # - fs listquota
     echo ""
     if [[ "${sixdesktrack}" == "/afs"* ]] ; then
-	sixdeskmess -1 "fs listquota ${sixdesktrack}:"
-	tmpLines=`fs listquota ${sixdesktrack}`
-	echo "${tmpLines}"
-	#   check, and in case raise a warning
-	fraction=`echo "${tmpLines}" | tail -1 | gawk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
-	if [ ${fraction} -gt 90 ] ; then
-	    sixdeskmess -1 "WARNING: your quota is above 90%!! pay attention to occupancy of the current study, in case of submission..."
-	fi
+        sixdeskmess -1 "fs listquota ${sixdesktrack}:"
+        tmpLines=`fs listquota ${sixdesktrack}`
+        echo "${tmpLines}"
+        #   check, and in case raise a warning
+        fraction=`echo "${tmpLines}" | tail -1 | gawk '{frac=$3/$2*100; ifrac=int(frac); if (frac-ifrac>0.5) {ifrac+=1} print (ifrac)}'`
+        if [ ${fraction} -gt 90 ] ; then
+            sixdeskmess -1 "WARNING: your quota is above 90%!! pay attention to occupancy of the current study, in case of submission..."
+        fi
     else
-	sixdeskmess -1 "df -Th ${sixdesktrack}:"
-	\df -Th ${sixdesktrack}
-	sixdeskmess -1 " the above output is at your convenience, for you to check disk space"
+        sixdeskmess -1 "df -Th ${sixdesktrack}:"
+        \df -Th ${sixdesktrack}
+        sixdeskmess -1 " the above output is at your convenience, for you to check disk space"
     fi
 
 fi

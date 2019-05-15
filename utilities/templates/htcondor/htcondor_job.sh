@@ -61,10 +61,10 @@ elif [ -f fma_sixtrack ] ; then
     # for debugging also copy files with particle coordinates
     dumpFiles=`ls -1 *_DUMP_* 2> /dev/null`
     if [ -n "${dumpFiles}" ] ; then
-	for tmpDumpFile in ${dumpFiles} ; do
-	    gzip ${tmpDumpFile}
-	    cp ${tmpDumpFile}.gz ${runDirBaseName}/${WUdir}
-	done
+        for tmpDumpFile in ${dumpFiles} ; do
+            gzip ${tmpDumpFile}
+            cp ${tmpDumpFile}.gz ${runDirBaseName}/${WUdir}
+        done
     fi
 fi
 

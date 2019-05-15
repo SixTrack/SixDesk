@@ -11,28 +11,28 @@ function checkDBnLines(){
     nCom=`wc -l < ${dbCom}`
     let nChk=${nInc}+${nCom}
     if ${__lcheck} ; then
-	if [ ${nAll} -ne ${nChk} ] ; then
-	    let nDiff=${nAll}-${nChk}
-	    sixdeskmess -1 "different number of entries in ${dbAll} (${nAll}) and ${dbInc} (${nInc}) plus ${dbCom} (${nCom}) - diff: ${nDiff}"
-	else
-	    sixdeskmess  1 "same number of entries in ${dbAll} (${nAll}) and ${dbInc} (${nInc}) plus ${dbCom} (${nCom})"
-	    lequal=true
-	fi
+        if [ ${nAll} -ne ${nChk} ] ; then
+            let nDiff=${nAll}-${nChk}
+            sixdeskmess -1 "different number of entries in ${dbAll} (${nAll}) and ${dbInc} (${nInc}) plus ${dbCom} (${nCom}) - diff: ${nDiff}"
+        else
+            sixdeskmess  1 "same number of entries in ${dbAll} (${nAll}) and ${dbInc} (${nInc}) plus ${dbCom} (${nCom})"
+            lequal=true
+        fi
     elif ${__lprint} ; then
-	sixdeskmess -1 "number of entries in ${dbAll}/${dbInc}/${dbCom} ${nAll}/${nInc}/${nCom}"
+        sixdeskmess -1 "number of entries in ${dbAll}/${dbInc}/${dbCom} ${nAll}/${nInc}/${nCom}"
     fi
 }
 
 function restoreFileFormat(){
     for tmpCheckFile in ${addWhiteSpaces[@]} ; do
         # strip all leading/trailing whitespaces + add a whitespace at the end
-	gawk '{$NF=$NF" "}1' ${tmpCheckFile} > ${tmpCheckFile}_temp
-	mv ${tmpCheckFile}_temp ${tmpCheckFile}
+        gawk '{$NF=$NF" "}1' ${tmpCheckFile} > ${tmpCheckFile}_temp
+        mv ${tmpCheckFile}_temp ${tmpCheckFile}
     done
     for tmpCheckFile in ${noWhiteSpaces[@]} ; do
-	# strip all leading/trailing whitespaces (no whitespace at the end)
-	gawk '{$NF=$NF}1' ${tmpCheckFile} > ${tmpCheckFile}_temp
-	mv ${tmpCheckFile}_temp ${tmpCheckFile}
+        # strip all leading/trailing whitespaces (no whitespace at the end)
+        gawk '{$NF=$NF}1' ${tmpCheckFile} > ${tmpCheckFile}_temp
+        mv ${tmpCheckFile}_temp ${tmpCheckFile}
     done
 }
 
@@ -179,17 +179,17 @@ echo ""
 sixdeskmess -1 "checking integrity of single DB files of each platform ..."
 for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
     if [ -d ${platForms[$ii]}jobs ] ; then
-	for tmpCheckFile in ${fileSuffixes[$ii]} incomplete_${fileSuffixes[$ii]} completed_${fileSuffixes[$ii]} ; do
-  	    # eg: boincjobs/incomplete_tasks
-	    dbFile=${platForms[$ii]}jobs/${tmpCheckFile}
-	    [ -e ${dbFile} ] || touch ${dbFile}
-	    sixdeskmess  1 "...considering DB file ${dbFile} ..."
+        for tmpCheckFile in ${fileSuffixes[$ii]} incomplete_${fileSuffixes[$ii]} completed_${fileSuffixes[$ii]} ; do
+            # eg: boincjobs/incomplete_tasks
+            dbFile=${platForms[$ii]}jobs/${tmpCheckFile}
+            [ -e ${dbFile} ] || touch ${dbFile}
+            sixdeskmess  1 "...considering DB file ${dbFile} ..."
             # - remove lines without a Runnam
-	    grep '%' ${dbFile} > ${dbFile}_temp
-	    rm ${dbFile}_temp
-	    # - sanitize file from non-ASCI chars
-	    sed -i '/[^[:print:]]/d' ${dbFile}
-	done
+            grep '%' ${dbFile} > ${dbFile}_temp
+            rm ${dbFile}_temp
+            # - sanitize file from non-ASCI chars
+            sed -i '/[^[:print:]]/d' ${dbFile}
+        done
     fi
 done
 
@@ -197,49 +197,49 @@ done
 sixdeskmess -1 "checking duplicates in DB files of each platform ..."
 for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
     if [ -d ${platForms[$ii]}jobs ] ; then
-	dbAll=${platForms[$ii]}jobs/${fileSuffixes[$ii]}
-	dbInc=${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]}
-	dbCom=${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]}
-	[ -e ${dbAll} ] || touch ${dbAll}
-	[ -e ${dbInc} ] || touch ${dbInc}
-	[ -e ${dbCom} ] || touch ${dbCom}
-	checkDBnLines true true
-	if ! ${lequal} ; then
-	    # - remove double entries in each file
+        dbAll=${platForms[$ii]}jobs/${fileSuffixes[$ii]}
+        dbInc=${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]}
+        dbCom=${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]}
+        [ -e ${dbAll} ] || touch ${dbAll}
+        [ -e ${dbInc} ] || touch ${dbInc}
+        [ -e ${dbCom} ] || touch ${dbCom}
+        checkDBnLines true true
+        if ! ${lequal} ; then
+            # - remove double entries in each file
             sixdeskmess  1 "   ...removing double entries in each file..."
-	    for dbFile in ${dbInc} ${dbCom} ${dbAll} ; do
-		sixdeskmess  1 "      ...considering DB file ${dbFile} ..."
-		cat ${dbFile} | sort -u > ${dbFile}_temp
-		mv ${dbFile}_temp ${dbFile}
-	    done
-	    checkDBnLines true true
-	fi
-	if ! ${lequal} ; then
-	    # - remove double entries in completed/incomplete lists from list of completed ids
-	    sixdeskmess 1 "   ...removing double entries among ${dbInc} and ${dbCom} from ${dbCom} ..."
-	    cat ${dbInc} ${dbCom} | sed 's: *$::' | sort | uniq -c | gawk '{if ($1>1) {print (substr($0,9))}}' > doubles.lis
-	    while read aline ; do
-		grep -v "${aline}" ${dbCom} > ${dbCom}_temp
-		mv ${dbCom}_temp ${dbCom}
-	    done < doubles.lis
-	    checkDBnLines true true
-	    # clean
-	    rm -f doubles.lis
-	fi
-	if ! ${lequal} ; then
-	    # - remove double entries among the three files
-	    sixdeskmess  1 "   ...adding missing entries in ${dbAll} or in ${dbInc}"
-	    cat ${dbInc} ${dbCom} | sed 's: *$::' | sort -u > treated.lis
-	    cat ${dbAll} | sed 's: *$::' | sort -u > all.lis
-	    diff all.lis treated.lis > diffs.txt
-	    #   . add missing ids to list of all
-	    grep '^> ' diffs.txt | gawk '{print (substr($0,3))}' >> ${dbAll}
-	    #   . add missing ids to list of incompletes
-	    grep '^< ' diffs.txt | gawk '{print (substr($0,3))}' >> ${dbInc}
-	    checkDBnLines true true
-	    # clean
-	    rm -f treated.lis all.lis diffs.txt
-	fi
+            for dbFile in ${dbInc} ${dbCom} ${dbAll} ; do
+                sixdeskmess  1 "      ...considering DB file ${dbFile} ..."
+                cat ${dbFile} | sort -u > ${dbFile}_temp
+                mv ${dbFile}_temp ${dbFile}
+            done
+            checkDBnLines true true
+        fi
+        if ! ${lequal} ; then
+            # - remove double entries in completed/incomplete lists from list of completed ids
+            sixdeskmess 1 "   ...removing double entries among ${dbInc} and ${dbCom} from ${dbCom} ..."
+            cat ${dbInc} ${dbCom} | sed 's: *$::' | sort | uniq -c | gawk '{if ($1>1) {print (substr($0,9))}}' > doubles.lis
+            while read aline ; do
+                grep -v "${aline}" ${dbCom} > ${dbCom}_temp
+                mv ${dbCom}_temp ${dbCom}
+            done < doubles.lis
+            checkDBnLines true true
+            # clean
+            rm -f doubles.lis
+        fi
+        if ! ${lequal} ; then
+            # - remove double entries among the three files
+            sixdeskmess  1 "   ...adding missing entries in ${dbAll} or in ${dbInc}"
+            cat ${dbInc} ${dbCom} | sed 's: *$::' | sort -u > treated.lis
+            cat ${dbAll} | sed 's: *$::' | sort -u > all.lis
+            diff all.lis treated.lis > diffs.txt
+            #   . add missing ids to list of all
+            grep '^> ' diffs.txt | gawk '{print (substr($0,3))}' >> ${dbAll}
+            #   . add missing ids to list of incompletes
+            grep '^< ' diffs.txt | gawk '{print (substr($0,3))}' >> ${dbInc}
+            checkDBnLines true true
+            # clean
+            rm -f treated.lis all.lis diffs.txt
+        fi
     fi
 done
 
@@ -247,9 +247,9 @@ done
 sixdeskmess -1 "restoring format of DB files of each platform ..."
 for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
     if [ -d ${platForms[$ii]}jobs ] ; then
-	addWhiteSpaces=( ${platForms[$ii]}jobs/${fileSuffixes[$ii]} ${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]} )
-	noWhiteSpaces=( ${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]} )
-	restoreFileFormat
+        addWhiteSpaces=( ${platForms[$ii]}jobs/${fileSuffixes[$ii]} ${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]} )
+        noWhiteSpaces=( ${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]} )
+        restoreFileFormat
     fi
 done
 
@@ -297,16 +297,16 @@ if ! ${lequal} ; then
     sixdeskmess  1 "      ...considering DB file ${dbAll} ..."
     gawk '{print ($1)}' ${dbAll} | sort | uniq -c | gawk '{if ($1>1) {print ($2)}}' > double.lis
     while read aRunnam ; do
-	sixdeskmess  1 "found duplicate Runnam ${aRunnam}"
-	allTaskIDs=`grep "^${aRunnam} " ${dbAll} | cut -d\  -f2- | sort -u`
-	allTaskIDs=( ${allTaskIDs} )
-	sed -i -e "/${aRunnam}/d" ${dbAll}
-	echo "${aRunnam} ${allTaskIDs[@]} " >> ${dbAll}
+        sixdeskmess  1 "found duplicate Runnam ${aRunnam}"
+        allTaskIDs=`grep "^${aRunnam} " ${dbAll} | cut -d\  -f2- | sort -u`
+        allTaskIDs=( ${allTaskIDs} )
+        sed -i -e "/${aRunnam}/d" ${dbAll}
+        echo "${aRunnam} ${allTaskIDs[@]} " >> ${dbAll}
     done < double.lis
     for dbFile in ${dbInc} ${dbCom} ; do
-	sixdeskmess  1 "      ...considering DB file ${dbFile} ..."
-	cat ${dbFile} | sort -u > ${dbFile}_temp
-	mv ${dbFile}_temp ${dbFile}
+        sixdeskmess  1 "      ...considering DB file ${dbFile} ..."
+        cat ${dbFile} | sort -u > ${dbFile}_temp
+        mv ${dbFile}_temp ${dbFile}
     done
     checkDBnLines true true
     # clean
@@ -317,8 +317,8 @@ if ! ${lequal} ; then
     sixdeskmess 1 "   ...removing double entries among ${dbInc} and ${dbCom} from ${dbCom} ..."
     cat ${dbInc} ${dbCom} | sed 's: *$::' | sort | uniq -c | gawk '{if ($1>1) {print (substr($0,9))}}' > doubles.lis
     while read aline ; do
-	grep -v "${aline}" ${dbCom} > ${dbCom}_temp
-	mv ${dbCom}_temp ${dbCom}
+        grep -v "${aline}" ${dbCom} > ${dbCom}_temp
+        mv ${dbCom}_temp ${dbCom}
     done < doubles.lis
     checkDBnLines true true
     # clean
@@ -334,13 +334,13 @@ if ! ${lequal} ; then
     grep '^> ' diffs.txt | gawk '{print (substr($0,3))}' > idsMisAll.lis
     searchFiles=""
     for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
-	! [ -e ${platForms[$ii]}jobs/${fileSuffixes[$ii]} ] || searchFiles="${searchFiles} ${platForms[$ii]}jobs/${fileSuffixes[$ii]}"
+        ! [ -e ${platForms[$ii]}jobs/${fileSuffixes[$ii]} ] || searchFiles="${searchFiles} ${platForms[$ii]}jobs/${fileSuffixes[$ii]}"
     done
     while read aRunnam ; do
-	allTaskIDs=`grep "^${aRunnam} " ${searchFiles} | cut -d\  -f2-`
-	allTaskIDs=( ${allTaskIDs} )
-	echo "${aRunnam} ${allTaskIDs[@]} " >> ${dbAll}
-	sixdeskmess  1 " added Runnam ${aRunnam} missing in ${dbAll} - taskids: ${allTaskIDs[@]}"
+        allTaskIDs=`grep "^${aRunnam} " ${searchFiles} | cut -d\  -f2-`
+        allTaskIDs=( ${allTaskIDs} )
+        echo "${aRunnam} ${allTaskIDs[@]} " >> ${dbAll}
+        sixdeskmess  1 " added Runnam ${aRunnam} missing in ${dbAll} - taskids: ${allTaskIDs[@]}"
     done < idsMisAll.lis
     #   . add missing ids to list of incompletes
     grep '^< ' diffs.txt | gawk '{print (substr($0,3))}' >> ${dbInc}
@@ -365,18 +365,18 @@ echo ""
 for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
     tmpCheckFile=${platForms[$ii]}jobs/${fileSuffixes[$ii]}
     if [ -s ${tmpCheckFile} ] ; then
-	sixdeskmess -1 "...checking against ${tmpCheckFile} ..."
-	sixdeskmess -1 "   this operation might take few minutes, depending on how many tasks you have in taskids - be patient..."
-	cat taskids ${tmpCheckFile} | gawk '{print ($1)}' | sort | uniq -c | gawk '{if ($1==1) {print ($2)}}' > missing_taskids_temp
-	while read Runnam ; do
-	    inTaskIds=`grep "^${Runnam} " taskids`
-	    if [ -z "${inTaskIds}" ] ; then
-		inTaskIds2=`grep "^${Runnam} " ${tmpCheckFile}`
-		# the taskid is present in the platform listing but not in taskids - add it
-		sixdeskmess -1 "...missing ${Runnam} in taskids - adding it ..."
-		echo "${inTaskIds2}" >> taskids
-	    fi
-	done < missing_taskids_temp
+        sixdeskmess -1 "...checking against ${tmpCheckFile} ..."
+        sixdeskmess -1 "   this operation might take few minutes, depending on how many tasks you have in taskids - be patient..."
+        cat taskids ${tmpCheckFile} | gawk '{print ($1)}' | sort | uniq -c | gawk '{if ($1==1) {print ($2)}}' > missing_taskids_temp
+        while read Runnam ; do
+            inTaskIds=`grep "^${Runnam} " taskids`
+            if [ -z "${inTaskIds}" ] ; then
+                inTaskIds2=`grep "^${Runnam} " ${tmpCheckFile}`
+                # the taskid is present in the platform listing but not in taskids - add it
+                sixdeskmess -1 "...missing ${Runnam} in taskids - adding it ..."
+                echo "${inTaskIds2}" >> taskids
+            fi
+        done < missing_taskids_temp
         rm -f missing_taskids_temp
     fi
 done
@@ -571,7 +571,7 @@ do
           #
           if [ ! -d ${tree}/${Rundir} ] ;then
               echo "Something really bad, $Rundir does NOT exist!!!"
-	      echo "$Rundir" >> missingDirs.txt
+              echo "$Rundir" >> missingDirs.txt
           else
               damaged=false
               for iFort in 2 3 8 16 ; do

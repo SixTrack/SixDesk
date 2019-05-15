@@ -55,15 +55,15 @@ function checkDBnLines(){
     nCom=`wc -l < ${dbCom}`
     let nChk=${nInc}+${nCom}
     if ${__lcheck} ; then
-	if [ ${nAll} -ne ${nChk} ] ; then
-	    let nDiff=${nAll}-${nChk}
-	    sixdeskmess -1 "different number of entries in ${dbAll} (${nAll}) and ${dbInc} (${nInc}) plus ${dbCom} (${nCom}) - diff: ${nDiff}"
-	else
-	    sixdeskmess  1 "same number of entries in ${dbAll} (${nAll}) and ${dbInc} (${nInc}) plus ${dbCom} (${nCom})"
-	    lequal=true
-	fi
+        if [ ${nAll} -ne ${nChk} ] ; then
+            let nDiff=${nAll}-${nChk}
+            sixdeskmess -1 "different number of entries in ${dbAll} (${nAll}) and ${dbInc} (${nInc}) plus ${dbCom} (${nCom}) - diff: ${nDiff}"
+        else
+            sixdeskmess  1 "same number of entries in ${dbAll} (${nAll}) and ${dbInc} (${nInc}) plus ${dbCom} (${nCom})"
+            lequal=true
+        fi
     elif ${__lprint} ; then
-	sixdeskmess -1 "number of entries in ${dbAll}/${dbInc}/${dbCom} ${nAll}/${nInc}/${nCom}"
+        sixdeskmess -1 "number of entries in ${dbAll}/${dbInc}/${dbCom} ${nAll}/${nInc}/${nCom}"
     fi
 }
 
@@ -83,7 +83,7 @@ update_cases()
       rm -f $sixdeskwork/sedscript.sed
       #make a sed script
       while read mycase ; do
-	  echo "/^${mycase}$/d" >> $sixdeskwork/sedscript.sed
+          echo "/^${mycase}$/d" >> $sixdeskwork/sedscript.sed
       done < $sixdeskwork/completed_this_run
       sed -f $sixdeskwork/sedscript.sed $sixdeskwork/myincomplete_cases > $sixdeskwork/myincomplete_cases_temp
       mv $sixdeskwork/myincomplete_cases_temp $sixdeskwork/myincomplete_cases
@@ -97,7 +97,7 @@ update_cases()
       # apply the same logics to plaform DB
       rm -f $sixdeskjobs/sedscript.sed
       while read aline ; do
-	  echo "/^${aline}/d" >> $sixdeskjobs/sedscript.sed
+          echo "/^${aline}/d" >> $sixdeskjobs/sedscript.sed
       done < $sixdeskjobs/completed_tasks_this_run
       sed -i -f $sixdeskjobs/sedscript.sed $sixdeskjobs/incomplete_tasks
       sed -i -f $sixdeskjobs/sedscript.sed $sixdeskjobs/completed_tasks
@@ -187,186 +187,186 @@ function getListNewResults(){
 
     if test $sixdeskplatform = "cpss"
     then
-	if test ! -s $sixdeskstudy/TaskGroupId
-	then
-	    rm $tmp
-	    rm $sixdesktasklist
-	    
+        if test ! -s $sixdeskstudy/TaskGroupId
+        then
+            rm $tmp
+            rm $sixdesktasklist
+            
 #MACRO mymess 0 No TaskGroup exists for CPSS.
-	    sixdeskmess -1 "No TaskGroup exists for CPSS."
+            sixdeskmess -1 "No TaskGroup exists for CPSS."
 #MACRO mymess
-	    
-	    
+            
+            
 #MACRO myunlock $sixdeskstudy
-	    sixdesklockdir=$sixdeskstudy
-	    sixdeskunlock
+            sixdesklockdir=$sixdeskstudy
+            sixdeskunlock
 #MACRO myunlock
-	    
-	    
+            
+            
 #MACRO myexit 0
-	    sixdeskexitparam=0
-	    sixdeskexit
+            sixdeskexitparam=0
+            sixdeskexit
 #MACRO myexit
-	    
-	fi
-	tgid=`cat $sixdeskstudy/TaskGroupId`
-	mytgid=`echo $tgid | sed -e 's/TaskGroupID: *//'`
-	
+            
+        fi
+        tgid=`cat $sixdeskstudy/TaskGroupId`
+        mytgid=`echo $tgid | sed -e 's/TaskGroupID: *//'`
+        
 #MACRO mymess 0 Checking TaskGroup $mytgid for $LHCDescrip
-	sixdeskmess 1 "Checking TaskGroup $mytgid for $LHCDescrip"
+        sixdeskmess 1 "Checking TaskGroup $mytgid for $LHCDescrip"
 #MACRO mymess
-	
-	perl ${SCRIPTDIR}/perl/queryReadyResults.pl $mytgid > $tmp
-	stat=$?
-	if test $stat -ne 0
-	then
-	    
+        
+        perl ${SCRIPTDIR}/perl/queryReadyResults.pl $mytgid > $tmp
+        stat=$?
+        if test $stat -ne 0
+        then
+            
 #MACRO mymess 0 Problem with query ReadyResults Status $stat `cat $tmp`
-	    sixdeskmess -1 "Problem with query ReadyResults Status $stat `cat $tmp`"
+            sixdeskmess -1 "Problem with query ReadyResults Status $stat `cat $tmp`"
 #MACRO mymess
-	    
-	    rm $tmp
-	    rm $sixdesktasklist
-	    
+            
+            rm $tmp
+            rm $sixdesktasklist
+            
 #MACRO myunlock $sixdeskstudy
-	    sixdesklockdir=$sixdeskstudy
-	    sixdeskunlock
+            sixdesklockdir=$sixdeskstudy
+            sixdeskunlock
 #MACRO myunlock
-	    
-	    
+            
+            
 #MACRO myexit 99
-	    sixdeskexitparam=99
-	    sixdeskexit
+            sixdeskexitparam=99
+            sixdeskexit
 #MACRO myexit
-	    
-	fi
-	# remove the \r's............
-	
+            
+        fi
+        # remove the \r's............
+        
 #MACRO mymktmp sixdeskresults $sixdeskjobs
-	sixdesktmpname=sixdeskresults
-	sixdesktmpdirarg=$sixdeskjobs
-	sixdeskmktmp
-	sixdeskresults=$sixdesktmp
+        sixdesktmpname=sixdeskresults
+        sixdesktmpdirarg=$sixdeskjobs
+        sixdeskmktmp
+        sixdeskresults=$sixdesktmp
 #MACRO mymktmp
-	
-	gawk -f ${SCRIPTDIR}/gawk/remover.awk $tmp > $sixdeskresults
-	rm $tmp
-	tot=`grep TotalTasks $sixdeskresults | sed -e 's/TotalTasks: *//'`
-	tmpReady=`grep ResultsReady $sixdeskresults | sed -e 's/ResultsReady: *//'`
-	
+        
+        gawk -f ${SCRIPTDIR}/gawk/remover.awk $tmp > $sixdeskresults
+        rm $tmp
+        tot=`grep TotalTasks $sixdeskresults | sed -e 's/TotalTasks: *//'`
+        tmpReady=`grep ResultsReady $sixdeskresults | sed -e 's/ResultsReady: *//'`
+        
 #MACRO mymess 1 Out of $tot Tasks $ready Results are available
-	sixdeskmess -1 "Out of $tot Tasks ${tmpReady} Results are available"
+        sixdeskmess -1 "Out of $tot Tasks ${tmpReady} Results are available"
 #MACRO mymess
-	
-	cat $sixdeskresults
-	tasks=`grep ReadyTasks $sixdeskresults | sed -e 's/ReadyTasks: *//'`
-	rm $sixdeskresults
-	
+        
+        cat $sixdeskresults
+        tasks=`grep ReadyTasks $sixdeskresults | sed -e 's/ReadyTasks: *//'`
+        rm $sixdeskresults
+        
 #MACRO mymktmp sixdesktasks $sixdeskjobs
-	sixdesktmpname=sixdesktasks
-	sixdesktmpdirarg=$sixdeskjobs
-	sixdeskmktmp
-	sixdesktasks=$sixdesktmp
+        sixdesktmpname=sixdesktasks
+        sixdesktmpdirarg=$sixdeskjobs
+        sixdeskmktmp
+        sixdesktasks=$sixdesktmp
 #MACRO mymktmp
-	
-	echo "$tasks" > $sixdesktasks
-	gawk -f ${SCRIPTDIR}/gawk/splitter.awk $sixdesktasks > $sixdesktasklist
-	rm $sixdesktasks 
+        
+        echo "$tasks" > $sixdesktasks
+        gawk -f ${SCRIPTDIR}/gawk/splitter.awk $sixdesktasks > $sixdesktasklist
+        rm $sixdesktasks 
     elif test $sixdeskplatform = "boinc"
     then
-	sixdeskboinc=$sixdeskboincdir
-	export sixdeskboinc
-	
-	if test ! -d $sixdeskboincdir
-	then
-	    mkdir -p $sixdeskboincdir
-	    # and here use AFS protection group stuff to fix access control list
-	    fs setacl $sixdeskboincdir $LOGNAME rlidwka $sixdeskpts rl
-	fi
-	if test -s $sixdeskboincdir/owner
-	then
-	    sixdeskowner=`cat $sixdeskboincdir/owner`
-	    if test "$sixdeskowner" != "$LOGNAME"
-	    then
-		
+        sixdeskboinc=$sixdeskboincdir
+        export sixdeskboinc
+        
+        if test ! -d $sixdeskboincdir
+        then
+            mkdir -p $sixdeskboincdir
+            # and here use AFS protection group stuff to fix access control list
+            fs setacl $sixdeskboincdir $LOGNAME rlidwka $sixdeskpts rl
+        fi
+        if test -s $sixdeskboincdir/owner
+        then
+            sixdeskowner=`cat $sixdeskboincdir/owner`
+            if test "$sixdeskowner" != "$LOGNAME"
+            then
+                
 #MACRO mymess 0 The workspace/LHCDescrip $sixdeskboincdirname are already in use by $sixdeskowner!!!
-		sixdeskmess -1 "The workspace/LHCDescrip $sixdeskboincdirname are already in use by $sixdeskowner!!!"
+                sixdeskmess -1 "The workspace/LHCDescrip $sixdeskboincdirname are already in use by $sixdeskowner!!!"
 #MACRO mymess
-		
-		rm -f $tmp
-		rm -f $sixdesktasklist
+                
+                rm -f $tmp
+                rm -f $sixdesktasklist
 
 #MACRO myunlock $sixdeskstudy
-		sixdesklockdir=$sixdeskstudy
-		sixdeskunlock
+                sixdesklockdir=$sixdeskstudy
+                sixdeskunlock
 #MACRO myunlock
-		
-		
+                
+                
 #MACRO myexit 11
-		sixdeskexitparam=11
-		sixdeskexit
+                sixdeskexitparam=11
+                sixdeskexit
 #MACRO myexit
-		
-	    fi
-	else
-	    echo "$LOGNAME" > $sixdeskboincdir/owner
-	fi
-	if test ! -d $sixdeskboincdir/work
-	then
-	    mkdir -p $sixdeskboincdir/work
-	fi
-	if test ! -d ${__origPath}
-	then
-	    mkdir -p ${__origPath}
-	fi
-	cd ${__origPath}
-	# remove possible *_1 entries (Sixout.zip)
-	find . -name ${workspace}_${LHCDesName}__\*_1_sixvf_boinc\* | sed '/_1$/d' > $tmp 2> /dev/null
-	cd $sixdeskhome
-	
+                
+            fi
+        else
+            echo "$LOGNAME" > $sixdeskboincdir/owner
+        fi
+        if test ! -d $sixdeskboincdir/work
+        then
+            mkdir -p $sixdeskboincdir/work
+        fi
+        if test ! -d ${__origPath}
+        then
+            mkdir -p ${__origPath}
+        fi
+        cd ${__origPath}
+        # remove possible *_1 entries (Sixout.zip)
+        find . -name ${workspace}_${LHCDesName}__\*_1_sixvf_boinc\* | sed '/_1$/d' > $tmp 2> /dev/null
+        cd $sixdeskhome
+        
 #MACRO mymktmp sixdeskresults $sixdeskjobs
-	sixdesktmpname=sixdeskresults
-	sixdesktmpdirarg=$sixdeskjobs
-	sixdeskmktmp
-	sixdeskresults=$sixdesktmp
+        sixdesktmpname=sixdeskresults
+        sixdesktmpdirarg=$sixdeskjobs
+        sixdeskmktmp
+        sixdeskresults=$sixdesktmp
 #MACRO mymktmp
-	
-	sed -f ${SCRIPTDIR}/sed/boincnames.sed $tmp > $sixdeskresults
-	rm $tmp
-	tmpReady=`wc -l $sixdeskresults | gawk '{print ($1)}'`
-	
+        
+        sed -f ${SCRIPTDIR}/sed/boincnames.sed $tmp > $sixdeskresults
+        rm $tmp
+        tmpReady=`wc -l $sixdeskresults | gawk '{print ($1)}'`
+        
 #MACRO mymess 0 $ready Results are available
-	# sixdeskmesslevel=0
-	# sixdeskmess -1 "${tmpReady} Results are available"
-	# sixdeskmess
+        # sixdeskmesslevel=0
+        # sixdeskmess -1 "${tmpReady} Results are available"
+        # sixdeskmess
 #MACRO mymess
-	
-	cat $sixdeskresults
+        
+        cat $sixdeskresults
 
 #MACRO mymess 0 $ready Results are available
-	sixdeskmess -1 "${tmpReady} Results are available"
+        sixdeskmess -1 "${tmpReady} Results are available"
 #MACRO mymess
-	
-	cut -d"%" -f6- $sixdeskresults > $tmp 
-	cut -d"_" -f4 $tmp > $sixdesktasklist
-	rm $tmp
-	rm $sixdeskresults
+        
+        cut -d"%" -f6- $sixdeskresults > $tmp 
+        cut -d"_" -f4 $tmp > $sixdesktasklist
+        rm $tmp
+        rm $sixdeskresults
     elif test "$sixdeskplatform" = "grid"
     then
-	# Here will produce a sixdesktasklist for GRID
-	echo "GRID not yet implemented"
-	rm -f $tmp
-	rm -f $sixdesktasklist
-	
+        # Here will produce a sixdesktasklist for GRID
+        echo "GRID not yet implemented"
+        rm -f $tmp
+        rm -f $sixdesktasklist
+        
 #MACRO myunlock $sixdeskstudy
-	sixdesklockdir=$sixdeskstudy
-	sixdeskunlock
+        sixdesklockdir=$sixdeskstudy
+        sixdeskunlock
 #MACRO myunlock
-	
-	
+        
+        
 #MACRO myexit 89
-	sixdeskexitparam=89
-	sixdeskexit
+        sixdeskexitparam=89
+        sixdeskexit
 #MACRO myexit
 
     fi
@@ -389,935 +389,935 @@ function downloadNewResults(){
     touch ${__sixdesktasklist}
     for ntaskid in `cat ${__sixdesktasklist}`
     do
-	if test $sixdeskplatform = "cpss"
-	then
-	    taskid=cpss$ntaskid
-	else
-	    taskid=$ntaskid
-	fi
-	success="false"
-	ignore="true"
-	delete="false"
-	duplicate="false"
-	anerror="false"
-	unknown="false"
-	
+        if test $sixdeskplatform = "cpss"
+        then
+            taskid=cpss$ntaskid
+        else
+            taskid=$ntaskid
+        fi
+        success="false"
+        ignore="true"
+        delete="false"
+        duplicate="false"
+        anerror="false"
+        unknown="false"
+        
 #MACRO mymess 1 Now treating TaskID $taskid
-	if [ ${sixdesklevel} -gt 0 ] ; then
-	    echo ""
-	    printf '.%.0s' {1..80}
-	    echo ""
-	fi
-	sixdeskmess -1 "Now treating TaskID $taskid"
+        if [ ${sixdesklevel} -gt 0 ] ; then
+            echo ""
+            printf '.%.0s' {1..80}
+            echo ""
+        fi
+        sixdeskmess -1 "Now treating TaskID $taskid"
 #MACRO mymess
-	
-	Runnam=""
-	Rundir=""
-	where=""
-	taskids=""
-	entry=`grep " $taskid " $IDS/taskids`
-	if test "$entry" != ""
-	then
-	    Runnam=`echo $entry | cut -d" " -f1`
-	    if test $sixdeskplatform = "boinc"
-	    then
-		aboincRunnam=`echo $Runnam | sed -e's/%/__/g'`
-		local __resName=${workspace}_${aboincRunnam}_1_sixvf_${taskid}${__suffix}
-		if test ! -f ${__origPath}/${__resName}
-		then
-		    # Hopefully because of duplicate TaskIds
-		    
+        
+        Runnam=""
+        Rundir=""
+        where=""
+        taskids=""
+        entry=`grep " $taskid " $IDS/taskids`
+        if test "$entry" != ""
+        then
+            Runnam=`echo $entry | cut -d" " -f1`
+            if test $sixdeskplatform = "boinc"
+            then
+                aboincRunnam=`echo $Runnam | sed -e's/%/__/g'`
+                local __resName=${workspace}_${aboincRunnam}_1_sixvf_${taskid}${__suffix}
+                if test ! -f ${__origPath}/${__resName}
+                then
+                    # Hopefully because of duplicate TaskIds
+                    
 #MACRO mymess 1 Looking for duplicates TaskId $taskid
-		    sixdeskmess -1 "Looking for duplicates TaskId $taskid"
+                    sixdeskmess -1 "Looking for duplicates TaskId $taskid"
 #MACRO mymess
-		    
-		    
+                    
+                    
 #MACRO mymktmp boincdup $sixdeskjobs
-		    sixdesktmpname=boincdup
-		    sixdesktmpdirarg=$sixdeskjobs
-		    sixdeskmktmp
-		    boincdup=$sixdesktmp
+                    sixdesktmpname=boincdup
+                    sixdesktmpdirarg=$sixdeskjobs
+                    sixdeskmktmp
+                    boincdup=$sixdesktmp
 #MACRO mymktmp
-		    
-		    grep " $taskid " $IDS/taskids > $boincdup
-		    mytimes=`wc -l $boincdup | gawk '{print ($1)}'`
-		    if test "$mytimes" -gt 1
-		    then
-			
+                    
+                    grep " $taskid " $IDS/taskids > $boincdup
+                    mytimes=`wc -l $boincdup | gawk '{print ($1)}'`
+                    if test "$mytimes" -gt 1
+                    then
+                        
 #MACRO mymess 0 FOUND duplicate TaskId  $taskid Times $mytimes
-			sixdeskmess -1 "FOUND duplicate TaskId  $taskid Times $mytimes"
+                        sixdeskmess -1 "FOUND duplicate TaskId  $taskid Times $mytimes"
 #MACRO mymess
-			
-			while read myline
-			do
-			    aRunnam=`echo $myline | cut -d" " -f1`
-			    aboincRunnam=`echo $aRunnam | sed -e's/%/__/g'`
-			    local __resName=${workspace}_${aboincRunnam}_1_sixvf_${taskid}${__suffix}
-			    if test -f ${__origPath}/${__resName}
-			    then
-				#found one, may be more!
-				
+                        
+                        while read myline
+                        do
+                            aRunnam=`echo $myline | cut -d" " -f1`
+                            aboincRunnam=`echo $aRunnam | sed -e's/%/__/g'`
+                            local __resName=${workspace}_${aboincRunnam}_1_sixvf_${taskid}${__suffix}
+                            if test -f ${__origPath}/${__resName}
+                            then
+                                #found one, may be more!
+                                
 #MACRO mymess 0 Found the duplicated entry $taskid $aRunnam
-				sixdeskmess -1 "Found the duplicated entry $taskid $aRunnam"
+                                sixdeskmess -1 "Found the duplicated entry $taskid $aRunnam"
 #MACRO mymess
-				
-				entry=$myline
-				Runnam=`echo $entry | cut -d" " -f1` 
-				
+                                
+                                entry=$myline
+                                Runnam=`echo $entry | cut -d" " -f1` 
+                                
 #MACRO mymess 0 Using $Runnam for $taskid
-				sixdeskmess -1 "Using $Runnam for $taskid"
+                                sixdeskmess -1 "Using $Runnam for $taskid"
 #MACRO mymess
-				
-				break
-			    fi
-			done < $boincdup
-		    else
-			
+                                
+                                break
+                            fi
+                        done < $boincdup
+                    else
+                        
 #MACRO mymess 0 A very serious problem in matching TaskID/Runnam!!!
-			sixdeskmess -1 "A very serious problem in matching TaskID/Runnam!!!"
+                        sixdeskmess -1 "A very serious problem in matching TaskID/Runnam!!!"
 #MACRO mymess
-			
-			
+                        
+                        
 #MACRO mymess 0 Could not resolve TaskId $taskid
-			sixdeskmess -1 "Could not resolve TaskId $taskid"
+                        sixdeskmess -1 "Could not resolve TaskId $taskid"
 #MACRO mymess
-			
-		    fi
-		    rm -f $boincdup
-		fi
-	    fi
-	    taskids=`echo $entry | cut -d" " -f2-`
-	    
+                        
+                    fi
+                    rm -f $boincdup
+                fi
+            fi
+            taskids=`echo $entry | cut -d" " -f2-`
+            
 #MACRO myrundir $Runnam Rundir
-	    runnamename=$Runnam
-	    sixdeskrundir ${lbackcomp}
-	    Rundir=$rundirname
+            runnamename=$Runnam
+            sixdeskrundir ${lbackcomp}
+            Rundir=$rundirname
 #MACRO myrundir
-	    
-	    where=$sixdesktrack/$Rundir
-	    
+            
+            where=$sixdesktrack/$Rundir
+            
 #MACRO mymess 1 Task $taskid for job $Runnam found in $Rundir
-	    sixdeskmess 1 "Task $taskid for job $Runnam found in $Rundir"
+            sixdeskmess 1 "Task $taskid for job $Runnam found in $Rundir"
 #MACRO mymess
-	    
-	fi
-	if test "$Runnam" = ""
-	then 
-	    
+            
+        fi
+        if test "$Runnam" = ""
+        then 
+            
 #MACRO mymess 0 Task $taskid can NOT be found in $sixdeskwork/taskids !!! Deleting result from the server
-	    sixdeskmess -1 "Task $taskid can NOT be found in $sixdeskwork/taskids !!! Deleting result from the server"
+            sixdeskmess -1 "Task $taskid can NOT be found in $sixdeskwork/taskids !!! Deleting result from the server"
 #MACRO mymess
-	    
-	    delete="true"
-	    anerror="true"
-	    unknown="true"
-	else
-	    where=$sixdesktrack/$Rundir
-	    if test ! -d "$where"
-	    then
-		
+            
+            delete="true"
+            anerror="true"
+            unknown="true"
+        else
+            where=$sixdesktrack/$Rundir
+            if test ! -d "$where"
+            then
+                
 #MACRO mymess 0 Strange the directory $where for task $taskid does NOT exist!!! We shall ignore this result for the moment
-		sixdeskmess -1 "Strange the directory $where for task $taskid does NOT exist!!! We shall ignore this result for the moment"
+                sixdeskmess -1 "Strange the directory $where for task $taskid does NOT exist!!! We shall ignore this result for the moment"
 #MACRO mymess
-		
-		delete="true"
-		anerror="true"
-	    else
-		#let us get the results downloaded
-		#sixres.tar.gz will be put here
-		cd $where
-		if test $sixdeskplatform = "cpss"
-		then
-		    perl ${SCRIPTDIR}/perl/downloadResult.pl $mytgid $ntaskid > down 2>&1
-		    stat=$?
-		elif test $sixdeskplatform = "boinc"
-		then
-		    found="false"
-		    boincRunnam=`echo $Runnam | sed -e's/%/__/g'`
-		    local __resName=${workspace}_${boincRunnam}_1_sixvf_${taskid}${__suffix}
-		    if ${lretrieveZip} ; then
-			if [ -z ${__suffix} ] ; then
-			    # dealing with results in spooldir
-			    local __resZipName=${__resName}_1
-			else
-			    local __resZipName=${__resName/%_0/_1}
-			fi
-		    fi
-		    if test ! -f ${__origPath}/${__resName}
-		    then
-			
+                
+                delete="true"
+                anerror="true"
+            else
+                #let us get the results downloaded
+                #sixres.tar.gz will be put here
+                cd $where
+                if test $sixdeskplatform = "cpss"
+                then
+                    perl ${SCRIPTDIR}/perl/downloadResult.pl $mytgid $ntaskid > down 2>&1
+                    stat=$?
+                elif test $sixdeskplatform = "boinc"
+                then
+                    found="false"
+                    boincRunnam=`echo $Runnam | sed -e's/%/__/g'`
+                    local __resName=${workspace}_${boincRunnam}_1_sixvf_${taskid}${__suffix}
+                    if ${lretrieveZip} ; then
+                        if [ -z ${__suffix} ] ; then
+                            # dealing with results in spooldir
+                            local __resZipName=${__resName}_1
+                        else
+                            local __resZipName=${__resName/%_0/_1}
+                        fi
+                    fi
+                    if test ! -f ${__origPath}/${__resName}
+                    then
+                        
 #MACRO mymess 0 CANNOT FIND the result file!!!
-			sixdeskmess -1 "CANNOT FIND the result file!!!"
+                        sixdeskmess -1 "CANNOT FIND the result file!!!"
 #MACRO mymess
-			
-			anerror="true"
-		    else
-			sixdeskmess 1 "Found in hierarchy $sixdeskboincdir"
-			found="true"
-		    fi
-		    if test "$found" = "true"
-		    then
-			mkdir -p sixtrack
-			gawk -f ${SCRIPTDIR}/gawk/remover.awk ${__origPath}/${__resName} > sixtrack/fort.10
-			cd sixtrack
-			if test -s ../fort.10.gz
-			then
-			    cp ../fort.10.gz old.10.gz
-			    gunzip -f old.10.gz
-			    #           diff old.10 fort.10 > /dev/null 2>&1
-			    # Cannot diff anymore because of version number
-			    
+                        
+                        anerror="true"
+                    else
+                        sixdeskmess 1 "Found in hierarchy $sixdeskboincdir"
+                        found="true"
+                    fi
+                    if test "$found" = "true"
+                    then
+                        mkdir -p sixtrack
+                        gawk -f ${SCRIPTDIR}/gawk/remover.awk ${__origPath}/${__resName} > sixtrack/fort.10
+                        cd sixtrack
+                        if test -s ../fort.10.gz
+                        then
+                            cp ../fort.10.gz old.10.gz
+                            gunzip -f old.10.gz
+                            #           diff old.10 fort.10 > /dev/null 2>&1
+                            # Cannot diff anymore because of version number
+                            
 #MACRO mymktmpdir diffs 
-			    sixdesktmpdirname=diffs
-			    sixdesktmpdirarg=
-			    sixdeskmktmpdir
-			    diffs=$sixdesktmpdir
+                            sixdesktmpdirname=diffs
+                            sixdesktmpdirarg=
+                            sixdeskmktmpdir
+                            diffs=$sixdesktmpdir
 #MACRO mymktmp
-			    
-			    cp old.10 $diffs/fort.20
-			    cp fort.10 $diffs/fort.21
-			    cd $diffs
-			    ${SCRIPTDIR}/fortran/verify10.exe | grep DIFF > diffs
-			    stat=$?
-			    cd ..
-			    if test $stat -ne 0
-			    then
-				rm -r $diffs
-				
+                            
+                            cp old.10 $diffs/fort.20
+                            cp fort.10 $diffs/fort.21
+                            cd $diffs
+                            ${SCRIPTDIR}/fortran/verify10.exe | grep DIFF > diffs
+                            stat=$?
+                            cd ..
+                            if test $stat -ne 0
+                            then
+                                rm -r $diffs
+                                
 #MACRO mymess 1 Results in fort.10 identical to previous run. Ignore and remove it
-				sixdeskmess 1 "Results in fort.10 identical to previous run. Ignore and remove it"
+                                sixdeskmess 1 "Results in fort.10 identical to previous run. Ignore and remove it"
 #MACRO mymess
-				
-				ignore="true"
-				delete="true"
-				duplicate="true"
-				# This line added to ensure that the case is marked completed
-				# The results may have been produced by a different workspace
-				success="true"
-			    else
-				
+                                
+                                ignore="true"
+                                delete="true"
+                                duplicate="true"
+                                # This line added to ensure that the case is marked completed
+                                # The results may have been produced by a different workspace
+                                success="true"
+                            else
+                                
 #MACRO mymess 0 New fort.10 from Task $taskid is different!!!!
-				sixdeskmess -1 "New fort.10 from Task $taskid is different!!!!"
+                                sixdeskmess -1 "New fort.10 from Task $taskid is different!!!!"
 #MACRO mymess
-				
-				while read aline
-				do
-				    
+                                
+                                while read aline
+                                do
+                                    
 #MACRO mymess 0 Verify10: $aline
-				    sixdeskmess -1 "Verify10: $aline"
+                                    sixdeskmess -1 "Verify10: $aline"
 #MACRO mymess
-				    
-				done < $diffs/diffs
-				rm -r $diffs
-				words=`wc -w fort.10 | gawk '{print ($1)}'`
-				lines=`wc -l fort.10 | gawk '{print ($1)}'`
-				nwords=`expr $sixdeskpairs \* 60`
-				if test "$words" -ne  $nwords -o "$lines" -ne $sixdeskpairs
-				then
-				    
+                                    
+                                done < $diffs/diffs
+                                rm -r $diffs
+                                words=`wc -w fort.10 | gawk '{print ($1)}'`
+                                lines=`wc -l fort.10 | gawk '{print ($1)}'`
+                                nwords=`expr $sixdeskpairs \* 60`
+                                if test "$words" -ne  $nwords -o "$lines" -ne $sixdeskpairs
+                                then
+                                    
 #MACRO mymess 0 We have $words words, $lines lines in NEW fort.10 (NOT $nwords, $sixdeskpairs)
-				    sixdeskmess -1 "We have $words words, $lines lines in NEW fort.10 (NOT $nwords, $sixdeskpairs)"
+                                    sixdeskmess -1 "We have $words words, $lines lines in NEW fort.10 (NOT $nwords, $sixdeskpairs)"
 #MACRO mymess
-				    
-				    
+                                    
+                                    
 #MACRO mymess 0 THIS IS A VERY SERIOUS ERROR!!!!!!!!!!!!
-				    sixdeskmess -1 "THIS IS A VERY SERIOUS ERROR!!!!!!!!!!!!"
+                                    sixdeskmess -1 "THIS IS A VERY SERIOUS ERROR!!!!!!!!!!!!"
 #MACRO mymess
-				    
-				    mkdir -p ../problems
-				    cp fort.10 ../problems/problem$taskid
-				    if ${lretrieveZip} ; then
-					if [ -e ${__origPath}/${__resZipName} ] ; then
-					    cp ${__origPath}/${__resZipName} ../problems/proble${taskid}_${oneResultName}
-					else
-					    sixdeskmess -1 "${__origPath}/${__resZipName} NOT found!"
-					fi
-				    fi
-				    ignore="true"
-				    delete="true"
-				    anerror="true"
-				else
-				    ln -sf old.10 fort.20
-				    ln -sf fort.10 fort.21
-				    #               ${SCRIPTDIR}/bash/checktens > $tmp
-				    ${SCRIPTDIR}/fortran/verify10.exe > $tmp
-				    vermess=`grep "VERSION" $tmp`
-				    
+                                    
+                                    mkdir -p ../problems
+                                    cp fort.10 ../problems/problem$taskid
+                                    if ${lretrieveZip} ; then
+                                        if [ -e ${__origPath}/${__resZipName} ] ; then
+                                            cp ${__origPath}/${__resZipName} ../problems/proble${taskid}_${oneResultName}
+                                        else
+                                            sixdeskmess -1 "${__origPath}/${__resZipName} NOT found!"
+                                        fi
+                                    fi
+                                    ignore="true"
+                                    delete="true"
+                                    anerror="true"
+                                else
+                                    ln -sf old.10 fort.20
+                                    ln -sf fort.10 fort.21
+                                    #               ${SCRIPTDIR}/bash/checktens > $tmp
+                                    ${SCRIPTDIR}/fortran/verify10.exe > $tmp
+                                    vermess=`grep "VERSION" $tmp`
+                                    
 #MACRO mymess 1 fort.10 check $vermess
-				    sixdeskmess -1 "fort.10 check $vermess"
+                                    sixdeskmess -1 "fort.10 check $vermess"
 #MACRO mymess
-				    
-				    numdiffs=`grep "DIFF fort.10, line" $tmp | wc -l | gawk '{print ($1)}'`
-				    numok=`egrep "SAME 22|SAME 23" $tmp | wc -l | gawk '{print ($1)}'`
-				    numok=`expr "$numok" / 2`
-				    particles=`expr $sixdeskpairs \* 2`
-				    if test "$numok" -ne "$numdiffs" -a "$numdiffs" -ne 0
-				    then
-					
+                                    
+                                    numdiffs=`grep "DIFF fort.10, line" $tmp | wc -l | gawk '{print ($1)}'`
+                                    numok=`egrep "SAME 22|SAME 23" $tmp | wc -l | gawk '{print ($1)}'`
+                                    numok=`expr "$numok" / 2`
+                                    particles=`expr $sixdeskpairs \* 2`
+                                    if test "$numok" -ne "$numdiffs" -a "$numdiffs" -ne 0
+                                    then
+                                        
 #MACRO mymess 0 Lost turn numbers different THIS IS A VERY SERIOUS ERROR!!!!!!!!!!!!
-					sixdeskmess -1 "Lost turn numbers different THIS IS A VERY SERIOUS ERROR!!!!!!!!!!!!"
+                                        sixdeskmess -1 "Lost turn numbers different THIS IS A VERY SERIOUS ERROR!!!!!!!!!!!!"
 #MACRO mymess
-					
-					ignore="true"
-					# For BOINC for the time being just ignore it and delete it.
-					delete="true"
-					anerror="true"
-					mkdir -p ../problems
-					cp fort.10 ../problems/problem$taskid
-					cp $tmp ../problems/diffs$taskid
-					if ${lretrieveZip} ; then
-					    if [ -e ${__origPath}/${__resZipName} ] ; then
-						cp ${__origPath}/${__resZipName} ../problems/proble${taskid}_${oneResultName}
-					    else
-						sixdeskmess -1 "${__origPath}/${__resZipName} NOT found!"
-					    fi
-					fi
-				    else
-					grep "DIFF" $tmp >/dev/null 2>&1
-					if test $? -ne 0
-					then
-					    
+                                        
+                                        ignore="true"
+                                        # For BOINC for the time being just ignore it and delete it.
+                                        delete="true"
+                                        anerror="true"
+                                        mkdir -p ../problems
+                                        cp fort.10 ../problems/problem$taskid
+                                        cp $tmp ../problems/diffs$taskid
+                                        if ${lretrieveZip} ; then
+                                            if [ -e ${__origPath}/${__resZipName} ] ; then
+                                                cp ${__origPath}/${__resZipName} ../problems/proble${taskid}_${oneResultName}
+                                            else
+                                                sixdeskmess -1 "${__origPath}/${__resZipName} NOT found!"
+                                            fi
+                                        fi
+                                    else
+                                        grep "DIFF" $tmp >/dev/null 2>&1
+                                        if test $? -ne 0
+                                        then
+                                            
 #MACRO mymess 0 exponent e? NO numerical difference !!!
-					    sixdeskmess -1 "exponent e? NO numerical difference !!!"
+                                            sixdeskmess -1 "exponent e? NO numerical difference !!!"
 #MACRO mymess
-					    
-					else
-					    
+                                            
+                                        else
+                                            
 #MACRO mymess 0 This is ACCEPTABLE as different but lost turns are the same
-					    sixdeskmess -1 "This is ACCEPTABLE as different but lost turns are the same"
+                                            sixdeskmess -1 "This is ACCEPTABLE as different but lost turns are the same"
 #MACRO mymess
-					    
-					fi
-					ignore="true"
-					delete="true"
-					duplicate="true"
-					mkdir -p ../problems
-					cp fort.10 ../problems/problem$taskid
-					cp $tmp ../problems/diffs$taskid
-					if ${lretrieveZip} ; then
-					    if [ -e ${__origPath}/${__resZipName} ] ; then
-						cp ${__origPath}/${__resZipName} ../problems/proble${taskid}_${oneResultName}
-					    else
-						sixdeskmess -1 "${__origPath}/${__resZipName} NOT found!"
-					    fi
-					fi
-				    fi
-				    rm $tmp
-				fi
-			    fi
-			else
-			    words=`wc -w < fort.10`
-			    lines=`wc -l < fort.10`
-			    nwords=`expr $sixdeskpairs \* 60`
-			    if test "$words" -ne  $nwords -o "$lines" -ne $sixdeskpairs
-			    then
-				
+                                            
+                                        fi
+                                        ignore="true"
+                                        delete="true"
+                                        duplicate="true"
+                                        mkdir -p ../problems
+                                        cp fort.10 ../problems/problem$taskid
+                                        cp $tmp ../problems/diffs$taskid
+                                        if ${lretrieveZip} ; then
+                                            if [ -e ${__origPath}/${__resZipName} ] ; then
+                                                cp ${__origPath}/${__resZipName} ../problems/proble${taskid}_${oneResultName}
+                                            else
+                                                sixdeskmess -1 "${__origPath}/${__resZipName} NOT found!"
+                                            fi
+                                        fi
+                                    fi
+                                    rm $tmp
+                                fi
+                            fi
+                        else
+                            words=`wc -w < fort.10`
+                            lines=`wc -l < fort.10`
+                            nwords=`expr $sixdeskpairs \* 60`
+                            if test "$words" -ne  $nwords -o "$lines" -ne $sixdeskpairs
+                            then
+                                
 #MACRO mymess 0 We have $words words, $lines lines in fort.10 (NOT $nwords, $sixdeskpairs)
-				sixdeskmess -1 "We have $words words, $lines lines in fort.10 (NOT $nwords, $sixdeskpairs)"
+                                sixdeskmess -1 "We have $words words, $lines lines in fort.10 (NOT $nwords, $sixdeskpairs)"
 #MACRO mymess
-				
-				
+                                
+                                
 #MACRO mymess 0 THIS IS A VERY SERIOUS ERROR!!!!!!!!!!!!
-				sixdeskmess -1 "THIS IS A VERY SERIOUS ERROR!!!!!!!!!!!!"
+                                sixdeskmess -1 "THIS IS A VERY SERIOUS ERROR!!!!!!!!!!!!"
 #MACRO mymess
-				
-				ignore="true"
-				delete="true"
-				anerror="true"
-			    else 
-				if [ ${sixdesklevel} -gt 1 ] ; then
-				    line1=`head -1 fort.10`
-				    local __messLine1=`echo $line1 | gawk '{print ("Maxturn",$1,"Lost",$2,"Qx/Qy",$3,$4)}'`
-				    local __messLine2=`echo $line1 | gawk '{print (" 1st Ampx/y",$7,$8,"2nd",$26,$27)}'`
-				    local __messLine3=`echo $line1 | gawk '{print ("DP",$9,"Findist",$10,"Maxslope",$11,"Turns",$22,$23)}'`
-				    local __messLine4=`echo $line1 | gawk '{print ("CPU",$60,"seconds Version",$52)}'`
-				    sixdeskmess 1 "${__messLine1}"
-				    sixdeskmess 1 "${__messLine2}"
-				    sixdeskmess 1 "${__messLine3}"
-				    sixdeskmess 1 "${__messLine4}"
-				fi
-				gzip -f fort.10
+                                
+                                ignore="true"
+                                delete="true"
+                                anerror="true"
+                            else 
+                                if [ ${sixdesklevel} -gt 1 ] ; then
+                                    line1=`head -1 fort.10`
+                                    local __messLine1=`echo $line1 | gawk '{print ("Maxturn",$1,"Lost",$2,"Qx/Qy",$3,$4)}'`
+                                    local __messLine2=`echo $line1 | gawk '{print (" 1st Ampx/y",$7,$8,"2nd",$26,$27)}'`
+                                    local __messLine3=`echo $line1 | gawk '{print ("DP",$9,"Findist",$10,"Maxslope",$11,"Turns",$22,$23)}'`
+                                    local __messLine4=`echo $line1 | gawk '{print ("CPU",$60,"seconds Version",$52)}'`
+                                    sixdeskmess 1 "${__messLine1}"
+                                    sixdeskmess 1 "${__messLine2}"
+                                    sixdeskmess 1 "${__messLine3}"
+                                    sixdeskmess 1 "${__messLine4}"
+                                fi
+                                gzip -f fort.10
 
 
-				ignore="false"
-				success="true"
-				delete="true"
-			    fi
-			fi
-		    fi
-		fi
-		if test $sixdeskplatform != "boinc"
-		then
-		    if test $stat -ne 0 -o ! -s sixres.tar.gz
-		    then
-			
+                                ignore="false"
+                                success="true"
+                                delete="true"
+                            fi
+                        fi
+                    fi
+                fi
+                if test $sixdeskplatform != "boinc"
+                then
+                    if test $stat -ne 0 -o ! -s sixres.tar.gz
+                    then
+                        
 #MACRO mymess 0 Download of task $taskid FAILED!!! Status $stat Message `cat down` or empty tar file
-			sixdeskmess -1 "Download of task $taskid FAILED!!! Status $stat Message `cat down` or empty tar file"
+                        sixdeskmess -1 "Download of task $taskid FAILED!!! Status $stat Message `cat down` or empty tar file"
 #MACRO mymess
-			
-			rm down
-			# probably a WEB service problem
-			# but delete it anyway (if possible)
-			delete="true"
-			anerror="true"
-			ignore="true"
-		    else 
-			cat down
-			rm down
-			ls -l sixres.tar.gz
-			cp sixres.tar.gz w$taskid.tar.gz 
-			gunzip -f sixres.tar.gz > mess 2>&1
-			stat=$?
-			if test $stat -ne 0
-			then
-			    
+                        
+                        rm down
+                        # probably a WEB service problem
+                        # but delete it anyway (if possible)
+                        delete="true"
+                        anerror="true"
+                        ignore="true"
+                    else 
+                        cat down
+                        rm down
+                        ls -l sixres.tar.gz
+                        cp sixres.tar.gz w$taskid.tar.gz 
+                        gunzip -f sixres.tar.gz > mess 2>&1
+                        stat=$?
+                        if test $stat -ne 0
+                        then
+                            
 #MACRO mymess 0 `ls -l sixres.tar.gz`
-			    sixdeskmess -1 "`ls -l sixres.tar.gz`"
+                            sixdeskmess -1 "`ls -l sixres.tar.gz`"
 #MACRO mymess
-			    
-			    
+                            
+                            
 #MACRO mymess 0 gunzip failed!!! `cat mess`
-			    sixdeskmess -1 "gunzip failed!!! `cat mess`"
+                            sixdeskmess -1 "gunzip failed!!! `cat mess`"
 #MACRO mymess
-			    
-			    # now just delete it but log for future reference
-			    delete="true"
-			    anerror="true"
-			    mkdir -p problems
-			    mv w$taskid.tar.gz problems
-			else
-			    rm mess
-			    tar -xf sixres.tar > mess 2>&1
-			    stat=$?
-			    if test $stat -ne 0
-			    then
-				
+                            
+                            # now just delete it but log for future reference
+                            delete="true"
+                            anerror="true"
+                            mkdir -p problems
+                            mv w$taskid.tar.gz problems
+                        else
+                            rm mess
+                            tar -xf sixres.tar > mess 2>&1
+                            stat=$?
+                            if test $stat -ne 0
+                            then
+                                
 #MACRO mymess 0 Untar of sixres.tar failed!!!
-				sixdeskmess -1 "Untar of sixres.tar failed!!!"
+                                sixdeskmess -1 "Untar of sixres.tar failed!!!"
 #MACRO mymess
-				
-				
+                                
+                                
 #MACRO mymess 0 `ls -l sixres.tar`
-				sixdeskmess -1 "`ls -l sixres.tar`"
+                                sixdeskmess -1 "`ls -l sixres.tar`"
 #MACRO mymess
-				
-				
+                                
+                                
 #MACRO mymess 0 `cat $where/mess`
-				sixdeskmess -1 "`cat $where/mess`"
+                                sixdeskmess -1 "`cat $where/mess`"
 #MACRO mymess
-				
-				rm mess
-				# never seen this in practice, just delete it
-				delete="true"
-				anerror="true"
-				ignore="true"
-				mkdir -p problems
-				mv w$taskid.tar.gz problems
-			    elif test ! -d sixtrack
-			    then
-				
+                                
+                                rm mess
+                                # never seen this in practice, just delete it
+                                delete="true"
+                                anerror="true"
+                                ignore="true"
+                                mkdir -p problems
+                                mv w$taskid.tar.gz problems
+                            elif test ! -d sixtrack
+                            then
+                                
 #MACRO mymess 0 Sixtrack untar has not produced a sixtrack directory!!!
-				sixdeskmess -1 "Sixtrack untar has not produced a sixtrack directory!!!"
+                                sixdeskmess -1 "Sixtrack untar has not produced a sixtrack directory!!!"
 #MACRO mymess
-				
-				
+                                
+                                
 #MACRO mymess 0 `ls -l sixres.tar`
-				sixdeskmess -1 "`ls -l sixres.tar`"
+                                sixdeskmess -1 "`ls -l sixres.tar`"
 #MACRO mymess
-				
-				
+                                
+                                
 #MACRO mymess 0 `cat mess`
-				sixdeskmess -1 "`cat mess`"
+                                sixdeskmess -1 "`cat mess`"
 #MACRO mymess
-				
-				rm mess
-				# never seen this in practice, just delete it
-				delete="true"
-				anerror="true"
-				ignore="true"
-				mkdir -p problems
-				mv w$taskid.tar.gz problems
-			    else
-				rm mess
-				rm sixres.tar
-				cd sixtrack
-				touch sixtrack.exe
-				rm sixtrack.exe
-				# Now remove any \r characters from Windows in ASCII text files
-				for fileno in 4 6 9 10 12 14 15 17 18 19 \
-						20 21 22 23 24 25 26 27 28 29 31 34 91 92 93 98
-				do
-				    myfil=fort.$fileno
-				    if test -s $myfil
-				    then
-					file $myfil | egrep "CRLF" > /dev/null 2>&1
-					if test $? -ne 0
-					then
-					    gawk -f ${SCRIPTDIR}/gawk/remover.awk $myfil > $tmp
-					    mv $tmp $myfil
-					fi
-				    fi
-				done 
-				if test -f fort.93
-				then
-				    echo "$Runnam $Rundir $taskid" >> $sixdesklogdir/restart.log
-				    cat fort.93 >> $sixdesklogdir/restart.log
-				fi
-				myRunnam=`echo $Runnam | cut -c1-50`
-				head -20 fort.6 | grep "$myRunnam" > headmess 2>&1
-				stat=$?
-				
+                                
+                                rm mess
+                                # never seen this in practice, just delete it
+                                delete="true"
+                                anerror="true"
+                                ignore="true"
+                                mkdir -p problems
+                                mv w$taskid.tar.gz problems
+                            else
+                                rm mess
+                                rm sixres.tar
+                                cd sixtrack
+                                touch sixtrack.exe
+                                rm sixtrack.exe
+                                # Now remove any \r characters from Windows in ASCII text files
+                                for fileno in 4 6 9 10 12 14 15 17 18 19 \
+                                                20 21 22 23 24 25 26 27 28 29 31 34 91 92 93 98
+                                do
+                                    myfil=fort.$fileno
+                                    if test -s $myfil
+                                    then
+                                        file $myfil | egrep "CRLF" > /dev/null 2>&1
+                                        if test $? -ne 0
+                                        then
+                                            gawk -f ${SCRIPTDIR}/gawk/remover.awk $myfil > $tmp
+                                            mv $tmp $myfil
+                                        fi
+                                    fi
+                                done 
+                                if test -f fort.93
+                                then
+                                    echo "$Runnam $Rundir $taskid" >> $sixdesklogdir/restart.log
+                                    cat fort.93 >> $sixdesklogdir/restart.log
+                                fi
+                                myRunnam=`echo $Runnam | cut -c1-50`
+                                head -20 fort.6 | grep "$myRunnam" > headmess 2>&1
+                                stat=$?
+                                
 #MACRO mymess 1 `cat headmess`
-				sixdeskmess -1 "`cat headmess`"
+                                sixdeskmess -1 "`cat headmess`"
 #MACRO mymess
-				
-				rm headmess
-				if test $stat -ne 0
-				then
-				    
+                                
+                                rm headmess
+                                if test $stat -ne 0
+                                then
+                                    
 #MACRO mymess 0 Cannot find Runnam $Runnam in fort.6 !!!; wrong results???
-				    sixdeskmess -1 "Cannot find Runnam $Runnam in fort.6 !!!; wrong results???"
+                                    sixdeskmess -1 "Cannot find Runnam $Runnam in fort.6 !!!; wrong results???"
 #MACRO mymess
-				    
-				    delete="true"
-				    ignore="true"
-				    anerror="true"
-				    mkdir -p ../problems
-				    mv ../w$taskid.tar.gz ../problems
-				elif test ! -s fort.10
-				then
-				    
+                                    
+                                    delete="true"
+                                    ignore="true"
+                                    anerror="true"
+                                    mkdir -p ../problems
+                                    mv ../w$taskid.tar.gz ../problems
+                                elif test ! -s fort.10
+                                then
+                                    
 #MACRO mymess 0 Something strange with fort.10!!! `ls -l fort.10`
-				    sixdeskmess -1 "Something strange with fort.10!!! `ls -l fort.10`"
+                                    sixdeskmess -1 "Something strange with fort.10!!! `ls -l fort.10`"
 #MACRO mymess
-				    
-				    delete="true"
-				    ignore="true"
-				    anerror="true"
-				    mkdir -p ../problems
-				    mv ../w$taskid.tar.gz ../problems
-				else
-				    cp fort.10 ../fort.10.w$taskid
-				    tail -10 fort.6 | grep "Turn(s)" > myturns$$
-				    stat=$?
-				    if test $stat -ne 0
-				    then
-					
+                                    
+                                    delete="true"
+                                    ignore="true"
+                                    anerror="true"
+                                    mkdir -p ../problems
+                                    mv ../w$taskid.tar.gz ../problems
+                                else
+                                    cp fort.10 ../fort.10.w$taskid
+                                    tail -10 fort.6 | grep "Turn(s)" > myturns$$
+                                    stat=$?
+                                    if test $stat -ne 0
+                                    then
+                                        
 #MACRO mymess 0 No Turn(s) reported in fort.6!!! `ls -l fort.6`
-					sixdeskmess -1 "No Turn(s) reported in fort.6!!! `ls -l fort.6`"
+                                        sixdeskmess -1 "No Turn(s) reported in fort.6!!! `ls -l fort.6`"
 #MACRO mymess
-					
-					
+                                        
+                                        
 #MACRO mymess 0 `cat myturns$$`
-					sixdeskmess -1 "`cat myturns$$`"
+                                        sixdeskmess -1 "`cat myturns$$`"
 #MACRO mymess
-					
-					rm myturns$$
-					delete="true"
-					ignore="true"
-					anerror="true"
-					mkdir -p ../problems
-					mv ../w$taskid.tar.gz ../problems
-				    else
-					
+                                        
+                                        rm myturns$$
+                                        delete="true"
+                                        ignore="true"
+                                        anerror="true"
+                                        mkdir -p ../problems
+                                        mv ../w$taskid.tar.gz ../problems
+                                    else
+                                        
 #MACRO mymess 1 `cat myturns$$`
-					sixdeskmess -1 "`cat myturns$$`"
+                                        sixdeskmess -1 "`cat myturns$$`"
 #MACRO mymess
-					
-					rm myturns$$
-					if test -s ../fort.10.gz
-					then
-					    gunzip -f ../fort.10.gz
-					    #                   diff fort.10 ../fort.10 > /dev/null 2>&1
-					    
+                                        
+                                        rm myturns$$
+                                        if test -s ../fort.10.gz
+                                        then
+                                            gunzip -f ../fort.10.gz
+                                            #                   diff fort.10 ../fort.10 > /dev/null 2>&1
+                                            
 #MACRO mymktmpdir diffs 
-					    sixdesktmpdirname=diffs
-					    sixdesktmpdirarg=
-					    sixdeskmktmpdir
-					    diffs=$sixdesktmpdir
+                                            sixdesktmpdirname=diffs
+                                            sixdesktmpdirarg=
+                                            sixdeskmktmpdir
+                                            diffs=$sixdesktmpdir
 #MACRO mymktmp
-					    
-					    cp ../fort.10 $diffs/fort.20
-					    cp fort.10 $diffs/fort.21
-					    cd $diffs
-					    ${SCRIPTDIR}/fortran/verify10.exe > diffs
-					    stat=$?
-					    cd ..
-					    if test $stat -ne 0 
-					    then
-						while read aline
-						do
-						    
+                                            
+                                            cp ../fort.10 $diffs/fort.20
+                                            cp fort.10 $diffs/fort.21
+                                            cd $diffs
+                                            ${SCRIPTDIR}/fortran/verify10.exe > diffs
+                                            stat=$?
+                                            cd ..
+                                            if test $stat -ne 0 
+                                            then
+                                                while read aline
+                                                do
+                                                    
 #MACRO mymess 1 Verify10: $aline
-						    sixdeskmess -1 "Verify10: $aline"
+                                                    sixdeskmess -1 "Verify10: $aline"
 #MACRO mymess
-						    
-						done < $diffs/diffs
-						sed -e's/0\.000000000000000E+00/0.0000000000000000e+00/g' -e's/E/e/g' fort.10 > fort.10e
-						diff fort.10e ../fort.10 > /dev/null 2>&1
-						stat=$?
-						rm fort.10e
-						if test $stat -ne 0
-						then
-						    
+                                                    
+                                                done < $diffs/diffs
+                                                sed -e's/0\.000000000000000E+00/0.0000000000000000e+00/g' -e's/E/e/g' fort.10 > fort.10e
+                                                diff fort.10e ../fort.10 > /dev/null 2>&1
+                                                stat=$?
+                                                rm fort.10e
+                                                if test $stat -ne 0
+                                                then
+                                                    
 #MACRO mymess 0 exponent e? NO numerical difference !!!
-						    sixdeskmess -1 "exponent e? NO numerical difference !!!"
+                                                    sixdeskmess -1 "exponent e? NO numerical difference !!!"
 #MACRO mymess
-						    
-						fi
-					    fi
-					    rm -r $diffs
-					    gzip -f ../fort.10
-					    if test $stat -ne 0
-					    then
-						
+                                                    
+                                                fi
+                                            fi
+                                            rm -r $diffs
+                                            gzip -f ../fort.10
+                                            if test $stat -ne 0
+                                            then
+                                                
 #MACRO mymess 1 Results in fort.10 identical to previous run. Ignore and remove
-						sixdeskmess -1 "Results in fort.10 identical to previous run. Ignore and remove"
+                                                sixdeskmess -1 "Results in fort.10 identical to previous run. Ignore and remove"
 #MACRO mymess
-						
-						ignore="true"
-						delete="true"
-						duplicate="true"
-						# This line added to ensure that the case is marked completed
-						# The results may have been produced by a different workspace
-						success="true"
-						rm ../w$taskid.tar.gz
-						rm ../fort.10.w$taskid
-					    else
-						
+                                                
+                                                ignore="true"
+                                                delete="true"
+                                                duplicate="true"
+                                                # This line added to ensure that the case is marked completed
+                                                # The results may have been produced by a different workspace
+                                                success="true"
+                                                rm ../w$taskid.tar.gz
+                                                rm ../fort.10.w$taskid
+                                            else
+                                                
 #MACRO mymess 0 New fort.10 from Task $taskid is different!!!!
-						sixdeskmess -1 "New fort.10 from Task $taskid is different!!!!"
+                                                sixdeskmess -1 "New fort.10 from Task $taskid is different!!!!"
 #MACRO mymess
-						
-						
+                                                
+                                                
 #MACRO mymess 0 THIS IS A VERY SERIOUS ERROR!!!!!!!!!!!!
-						sixdeskmess -1 "THIS IS A VERY SERIOUS ERROR!!!!!!!!!!!!"
+                                                sixdeskmess -1 "THIS IS A VERY SERIOUS ERROR!!!!!!!!!!!!"
 #MACRO mymess
-						
-						ignore="true"
-						delete="true"
-						anerror="true"
-						mkdir -p ../problems
-						mv ../w$taskid.tar.gz ../problems
-					    fi
-					else
-					    words=`wc -w fort.10 | gawk '{print ($1)}'`
-					    lines=`wc -l fort.10 | gawk '{print ($1)}'`
-					    nwords=`expr $sixdeskpairs \* 60`
-					    if test "$words" -ne  $nwords -o "$lines" -ne $sixdeskpairs
-					    then
-						
+                                                
+                                                ignore="true"
+                                                delete="true"
+                                                anerror="true"
+                                                mkdir -p ../problems
+                                                mv ../w$taskid.tar.gz ../problems
+                                            fi
+                                        else
+                                            words=`wc -w fort.10 | gawk '{print ($1)}'`
+                                            lines=`wc -l fort.10 | gawk '{print ($1)}'`
+                                            nwords=`expr $sixdeskpairs \* 60`
+                                            if test "$words" -ne  $nwords -o "$lines" -ne $sixdeskpairs
+                                            then
+                                                
 #MACRO mymess 0 We have $words words, $lines lines in fort.10 (NOT $nwords, $sixdeskpairs)
-						sixdeskmess -1 "We have $words words, $lines lines in fort.10 (NOT $nwords, $sixdeskpairs)"
+                                                sixdeskmess -1 "We have $words words, $lines lines in fort.10 (NOT $nwords, $sixdeskpairs)"
 #MACRO mymess
-						
-						
+                                                
+                                                
 #MACRO mymess 0 THIS IS A VERY SERIOUS ERROR!!!!!!!!!!!!
-						sixdeskmess -1 "THIS IS A VERY SERIOUS ERROR!!!!!!!!!!!!"
+                                                sixdeskmess -1 "THIS IS A VERY SERIOUS ERROR!!!!!!!!!!!!"
 #MACRO mymess
-						
-						ignore="true"
-						delete="true"
-						anerror="true"
-						mkdir -p ../problems
-						mv ../w$taskid.tar.gz ../problems
-					    else
-						rm ../w$taskid.tar.gz
-						rm ../fort.10.w$taskid
-						gzip -f *
-						ignore="false"
-					    fi
-					fi
-				    fi
-				    # End of it all (except copying to CASTOR)
-				fi
-				# End of 1st time or not
-				cd $where
-				if test "$ignore" = "false"
-				then
-				    #Now figure out the CASTOR name etc
-				    if test "$sixdeskcastor" = "true"
-				    then
-					export RFIO_USE_CASTOR_V2="YES"
-					export STAGE_HOST="castorpublic"
-					export STAGE_SVCCLASS="default"
-					CASTOR=/castor/cern.ch/nap/$LOGNAME/direct_track/$Rundir
-					
+                                                
+                                                ignore="true"
+                                                delete="true"
+                                                anerror="true"
+                                                mkdir -p ../problems
+                                                mv ../w$taskid.tar.gz ../problems
+                                            else
+                                                rm ../w$taskid.tar.gz
+                                                rm ../fort.10.w$taskid
+                                                gzip -f *
+                                                ignore="false"
+                                            fi
+                                        fi
+                                    fi
+                                    # End of it all (except copying to CASTOR)
+                                fi
+                                # End of 1st time or not
+                                cd $where
+                                if test "$ignore" = "false"
+                                then
+                                    #Now figure out the CASTOR name etc
+                                    if test "$sixdeskcastor" = "true"
+                                    then
+                                        export RFIO_USE_CASTOR_V2="YES"
+                                        export STAGE_HOST="castorpublic"
+                                        export STAGE_SVCCLASS="default"
+                                        CASTOR=/castor/cern.ch/nap/$LOGNAME/direct_track/$Rundir
+                                        
 #MACRO mymess 1 CASTOR of $Runnam.tar to $CASTOR
-					sixdeskmess -1 "CASTOR of $Runnam.tar to $CASTOR"
+                                        sixdeskmess -1 "CASTOR of $Runnam.tar to $CASTOR"
 #MACRO mymess
-					
-					nsrm -rf $CASTOR > /dev/null 2>&1
-					nsmkdir -p $CASTOR
-				    fi
-				    cd sixtrack
-				    tar cvf ../$Runnam.tar fort.*.gz > $tmp 2>&1
-				    stat=$?
-				    cd ..
-				    if test $stat -ne 0
-				    then
-					
+                                        
+                                        nsrm -rf $CASTOR > /dev/null 2>&1
+                                        nsmkdir -p $CASTOR
+                                    fi
+                                    cd sixtrack
+                                    tar cvf ../$Runnam.tar fort.*.gz > $tmp 2>&1
+                                    stat=$?
+                                    cd ..
+                                    if test $stat -ne 0
+                                    then
+                                        
 #MACRO mymess 0 Tar $Runnam.tar $where/sixtrack/fort.*.gz failed!!!
-					sixdeskmess -1 "Tar $Runnam.tar $where/sixtrack/fort.*.gz failed!!!"
+                                        sixdeskmess -1 "Tar $Runnam.tar $where/sixtrack/fort.*.gz failed!!!"
 #MACRO mymess
-					
-					
+                                        
+                                        
 #MACRO mymess 0 `cat $tmp`
-					sixdeskmess -1 "`cat $tmp`"
+                                        sixdeskmess -1 "`cat $tmp`"
 #MACRO mymess
-					
-					rm $tmp
-					anerror="true"
-				    else
-					rm $tmp
-					if test "$sixdeskcastor" = "true"
-					then
-					    rfcp $Runnam.tar $CASTOR > $tmp 2>&1
-					    stat=$?
-					    rm $Runnam.tar
-					    if test $stat -ne 0
-					    then
-						
+                                        
+                                        rm $tmp
+                                        anerror="true"
+                                    else
+                                        rm $tmp
+                                        if test "$sixdeskcastor" = "true"
+                                        then
+                                            rfcp $Runnam.tar $CASTOR > $tmp 2>&1
+                                            stat=$?
+                                            rm $Runnam.tar
+                                            if test $stat -ne 0
+                                            then
+                                                
 #MACRO mymess 0 Copy to CASTOR failed!!! rfcp $where/sixtrack/$Runnam.tar $CASTOR
-						sixdeskmess -1 "Copy to CASTOR failed!!! rfcp $where/sixtrack/$Runnam.tar $CASTOR"
+                                                sixdeskmess -1 "Copy to CASTOR failed!!! rfcp $where/sixtrack/$Runnam.tar $CASTOR"
 #MACRO mymess
-						
-						
+                                                
+                                                
 #MACRO mymess 0 `cat $tmp`
-						sixdeskmess -1 "`cat $tmp`"
+                                                sixdeskmess -1 "`cat $tmp`"
 #MACRO mymess
-						
-						rm $tmp
-						anerror="true"
-					    else
-						rm $tmp
-						success="true"
-						delete="true"
-					    fi
-					else
-					    # CASTOR is not available
-					    success="true"
-					    delete="true"
-					fi
-					# test of castor copy?
-				    fi
-				    # end of tar OK?
-				fi
-				# end of various nasties with fort.10 fort.6 etc
-			    fi
-			    # end of untar problem or not
-			fi
-			# end of gunzip problem
-		    fi
-		    # end of download result
-		fi
-		# end of if NOT BOINC
-		touch $where/down
-		rm $where/down
-	    fi
-	    # end of checking where
-	fi
-	# end of found a taskid or not
-	cd $sixdeskhome
+                                                
+                                                rm $tmp
+                                                anerror="true"
+                                            else
+                                                rm $tmp
+                                                success="true"
+                                                delete="true"
+                                            fi
+                                        else
+                                            # CASTOR is not available
+                                            success="true"
+                                            delete="true"
+                                        fi
+                                        # test of castor copy?
+                                    fi
+                                    # end of tar OK?
+                                fi
+                                # end of various nasties with fort.10 fort.6 etc
+                            fi
+                            # end of untar problem or not
+                        fi
+                        # end of gunzip problem
+                    fi
+                    # end of download result
+                fi
+                # end of if NOT BOINC
+                touch $where/down
+                rm $where/down
+            fi
+            # end of checking where
+        fi
+        # end of found a taskid or not
+        cd $sixdeskhome
 
-	# check if Sixout.zip is there or not (only when it should be)
-	if ${lretrieveZip} && [ $success == "true" -a $sixdeskplatform == "boinc" ] ; then
-	    if [ ! -e ${__origPath}/${__resZipName} ] ; then
-		sixdeskmess -1 "${__origPath}/${__resZipName} NOT found when it should be there!"
-		sixdeskmess -1 "flagging event as NOT successful!!!"
-		success="false"
-		ignore="true"
-		delete="false"
-		anerror="true"
-	    fi
-	fi
+        # check if Sixout.zip is there or not (only when it should be)
+        if ${lretrieveZip} && [ $success == "true" -a $sixdeskplatform == "boinc" ] ; then
+            if [ ! -e ${__origPath}/${__resZipName} ] ; then
+                sixdeskmess -1 "${__origPath}/${__resZipName} NOT found when it should be there!"
+                sixdeskmess -1 "flagging event as NOT successful!!!"
+                success="false"
+                ignore="true"
+                delete="false"
+                anerror="true"
+            fi
+        fi
 
-	if test "$success" = "true"
-	then
-	    
+        if test "$success" = "true"
+        then
+            
 #MACRO mymess 1 Saving fort.10.gz and updating completed jobs etc
-	    sixdeskmess 1 "Saving fort.10.gz (and ${oneResultName}) and updating completed jobs etc"
+            sixdeskmess 1 "Saving fort.10.gz (and ${oneResultName}) and updating completed jobs etc"
 #MACRO mymess
-	    
-	    if test "$duplicate" = "false"
-	    then
-		mv $where/sixtrack/fort.10.gz $where/fort.10.gz 
-	    fi
-	    
+            
+            if test "$duplicate" = "false"
+            then
+                mv $where/sixtrack/fort.10.gz $where/fort.10.gz 
+            fi
+            
 #MACRO mylock $sixdeskwork
-	    ###    sixdesklockdir=$sixdeskwork
-	    ###    sixdesklock
+            ###    sixdesklockdir=$sixdeskwork
+            ###    sixdesklock
 #MACRO mylock
-	    
-	    
-	    if ${lretrieveZip} && [ $sixdeskplatform == "boinc" -a $duplicate == "false" ] ; then
-		sixdeskmess 1 "...${oneResultName} is there as well: ${__resZipName}! --> saving it!"
-		if ${ldos2unix} ; then
-		    sixdeskmess 1 "...dos2unix on files in archive"
-		    unzip ${__origPath}/${__resZipName} -d ${tmpNodeDir}
-		    local __tmpAllFiles=`zipinfo -1 ${__origPath}/${__resZipName}`
-		    cd ${tmpNodeDir}
-		    dos2unix ${__tmpAllFiles}
-		    zip ${__resZipName} ${__tmpAllFiles}
-		    cp ${__resZipName} ${where}/${oneResultName}
-		    rm -f ${__resZipName} ${__tmpAllFiles}
-		    cd $sixdeskhome
-		else
-		    cp ${__origPath}/${__resZipName} ${where}/${oneResultName}
-		fi
-	    fi
+            
+            
+            if ${lretrieveZip} && [ $sixdeskplatform == "boinc" -a $duplicate == "false" ] ; then
+                sixdeskmess 1 "...${oneResultName} is there as well: ${__resZipName}! --> saving it!"
+                if ${ldos2unix} ; then
+                    sixdeskmess 1 "...dos2unix on files in archive"
+                    unzip ${__origPath}/${__resZipName} -d ${tmpNodeDir}
+                    local __tmpAllFiles=`zipinfo -1 ${__origPath}/${__resZipName}`
+                    cd ${tmpNodeDir}
+                    dos2unix ${__tmpAllFiles}
+                    zip ${__resZipName} ${__tmpAllFiles}
+                    cp ${__resZipName} ${where}/${oneResultName}
+                    rm -f ${__resZipName} ${__tmpAllFiles}
+                    cd $sixdeskhome
+                else
+                    cp ${__origPath}/${__resZipName} ${where}/${oneResultName}
+                fi
+            fi
 
-	    # Now we make a file completed_this_run which we will
-	    # use to update a parallel mycompleted_cases and myincomplete_cases
-	    echo "$Runnam" >> $sixdeskwork/completed_this_run
-	    echo "$Runnam ${taskid}" >> $sixdeskjobs/completed_tasks_this_run
-	    #Eric here we should now delete other redundant tasks
-	    #mess="Taskids were x$taskids""x"
-	    #taskids=`echo "$taskids" | sed -e's? '$taskid' ? ?'`
-	    #mess="Taskids now x$taskids""x"
-	    #for l in $taskids
-	    #do
-	    #  echo "Here I will delete $l in $mytgid"
-	    #done
-	    
+            # Now we make a file completed_this_run which we will
+            # use to update a parallel mycompleted_cases and myincomplete_cases
+            echo "$Runnam" >> $sixdeskwork/completed_this_run
+            echo "$Runnam ${taskid}" >> $sixdeskjobs/completed_tasks_this_run
+            #Eric here we should now delete other redundant tasks
+            #mess="Taskids were x$taskids""x"
+            #taskids=`echo "$taskids" | sed -e's? '$taskid' ? ?'`
+            #mess="Taskids now x$taskids""x"
+            #for l in $taskids
+            #do
+            #  echo "Here I will delete $l in $mytgid"
+            #done
+            
 #MACRO myunlock $sixdeskwork
-	    ###sixdesklockdir=$sixdeskwork
-	    ###sixdeskunlock
+            ###sixdesklockdir=$sixdeskwork
+            ###sixdeskunlock
 #MACRO myunlock
-	    
-	    
+            
+            
 #MACRO mymess 2 Removing JOB_NOT_YET_COMPLETED in $where
-	    sixdeskmess 1 "Removing JOB_NOT_YET_COMPLETED in $where"
+            sixdeskmess 1 "Removing JOB_NOT_YET_COMPLETED in $where"
 #MACRO mymess
-	    
-	    rm -f $where/JOB_NOT_YET_COMPLETED
-	    #  Do NOT remove input files when using CPSS , BOINC or GRID???
-	    #  rm $where/fort.2.gz $where/fort.3.gz $where/fort.8.gz $where/fort.16.gz
-	fi
-	if test "$where" != ""
-	then
-	    if test -d $where
-	    then
-		if test -d $where/sixtrack
-		then
-		    rm -r $where/sixtrack
-		fi
-		sixdeskmess 2 "Final state of $where" "ls -l $where"
-	    fi
-	fi
-	if test "$delete" = "true"
-	then
-	    # success = true => delete = true
-	    if test $sixdeskplatform = "cpss"
-	    then
-		
+            
+            rm -f $where/JOB_NOT_YET_COMPLETED
+            #  Do NOT remove input files when using CPSS , BOINC or GRID???
+            #  rm $where/fort.2.gz $where/fort.3.gz $where/fort.8.gz $where/fort.16.gz
+        fi
+        if test "$where" != ""
+        then
+            if test -d $where
+            then
+                if test -d $where/sixtrack
+                then
+                    rm -r $where/sixtrack
+                fi
+                sixdeskmess 2 "Final state of $where" "ls -l $where"
+            fi
+        fi
+        if test "$delete" = "true"
+        then
+            # success = true => delete = true
+            if test $sixdeskplatform = "cpss"
+            then
+                
 #MACRO mymess 1 Deleting result $ntaskid from the server
-		sixdeskmess 1 "Deleting result $ntaskid from the server"
+                sixdeskmess 1 "Deleting result $ntaskid from the server"
 #MACRO mymess
-		
-		perl ${SCRIPTDIR}/perl/confirmResultDownload.pl $ntaskid > $tmp 2>&1
-		stat=$?
-		if test $stat -ne 0
-		then
-		    
+                
+                perl ${SCRIPTDIR}/perl/confirmResultDownload.pl $ntaskid > $tmp 2>&1
+                stat=$?
+                if test $stat -ne 0
+                then
+                    
 #MACRO mymess 0 confirmResultDownload failed!!! `cat $tmp`
-		    sixdeskmess -1 "confirmResultDownload failed!!! `cat $tmp`"
+                    sixdeskmess -1 "confirmResultDownload failed!!! `cat $tmp`"
 #MACRO mymess
-		    
-		fi
-		rm $tmp
-	    elif test $sixdeskplatform = "boinc"
-	    then
-		
+                    
+                fi
+                rm $tmp
+            elif test $sixdeskplatform = "boinc"
+            then
+                
 #MACRO mymess 1 Deleting result $taskid
-		sixdeskmess 1 "Deleting result $taskid"
+                sixdeskmess 1 "Deleting result $taskid"
 #MACRO mymess
-		
-		if test "$Runnam" != ""
-		then
-		    if [ -z "${__suffix}" ] ; then
-			# dealing with results in spooldir, otherwise if in /tmp, results
-			#    will be deleted at the end of processing
-			rm -f ${__origPath}/${__resName}
-			if ${lretrieveZip} ; then
-			    rm -f ${__origPath}/${__resZipName}
-			fi
-			# and try and remove Alex .done and .zip
-		    
+                
+                if test "$Runnam" != ""
+                then
+                    if [ -z "${__suffix}" ] ; then
+                        # dealing with results in spooldir, otherwise if in /tmp, results
+                        #    will be deleted at the end of processing
+                        rm -f ${__origPath}/${__resName}
+                        if ${lretrieveZip} ; then
+                            rm -f ${__origPath}/${__resZipName}
+                        fi
+                        # and try and remove Alex .done and .zip
+                    
 #MACRO mymess 1 Deleting .done and .zip
-			sixdeskmess 1 "Deleting .done and .zip"
+                        sixdeskmess 1 "Deleting .done and .zip"
 #MACRO mymess
-			rm -f $sixdeskboincdir/work/${workspace}_${boincRunnam}_1_sixvf_$taskid.desc.done
-			rm -f $sixdeskboincdir/work/${workspace}_${boincRunnam}_1_sixvf_$taskid.zip
-		    fi
-		else
-		    if [ -z "${__suffix}" ] ; then
-			# dealing with results in spooldir, otherwise if in /tmp, results
-			#    will be deleted at the end of processing
-			rm -f ${__origPath}/${workspace}_*_1_sixvf_${taskid}
-			rm -f ${__origPath}/${workspace}_*_1_sixvf_${taskid}_0
-			if ${lretrieveZip} ; then
-			    rm -f ${__origPath}/${workspace}_*_1_sixvf_${taskid}_1
-			fi
-			# Alex stuff?
-			rm -f $sixdeskboincdir/work/${workspace}_*_1_sixvf_${taskid}.desc.done
-			rm -f $sixdeskboincdir/work/${workspace}_*_1_sixvf_${taskid}.zip
-		    fi
-		fi
-	    fi
-	fi
-	if test $success = "false"
-	then
-	    if test "$anerror" = "true"
-	    then
-		
+                        rm -f $sixdeskboincdir/work/${workspace}_${boincRunnam}_1_sixvf_$taskid.desc.done
+                        rm -f $sixdeskboincdir/work/${workspace}_${boincRunnam}_1_sixvf_$taskid.zip
+                    fi
+                else
+                    if [ -z "${__suffix}" ] ; then
+                        # dealing with results in spooldir, otherwise if in /tmp, results
+                        #    will be deleted at the end of processing
+                        rm -f ${__origPath}/${workspace}_*_1_sixvf_${taskid}
+                        rm -f ${__origPath}/${workspace}_*_1_sixvf_${taskid}_0
+                        if ${lretrieveZip} ; then
+                            rm -f ${__origPath}/${workspace}_*_1_sixvf_${taskid}_1
+                        fi
+                        # Alex stuff?
+                        rm -f $sixdeskboincdir/work/${workspace}_*_1_sixvf_${taskid}.desc.done
+                        rm -f $sixdeskboincdir/work/${workspace}_*_1_sixvf_${taskid}.zip
+                    fi
+                fi
+            fi
+        fi
+        if test $success = "false"
+        then
+            if test "$anerror" = "true"
+            then
+                
 #MACRO mymess 0 Download FAILED for $taskid : $where  !!!
-		sixdeskmess 1 "Download FAILED for $taskid : $where  !!!"
+                sixdeskmess 1 "Download FAILED for $taskid : $where  !!!"
 #MACRO mymess
-		
-		let __failed+=1
-		touch $sixdesklogdir/sixdeskerror.log
-		grep "^$taskid " $sixdesklogdir/sixdeskerror.log > /dev/null 2>&1
-		if test $? -ne 0
-		then
-		    echo "$taskid $Runnam $Rundir" >> $sixdesklogdir/sixdeskerror.log
-		fi
-	    fi
-	fi
-	if test "$duplicate" = "true" 
-	then
-	    let __duplicated+=1
-	    
+                
+                let __failed+=1
+                touch $sixdesklogdir/sixdeskerror.log
+                grep "^$taskid " $sixdesklogdir/sixdeskerror.log > /dev/null 2>&1
+                if test $? -ne 0
+                then
+                    echo "$taskid $Runnam $Rundir" >> $sixdesklogdir/sixdeskerror.log
+                fi
+            fi
+        fi
+        if test "$duplicate" = "true" 
+        then
+            let __duplicated+=1
+            
 #MACRO mymess 1 $taskid ignored (duplicate/redundant result)
-	    sixdeskmess 1 "$taskid ignored (duplicate/redundant result)"
+            sixdeskmess 1 "$taskid ignored (duplicate/redundant result)"
 #MACRO mymess
-	    
-	elif test "$success" = "true"
-	then
-	    let __ok+=1
-	    
+            
+        elif test "$success" = "true"
+        then
+            let __ok+=1
+            
 #MACRO mymess 1 $taskid downloaded successfully to $where
-	    sixdeskmess 1 "$taskid downloaded successfully to $where"
+            sixdeskmess 1 "$taskid downloaded successfully to $where"
 #MACRO mymess
-	    
-	fi
-	#Eric
-	let iTreated+=1
-	if ${lKerberos} && [ $((${iTreated}%${NrenewKerberos})) -eq 0 ] ; then
-	    sixdeskmess 2 "renewing kerberos token: ${iTreated} vs ${NrenewKerberos}"
-	    sixdeskRenewKerberosToken
-	fi
+            
+        fi
+        #Eric
+        let iTreated+=1
+        if ${lKerberos} && [ $((${iTreated}%${NrenewKerberos})) -eq 0 ] ; then
+            sixdeskmess 2 "renewing kerberos token: ${iTreated} vs ${NrenewKerberos}"
+            sixdeskRenewKerberosToken
+        fi
     done  
     # end of all tasks
     rm -f ${__sixdesktasklist}
 
     if [ ${sixdesklevel} -gt 0 ] ; then
-	echo ""
-	printf '.%.0s' {1..80}
-	echo ""
+        echo ""
+        printf '.%.0s' {1..80}
+        echo ""
     fi
     if [ ${tmpReady} -gt 0 ] ; then
-	sixdeskmess -1 "In this batch of ${tmpReady} ready results, ${__ok} were downloaded successfully, ${__duplicated} were deleted as duplicate/redundant, and ${__failed} failed."
+        sixdeskmess -1 "In this batch of ${tmpReady} ready results, ${__ok} were downloaded successfully, ${__duplicated} were deleted as duplicate/redundant, and ${__failed} failed."
     fi
 
     let ok+=${__ok}
@@ -1338,14 +1338,14 @@ function check_output_option(){
     esac
 
     if ! ${__selected_output_valid}; then
-	echo "ERROR: Option -o requires the following arguments:"
-	echo "    0: only error messages and basic output [default]"
-	echo "    1: full output"
-	echo "    2: extended output for debugging"
-	exit
+        echo "ERROR: Option -o requires the following arguments:"
+        echo "    0: only error messages and basic output [default]"
+        echo "    1: full output"
+        echo "    2: extended output for debugging"
+        exit
     else
-	loutform=true
-	sixdesklevel_option=${OPTARG}
+        loutform=true
+        sixdesklevel_option=${OPTARG}
     fi
     
 }
@@ -1380,70 +1380,70 @@ unlockSetEnv=""
 # get options (heading ':' to disable the verbose error handling)
 while getopts  ":hBto:n:d:p:zxUl" opt ; do
     case $opt in
-	h)
-	    how_to_use
-	    exit 1
-	    ;;
-	B)
-	    # use whatever breaks backward compatibility
-	    lbackcomp=false
-	    ;;
-	t)
-	    lreconsiderDelete=true
-	    ;;
-	z)
-	    # retrieve also Sixout.zip
-	    lretrieveZip=true
-	    ;;
-	x)
-	    # run dos2unix on every item in Sixout.zip
-	    ldos2unix=true
-            # this call imply that Sixout.zip should be retrieved		
-	    lretrieveZip=true
-	    ;;
-	    
-	n)
-	    # renew kerberos token every N jobs
-	    NrenewKerberos=${OPTARG}
-	    # check it is actually a number
-	    let NrenewKerberos+=0
-	    if [ $? -ne 0 ] 2>/dev/null; then
-		how_to_use
-		echo "-n argument option is not a number!"
-		exit 1
-	    fi
-	    ;;
-	o)
-	    # output option
-	    check_output_option
-	    ;;	
-	d)
-	    # the user is requesting a specific study
-	    optArgCurrStudy="-d ${OPTARG}"
-	    ;;
-	p)
-	    # the user is requesting a specific platform
-	    optArgCurrPlatForm="-p ${OPTARG}"
-	    ;;
-	U)
-	    # unlock currently locked folder
-	    lunlockRunRes=true
-	    unlockSetEnv="-U"
-	    ;;
-	l)
-	    # only list results
-	    lProceedRunRes=false
-	    ;;
-	:)
-	    how_to_use
-	    echo "Option -$OPTARG requires an argument."
-	    exit 1
-	    ;;
-	\?)
-	    how_to_use
-	    echo "Invalid option: -$OPTARG"
-	    exit 1
-	    ;;
+        h)
+            how_to_use
+            exit 1
+            ;;
+        B)
+            # use whatever breaks backward compatibility
+            lbackcomp=false
+            ;;
+        t)
+            lreconsiderDelete=true
+            ;;
+        z)
+            # retrieve also Sixout.zip
+            lretrieveZip=true
+            ;;
+        x)
+            # run dos2unix on every item in Sixout.zip
+            ldos2unix=true
+            # this call imply that Sixout.zip should be retrieved               
+            lretrieveZip=true
+            ;;
+            
+        n)
+            # renew kerberos token every N jobs
+            NrenewKerberos=${OPTARG}
+            # check it is actually a number
+            let NrenewKerberos+=0
+            if [ $? -ne 0 ] 2>/dev/null; then
+                how_to_use
+                echo "-n argument option is not a number!"
+                exit 1
+            fi
+            ;;
+        o)
+            # output option
+            check_output_option
+            ;;  
+        d)
+            # the user is requesting a specific study
+            optArgCurrStudy="-d ${OPTARG}"
+            ;;
+        p)
+            # the user is requesting a specific platform
+            optArgCurrPlatForm="-p ${OPTARG}"
+            ;;
+        U)
+            # unlock currently locked folder
+            lunlockRunRes=true
+            unlockSetEnv="-U"
+            ;;
+        l)
+            # only list results
+            lProceedRunRes=false
+            ;;
+        :)
+            how_to_use
+            echo "Option -$OPTARG requires an argument."
+            exit 1
+            ;;
+        \?)
+            how_to_use
+            echo "Invalid option: -$OPTARG"
+            exit 1
+            ;;
     esac
 done
 shift "$(($OPTIND - 1))"
@@ -1646,9 +1646,9 @@ if ${lProceedRunRes} ; then
 else
     nFoundNewResults=`ls -1 $sixdeskboincdir/results/${workspace}_${LHCDesName}__\*_1_sixvf_boinc\* 2> /dev/null | wc -l `
     if [ ${nFoundNewResults} -gt 0 ] ; then
-	sixdeskmess -1 "...found ${nFoundNewResults} fresh results from BOINC!"
+        sixdeskmess -1 "...found ${nFoundNewResults} fresh results from BOINC!"
     else
-	sixdeskmess -1 "...no fresh results from BOINC!"
+        sixdeskmess -1 "...no fresh results from BOINC!"
     fi
 fi
 
@@ -1672,9 +1672,9 @@ if [ -n "${allNewArchives}" ] ; then
     nNewResults=0
     sixdeskmess -1 "Found ${nNewArchives} archives with fresh results from BOINC:"
     for tmpArchive in ${allNewArchives} ; do
-	nResults=`zipinfo -1 ${tmpArchive} | grep '_0$' | wc -l`
-	sixdeskmess -1 "...archive ${tmpArchive} - results: ${nResults}"
-	let nNewResults+=${nResults}
+        nResults=`zipinfo -1 ${tmpArchive} | grep '_0$' | wc -l`
+        sixdeskmess -1 "...archive ${tmpArchive} - results: ${nResults}"
+        let nNewResults+=${nResults}
     done
     sixdeskmess -1 "...for a total of ${nNewResults} fresh results from BOINC"
 else
@@ -1686,9 +1686,9 @@ if [ -n "${allOldArchives}" ] ; then
     nOldResults=0
     sixdeskmess -1 "Found ${nOldArchives} archives with old results from BOINC:"
     for tmpArchive in ${allOldArchives} ; do
-	nResults=`zipinfo -1 ${tmpArchive} | grep '_0$' | wc -l`
-	sixdeskmess -1 "...archive ${tmpArchive} - results: ${nResults}"
-	let nOldResults+=${nResults}
+        nResults=`zipinfo -1 ${tmpArchive} | grep '_0$' | wc -l`
+        sixdeskmess -1 "...archive ${tmpArchive} - results: ${nResults}"
+        let nOldResults+=${nResults}
     done
     sixdeskmess -1 "...for a total of ${nOldResults} old results from BOINC"
 else
@@ -1701,9 +1701,9 @@ echo ""
 
 if ${lProceedRunRes} ; then
     if ${lreconsiderDelete} ; then
-	allArchives="${allNewArchives} ${allOldArchives}"
+        allArchives="${allNewArchives} ${allOldArchives}"
     else
-	allArchives="${allNewArchives}"
+        allArchives="${allNewArchives}"
     fi
     if [ -z "${allArchives}" ] ; then
         echo ""
@@ -1718,52 +1718,52 @@ if ${lProceedRunRes} ; then
     else
     
         for tmpArchive in ${allArchives} ; do
-    	
-    	    tmpArchiveName=`basename ${tmpArchive}`
-    	    tmpArchiveDir=`dirname ${tmpArchive}`
-    	    tmpExtractDir=${tmpNodeDir}/${tmpArchiveName//.zip/}
-    	
-    	    echo ""
-    	    printf '=%.0s' {1..80}
-    	    echo ""
-    	    echo ""
-    	    sixdeskmess -1 "You have results in ${tmpArchiveDir} archived in ${tmpArchiveName}!!"
-    	    sixdeskmess -1 "I will download them as well!!"
-    	
+        
+            tmpArchiveName=`basename ${tmpArchive}`
+            tmpArchiveDir=`dirname ${tmpArchive}`
+            tmpExtractDir=${tmpNodeDir}/${tmpArchiveName//.zip/}
+        
+            echo ""
+            printf '=%.0s' {1..80}
+            echo ""
+            echo ""
+            sixdeskmess -1 "You have results in ${tmpArchiveDir} archived in ${tmpArchiveName}!!"
+            sixdeskmess -1 "I will download them as well!!"
+        
             # set trap
-    	    trap "rm -rf ${tmpExtractDir}" 0
-    	
-    	    unzip ${tmpArchive} -d ${tmpExtractDir}
-    	
+            trap "rm -rf ${tmpExtractDir}" 0
+        
+            unzip ${tmpArchive} -d ${tmpExtractDir}
+        
             # get list of new results originally from CPU resource
-    	    # it produces:
-    	    # - sixdesktasklist: a file with the takslist of results (eg boincXXXX)
-    	    getListNewResults ${tmpExtractDir}
-	
-	    # download results and save them in track tree
-	    downloadNewResults ${tmpExtractDir} $sixdesktasklist "_0"
-   	    # update the my* DB
-	    update_cases
-	
-	    if [ $? -eq 0 ] ; then
-	        # mv in processed only brand new results
-		if [[ "${tmpArchive}" != *"/processed/"* ]] ; then
-		    [ -d ${tmpArchiveDir}/processed ] || mkdir ${tmpArchiveDir}/processed
-		    mv ${tmpArchive} ${tmpArchiveDir}/processed/${tmpArchiveName}
-		fi
-		touch ${tmpArchiveDir}/processed/${tmpArchiveName}
-	    fi
+            # it produces:
+            # - sixdesktasklist: a file with the takslist of results (eg boincXXXX)
+            getListNewResults ${tmpExtractDir}
+        
+            # download results and save them in track tree
+            downloadNewResults ${tmpExtractDir} $sixdesktasklist "_0"
+            # update the my* DB
+            update_cases
+        
+            if [ $? -eq 0 ] ; then
+                # mv in processed only brand new results
+                if [[ "${tmpArchive}" != *"/processed/"* ]] ; then
+                    [ -d ${tmpArchiveDir}/processed ] || mkdir ${tmpArchiveDir}/processed
+                    mv ${tmpArchive} ${tmpArchiveDir}/processed/${tmpArchiveName}
+                fi
+                touch ${tmpArchiveDir}/processed/${tmpArchiveName}
+            fi
 
-	    rm -rf ${tmpExtractDir}
- 	    # reset trap
-	    trap - 0
-	
-	    echo ""
-	    printf '=%.0s' {1..80}
-	    echo ""
-	    echo ""
-	    
-	done
+            rm -rf ${tmpExtractDir}
+            # reset trap
+            trap - 0
+        
+            echo ""
+            printf '=%.0s' {1..80}
+            echo ""
+            echo ""
+            
+        done
     fi
     
     sixdeskmess -1 "Before this run of `basename $0`: $cases total cases, $ccases complete ($icases incomplete)"
@@ -1772,15 +1772,15 @@ if ${lProceedRunRes} ; then
     then
 
         #MACRO mymess 0 Of $ready Ready results, $ok were downloaded successfully, $duplicated were deleted as duplicate/redundant, and $failed failed.
-	sixdeskmess -1 "Of $ready Ready results, $ok were downloaded successfully, $duplicated were deleted as duplicate/redundant, and $failed failed."
+        sixdeskmess -1 "Of $ready Ready results, $ok were downloaded successfully, $duplicated were deleted as duplicate/redundant, and $failed failed."
         #MACRO mymess
 
     else
 
         #MACRO mymess 0 There were no results available
-	sixdeskmess -1 "There were no results available"
+        sixdeskmess -1 "There were no results available"
         #MACRO mymess
-	
+        
     fi
 fi
 

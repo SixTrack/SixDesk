@@ -37,27 +37,27 @@ function make_mask_names_values() {
     
     local __iArg=0
     for _arg in "${@:1}" ; do                   # skip the first arg ( function name )
-	IFS='|' read -ra _arg <<< "$_arg"       # split at delimiter "|"
-	_arg="${_arg[@]}"
-	if [[ ! -z "${_arg// }" ]] ; then       # test if the argument is not whites only
+        IFS='|' read -ra _arg <<< "$_arg"       # split at delimiter "|"
+        _arg="${_arg[@]}"
+        if [[ ! -z "${_arg// }" ]] ; then       # test if the argument is not whites only
             # - names
-	    _new=""
-	    for _r in ${_result_names} ; do     # take all the old strings...
-		for _x in $_arg ; do
-		    _xx="${scan_vars[__iArg]}_${_x}" 
-		    _new="$_new ${_r}_${_xx}"   # ...and append the new parameter
-		done
-	    done
-	    _result_names=${_new:1}             # strip the leading space
+            _new=""
+            for _r in ${_result_names} ; do     # take all the old strings...
+                for _x in $_arg ; do
+                    _xx="${scan_vars[__iArg]}_${_x}" 
+                    _new="$_new ${_r}_${_xx}"   # ...and append the new parameter
+                done
+            done
+            _result_names=${_new:1}             # strip the leading space
             # - values
-	    _new=""
-	    for _r in ${_result_values} ; do    # take all the old strings...
-		for _x in $_arg ; do
-		    _new="$_new ${_r}%${_x}"    # ...and append the new parameter
-		done
-	    done
-	    _result_values=${_new:1}            # strip the leading space
-	fi
+            _new=""
+            for _r in ${_result_values} ; do    # take all the old strings...
+                for _x in $_arg ; do
+                    _new="$_new ${_r}%${_x}"    # ...and append the new parameter
+                done
+            done
+            _result_values=${_new:1}            # strip the leading space
+        fi
         ((__iArg++))
     done
     
@@ -70,11 +70,11 @@ function make_mask_names_values() {
 
 function get_study_names(){
     if ! ${scan_masks}; then
-	get_arguments_make_mask
-	make_mask_names_values ${arguments}
+        get_arguments_make_mask
+        make_mask_names_values ${arguments}
     else
-	sixdeskmess -1 "scan_masks set to TRUE, using defined list of mask names"
-	scan_studies=(${scan_studies})
+        sixdeskmess -1 "scan_masks set to TRUE, using defined list of mask names"
+        scan_studies=(${scan_studies})
     fi
 }
 
@@ -88,11 +88,11 @@ function get_arguments_make_mask(){
     
     arguments=""
     for _v in ${scan_variables}; do
-	_V=_v
-	eval "_Z=scan_vals_\$$_V"           # create the variable scan_vals_B
-	eval "_Y=\$$_Z"                     # read the value of the variable scan_vals_B
-	_arg=$(make_array_with_delimiter "${_Y}")
-	arguments="${arguments} ${_arg}"
+        _V=_v
+        eval "_Z=scan_vals_\$$_V"           # create the variable scan_vals_B
+        eval "_Y=\$$_Z"                     # read the value of the variable scan_vals_B
+        _arg=$(make_array_with_delimiter "${_Y}")
+        arguments="${arguments} ${_arg}"
     done
 }
 
@@ -132,9 +132,9 @@ function generate_mask_file(){
     local __sedCommand=""
     for (( _j=0; _j<${#values[@]}; _j++ )) ; do
         # the placeholder to be substituted in the mask file
-	_placeholder=${_placeholders[${_j}]}
+        _placeholder=${_placeholders[${_j}]}
         # the value this placeholder shall be replaced with
-	_val=${values[${_j}]}
+        _val=${values[${_j}]}
         # concatenate actual sed commands
         __sedCommand="${__sedCommand} -e \"s?${_placeholder}?${_val}?g\""
     done
@@ -149,8 +149,8 @@ function check_mask_for_placeholders(){
     local _placeholder
     for _placeholder in ${scan_placeholders} ; do
         if ! grep -q "${_placeholder}" "${_orimask}"; then
-	    sixdeskmess -1 "WARNING: Placeholder ${_placeholder} not found in original mask file ${_orimask}!"
-	    sixdeskConfirmExit
+            sixdeskmess -1 "WARNING: Placeholder ${_placeholder} not found in original mask file ${_orimask}!"
+            sixdeskConfirmExit
             if [ $? -ne 0 ] ; then
                 sixdeskmess -1  "Please modify mask file or check ${scanDefinitionsFileName}";
                 exit 1
