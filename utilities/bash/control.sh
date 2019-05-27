@@ -304,16 +304,14 @@ if ${lkinit} ; then
     if [ $? -gt 0] ; then
         echo "--> kinit failed - AFS/Kerberos credentials expired!!! aborting..."
         exit 1
-    else
-        aklog -c cern.ch -k CERN.CH
     fi
+    aklog -c cern.ch -k CERN.CH
     if [ $? -gt 0 ] ; then
-        echo "--> aklog failed!!! aborting...."
+        echo "--> aklog failed!!! aborting..."
         exit 1
-    else
-        echo " --> klist output:"
-        klist
     fi
+    echo " --> klist output:"
+    klist
 fi
 
 # ------------------------------------------------------------------------------
