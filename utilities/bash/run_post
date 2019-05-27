@@ -127,11 +127,11 @@ if [ $long -eq 1 ] ;then
   jtest=1
 fi
 if [ -s "$sixdesktrack/$LHCDesHome/general_input" ];then
-  elhc=`awk '{print $1}' $sixdesktrack/$LHCDesHome/general_input`
-  einj=`awk '{print $2}' $sixdesktrack/$LHCDesHome/general_input`
+  elhc=`gawk '{print $1}' $sixdesktrack/$LHCDesHome/general_input`
+  einj=`gawk '{print $2}' $sixdesktrack/$LHCDesHome/general_input`
 elif [ -s "general_input" ];then
-  elhc=`awk '{print $1}' general_input`
-  einj=`awk '{print $2}' general_input`
+  elhc=`gawk '{print $1}' general_input`
+  einj=`gawk '{print $2}' general_input`
 else
 
 #MACRO mymess 0 No general_input file: Run stopped!!!

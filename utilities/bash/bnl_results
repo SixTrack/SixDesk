@@ -303,7 +303,7 @@ then
   sixdeskresults=$sixdesktmp
 #MACRO mymktmp
 
-  awk -f ${SCRIPTDIR}/awk/remover.awk $tmp > $sixdeskresults
+  gawk -f ${SCRIPTDIR}/gawk/remover.awk $tmp > $sixdeskresults
   rm $tmp
   tot=`grep TotalTasks $sixdeskresults | sed -e 's/TotalTasks: *//'`
   ready=`grep ResultsReady $sixdeskresults | sed -e 's/ResultsReady: *//'`
@@ -325,7 +325,7 @@ then
 #MACRO mymktmp
 
   echo "$tasks" > $sixdesktasks
-  awk -f ${SCRIPTDIR}/awk/splitter.awk $sixdesktasks > $sixdesktasklist
+  gawk -f ${SCRIPTDIR}/gawk/splitter.awk $sixdesktasks > $sixdesktasklist
   rm $sixdesktasks 
 elif test $sixdeskplatform = "boinc"
 then
@@ -598,7 +598,7 @@ do
         if test "$found" = "true"
         then
           mkdir -p sixtrack
-          awk -f ${SCRIPTDIR}/awk/remover.awk $sixdeskboincdir/results/$workspace"_"$boincRunnam"_1_sixvf_"$taskid > sixtrack/fort.10
+          gawk -f ${SCRIPTDIR}/gawk/remover.awk $sixdeskboincdir/results/$workspace"_"$boincRunnam"_1_sixvf_"$taskid > sixtrack/fort.10
 #Eric BOINC marker
           cd sixtrack
 
@@ -860,7 +860,7 @@ do
                   file $myfil | egrep "CRLF" > /dev/null 2>&1
                   if test $? -eq 0
                   then
-                    awk -f ${SCRIPTDIR}/awk/remover.awk $myfil > $tmp
+                    gawk -f ${SCRIPTDIR}/gawk/remover.awk $myfil > $tmp
                     mv $tmp $myfil
                   fi
                 fi

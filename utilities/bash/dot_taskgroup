@@ -33,7 +33,7 @@ sixdeskmktmp
 tmp=$sixdesktmp
 #MACRO mymktmp
 
-awk -f ${SCRIPTDIR}/awk/remover.awk $sixdeskstudy/ProgramId > $tmp
+gawk -f ${SCRIPTDIR}/gawk/remover.awk $sixdeskstudy/ProgramId > $tmp
 mv $tmp $sixdeskstudy/ProgramId
 if test $sixdeskstat -ne 0
 then
@@ -112,7 +112,7 @@ else
   perl ${SCRIPTDIR}/perl/createTaskGroup.pl "$sixdeskTaskGroupName" "$sixdeskDescription" "$sixdeskProgramId" "$sixdeskStatus" "$sixdeskPriority" "$sixdeskComments" > $tmpg 2>&1
   sixdeskstat=$?
   # get rid of \r if any....I saw it once at least!
-  awk -f ${SCRIPTDIR}/awk/remover.awk $tmpg > $sixdeskstudy/TaskGroupId
+  gawk -f ${SCRIPTDIR}/gawk/remover.awk $tmpg > $sixdeskstudy/TaskGroupId
   if test $sixdeskstat -ne 0
   then
 

@@ -54,23 +54,23 @@ while getopts  ":cdhlmsx:" opt ; do
     case $opt in
         c)  lPlaceHolderCheck=false ;;
         d)  scanDefinitionsFileName="${OPTARG}" ;;
-	h)  how_to_use
-	    exit 1
-	    ;;
+        h)  how_to_use
+            exit 1
+            ;;
         l)  llocalfort3=true ;;
-	m)  lcreatemask=true ;;
+        m)  lcreatemask=true ;;
         s)  lsetstudy=true ;;
         x)  lcommand=true
             tmpCommand="${OPTARG}"
             ;;
-	:)  how_to_use
-	    echo "Option -$OPTARG requires an argument."
-	    exit 1
-	    ;;
-	\?) how_to_use
-	    echo "Invalid option: -$OPTARG"
-	    exit 1
-	    ;;
+        :)  how_to_use
+            echo "Option -$OPTARG requires an argument."
+            exit 1
+            ;;
+        \?) how_to_use
+            echo "Invalid option: -$OPTARG"
+            exit 1
+            ;;
     esac
 done
 shift "$(($OPTIND - 1))"
@@ -130,7 +130,7 @@ get_study_names
 if ${lcreatemask}; then
     if ${lPlaceHolderCheck} ; then
         sixdeskmess -1 "Checking if all placeholders are existing in mask file "
-	check_mask_for_placeholders
+        check_mask_for_placeholders
     fi
     sixdeskmess -1 "Creating mask files"
     scan_loop generate_mask_file false false
