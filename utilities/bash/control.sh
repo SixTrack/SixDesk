@@ -297,14 +297,18 @@ if ${lkinit} ; then
     if ${lkrenew} ; then
         echo " --> kinit -R beforehand:"
         kinit -R
-        aklog -c cern.ch -k CERN.CH
     else
         echo " --> kinit beforehand:"
         kinit
+    fi
+    if [ $? -gt 0] ; then
+        echo "--> kinit failed - AFS/Kerberos credentials expired!!! aborting..."
+        exit 1
+    else
         aklog -c cern.ch -k CERN.CH
     fi
     if [ $? -gt 0 ] ; then
-        echo "--> kinit failed - AFS/Kerberos credentials expired!!! aborting..."
+        echo "--> aklog failed!!! aborting...."
         exit 1
     else
         echo " --> klist output:"

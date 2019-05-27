@@ -1613,9 +1613,15 @@ function sixdeskRenewKerberosToken(){
         local __lKlist=true
     fi
     sixdeskmess -1 " --> kinit;"
-    multipleTrials "kinit -R ; local __exit_status=\$?; aklog -c cern.ch -k CERN.CH" "[ \$__exit_status -eq 0 ]"
+    multipleTrials "kinit -R ; local __exit_status=\$? " "[ \$__exit_status -eq 0 ]"
     if [ $? -gt 0 ] ; then
         sixdeskmess -1 "--> kinit -R failed - AFS/Kerberos credentials expired??? aborting..."
+        exit
+    else
+        multipleTrials "aklog -c cern.ch -k CERN.CH; local __exit_status=\$?; " "[ \$__exit_status -eq 0 ]"
+    fi
+    if [ $? -gt 0 ] ; then
+        sixdeskmess -1 "--> aklog failed!!! aborting..."
         exit
     else
         if ${__lKlist} ; then
