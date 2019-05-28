@@ -88,7 +88,7 @@ do
     then
       rm -f ${myname}.${j}.stable1
       touch ${myname}.${j}.stable1
-      awk -f ${SCRIPTDIR}/awk/stable.awk "$w1/${myname1}.$j" > ${myname}.${j}.stable1
+      gawk -f ${SCRIPTDIR}/gawk/stable.awk "$w1/${myname1}.$j" > ${myname}.${j}.stable1
     else
 
 #MACRO mymess 0 Skipping Angle $j; DAres.${s1}.${sixdesktunes}.${turnse}.$j missing or empty
@@ -108,7 +108,7 @@ do
     then
       rm -f "${myname}.${j}.stable2"
       touch "${myname}.${j}.stable2"
-      awk -f ${SCRIPTDIR}/awk/stable.awk "$w2/${myname2}.$j" > ${myname}.${j}.stable2
+      gawk -f ${SCRIPTDIR}/gawk/stable.awk "$w2/${myname2}.$j" > ${myname}.${j}.stable2
     else
 
 #MACRO mymess 0 Skipping Angle $j; DAres.${s2}.${sixdesktunes}.${turnse}.$j missing or empty
@@ -118,13 +118,13 @@ do
 
       skip=1
     fi
-# Now combine the two files (and the awk also writes the .sum)
+# Now combine the two files (and the gawk also writes the .sum)
     if test "$skip" -eq 0
     then
       join ${myname}.${j}.stable1 ${myname}.${j}.stable2 > ${myname}.${j}.tmp
       rm ${myname}.${j}.stable1 
       rm ${myname}.${j}.stable2
-      awk -f ${SCRIPTDIR}/awk/stable2.awk ${myname}.${j}.tmp > ${myname}.${j}.stable
+      gawk -f ${SCRIPTDIR}/gawk/stable2.awk ${myname}.${j}.tmp > ${myname}.${j}.stable
       ln -sf ${myname}.${j}.stable ${nickname}.${j}.stable
       rm ${myname}.${j}.tmp
     fi

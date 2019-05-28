@@ -89,12 +89,12 @@ EOF
 function preliminaryChecks(){
     local __lerr=0
     if ! ${lFree} && ! ${lStudyGiven} && ! ${lFileGiven} ; then
-	how_to_use
-	echo " please specify an action, i.e. backing up a study (-d option) or a file (-f option) or remove existing locks"
-	let __lerr+=1
+        how_to_use
+        echo " please specify an action, i.e. backing up a study (-d option) or a file (-f option) or remove existing locks"
+        let __lerr+=1
     elif ${lStudyGiven} ; then
-	source ${SCRIPTDIR}/bash/set_env.sh -d ${currStudy} ${verbose} -e
-	sixdeskDefineUserTree $basedir $scratchdir $workspace
+        source ${SCRIPTDIR}/bash/set_env.sh -d ${currStudy} ${verbose} -e
+        sixdeskDefineUserTree $basedir $scratchdir $workspace
     fi
     return ${__lerr}
 }
@@ -102,23 +102,23 @@ function preliminaryChecks(){
 function echoOptions(){
     echo ""
     if ${lFree} ; then
-	sixdeskmess 1 "freeing locks from a previous run!"
+        sixdeskmess 1 "freeing locks from a previous run!"
     else
-	sixdeskmess 1 "back up:"
-	sixdeskmess 1 "- source:      ${fullSource}"
-	sixdeskmess 1 "- destination: ${fullDest}"
-	sixdeskmess 1 "- protocol:    ${comProt}"
-	if ${lverbose} ; then
-	    sixdeskmess 1 "--> verbose option active!"
-	fi
-	if ${lStudyGiven} ; then
-	    if ! ${lzip} ; then
-		sixdeskmess 1 "--> do not zip before creating (unzip after restoring) back-up file!"
-	    fi
-	    if ! ${lclean} ; then
-		sixdeskmess 1 "--> .zip files won't be removed locally!"
-	    fi
-	fi
+        sixdeskmess 1 "back up:"
+        sixdeskmess 1 "- source:      ${fullSource}"
+        sixdeskmess 1 "- destination: ${fullDest}"
+        sixdeskmess 1 "- protocol:    ${comProt}"
+        if ${lverbose} ; then
+            sixdeskmess 1 "--> verbose option active!"
+        fi
+        if ${lStudyGiven} ; then
+            if ! ${lzip} ; then
+                sixdeskmess 1 "--> do not zip before creating (unzip after restoring) back-up file!"
+            fi
+            if ! ${lclean} ; then
+                sixdeskmess 1 "--> .zip files won't be removed locally!"
+            fi
+        fi
     fi    
     echo ""
 }
@@ -128,109 +128,109 @@ function setCommand(){
     lscp=false
     # file name:
     if [ -z "${fileName}" ] ; then
-	# automatic naming convention:
-	fileName=${currStudy}.zip
+        # automatic naming convention:
+        fileName=${currStudy}.zip
     fi
     if [ ${lSerGiven} -eq 2 ] ; then
-	# copying back-up from one storage system to the other one
-	# -> change default source path
-	if [ "$sourcePath" == "." ] ; then
-	    sourcePath=$destPathDef
-	fi
-	# -> invert assignment of storage service and paths, for a more intuitive user interface
-	local __tmpStorageService=${storageServiceSource}
-	storageServiceSource=${storageServiceDest}
-	storageServiceDest=${__tmpStorageService}
-	local __tmpPath=${sourcePath}
-	sourcePath=${destPath}
-	destPath=${__tmpPath}
+        # copying back-up from one storage system to the other one
+        # -> change default source path
+        if [ "$sourcePath" == "." ] ; then
+            sourcePath=$destPathDef
+        fi
+        # -> invert assignment of storage service and paths, for a more intuitive user interface
+        local __tmpStorageService=${storageServiceSource}
+        storageServiceSource=${storageServiceDest}
+        storageServiceDest=${__tmpStorageService}
+        local __tmpPath=${sourcePath}
+        sourcePath=${destPath}
+        destPath=${__tmpPath}
     fi
     # swap source and destination
     if ${lreverse} ; then
-	# reverse selection
-	local __tmpPath=${sourcePath}
-	sourcePath=${destPath}
-	destPath=${__tmpPath}
-	local __tmpStorageService=${storageServiceSource}
-	storageServiceSource=${storageServiceDest}
-	storageServiceDest=${__tmpStorageService}
+        # reverse selection
+        local __tmpPath=${sourcePath}
+        sourcePath=${destPath}
+        destPath=${__tmpPath}
+        local __tmpStorageService=${storageServiceSource}
+        storageServiceSource=${storageServiceDest}
+        storageServiceDest=${__tmpStorageService}
     fi
     # fullpaths:
     if [ `echo "$destPath" | cut -c1` == "/" ] ; then
-	fullPathDest=$destPath
+        fullPathDest=$destPath
     fi
     if [ `echo "$sourcePath" | cut -c1` == "/" ] ; then
-	fullPathSource=$sourcePath
+        fullPathSource=$sourcePath
     fi
     # destination
     if [ "${storageServiceDest}" == "EOS" ] ; then
-	[ -n "${fullPathDest}" ] || fullPathDest=$eosBaseDir/$destPath
-	fullDest=root://${eosServerName}/${fullPathDest}
-	lxrdcp=true
+        [ -n "${fullPathDest}" ] || fullPathDest=$eosBaseDir/$destPath
+        fullDest=root://${eosServerName}/${fullPathDest}
+        lxrdcp=true
     elif [ "${storageServiceDest}" == "CASTOR" ] ; then
-	[ -n "${fullPathDest}" ] || fullPathDest=$castorBaseDir/$destPath
-	fullDest=root://${castorServerName}/${fullPathDest}
-	lxrdcp=true
+        [ -n "${fullPathDest}" ] || fullPathDest=$castorBaseDir/$destPath
+        fullDest=root://${castorServerName}/${fullPathDest}
+        lxrdcp=true
     elif [ "${storageServiceDest}" == "LOCAL" ] ; then
-	if [ `uname -n | cut -c1-6` == "lxplus" ] ; then
-	    localBaseDir=$localBaseDirAFS
-	else
-	    localBaseDir=$localBaseDirHome
-	fi
-	[ -n "${fullPathDest}" ] || fullPathDest=$localBaseDir/$destPath
-	fullDest=${fullPathDest}
+        if [ `uname -n | cut -c1-6` == "lxplus" ] ; then
+            localBaseDir=$localBaseDirAFS
+        else
+            localBaseDir=$localBaseDirHome
+        fi
+        [ -n "${fullPathDest}" ] || fullPathDest=$localBaseDir/$destPath
+        fullDest=${fullPathDest}
     elif [ -n "${storageServiceDest}" ] ; then
-	if [ `echo "${storageServiceDest}" | cut -c1-6` == "lxplus" ] ; then
-	    privBaseDir=$localBaseDirAFS
-	fi
-	[ -n "${fullPathDest}" ] || fullPathDest=$privBaseDir/$destPath
-	fullDest=$LOGNAME@${storageServiceDest}:${fullPathDest}
-	lscp=true
+        if [ `echo "${storageServiceDest}" | cut -c1-6` == "lxplus" ] ; then
+            privBaseDir=$localBaseDirAFS
+        fi
+        [ -n "${fullPathDest}" ] || fullPathDest=$privBaseDir/$destPath
+        fullDest=$LOGNAME@${storageServiceDest}:${fullPathDest}
+        lscp=true
     else
-	[ -n "${fullPathDest}" ] || fullPathDest=$destPath
-	fullDest=${fullPathDest}
+        [ -n "${fullPathDest}" ] || fullPathDest=$destPath
+        fullDest=${fullPathDest}
     fi
     # source
     if [ "${storageServiceSource}" == "EOS" ] ; then
-	[ -n "${fullPathSource}" ] || fullPathSource=$eosBaseDir/$sourcePath
-	fullSource=root://${eosServerName}/${fullPathSource}
-	lxrdcp=true
+        [ -n "${fullPathSource}" ] || fullPathSource=$eosBaseDir/$sourcePath
+        fullSource=root://${eosServerName}/${fullPathSource}
+        lxrdcp=true
     elif [ "${storageServiceSource}" == "CASTOR" ] ; then
-	[ -n "${fullPathSource}" ] || fullPathSource=$castorBaseDir/$sourcePath
-	fullSource=root://${castorServerName}/${fullPathSource}
-	lxrdcp=true
+        [ -n "${fullPathSource}" ] || fullPathSource=$castorBaseDir/$sourcePath
+        fullSource=root://${castorServerName}/${fullPathSource}
+        lxrdcp=true
     elif [ "${storageServiceSource}" == "LOCAL" ] ; then
-	if [ `uname -n | cut -c1-6` == "lxplus" ] ; then
-	    localBaseDir=$localBaseDirAFS
-	else
-	    localBaseDir=$localBaseDirHome
-	fi
-	[ -n "${fullPathSource}" ] || fullPathSource=$localBaseDir/$sourcePath
-	fullSource=${fullPathSource}
+        if [ `uname -n | cut -c1-6` == "lxplus" ] ; then
+            localBaseDir=$localBaseDirAFS
+        else
+            localBaseDir=$localBaseDirHome
+        fi
+        [ -n "${fullPathSource}" ] || fullPathSource=$localBaseDir/$sourcePath
+        fullSource=${fullPathSource}
     elif [ -n "${storageServiceSource}" ] ; then
-	if [ `echo "${storageServiceSource}" | cut -c1-6` == "lxplus" ] ; then
-	    privBaseDir=$localBaseDirAFS
-	fi
-	[ -n "${fullPathSource}" ] || fullPathSource=$privBaseDir/$sourcePath
-	fullSource=$LOGNAME@${storageServiceSource}:${fullPathSource}
-	lscp=true
+        if [ `echo "${storageServiceSource}" | cut -c1-6` == "lxplus" ] ; then
+            privBaseDir=$localBaseDirAFS
+        fi
+        [ -n "${fullPathSource}" ] || fullPathSource=$privBaseDir/$sourcePath
+        fullSource=$LOGNAME@${storageServiceSource}:${fullPathSource}
+        lscp=true
     else
-	[ -n "${fullPathSource}" ] || fullPathSource=$sourcePath
-	fullSource=${fullPathSource}
+        [ -n "${fullPathSource}" ] || fullPathSource=$sourcePath
+        fullSource=${fullPathSource}
     fi
     # add filename to full path of source
     fullSource="${fullSource}/${fileName}"
     # protocol
     if ${lxrdcp} && ${lscp} ; then
-	how_to_use
-	echo "cannot xrdcp and scp at the same time"
-	exit 1
+        how_to_use
+        echo "cannot xrdcp and scp at the same time"
+        exit 1
     elif ${lxrdcp} ; then
-	comProt="xrdcp"
+        comProt="xrdcp"
     elif ${lscp} ; then
-	comProt="scp -p"
+        comProt="scp -p"
     else
-	comProt="cp -p"
+        comProt="cp -p"
     fi
 }
 
@@ -238,20 +238,20 @@ function checkSourceFile(){
     # for each storage service, check that the back-up file exists
     local __lerr=0
     if [ "${storageServiceSource}" == "EOS" ] ; then
-	eos ls -l ${fullPathSource}/${fileName} > /dev/null 2>&1
-	__lerr=$?
+        eos ls -l ${fullPathSource}/${fileName} > /dev/null 2>&1
+        __lerr=$?
     elif [ "${storageServiceSource}" == "CASTOR" ] ; then
-	nsls -l ${fullPathSource}/${fileName} > /dev/null 2>&1
-	__lerr=$?
+        nsls -l ${fullPathSource}/${fileName} > /dev/null 2>&1
+        __lerr=$?
     elif [ "${storageServiceSource}" == "LOCAL" ] ; then
-	ls -l ${fullPathSource}/${fileName} > /dev/null 2>&1
-	__lerr=$?
+        ls -l ${fullPathSource}/${fileName} > /dev/null 2>&1
+        __lerr=$?
     elif [ -n "${storageServiceSource}" ] ; then
-	ssh $LOGNAME@${storageServiceSource} "ls -l ${fullPathSource}/${fileName}" > /dev/null 2>&1
-	__lerr=$?
+        ssh $LOGNAME@${storageServiceSource} "ls -l ${fullPathSource}/${fileName}" > /dev/null 2>&1
+        __lerr=$?
     else
-	ls -l ${fullPathSource}/${fileName} > /dev/null 2>&1
-	__lerr=$?
+        ls -l ${fullPathSource}/${fileName} > /dev/null 2>&1
+        __lerr=$?
     fi
     return $__lerr
 }
@@ -262,54 +262,54 @@ function prepareDest(){
     # - remove destination file, to avoid copy of backup is rejected by xrdcp
     #   (and useless error messages)
     if [ "${storageServiceDest}" == "EOS" ] ; then
-	eos ls -l ${fullPathDest} > /dev/null 2>&1
-	if [ $? -ne 0 ] ; then
-	    eos mkdir -p ${fullPathDest}
-	fi
-	eos ls -l ${fullPathDest}/${fileName} > /dev/null 2>&1
-	if [ $? -eq 0 ] ; then
-	    eos rm ${fullPathDest}/${fileName}
-	fi
+        eos ls -l ${fullPathDest} > /dev/null 2>&1
+        if [ $? -ne 0 ] ; then
+            eos mkdir -p ${fullPathDest}
+        fi
+        eos ls -l ${fullPathDest}/${fileName} > /dev/null 2>&1
+        if [ $? -eq 0 ] ; then
+            eos rm ${fullPathDest}/${fileName}
+        fi
     elif [ "${storageServiceDest}" == "CASTOR" ] ; then
-	nsls -l ${fullPathDest} > /dev/null 2>&1
-	if [ $? -ne 0 ] ; then
-	    nsmkdir -p ${fullPathDest}
-	fi
-	nsls -l ${fullPathDest}/${fileName} > /dev/null 2>&1
-	if [ $? -eq 0 ] ; then
-	    nsrm ${fullPathDest}/${fileName}
-	fi
+        nsls -l ${fullPathDest} > /dev/null 2>&1
+        if [ $? -ne 0 ] ; then
+            nsmkdir -p ${fullPathDest}
+        fi
+        nsls -l ${fullPathDest}/${fileName} > /dev/null 2>&1
+        if [ $? -eq 0 ] ; then
+            nsrm ${fullPathDest}/${fileName}
+        fi
     elif [ "${storageServiceDest}" == "LOCAL" ] ; then
-	if [ "${destPath}" != "." ] ; then
-	    ls -l ${fullPathDest} > /dev/null 2>&1
-	    if [ $? -ne 0 ] ; then
-		mkdir -p ${fullPathDest}
-	    fi
-	fi
-	ls -l ${fullPathDest}/${fileName} > /dev/null 2>&1
-	if [ $? -eq 0 ] ; then
-	    rm -f ${fullPathDest}/${fileName}
-	fi
+        if [ "${destPath}" != "." ] ; then
+            ls -l ${fullPathDest} > /dev/null 2>&1
+            if [ $? -ne 0 ] ; then
+                mkdir -p ${fullPathDest}
+            fi
+        fi
+        ls -l ${fullPathDest}/${fileName} > /dev/null 2>&1
+        if [ $? -eq 0 ] ; then
+            rm -f ${fullPathDest}/${fileName}
+        fi
     elif [ -n "${storageServiceDest}" ] ; then
-	ssh $LOGNAME@${storageServiceDest} "ls -l ${fullPathDest}" > /dev/null 2>&1
-	if [ $? -ne 0 ] ; then
-	    ssh $LOGNAME@${storageServiceDest} "mkdir -p ${fullPathDest}"
-	fi
-	ssh $LOGNAME@${storageServiceDest} "ls -l ${fullPathDest}/${fileName}" > /dev/null 2>&1
-	if [ $? -eq 0 ] ; then
-	    ssh $LOGNAME@${storageServiceDest} "rm -f ${fullPathDest}/${fileName}"
-	fi
+        ssh $LOGNAME@${storageServiceDest} "ls -l ${fullPathDest}" > /dev/null 2>&1
+        if [ $? -ne 0 ] ; then
+            ssh $LOGNAME@${storageServiceDest} "mkdir -p ${fullPathDest}"
+        fi
+        ssh $LOGNAME@${storageServiceDest} "ls -l ${fullPathDest}/${fileName}" > /dev/null 2>&1
+        if [ $? -eq 0 ] ; then
+            ssh $LOGNAME@${storageServiceDest} "rm -f ${fullPathDest}/${fileName}"
+        fi
     else
-	if [ "${destPath}" != "." ] ; then
-	    ls -l ${fullPathDest} > /dev/null 2>&1
-	    if [ $? -ne 0 ] ; then
-		mkdir -p ${fullPathDest}
-	    fi
-	fi
-	ls -l ${fullPathDest}/${fileName} > /dev/null 2>&1
-	if [ $? -eq 0 ] ; then
-	    rm -f ${fullPathDest}/${fileName}
-	fi
+        if [ "${destPath}" != "." ] ; then
+            ls -l ${fullPathDest} > /dev/null 2>&1
+            if [ $? -ne 0 ] ; then
+                mkdir -p ${fullPathDest}
+            fi
+        fi
+        ls -l ${fullPathDest}/${fileName} > /dev/null 2>&1
+        if [ $? -eq 0 ] ; then
+            rm -f ${fullPathDest}/${fileName}
+        fi
     fi
 }
 
@@ -318,17 +318,17 @@ function backUpExit(){
 
     # remove zip files
     if $lclean ; then
-	sixdeskmess 1 "cleaning zip files..."
-	cleanFiles="${fileName}"
-	if ${lzip} ; then
-	    cleanFiles="${cleanFiles} ${zipFiles}"
-	fi
-	for cleanFile in  ${cleanFiles}; do
-	    if ${lverbose} ; then
-		sixdeskmess 1 "- file: ${cleanFile}"
-	    fi
-	    rm -f ${cleanFile}
-	done
+        sixdeskmess 1 "cleaning zip files..."
+        cleanFiles="${fileName}"
+        if ${lzip} ; then
+            cleanFiles="${cleanFiles} ${zipFiles}"
+        fi
+        for cleanFile in  ${cleanFiles}; do
+            if ${lverbose} ; then
+                sixdeskmess 1 "- file: ${cleanFile}"
+            fi
+            rm -f ${cleanFile}
+        done
     fi
 
     sixdeskexit $__lerr
@@ -397,83 +397,83 @@ lSerGiven=0
 lPatGiven=0
 while getopts  ":hvCd:s:f:FRz" opt ; do
     case $opt in
-	d)
-	    # the user is requesting a specific study
-	    currStudy="${OPTARG}"
-	    lStudyGiven=true
-	    # automatically zip
-	    lzip=true
-	    ;;
-	f)
-	    # the user is requesting a specific file
-	    fileName="${OPTARG}"
-	    lFileGiven=true
-	    # skip zipping
-	    lzip=false
-	    # do not clean, ie remove zip files
-	    lclean=false
-	    ;;
-	v)
-	    # verbose
-	    lverbose=true
-	    ;;
-	C)
-	    # do not clean, ie remove zip files
-	    lclean=false
-	    ;;
-	s)
-	    # the user is requesting a specific storage service
-	    tmpString="${OPTARG}:"
-	    tmpService=`echo "${tmpString}" | cut -d: -f1`
-	    tmpPath=`echo "${tmpString}" | cut -d: -f2`
-	    if [ "${tmpService}" != "EOS" ] && [ "${tmpService}" != "CASTOR" ] && [ "${tmpService}" != "LOCAL" ] ; then
-		# it might be a machine: try to ping
-		ping -c1 ${tmpService} >/dev/null 2>&1
-		if [ $? -ne 0 ] ; then
-		    how_to_use
-		    echo "Invalid storage service or ${tmpService} not available"
-		    exit 1
-		fi
-	    fi
-	    if [ ${lSerGiven} -eq 0 ] ; then
-		storageServiceDest="${tmpService}"
-		if [ -n "${tmpPath}" ] ; then
-		    destPath="${tmpPath}"
-		fi
-	    elif [ ${lSerGiven} -eq 1 ] ; then
-		storageServiceSource="${tmpService}"
-		if [ -n "${tmpPath}" ] ; then
-		    sourcePath="${tmpPath}"
-		fi
-	    fi
-	    let lSerGiven+=1
-	    ;;
-	z)
-	    # skip zipping
-	    lzip=false
-	    ;;
-	R)
-	    # reverse selection
-	    lreverse=true
-	    ;;
-	F)
-	    # free locks
-	    lFree=true
-	    ;;
-	h)
-	    how_to_use
-	    exit 1
-	    ;;
-	:)
-	    how_to_use
-	    echo "Option -$OPTARG requires an argument."
-	    exit 1
-	    ;;
-	\?)
-	    how_to_use
-	    echo "Invalid option: -$OPTARG"
-	    exit 1
-	    ;;
+        d)
+            # the user is requesting a specific study
+            currStudy="${OPTARG}"
+            lStudyGiven=true
+            # automatically zip
+            lzip=true
+            ;;
+        f)
+            # the user is requesting a specific file
+            fileName="${OPTARG}"
+            lFileGiven=true
+            # skip zipping
+            lzip=false
+            # do not clean, ie remove zip files
+            lclean=false
+            ;;
+        v)
+            # verbose
+            lverbose=true
+            ;;
+        C)
+            # do not clean, ie remove zip files
+            lclean=false
+            ;;
+        s)
+            # the user is requesting a specific storage service
+            tmpString="${OPTARG}:"
+            tmpService=`echo "${tmpString}" | cut -d: -f1`
+            tmpPath=`echo "${tmpString}" | cut -d: -f2`
+            if [ "${tmpService}" != "EOS" ] && [ "${tmpService}" != "CASTOR" ] && [ "${tmpService}" != "LOCAL" ] ; then
+                # it might be a machine: try to ping
+                ping -c1 ${tmpService} >/dev/null 2>&1
+                if [ $? -ne 0 ] ; then
+                    how_to_use
+                    echo "Invalid storage service or ${tmpService} not available"
+                    exit 1
+                fi
+            fi
+            if [ ${lSerGiven} -eq 0 ] ; then
+                storageServiceDest="${tmpService}"
+                if [ -n "${tmpPath}" ] ; then
+                    destPath="${tmpPath}"
+                fi
+            elif [ ${lSerGiven} -eq 1 ] ; then
+                storageServiceSource="${tmpService}"
+                if [ -n "${tmpPath}" ] ; then
+                    sourcePath="${tmpPath}"
+                fi
+            fi
+            let lSerGiven+=1
+            ;;
+        z)
+            # skip zipping
+            lzip=false
+            ;;
+        R)
+            # reverse selection
+            lreverse=true
+            ;;
+        F)
+            # free locks
+            lFree=true
+            ;;
+        h)
+            how_to_use
+            exit 1
+            ;;
+        :)
+            how_to_use
+            echo "Option -$OPTARG requires an argument."
+            exit 1
+            ;;
+        \?)
+            how_to_use
+            echo "Invalid option: -$OPTARG"
+            exit 1
+            ;;
     esac
 done
 shift "$(($OPTIND - 1))"
@@ -507,8 +507,8 @@ if [ -z "${currStudy}" ] ; then
     export sixdeskhome="."
     export sixdeskecho="yes!"
     if [ ! -s ${SCRIPTDIR}/bash/dot_profile ] ; then
-	echo "dot_profile is missing!!!"
-	exit 1
+        echo "dot_profile is missing!!!"
+        exit 1
     fi
     # - load environment
     source ${SCRIPTDIR}/bash/dot_profile
@@ -562,56 +562,56 @@ if ${lzip} && [ "${sourcePath}" == "." ] ; then
     lerr=0
     zipFiles=""
     for (( ii=0; ii<${#zipDirs[@]} ; ii++ )) ; do
-	tmpZipFileName=${currStudy}_${nickDirs[$ii]}.zip
-	echo ""
-	sixdeskmess 1 "zipping files in ${nickDirs[$ii]} dir ${zipDirs[$ii]} in ${tmpZipFileName}"
-	cd ${zipDirs[$ii]}
-	if ${lverbose} ; then
-	    zip -r --symlinks -b /tmp ${currDir}/${tmpZipFileName} .
-	    let lerr+=$?
-	else
-	    zip -r --symlinks -b /tmp ${currDir}/${tmpZipFileName} . > /dev/null 2>&1
-	    let lerr+=$?
-	fi
-	cd - > /dev/null 2>&1
-	sixdeskmess 1 "zipping ${tmpZipFileName} in ${fileName}"
-	if ${lverbose} ; then
-	    zip -b /tmp ${fileName} ${tmpZipFileName}
-	    let lerr+=$?
-	else
-	    zip -b /tmp ${fileName} ${tmpZipFileName} > /dev/null 2>&1
-	    let lerr+=$?
-	fi
-	zipFiles="${zipFiles} ${tmpZipFileName}"
+        tmpZipFileName=${currStudy}_${nickDirs[$ii]}.zip
+        echo ""
+        sixdeskmess 1 "zipping files in ${nickDirs[$ii]} dir ${zipDirs[$ii]} in ${tmpZipFileName}"
+        cd ${zipDirs[$ii]}
+        if ${lverbose} ; then
+            zip -r --symlinks -b /tmp ${currDir}/${tmpZipFileName} .
+            let lerr+=$?
+        else
+            zip -r --symlinks -b /tmp ${currDir}/${tmpZipFileName} . > /dev/null 2>&1
+            let lerr+=$?
+        fi
+        cd - > /dev/null 2>&1
+        sixdeskmess 1 "zipping ${tmpZipFileName} in ${fileName}"
+        if ${lverbose} ; then
+            zip -b /tmp ${fileName} ${tmpZipFileName}
+            let lerr+=$?
+        else
+            zip -b /tmp ${fileName} ${tmpZipFileName} > /dev/null 2>&1
+            let lerr+=$?
+        fi
+        zipFiles="${zipFiles} ${tmpZipFileName}"
     done
     if [ -s "${sixdeskTaskIds/$LHCDescrip/sixdeskTaskId}" ] ; then
-	# sixdesktaskid
-	echo ""
-	sixdeskmess 1 "zipping sixdeskTaskId file"
-	if ${lverbose} ; then
-	    zip -b /tmp ${fileName} sixdeskTaskIds/$LHCDescrip/sixdeskTaskId
-	    let lerr+=$?
-	else
-	    zip -b /tmp ${fileName} sixdeskTaskIds/$LHCDescrip/sixdeskTaskId > /dev/null 2>&1
-	    let lerr+=$?
-	fi
+        # sixdesktaskid
+        echo ""
+        sixdeskmess 1 "zipping sixdeskTaskId file"
+        if ${lverbose} ; then
+            zip -b /tmp ${fileName} sixdeskTaskIds/$LHCDescrip/sixdeskTaskId
+            let lerr+=$?
+        else
+            zip -b /tmp ${fileName} sixdeskTaskIds/$LHCDescrip/sixdeskTaskId > /dev/null 2>&1
+            let lerr+=$?
+        fi
     fi
     if [ -s "${currStudy}.db" ] ; then
-	# sixdeskDB
-	echo ""
-	sixdeskmess 1 "zipping sixdb file ${currStudy}.db"
-	if ${lverbose} ; then
-	    zip -b /tmp ${fileName} ${currStudy}.db
-	    let lerr+=$?
-	else
-	    zip -b /tmp ${fileName} ${currStudy}.db > /dev/null 2>&1
-	    let lerr+=$?
-	fi
+        # sixdeskDB
+        echo ""
+        sixdeskmess 1 "zipping sixdb file ${currStudy}.db"
+        if ${lverbose} ; then
+            zip -b /tmp ${fileName} ${currStudy}.db
+            let lerr+=$?
+        else
+            zip -b /tmp ${fileName} ${currStudy}.db > /dev/null 2>&1
+            let lerr+=$?
+        fi
     fi
     if [ $lerr -ne 0 ] ; then
-	echo ""
-	sixdeskmess 1 "errors while zipping!"
-	exit $lerr
+        echo ""
+        sixdeskmess 1 "errors while zipping!"
+        exit $lerr
     fi
 fi
 
@@ -650,57 +650,57 @@ if ${lzip} && [ "${destPath}" == "." ] ; then
     lerr=0
     zipFiles=""
     if ! [ -s ${fileName} ] ; then
-	echo ""
-	sixdeskmess 1 "file ${fileName} does NOT exist!"
-	exit 1
+        echo ""
+        sixdeskmess 1 "file ${fileName} does NOT exist!"
+        exit 1
     fi
     archives=`zipinfo -1 ${fileName}`
     if [ -z "${archives}" ] ; then
-	echo ""
-	sixdeskmess 1 "${fileName} is an empty zip file!"
-	exit 1
+        echo ""
+        sixdeskmess 1 "${fileName} is an empty zip file!"
+        exit 1
     fi
     if ! ${lverbose} ; then
-	sixdeskmess 1 "archive ${fileName} contains:"
-	unzip -l ${fileName}
+        sixdeskmess 1 "archive ${fileName} contains:"
+        unzip -l ${fileName}
     fi
     sixdeskmess 1 "unzipping..."
     if ${lverbose} ; then
-	unzip ${fileName}
-	let lerr+=$?
+        unzip ${fileName}
+        let lerr+=$?
     else
-	unzip ${fileName} > /dev/null 2>&1
-	let lerr+=$?
+        unzip ${fileName} > /dev/null 2>&1
+        let lerr+=$?
     fi
     for (( ii=0; ii<${#zipDirs[@]} ; ii++ )) ; do
-	echo ""
-	sixdeskmess 1 "unzipping files in ${nickDirs[$ii]} dir ${zipDirs[$ii]}"
-	tmpZipFileName=`echo "${archives}" | grep ${currStudy}_${nickDirs[$ii]}_ | grep zip`
-	if [ -z "${tmpZipFileName}" ] ; then
-	    sixdeskmess 1 "--> no backup in ${fileName}! skipping it..."
-	    continue
-	fi
-	cd ${zipDirs[$ii]}
-	if ${lverbose} ; then
-	    unzip -o ${currDir}/${tmpZipFileName}
-	    let lerr+=$?
-	else
-	    unzip -o ${currDir}/${tmpZipFileName} > /dev/null 2>&1
-	    let lerr+=$?
-	fi
-	cd - > /dev/null 2>&1
-	zipFiles="${zipFiles} ${tmpZipFileName}"
+        echo ""
+        sixdeskmess 1 "unzipping files in ${nickDirs[$ii]} dir ${zipDirs[$ii]}"
+        tmpZipFileName=`echo "${archives}" | grep ${currStudy}_${nickDirs[$ii]}_ | grep zip`
+        if [ -z "${tmpZipFileName}" ] ; then
+            sixdeskmess 1 "--> no backup in ${fileName}! skipping it..."
+            continue
+        fi
+        cd ${zipDirs[$ii]}
+        if ${lverbose} ; then
+            unzip -o ${currDir}/${tmpZipFileName}
+            let lerr+=$?
+        else
+            unzip -o ${currDir}/${tmpZipFileName} > /dev/null 2>&1
+            let lerr+=$?
+        fi
+        cd - > /dev/null 2>&1
+        zipFiles="${zipFiles} ${tmpZipFileName}"
     done
     tmpSixDbFileName=`echo "${archives}" | grep '\.db'`
     if [ -n "${tmpSixDbFileName}" ] ; then
-	for tmpSixDB in ${tmpSixDbFileName} ; do
-	    sixdeskmess 1 "sixdb file ${tmpSixDB} unzipped!"
-	done
+        for tmpSixDB in ${tmpSixDbFileName} ; do
+            sixdeskmess 1 "sixdb file ${tmpSixDB} unzipped!"
+        done
     fi
     if [ $lerr -ne 0 ] ; then
-	echo ""
-	sixdeskmess 1 "errors while unzipping!"
-	exit $lerr
+        echo ""
+        sixdeskmess 1 "errors while unzipping!"
+        exit $lerr
     fi
 fi
 
