@@ -1257,7 +1257,7 @@ sixdeskCheckAppVerBOINC(){
             __lerr=1
             sixdeskmess -1 "Unable to determine which is the latest version of ${appName} in ${newBuildPathDef}/${appName}_BOINC_versions.txt"
         else
-            ${appVer}=${__latestVersion}
+            appVer=${__latestVersion}
         fi
     else
         local __BOINCversions=`grep -v '#' ${newBuildPathDef}/${appName}_BOINC_versions.txt`
