@@ -62,7 +62,7 @@ then
 
   egrep ">|<|\|" "$diffs" > $summary
   rm $oldenv $newenv $diffs
-  if [ -e $summary -a `wc -l $summary | awk '{print ($1)}'` -gt 1 ] ; then
+  if [ -e $summary -a `wc -l $summary | gawk '{print ($1)}'` -gt 1 ] ; then
       sixdeskmess -1 "dot_env: env mismatch in `basename $sixdeskstudy` and active one!!!"
   fi
   while read aline
