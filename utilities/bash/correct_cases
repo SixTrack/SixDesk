@@ -69,10 +69,10 @@ cp $sixdeskwork/incomplete_cases $sixdeskwork/backup
 cp $sixdeskwork/myincomplete_cases $sixdeskwork/backup
 for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
     if [ -d ${platForms[$ii]}jobs ] ; then
-	mkdir -p $sixdeskwork/${platForms[$ii]}jobs/backup
-	for tmpFile in incomplete_${fileSuffixes[$ii]} completed_${fileSuffixes[$ii]} ; do
-	    cp $sixdeskwork/${platForms[$ii]}jobs/${tmpFile}  $sixdeskwork/${platForms[$ii]}jobs/backup
-	done
+        mkdir -p $sixdeskwork/${platForms[$ii]}jobs/backup
+        for tmpFile in incomplete_${fileSuffixes[$ii]} completed_${fileSuffixes[$ii]} ; do
+            cp $sixdeskwork/${platForms[$ii]}jobs/${tmpFile}  $sixdeskwork/${platForms[$ii]}jobs/backup
+        done
     fi
 done
 
@@ -150,35 +150,35 @@ do
 done < taskids
 for tmpFile in completed_cases incomplete_cases ; do
     if [ -s ${tmpFile} ] ; then
-	cp ${tmpFile} $sixdeskwork/${tmpFile}
-	cp ${tmpFile} $sixdeskwork/my${tmpFile}
+        cp ${tmpFile} $sixdeskwork/${tmpFile}
+        cp ${tmpFile} $sixdeskwork/my${tmpFile}
     else
-	rm -f $sixdeskwork/${tmpFile}
-	touch $sixdeskwork/${tmpFile}
-	rm -f $sixdeskwork/my${tmpFile}
-	touch $sixdeskwork/my${tmpFile}
+        rm -f $sixdeskwork/${tmpFile}
+        touch $sixdeskwork/${tmpFile}
+        rm -f $sixdeskwork/my${tmpFile}
+        touch $sixdeskwork/my${tmpFile}
     fi
 done
 # take care of platform DBs:
 for (( ii=0; ii<${#platForms[@]}; ii++ )) ; do
     if [ -d $sixdeskwork/${platForms[$ii]}jobs ] ; then
-	sixdeskmess -1 "updating ${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]} and ${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]} ..."
-	# --version-sort, to preserve the natural order of numbers with dot
-	join --nocheck-order     <(sort -k1 --version-sort $sixdeskwork/${platForms[$ii]}jobs/${fileSuffixes[$ii]}) <(sort -k1 --version-sort $sixdeskwork/completed_cases) > $sixdeskwork/${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]}
-	join --nocheck-order -v1 <(sort -k1 --version-sort $sixdeskwork/${platForms[$ii]}jobs/${fileSuffixes[$ii]}) <(sort -k1 --version-sort $sixdeskwork/completed_cases) > $sixdeskwork/${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]}
-	cases=0
-	if [ -s $sixdeskwork/${platForms[$ii]}jobs/${fileSuffixes[$ii]} ] ; then
-	    cases=`wc -l < $sixdeskwork/${platForms[$ii]}jobs/${fileSuffixes[$ii]}`
-	fi
-	icases=0
-	if [ -s $sixdeskwork/${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]} ] ; then
-	    icases=`wc -l < $sixdeskwork/${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]}`
-	fi
-	ccases=0
-	if [ -s $sixdeskwork/${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]} ] ; then
-	    ccases=`wc -l < $sixdeskwork/${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]}`
-	fi
-	sixdeskmess -1 "...present status of platform DB: $cases cases, $ccases complete ($icases incomplete)"
+        sixdeskmess -1 "updating ${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]} and ${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]} ..."
+        # --version-sort, to preserve the natural order of numbers with dot
+        join --nocheck-order     <(sort -k1 --version-sort $sixdeskwork/${platForms[$ii]}jobs/${fileSuffixes[$ii]}) <(sort -k1 --version-sort $sixdeskwork/completed_cases) > $sixdeskwork/${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]}
+        join --nocheck-order -v1 <(sort -k1 --version-sort $sixdeskwork/${platForms[$ii]}jobs/${fileSuffixes[$ii]}) <(sort -k1 --version-sort $sixdeskwork/completed_cases) > $sixdeskwork/${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]}
+        cases=0
+        if [ -s $sixdeskwork/${platForms[$ii]}jobs/${fileSuffixes[$ii]} ] ; then
+            cases=`wc -l < $sixdeskwork/${platForms[$ii]}jobs/${fileSuffixes[$ii]}`
+        fi
+        icases=0
+        if [ -s $sixdeskwork/${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]} ] ; then
+            icases=`wc -l < $sixdeskwork/${platForms[$ii]}jobs/incomplete_${fileSuffixes[$ii]}`
+        fi
+        ccases=0
+        if [ -s $sixdeskwork/${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]} ] ; then
+            ccases=`wc -l < $sixdeskwork/${platForms[$ii]}jobs/completed_${fileSuffixes[$ii]}`
+        fi
+        sixdeskmess -1 "...present status of platform DB: $cases cases, $ccases complete ($icases incomplete)"
     fi
 done
 

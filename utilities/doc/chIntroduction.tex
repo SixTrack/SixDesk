@@ -66,10 +66,11 @@ clusters?}
     \rowcolor{blue!30}
     \textbf{Component} & \textbf{reason} \\
     \hline
-    kerberos & to renew/check credentials via \texttt{klist} and \texttt{kinit} \\
+    kerberos (local installation) & to renew/check credentials via \texttt{klist} and \texttt{kinit} \\
     \hline
-    AFS (local mount) & retrieval of optics files \\
-    & submission to BOINC via spooldir\\
+    AFS (or openAFS for local mounting) & retrieval of optics files \\
+    & submission to BOINC via spooldir \\
+    & obtain tokens for authentication via \texttt{aklog} \\
     \hline
     HTCondor (local installation) & submission of jobs to local batch system \\
     \hline
@@ -281,7 +282,7 @@ Therefore, in case of running jobs on BOINC, it is important
 that the user specifies which application to use and which version,
 via the \texttt{appName} and \texttt{appVer} variable. If left
 blank, SixDesk will set automatically the two in order to have
-the latest version of SixTrack / SixTrackTest.
+the latest version of \whichSixTrack{}.
 In case of BOINC, it is advisabel to set this variable.
 
 The \texttt{appName} and \texttt{appVer} variables can be used
