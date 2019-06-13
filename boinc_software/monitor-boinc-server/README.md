@@ -18,7 +18,9 @@ Folder containing material for monitoring the activity of/on the BOINC server. A
    * `monitorBoincServer.sh`: parses the BOINC status page and updates daily plots (bash wrapper);
    * `monitorBoincServerDailyArchive.sh`: archives daily data and updated monthly plots;
    * `parseHTML.py`: parser of BOINC status page;
+   * `parseStudyStates.py`: parser of queries to BOINC prodution DB to save table of progress;
    * `plotData.gnu`: plots daily data;
+   * `queryStudies.sh`: queries the BOINC production DB to get an idea of the current status of studies;
 
 ## `general-activity/archive`
 This folder contains past data, archived by months.
@@ -52,13 +54,19 @@ evince general-activity/status_2019-04-30.pdf &
 # please change the year-month pair according to your needs
 evince general-activity/archive/2018-03/status_2018-03.pdf &
 ```
-   * for a any desired time range:
+   * for a desired time range:
 ```
 cd general-activity/archive
 # please modify plotData_restart.gnu according to your needs
 gnuplot plotData_restart.gnu
 eog ../../boincStatus/serverOverview.png
 # please ll ../../boincStatus/ to see all available plots
+```
+
+To visulise state of studies:
+```
+# please replace HEL with a string identifying the desired studies
+grep -e '#' -e HEL studies.txt
 ```
 
 To visulise submission/assimilation on BOINC:
@@ -91,4 +99,10 @@ An example of acrontab jobs:
 15 0 * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/submissions ; ./monitorSubmissions.sh yesterday >> monitorSubmissions.log 2>&1 ; ./monitorSubmissionsDailyArchive.sh >> monitorSubmissions.log 2>&1
 # assimilator getting stuck
 1,6,11,16,21,26,31,36,41,46,51,56 * * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/general-activity ; ./monitorAssimilatorTimeStamp.sh >> /dev/null 2>&1
+#
+# update summary plots monitoring BOINC:
+35 2,8,14,20 * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus ; ./updatePlots.sh >> updatePlots.log 2>&1
+#
+# query the BOINC production DB and get current status of studies
+24 * * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/general-activity ; ./queryStudies.sh >> queryStudies.sh.log 2>&1
 ```
