@@ -50,7 +50,7 @@ if ( __name__ == "__main__" ):
             oFile.write("# status at %s\n"%(now))
             strOut="# %-58s,"%("study name")
             if (lPrintAssimilateState): strOut+=", ".join( "assimilate_state=%1s"%(key) for key in sorted(allStates) )+", "
-            strOut+="%18s, %14s, %14s" %("total","assimilated [%]", "missing [%]")
+            strOut+="%18s, %14s, %18s" %("total","assimilated [%]", "prog./queue [%]")
             oFile.write('%s\n'%(strOut))
             for studyName in sorted(studiesStates.keys()):
                 strOut="%-60s"%(studyName)
@@ -58,7 +58,7 @@ if ( __name__ == "__main__" ):
                 tot=sum(studiesStates[studyName]['assimilate_state'].values())
                 strOut+=" %18i"%(tot)
                 strOut+=" % 16.3f"%(studiesStates[studyName]['assimilate_state']['2']*100.0/tot)
-                strOut+=" % 15.3f"%((1-studiesStates[studyName]['assimilate_state']['2']*1.0/tot)*100)
+                strOut+=" % 19.3f"%((1-studiesStates[studyName]['assimilate_state']['2']*1.0/tot)*100)
                 oFile.write('%s\n'%(strOut))
     
     exit(0)
