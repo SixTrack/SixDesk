@@ -16,7 +16,8 @@ if [ $? -eq 0 ] ; then
     for userfile in `ls -1 delete/*` ; do
 	echo ""
 	echo "file ${userfile} ..."
-	dos2unix ${userfile}
+	dos2unix -n ${userfile} ${userfile}_temp
+	mv ${userfile}_temp ${userfile}
 	allStudies=`grep . ${userfile} | grep -v '#' | awk '{for (ii=1;ii<=NF;ii++) {print ($ii)}}'`
 	echo "removing the following study dirs and freeing space:"
 	duLines=`\du -ch --summarize ${allStudies}`

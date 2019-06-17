@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "# study, number of waiting jobs, number of waiting jobs (subFolders), number of problematic files, disk occupancy: work,results"
+echo "# study, number of waiting jobs, number of waiting jobs (subFolders) - number of problematic files - disk occupancy: work,results"
 for tmpWorkDir in `find . -maxdepth 2 -type d -name "work"` ; do
     nFiles=`ls -1 ${tmpWorkDir}/*.desc 2> /dev/null | wc -l`
     nFilesSub=`ls -1 ${tmpWorkDir}/*/*.desc 2> /dev/null | wc -l`

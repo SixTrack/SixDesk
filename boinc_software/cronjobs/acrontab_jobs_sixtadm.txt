@@ -17,20 +17,20 @@
 0 3 * * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/download ; ./clean.sh >> clean.log 2>&1
 #
 # actually delete old studies
-20 3 * * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinc ; /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.sh >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
-40 3 * * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinctest ; /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.sh >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
+20 3 * * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinc ; /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/deleteStudies.sh >> /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/deleteStudies.log 2>&1
+40 3 * * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinctest ; /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/deleteStudies.sh >> /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/deleteStudies.log 2>&1
 #
 # list studies in spooldirs that could be deleted and notify users (based on <workspace>_<study> dir itself):
-0 4 1 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinc ; /afs/cern.ch/user/s/sixtadm/boinc_soft/listDeleteStudies.sh >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
-0 5 1 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinctest ; /afs/cern.ch/user/s/sixtadm/boinc_soft/listDeleteStudies.sh >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
+0 4 1 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinc ; /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/listDeleteStudies.sh >> /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/deleteStudies.log 2>&1
+0 5 1 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinctest ; /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/listDeleteStudies.sh >> /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/deleteStudies.log 2>&1
 #
 # list studies in spooldirs that could be deleted and notify users (based on <workspace>_<study>/work dir):
-0 4 11 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinc ; /afs/cern.ch/user/s/sixtadm/boinc_soft/listDeleteStudies.sh work >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
-0 5 11 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinctest ; /afs/cern.ch/user/s/sixtadm/boinc_soft/listDeleteStudies.sh work >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
+0 4 11 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinc ; /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/listDeleteStudies.sh work >> /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/deleteStudies.log 2>&1
+0 5 11 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinctest ; /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/listDeleteStudies.sh work >> /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/deleteStudies.log 2>&1
 #
 # list studies in spooldirs that could be deleted and notify users (based on <workspace>_<study>/results dir):
-0 4 21 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinc ; /afs/cern.ch/user/s/sixtadm/boinc_soft/listDeleteStudies.sh results >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
-0 5 21 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinctest ; /afs/cern.ch/user/s/sixtadm/boinc_soft/listDeleteStudies.sh results >> /afs/cern.ch/user/s/sixtadm/boinc_soft/deleteStudies.log 2>&1
+0 4 21 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinc ; /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/listDeleteStudies.sh results >> /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/deleteStudies.log 2>&1
+0 5 21 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinctest ; /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/listDeleteStudies.sh results >> /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/deleteStudies.log 2>&1
 #
 #
 # new scripts for monitoring BOINC server:
@@ -43,5 +43,11 @@
 35 1,7,13,19 * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/submissions ; ./monitorSubmissions.sh >> monitorSubmissions.log 2>&1
 15 0 * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/submissions ; ./monitorSubmissions.sh yesterday >> monitorSubmissions.log 2>&1 ; ./monitorSubmissionsDailyArchive.sh >> monitorSubmissions.log 2>&1
 # assimilator getting stuck
-1,6,11,16,21,26,31,36,41,46,51,56 * * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/general-activity ; ./monitorAssimilatorTimeStamp.sh >> /dev/null 2>&1
+# 1,6,11,16,21,26,31,36,41,46,51,56 * * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/general-activity ; ./monitorAssimilatorTimeStamp.sh >> /dev/null 2>&1
+1,6,11,16,21,26,31,36,41,46,51,56 * * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/general-activity ; ./monitorAssimilatorTimeStamp.sh >> monitorAssimilatorTimeStamp.sh.log 2>&1
 #
+# update summary plots monitoring BOINC:
+35 2,8,14,20 * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus ; ./updatePlots.sh >> updatePlots.log 2>&1
+#
+# query the BOINC production DB and get current status of studies
+24 * * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/general-activity ; ./queryStudies.sh >> queryStudies.sh.log 2>&1
