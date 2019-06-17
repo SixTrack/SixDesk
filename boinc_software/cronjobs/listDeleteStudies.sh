@@ -34,6 +34,9 @@ echo " starting `basename $0` at `date` ..."
 # prepare delete dir
 [ -d delete ] || mkdir delete
 
+# prepare /tmp/sixtadm dir
+[ -d /tmp/${LOGNAME} ] || mkdir /tmp/${LOGNAME}
+
 # convert threshold in kB
 threshOccupancyKB=`echo ${threshOccupancy} | awk '{print ($1*1024**2)}'`
 
@@ -59,7 +62,7 @@ if [ -n "$1" ] ; then
     esac
 else
     echo " find old directories based on <workspace>_<studyName> only ..."
-    allStudies=`find . -maxdepth 1 -type d -ctime +${oldN} | grep -v -e upload -e delete`
+    allStudies=`find . -maxdepth 1 ! -path . -type d -ctime +${oldN} | grep -v -e upload -e delete`
     for currCase in ${allStudies} ; do
 	treatSingleDir ${currCase}
     done
