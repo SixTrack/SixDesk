@@ -16,13 +16,13 @@ presTime=`echo "${presTime}" | awk '{print ($2,$3)}' | cut -d\. -f1`
 presUpdate=0
 
 if [ -e ${lastMtimeFile} ] ; then
-    lastTime=`cat ${lastMtimeFile} | head -1`
-    lastUpdate=`cat ${lastMtimeFile} | head -2 | tail -1`
+    lastTime=`head -1 ${lastMtimeFile}`
+    lastUpdate=`head -2 ${lastMtimeFile} | tail -1`
     if [ "${presTime}" == "${lastTime}" ] ; then
 	if [ ${lastUpdate} -eq 0 ] ; then
 	    # first time that the assimilator log does not get updated
 	    echo "assimilator stuck: ${presTime}"
-	    echo "${presTime}" >> ${logFilesPath}/assimilatorStuck.txt
+	    echo "${presTime}" | tee -a ${logFilesPath}/assimilatorStuck.txt
 	    echo "" | mail -s 'assimilator stuck' sixtadm@cern.ch
 	else
 	    echo "assimilator still stuck at `date +%Y-%m-%d\ %H:%M:%S`"
@@ -32,14 +32,15 @@ if [ -e ${lastMtimeFile} ] ; then
 	if [ ${lastUpdate} -eq 1 ] ; then
 	    # assimilator log restarted
 	    echo "assimilator restarted: ${presTime}"
-	    echo "${presTime}" >> ${logFilesPath}/assimilatorRestart.txt
+	    echo "${presTime}" | tee -a ${logFilesPath}/assimilatorRestart.txt
 	else
 	    echo "assimilator running regularly"
 	fi
     fi
 fi
 
-echo "${presTime}" > ${lastMtimeFile}
-echo "${presUpdate}" >> ${lastMtimeFile}
+echo "saving status in ${lastMtimeFile} ..."
+echo "${presTime}" | tee ${lastMtimeFile}
+echo "${presUpdate}" | tee -a ${lastMtimeFile}
 
 echo " ...done."

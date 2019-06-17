@@ -23,7 +23,7 @@ echo " starting `basename $0` at `date` ..."
 if ${lretrieve} ; then
     echo " retrieving submitted WUs and time intervals from log files on ${boincServer} - date: ${tmpDate}"
     # do not use grep -h: the script still needs the study name (from the submit.*.log file)!
-    ssh sixtadm@${boincServer} "cd ${sixtrackProjPath}/log_boincai11 ; grep -e $tmpDate submit*log | awk '{sub(/:/,\"\ \",\$0); print (\$0)}' | sort -k2 > ${where}/submitAll_${tmpDate}.txt"
+    ssh sixtadm@${boincServer} "cd ${sixtrackProjPath}/log_boincai11 ; grep -e $tmpDate submit*log | grep Submitted | awk '{sub(/:/,\"\ \",\$0); print (\$0)}' | sort -k2 > ${where}/submitAll_${tmpDate}.txt"
     echo " reshuffling retrieve info in a more compact and plottable way in submitAll_${tmpDate}.dat ..."
     # $1 is really the study name (from the submit.*.log file)
     # awk '{if ($1!=lastStudy) {print (tStart,lastLine,Ntot); tStart=$2; Ntot=0;} Ntot=Ntot+1; lastLine=$0; lastStudy=$1;}END{print (tStart,$0,Ntot)}' submitAll_${tmpDate}.txt > submitAll_${tmpDate}.dat

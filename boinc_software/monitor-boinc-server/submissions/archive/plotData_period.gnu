@@ -20,9 +20,9 @@ tStep=1*3600
 # time interval
 # AM -> tMin='2017-05-23T00:00:00'
 # AM -> tMin='2017-06-15T00:00:00'
-tMin='2019-04-29T00:00:00'
-tMax='2019-05-20T23:59:59'
-tStep=3600*12
+tMin='2019-05-01T00:00:00'
+tMax='2019-07-01T00:00:00'
+tStep=3600*24
 
 # typical enlarged window size: 1900,400
 # trigger use of png or interactive windows: 0: png, 1: interactive
@@ -30,7 +30,7 @@ linteractive=0
 lprintDate=0 # 0: no date/time in png name; 1: date/time in png name
 xSizeWdw=1600#regular: 1000
 ySizeWdw=600#regular: 400
-lLog=0 # 1: log y-axis; 0: linear y-axis
+lLog=1 # 1: log y-axis; 0: linear y-axis
 
 if ( lprintDate==0 ) {
 rightNowPNG=''
@@ -52,9 +52,9 @@ system( "awk '{if ($1!=\"#\") {print ($6,$4)}}' ".iFileName." | sort -k 1 | awk 
 
 set xdata time
 set timefmt '%Y-%m-%dT%H:%M:%S'
-set format x '%Y-%m-%d %H:%M'
-# set format x '%Y-%m-%d'
-set xtics rotate by 90 tStep left
+# set format x '%Y-%m-%d %H:%M'
+set format x '%Y-%m-%d'
+set xtics rotate by 90 tStep right
 tMin=strptime("%Y-%m-%dT%H:%M:%S",tMin)
 tMax=strptime("%Y-%m-%dT%H:%M:%S",tMax)
 set xrange [tMin:tMax]
@@ -68,38 +68,42 @@ set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/m
 } else {
 set term qt 10 title currTitle size xSizeWdw,ySizeWdw
 }
-set ylabel 'submitted WUs [10^6]'
 if ( lLog==1 ) {
+set ylabel 'submitted WUs []'
+scaleFact=1E0
 set logscale y
 set grid xtics ytics mxtics mytics
 set grid layerdefault   linetype -1 linecolor rgb "gray"  linewidth 0.200,  linetype 0 linecolor rgb "gray"  linewidth 0.200
 set format y '10^{%L}'
 set mytics 10
+} else {
+set ylabel 'submitted WUs [10^6]'
+scaleFact=1E6
 }
 
 plot \
-     "< awk '{if ($6==\"mcrouch\") {tot+=$4; print ($1,$3,tot)}}'  ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'black'          title 'mcrouch',\
-     "< awk '{if ($6==\"ynosochk\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'dark-green'     title 'ynosochk',\
-     "< awk '{if ($6==\"emaclean\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'green'          title 'emaclean',\
-     "< awk '{if ($6==\"fvanderv\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'blue'           title 'fvanderv',\
-     "< awk '{if ($6==\"kaltchev\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'magenta'        title 'kaltchev',\
-     "< awk '{if ($6==\"phermes\") {tot+=$4; print ($1,$3,tot)}}'  ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'cyan'           title 'phermes',\
-     "< awk '{if ($6==\"nkarast\") {tot+=$4; print ($1,$3,tot)}}'  ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'orange'         title 'nkarast',\
-     "< awk '{if ($6==\"dpellegr\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'pink'           title 'dpellegr',\
-     "< awk '{if ($6==\"ecruzala\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'navy'           title 'ecruzala',\
-     "< awk '{if ($6==\"amereghe\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'purple'         title 'amereghe',\
-     "< awk '{if ($6==\"rdemaria\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'yellow'         title 'rdemaria',\
-     "< awk '{if ($6==\"jbarranc\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'dark-blue'      title 'jbarranc',\
-     "< awk '{if ($6==\"giovanno\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'gold'           title 'giovanno',\
-     "< awk '{if ($6==\"mcintosh\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'violet'         title 'mcintosh',\
-     "< awk '{if ($6==\"skostogl\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'dark-red'       title 'skostogl',\
-     "< awk '{if ($6==\"lcoyle\") {tot+=$4; print ($1,$3,tot)}}'   ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'salmon'         title 'lcoyle',\
-     "< awk '{if ($6==\"mihofer\") {tot+=$4; print ($1,$3,tot)}}'  ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'olive'          title 'mihofer',\
-     "< awk '{if ($6==\"xiaohan\") {tot+=$4; print ($1,$3,tot)}}'  ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'skyblue'        title 'xiaohan',\
-     "< awk '{if ($6==\"dmirarch\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'slategray'      title 'dmirarch',\
-     "< awk '{if ($6==\"dalena\") {tot+=$4; print ($1,$3,tot)}}'   ".iFileName index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'dark-plum'      title 'dalena',\
-     "< awk '{if ($6==\"mischenk\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/1E3) with steps lt 1 lw 3 lc rgb 'dark-goldenrod' title 'mischenk',\
-     "< awk '{if ($6==\"-\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName        index 0 using 1:($3/1E6) with steps lt 1 lw 3 lc rgb 'red'            title '-'
+     "< awk '{if ($6==\"mcrouch\") {tot+=$4; print ($1,$3,tot)}}'  ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'black'          title 'mcrouch',\
+     "< awk '{if ($6==\"ynosochk\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'dark-green'     title 'ynosochk',\
+     "< awk '{if ($6==\"emaclean\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'green'          title 'emaclean',\
+     "< awk '{if ($6==\"fvanderv\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'blue'           title 'fvanderv',\
+     "< awk '{if ($6==\"kaltchev\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'magenta'        title 'kaltchev',\
+     "< awk '{if ($6==\"phermes\") {tot+=$4; print ($1,$3,tot)}}'  ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'cyan'           title 'phermes',\
+     "< awk '{if ($6==\"nkarast\") {tot+=$4; print ($1,$3,tot)}}'  ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'orange'         title 'nkarast',\
+     "< awk '{if ($6==\"dpellegr\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'pink'           title 'dpellegr',\
+     "< awk '{if ($6==\"ecruzala\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'navy'           title 'ecruzala',\
+     "< awk '{if ($6==\"amereghe\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'purple'         title 'amereghe',\
+     "< awk '{if ($6==\"rdemaria\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'yellow'         title 'rdemaria',\
+     "< awk '{if ($6==\"jbarranc\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'dark-blue'      title 'jbarranc',\
+     "< awk '{if ($6==\"giovanno\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'gold'           title 'giovanno',\
+     "< awk '{if ($6==\"mcintosh\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'violet'         title 'mcintosh',\
+     "< awk '{if ($6==\"skostogl\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'dark-red'       title 'skostogl',\
+     "< awk '{if ($6==\"lcoyle\") {tot+=$4; print ($1,$3,tot)}}'   ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'salmon'         title 'lcoyle',\
+     "< awk '{if ($6==\"mihofer\") {tot+=$4; print ($1,$3,tot)}}'  ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'olive'          title 'mihofer',\
+     "< awk '{if ($6==\"xiaohan\") {tot+=$4; print ($1,$3,tot)}}'  ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'skyblue'        title 'xiaohan',\
+     "< awk '{if ($6==\"dmirarch\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'slategray'      title 'dmirarch',\
+     "< awk '{if ($6==\"dalena\") {tot+=$4; print ($1,$3,tot)}}'   ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'dark-plum'      title 'dalena',\
+     "< awk '{if ($6==\"mischenk\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'dark-goldenrod' title 'mischenk',\
+     "< awk '{if ($6==\"-\") {tot+=$4; print ($1,$3,tot)}}' ".iFileName        index 0 using 1:($3/scaleFact) with steps lt 1 lw 3 lc rgb 'red'            title '-'
 #
 if (lLog==1){
 unset logscale y

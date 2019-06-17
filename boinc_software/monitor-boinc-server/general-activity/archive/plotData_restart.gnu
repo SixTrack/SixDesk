@@ -12,15 +12,15 @@ restaFile='../assimilatorRestart.txt'
 set xdata time
 set timefmt '%Y-%m-%d %H:%M:%S'
 # set format x '%b %Y'
-# set format x '%Y-%m-%d'
-set format x '%Y-%m-%d %H:%M'
+set format x '%Y-%m-%d'
+# set format x '%Y-%m-%d %H:%M'
 # set xtics 365.2425 / 12 * 24 * 3600 rotate by 90 right
-set xtics 3600*12 rotate by 90 right
+set xtics 3600*24 rotate by 90 right
 set grid xtics lt 0 lw 1
 # tMin=strptime("%Y-%m-%d %H:%M:%S","2017-02-01 00:00:00")
 # tMin=strptime("%Y-%m-%d %H:%M:%S","2017-06-15 00:00:00")
-tMin=strptime("%Y-%m-%d %H:%M:%S","2019-04-29 00:00:00")
-tMax=strptime("%Y-%m-%d %H:%M:%S","2019-05-20 23:59:59")
+tMin=strptime("%Y-%m-%d %H:%M:%S","2019-05-01 00:00:00")
+tMax=strptime("%Y-%m-%d %H:%M:%S","2019-07-01 00:00:00")
 set xrange [tMin:tMax]
 ybar=300
 M=0.1
@@ -107,7 +107,7 @@ set ytics mirror tc rgb 'black'
 unset y2label
 unset y2tics
 set grid xtics ytics lt 0 lw 1 lc rgb 'black'
-set yrange [0:125]
+set yrange [70:145]
 plot \
      '< cat 2019-??/server_status_????-??.dat' index 0 using 1:($16/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
 set yrange [*:*]
