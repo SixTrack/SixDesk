@@ -6,6 +6,7 @@ iNLT=400
 boincDownloadDir="/afs/cern.ch/work/b/boinc/download"
 boincSpoolDirPath="/afs/cern.ch/work/b/boinc"
 allDir=all
+abnDir=abnormal
 zipToolDir=`basename $0`
 zipToolDir=${zipToolDir//.sh}
 initDir=$PWD
@@ -203,7 +204,31 @@ if [ -n "${WUs2bZipped}" ] ; then
     done
 
 else
-    log "...only super-recent WUs in ${allDir}! - skipping..."
+    log "...only super-recent WUs or no WUs at all in ${allDir}! - skipping..."
+fi
+
+cd ${initDir}
+
+# ==============================================================================
+# treat abnormal/ dir
+# ==============================================================================
+
+cd ${abnDir}
+
+# get WUs (grep -v is redundant, but it is kept for security)
+WUs2bZipped=`find . ! -path . -mmin +5 | grep -v -e '.zip' -e .doNotRemoveMe`
+
+if [ -n "${WUs2bZipped}" ] ; then
+
+    log "... ${abnDir} - results involved:"
+    log "${WUs2bZipped}"
+
+    # actually zip and move to boincDownloadDir
+    WUnames="${WUs2bZipped}"
+    treatStudy abnormal
+
+else
+    log "...only super-recent WUs or no WUs at all in ${abnDir}! - skipping..."
 fi
 
 cd ${initDir}
@@ -212,7 +237,7 @@ cd ${initDir}
 # treat studies
 # ==============================================================================
 
-for studyName in `ls -1d * | grep -v -e "^${allDir}$" -e "^${zipToolDir}$"` ; do
+for studyName in `ls -1d * | grep -v -e "^${allDir}$" -e "^${abnDir}$" -e "^${zipToolDir}$"` ; do
     log "...study ${studyName}"
     cd ${studyName}
 
