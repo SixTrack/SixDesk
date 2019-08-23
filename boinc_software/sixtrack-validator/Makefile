@@ -1,6 +1,7 @@
 #!make
 
-PROJ=/boincdata/boinc/software/boinc_src/boinc
+# PROJ=/boincdata/boinc/software/boinc_src/boinc
+PROJ=/afs/cern.ch/work/s/sixtadm/public/boinc
 SIXT=/usr/local/boinc/project/sixtrack/sixtrack-validator
 
 INCL=-I$(PROJ) -I$(PROJ)/lib -I$(PROJ)/db -I$(PROJ)/sched -I/usr/include/mysql
