@@ -54,6 +54,7 @@ static char *SPOOLDEP[] = {"boinc", "boinczip", "boinctest", "boincai08", "boinc
 //static char *SPOOLDIR = "/afs/cern.ch/user/b/boinc/scratch0/boinc";
 static char *RESULTDIR = "results";
 static char *RESULTALL = "all";
+static char *RESULTABNAME = "abnormal";
 static char *RESULTDIR_6 = "results";
 //static char *RESULTDIR_6 = "results_6";
 static char *ERRORREPT = "sample_results/errors";
@@ -165,9 +166,17 @@ int assimilate_handler( WORKUNIT& wu, vector<RESULT>& /*results*/, RESULT& canon
 	strncpy(buf,wu.name,STR_SIZE);
 	buf[STR_SIZE-1] = '\0';
         char *dirnul = strstr(buf,"__");           // convention: buf contains the first part of the name = directory name
-        char *dirres = (char *) (dirnul + 2);      // convention: dirres contains the second (unique) part of the name
-        *dirnul = '\0';                            // VERY IMPORTANT SETTING to separate the directory name in the buffer
-	err = 1;                                   // to let results be written to SPOOLERR directory if AFS directory not found
+        if ( dirnul == NULL ) {  // WU name does not fulfill naming convention
+          scope_messages.printf( "[%s] WU with ill name!\n",wu.name);
+          // get ready to assimilate results in RESULTABNAME
+          if( (nstr=snprintf(dire_path,STR_SIZE,"%s/%s",SPOOLERR,RESULTABNAME)) >= STR_SIZE) return write_error(1,dire_path);
+          errno = 0;
+          err = 0; 
+        } else {
+          char *dirres = (char *) (dirnul + 2);      // convention: dirres contains the second (unique) part of the name
+          *dirnul = '\0';                            // VERY IMPORTANT SETTING to separate the directory name in the buffer
+          err = 1;                                   // to let results be written to SPOOLERR directory if AFS directory not found
+        }
  
 /* iza debug:  
 	int lenwname = strlen(buf);
