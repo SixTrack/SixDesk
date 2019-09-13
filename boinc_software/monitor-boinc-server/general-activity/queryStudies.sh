@@ -27,4 +27,5 @@ if ${lPython} ; then
     echo "   ...done."
 fi
 
-echo "...done."
+now=`date '+%F %T'`
+echo "...done by ${now}."

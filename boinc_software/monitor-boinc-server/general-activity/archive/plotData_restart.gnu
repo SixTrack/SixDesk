@@ -17,10 +17,13 @@ set format x '%Y-%m-%d'
 # set xtics 365.2425 / 12 * 24 * 3600 rotate by 90 right
 set xtics 3600*24 rotate by 90 right
 set grid xtics lt 0 lw 1
-# tMin=strptime("%Y-%m-%d %H:%M:%S","2017-02-01 00:00:00")
-# tMin=strptime("%Y-%m-%d %H:%M:%S","2017-06-15 00:00:00")
-tMin=strptime("%Y-%m-%d %H:%M:%S","2019-05-01 00:00:00")
-tMax=strptime("%Y-%m-%d %H:%M:%S","2019-07-01 00:00:00")
+# tMin=strptime("%Y-%m-%d %H:%M:%S","2019-06-01 00:00:00")
+# tMax=strptime("%Y-%m-%d %H:%M:%S","2019-08-01 00:00:00")
+# use bash's date command, since gnuplot's time(0.0) returns UTC time stamps,
+#     and logging is in GVA local time
+tNow=strptime("%Y-%m-%d %H:%M:%S",system('date +"%F %T"'))
+tMax=tNow+1*24*3600
+tMin=tNow-45*24*3600
 set xrange [tMin:tMax]
 ybar=300
 M=0.1
@@ -53,10 +56,10 @@ set ylabel 'tasks in progress/ready to send [10^3]'
 set ytics nomirror
 set y2label 'tasks waiting for assimilation' tc rgb 'blue'
 set y2tics tc rgb 'blue'
-set y2range [0:*]
+# set y2range [0:*]
 nLines=system("wc -l ".restaFile." | awk '{print ($1)}'")
 plot \
-     '< cat 2019-??/server_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
+     '< cat ????-??/server_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
      ''               index 0 using 1:($3/1000*M) with linespoints pt 7 ps 1 lt 2 lw 1 lc rgb 'green' title 'ready to send '.gprintf('(x%.1f)',1.0/M),\
      ''               index 0 using 1:6 with linespoints axis x1y2 pt 7 ps 1 lt 2 lw 1 lc rgb 'blue' notitle,\
      restartFile index 0 using 1:(ybar) with impulses lt -1 lw 2 notitle,\
@@ -69,7 +72,7 @@ unset grid
 set grid y2tics lt 0 lw 1 lc rgb 'blue'
 replot
 unset multiplot
-set y2range [*:*]
+# set y2range [*:*]
 
 # credit
 currTitle='credit'
@@ -77,20 +80,33 @@ if ( linteractive==0 ) {
 set term png size xSizeWdw,ySizeWdw notransparent enhanced
 set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/boincStatus/creditOverview'.rightNowPNG.'.png'
 } else {
-set term qt 1 title currTitle size xSizeWdw,ySizeWdw
+set term qt 1 title currTitle size xSizeWdw,2*ySizeWdw
 }
 set title currTitle
-set key outside horizontal
-set ylabel 'recent credit (users/computers) [10^3]' tc rgb 'red'
+set key inside horizontal top center
+set ylabel 'recent credit [10^3]' tc rgb 'red'
 set ytics nomirror tc rgb 'red'
-set y2label 'total credit (users/computers) [10^3]' tc rgb 'magenta'
-set y2tics tc rgb 'magenta'
+set y2label 'total credit [10^3]' tc rgb 'blue'
+set y2tics tc rgb 'blue'
 set grid xtics ytics lt 0 lw 1 lc rgb 'black'
+set multiplot layout 2,1
+fact=1E3
+#
+set title 'users'
+# set yrange [7.5E3/fact:10E3/fact]
+# set y2range [158E3/fact:165E3/fact]
 plot \
-     '< cat 2019-??/server_status_????-??.dat' index 0 using 1:($11/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'users',\
-     ''               index 0 using 1:($14/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'blue' title 'computers',\
-     ''               index 0 using 1:($10/1000) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'magenta' notitle,\
-     ''               index 0 using 1:($13/1000) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'cyan' notitle
+     '< cat ????-??/server_status_????-??.dat' index 0 using 1:($11/fact) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'with recent credit',\
+     ''               index 0 using 1:($10/fact) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'blue' title 'with credit'
+set title 'computers'
+# set yrange [21E3/fact:25E3/fact]
+# set y2range [450E3/fact:470E3/fact]
+plot \
+     '< cat ????-??/server_status_????-??.dat' index 0 using 1:($14/fact) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'with recent credit',\
+     ''               index 0 using 1:($13/fact) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'blue' title 'with credit'
+# set yrange [*:*]
+# set y2range [*:*]
+unset multiplot
 
 # gigaflops
 currTitle='TeraFLOPs'     
@@ -107,10 +123,10 @@ set ytics mirror tc rgb 'black'
 unset y2label
 unset y2tics
 set grid xtics ytics lt 0 lw 1 lc rgb 'black'
-set yrange [70:145]
+# set yrange [70:155]
 plot \
-     '< cat 2019-??/server_status_????-??.dat' index 0 using 1:($16/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
-set yrange [*:*]
+     '< cat ????-??/server_status_????-??.dat' index 0 using 1:($16/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
+# set yrange [*:*]
 unset title
 
 # WUs waiting for validation
@@ -129,7 +145,7 @@ unset y2label
 unset y2tics
 set grid xtics ytics lt 0 lw 1 lc rgb 'black'
 plot \
-     '< cat 2019-??/server_status_????-??.dat' index 0 using 1:5 with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
+     '< cat ????-??/server_status_????-??.dat' index 0 using 1:5 with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
 unset title
 
 # ------------------------------------------------------------------------------
@@ -142,7 +158,7 @@ set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/m
 } else {
 set term qt 4 title currTitle size xSizeWdw,ySizeWdw
 }
-set multiplot # title currTitle
+set multiplot title currTitle
 set key outside horizontal
 set ylabel 'tasks in progress/unsent [10^3]'
 set ytics nomirror
@@ -151,7 +167,7 @@ set y2tics tc rgb 'blue'
 set xtics rotate by 90 right
 set grid xtics lt 0 lw 1
 plot \
-     '< cat 2019-??/SixTrack_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
+     '< cat ????-??/SixTrack_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
      ''               index 0 using 1:($3/1000*M) with linespoints pt 7 ps 1 lt 2 lw 1 lc rgb 'green' title 'ready to send '.gprintf('(x%.1f)',1.0/M),\
      ''               index 0 using 1:5 with linespoints axis x1y2 pt 7 ps 1 lt 2 lw 1 lc rgb 'blue' notitle
 unset grid
@@ -181,7 +197,7 @@ set y2tics tc rgb 'blue'
 set xtics rotate by 90 right
 set grid xtics lt 0 lw 1
 plot \
-     '< cat 2019-??/sixtracktest_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
+     '< cat ????-??/sixtracktest_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
      ''               index 0 using 1:($3/1000*M) with linespoints pt 7 ps 1 lt 2 lw 1 lc rgb 'green' title 'ready to send '.gprintf('(x%.1f)',1.0/M),\
      ''               index 0 using 1:5 with linespoints axis x1y2 pt 7 ps 1 lt 2 lw 1 lc rgb 'blue' notitle
 unset grid

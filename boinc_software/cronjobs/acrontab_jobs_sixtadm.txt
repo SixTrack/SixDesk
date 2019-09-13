@@ -4,7 +4,7 @@
 # Puppet Name: worksubmit sixtrack 2
 7,17,27,37,47,57 * * * * boincai11.cern.ch /usr/local/boinc/project/sixtrack/bin/cron.submit-sixtracktest-simo3 -m 3000 > /dev/null 2>&1
 # Puppet Name: worksubmit sixtrack
-1,11,21,31,41,51 * * * * boincai11.cern.ch /usr/local/boinc/project/sixtrack/bin/cron.submit-sixtrack-simo3 -m 3000 > /dev/null 2>&1
+1 * * * * boincai11.cern.ch /usr/local/boinc/project/sixtrack/bin/cron.submit-sixtrack-simo3 -m 3000 > /dev/null 2>&1
 # zip all WUs which were not given back to user
 # crontab every 3h
 30 */3 * * * boincai11.cern.ch cd /share/sixtrack/assimilation ; /usr/local/boinc/project/sixtrack/bin/zip-trashed-WUs.sh > /dev/null 2>&1
@@ -31,6 +31,9 @@
 # list studies in spooldirs that could be deleted and notify users (based on <workspace>_<study>/results dir):
 0 4 21 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinc ; /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/listDeleteStudies.sh results >> /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/deleteStudies.log 2>&1
 0 5 21 * * lxplus.cern.ch cd /afs/cern.ch/work/b/boinc/boinctest ; /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/listDeleteStudies.sh results >> /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/deleteStudies.log 2>&1
+#
+# tar.gz new job and spool it to EOS
+4,14,24,34,44,54 * * * * lxplus.cern.ch /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs/mv2EOS.sh > /dev/null 2>&1
 #
 #
 # new scripts for monitoring BOINC server:

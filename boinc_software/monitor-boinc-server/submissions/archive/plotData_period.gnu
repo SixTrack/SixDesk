@@ -20,8 +20,11 @@ tStep=1*3600
 # time interval
 # AM -> tMin='2017-05-23T00:00:00'
 # AM -> tMin='2017-06-15T00:00:00'
-tMin='2019-05-01T00:00:00'
-tMax='2019-07-01T00:00:00'
+tNow=strptime("%Y-%m-%d %H:%M:%S",system('date +"%F %T"'))
+tMax=tNow+1*24*3600
+tMin=tNow-45*24*3600
+tMin=strftime("%Y-%m-%dT%H:%M:%S",tMin)
+tMax=strftime("%Y-%m-%dT%H:%M:%S",tMax)
 tStep=3600*24
 
 # typical enlarged window size: 1900,400
