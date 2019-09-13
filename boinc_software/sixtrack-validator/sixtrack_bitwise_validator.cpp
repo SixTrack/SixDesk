@@ -36,6 +36,7 @@
 #include "sched_util.h"
 #include "sched_msgs.h"
 #include "validate_util.h"
+#include "validator.h"
 #include "md5_file.h"
 
 using std::string;
@@ -56,6 +57,9 @@ using std::vector;
 #define SIXCREDIT 2.0E-6
 //#define SIXCREDIT 2.5E-6
 
+bool is_gzip = false;
+    // if true, files are gzipped; skip header when comparing
+
 struct FILE_CKSUM {
 	FILE *fp;
 };
@@ -65,7 +69,25 @@ struct FILE_CKSUM_LIST {
     ~FILE_CKSUM_LIST(){}
 };
 
-bool files_match(RESULT &r1, FILE_CKSUM_LIST& f1, const RESULT &r2, FILE_CKSUM_LIST& f2) {
+int validate_handler_init(int argc, char** argv) {
+    // handle project specific arguments here
+    for (int i=1; i<argc; i++) {
+        if (is_arg(argv[i], "is_gzip")) {
+            is_gzip = true;
+        }
+    }
+    return 0;
+}
+
+void validate_handler_usage() {
+    // describe the project specific arguments here
+    fprintf(stderr,
+        "    Custom options:\n"
+        "    [--is_gzip]  files are gzipped; skip header when comparing\n"
+    );
+}
+
+bool files_match(RESULT &r1, FILE_CKSUM_LIST& f1, RESULT &r2, FILE_CKSUM_LIST& f2) {
 
     int c1, c2;
     int ipos, jpos;
@@ -189,8 +211,8 @@ bool files_match(RESULT &r1, FILE_CKSUM_LIST& f1, const RESULT &r2, FILE_CKSUM_L
 	   outlier = 0;
 	   if(fracturn < 1.0) { 
 	     r1.runtime_outlier = true;
-//              r2.runtime_outlier = 1;   // const
-		outlier = 1;
+	     r2.runtime_outlier = true;
+             outlier = 1;
 	   }
 	   runtime1 = r1.elapsed_time;
 	   runtime2 = r2.elapsed_time;
@@ -271,7 +293,7 @@ int init_result(RESULT& result, void*& data) {
 
 int compare_results(
     RESULT & r1, void* data1,
-    RESULT const& r2, void* data2,
+    RESULT & r2, void* data2,
     bool& match
 ) {
     FILE_CKSUM_LIST* f1 = (FILE_CKSUM_LIST*) data1;
