@@ -1281,9 +1281,11 @@ sixdeskSetQueue(){
     # . LSF: test 8nm 1nh 8nh 1nd 2nd 1nw 2nw (see http://lsf-rrd.cern.ch/lrf-lsf/)
     # . HTCONDOR: espresso (20min) microcentury (1h) longlunch (2h) workday (8h) tomorrow (1d) testmatch (3d) nextweek (1w) (see http://batchdocs.web.cern.ch/batchdocs/local/lsfmigratepractical.html)
     # verify lsf var is properly set
+    sixdeskmess 2 "queues: ${1}=${!1} - ${2}=${!2}"
     if [ -z "${!1}" ] ; then
         # assign a default value
         eval "${1}=8nh"
+        sixdeskmess 2 "LSF queue (default): ${!1}"
     else
         case ${!1} in
             8nm | 1nh | 8nh | 1nd | 2nd | 1nw | 2nw )
@@ -1296,10 +1298,11 @@ sixdeskSetQueue(){
                 ;;
         esac
     fi
+    sixdeskmess 2 "queues: ${1}=${!1} - ${2}=${!2}"
     # verify htcondor var is set:
     if [ -n "${!2}" ] ; then
         case ${!2} in
-            espresso | microcentury | workday | tomorrow | testmatch | 1nextweek )
+            espresso | microcentury | workday | tomorrow | testmatch | nextweek )
                 sixdeskmess 2 "HTCONDOR queue (sixdeskenv): ${!2}"
                 ;;
             *)
@@ -1308,6 +1311,7 @@ sixdeskSetQueue(){
                 ;;
         esac
     fi
+    sixdeskmess 2 "queues: ${1}=${!1} - ${2}=${!2}"
     if [ -z "${!2}" ] ; then
         # assign a default value based on the lsf value
         case ${!1} in

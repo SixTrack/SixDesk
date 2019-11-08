@@ -4,7 +4,11 @@ function how_to_use() {
     cat <<EOF
 
    `basename $0` (-h) [action] [option]
-   to manage the submission of sixtrack jobs
+   To manage the submission of sixtrack jobs.
+   By default, the script will generate/check/submit
+      only those points that have not been submitted yet or do not have results yet.
+   In case of re-submitting incomplete jobs, the list of jobs is pre-defined by SixDesk,
+      and the loop will be run on the entire list.
 
    -h      displays this help
 
@@ -41,6 +45,9 @@ function how_to_use() {
            for the moment, this sticks only to expressions affecting ratio of
               emittances, amplitude scans and job names in fort.3
    -d      study name (when running many jobs in parallel)
+   -F      in case of preparation/check/submission of files, do not check if results
+              are already present or the job has been already simulated, 
+              but forcely re-run any point in the scan.
    -l      use fort.3.local (only for generation/fixing)
    -m      a batch of BOINC jobs should be composed of at most
               N jobs (active only in case of BOINC platform - default: ${nMaxJobsSubmitBoincDef}).
@@ -71,17 +78,7 @@ function how_to_use() {
            NB: when used with -S option, it is your responsibility to make sure that
                there are no points in the scan that should be submitted but they are
                actually skipped as they come 'after' the job you provided
-   -S      selected points of scan only
-           in case of preparation of files, regenerate only those directories
-              with an incomplete set of input files, unless a fort.10.gz of non-zero
-              length or the JOB_NOT_YET_COMPLETED file are there;
-           in case of check, check the correct input is generated only in those
-              directories that will be submitted (see previous point)
-           in case of submission, submit those directories requiring actual submission
-              (see previous point)
-           NB: 
-           - this option is NOT active in case of -c only!
-           - this option is NOT compatible with -i action!
+   -S      selected points of scan only - DEPRECATED!!!
    -v      verbose (OFF by default)
 
 
@@ -1919,7 +1916,7 @@ lsubmit=false
 lstatus=false
 lfix=false
 lcleanzip=false
-lselected=false
+lselected=true
 lmegazip=false
 loutform=false
 lbackcomp=true
@@ -1953,7 +1950,7 @@ additionalFilesOutMADFullPaths=""
 additionalFilesOutMADNames=""
 
 # get options (heading ':' to disable the verbose error handling)
-while getopts  ":aBcCd:fghilm:Mn:N:o:p:P:R:sStUvw" opt ; do
+while getopts  ":aBcCd:fFghilm:Mn:N:o:p:P:R:sStUvw" opt ; do
     case $opt in
         a)
             # do everything
@@ -1983,6 +1980,10 @@ while getopts  ":aBcCd:fghilm:Mn:N:o:p:P:R:sStUvw" opt ; do
             # fix directories
             lfix=true
             ;;
+        F)
+            # run forcely, i.e. do not check if results are already there
+            lselected=false
+            ;;
         g)
             # generate simulation files
             lgenerate=true
@@ -2002,6 +2003,8 @@ while getopts  ":aBcCd:fghilm:Mn:N:o:p:P:R:sStUvw" opt ; do
             lcheck=false
             # submit
             lsubmit=true
+            # lSelected not needed
+            lselected=false
             ;;
         l) 
             # use fort.3.local
@@ -2071,7 +2074,9 @@ while getopts  ":aBcCd:fghilm:Mn:N:o:p:P:R:sStUvw" opt ; do
             ;;
         S)
             # selected points of scan only
-            lselected=true
+            how_to_use
+            echo "-S option is deprecated!"
+            exit 1
             ;;
         t)
             # status
@@ -2135,10 +2140,6 @@ fi
 if ${lFinaliseHTCondor} ; then
     optArgCurrPlatForm="-p ${sixdeskplatformDefIncomplete}"
     echo "-w action forces platform to ${sixdeskplatformDefIncomplete}"
-fi
-if ${lincomplete} && ${lselected} ; then
-    echo "-S option and -i action are incompatible!"
-    exit 1
 fi
 
 # ------------------------------------------------------------------------------
