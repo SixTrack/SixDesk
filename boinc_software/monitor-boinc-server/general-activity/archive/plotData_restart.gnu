@@ -83,10 +83,10 @@ set output '/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/m
 set term qt 1 title currTitle size xSizeWdw,2*ySizeWdw
 }
 set title currTitle
-set key inside horizontal top center
-set ylabel 'recent credit [10^3]' tc rgb 'red'
+set key inside horizontal bottom center
+set ylabel 'with recent credit [10^3]' tc rgb 'red'
 set ytics nomirror tc rgb 'red'
-set y2label 'total credit [10^3]' tc rgb 'blue'
+set y2label 'with credit [10^3]' tc rgb 'blue'
 set y2tics tc rgb 'blue'
 set grid xtics ytics lt 0 lw 1 lc rgb 'black'
 set multiplot layout 2,1
@@ -96,17 +96,18 @@ set title 'users'
 # set yrange [7.5E3/fact:10E3/fact]
 # set y2range [158E3/fact:165E3/fact]
 plot \
-     '< cat ????-??/server_status_????-??.dat' index 0 using 1:($11/fact) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'with recent credit',\
-     ''               index 0 using 1:($10/fact) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'blue' title 'with credit'
+     '< cat ????-??/server_status_????-??.dat' index 0 using 1:($11/fact) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'users with recent credit',\
+     ''               index 0 using 1:($10/fact) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'blue' title 'users with credit'
 set title 'computers'
 # set yrange [21E3/fact:25E3/fact]
 # set y2range [450E3/fact:470E3/fact]
 plot \
-     '< cat ????-??/server_status_????-??.dat' index 0 using 1:($14/fact) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'with recent credit',\
-     ''               index 0 using 1:($13/fact) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'blue' title 'with credit'
+     '< cat ????-??/server_status_????-??.dat' index 0 using 1:($14/fact) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'hosts with recent credit',\
+     ''               index 0 using 1:($13/fact) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'blue' title 'hosts with credit'
 # set yrange [*:*]
 # set y2range [*:*]
 unset multiplot
+set key inside horizontal top center
 
 # gigaflops
 currTitle='TeraFLOPs'     
