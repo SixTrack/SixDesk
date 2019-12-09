@@ -107,11 +107,9 @@ function mvZip(){
     log "...cp ${__fileToCopy} ${__destPath}"
     cp ${__fileToCopy} ${__destPath}
     if [ $? -eq 0 ] ; then
-        if [[ "${__fileToCopy}" != "${tmpDirBase}"* ]] ; then
-            # in case of zip in a subfolder of ${tmpDirBase}, there is no
-	    #    need to clean away, as cleaning will be performed at the end
-	    rm -f ${__fileToCopy}
-	fi
+	# rm zip file
+	log "...cleaning: rm -f ${__fileToCopy}"
+	rm -f ${__fileToCopy}
     else
         if [[ "${__fileToCopy}" == "${tmpDirBase}"* ]] ; then
             # in case of zip in a subfolder of ${tmpDirBase}, copy it here
@@ -157,9 +155,18 @@ function actualZip(){
     cd ${__tmpDir}
     zip ${__zipFileName} ${tmpWUnames} 2>&1 | log
     local __zipStatus=$?
-    cd ${__currDir}
+    # rm result files in ${__tmpDir}
     if ! ${lTest} ; then
 	if [ ${__zipStatus} -eq 0 ] ; then
+	    log "...cleaning results just zipped in ${__tmpDir}"
+	    rm ${tmpWUnames}
+	fi
+    fi
+    cd ${__currDir}
+    # rm result files in ${__currDir}
+    if ! ${lTest} ; then
+	if [ ${__zipStatus} -eq 0 ] ; then
+	    log "...cleaning original results in ${__currDir}"
 	    rm ${tmpWUnames}
 	fi
     fi
