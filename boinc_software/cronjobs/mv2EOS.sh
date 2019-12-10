@@ -120,7 +120,7 @@ makeTar(){
 	tarName=`basename ${spooldir}`_`date "+%Y-%m-%d_%H-%M-%S".tar`
 	log "new tar name: ${tarName}"
 
-	myCommand="tar -cvf ../${tarName} ."
+	myCommand="tar -cvf ../${tarName} *.desc *.zip"
 	log "${myCommand}"
 	${myCommand}
     else
@@ -184,7 +184,7 @@ EOF
 
 maxjobs=0 # =0: no limits
 maxjobs_perStudy=1000
-maxjobs_perTar=10000
+maxjobs_perTar=10000 # WUs
 studyName=""
 
 while getopts ":hd:m:n:N:"  OPT

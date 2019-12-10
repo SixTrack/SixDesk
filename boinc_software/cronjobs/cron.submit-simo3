@@ -42,6 +42,7 @@ export EOS_MGM_URL=root://eosuser.cern.ch
 pathInEos=/eos/user/s/sixtadm/spooldirs/uploads/boinc
 tmpDirBase=/tmp/sixtadm/`basename $0`/boinc
 nMaxRetrial=10
+reportMsg=""
 
 TLpath="/afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/general-activity/SixTrack_status_????-??-??.dat"
 
@@ -54,6 +55,7 @@ abort(){
     fi
     error "$1"
     log "ABORT exitcode is $exitcode"
+    [ ${exitcode} -le 1 ] || echo "ERROR message: $1 - exit code: ${exitcode} - report MSG: ${reportMsg}" | mail -s "ABORT in `basename $0`" sixtadm@cern.ch
     exit $exitcode	
 }
 	
@@ -109,7 +111,7 @@ getlock(){
 	trap "rm $lockfile; log Relase lock $lockfile" EXIT
 	log Got lock $lockfile 
     else 
-	abort 1 "$lockfile already exists. $0 already running? Abort..."
+	abort 2 "$lockfile already exists. $0 already running? Abort..."
 	#never get here
 	exit 1
     fi
@@ -123,6 +125,10 @@ run_spool_megazip(){
     # take into account arrival time
     find "$spooldirUpload" -mmin +5 -name "*.zip" -printf "%T+\t%p\n" | sort | awk '{print ($2)}' | (
 	while read workBatch ; do
+
+	    nForeseen=0
+	    traffic_light || abort 1 "traffic light: red"
+
 	    unzip -t $workBatch  >/dev/null 2>&1
 	    if [ $? -ne 0 ] ; then
 		warn "integrity problem with $workBatch - move it to ${workBatch}.err"
@@ -179,6 +185,10 @@ run_spool(){ # max_jobs_to_submit, max_jobs_perStudy, specific_study
 
     # main loop
     for workdir in ${allWorkDirs} ; do
+
+	nForeseen=0
+	traffic_light || abort 1 "traffic light: red"
+
         ! ${lMaxJobsPerStudy} || local __StudyComplete=0
 	#check for desc files in the current work dir, and subfolders
 	# take into account arrival time
@@ -230,81 +240,83 @@ run_spool_EOS(){
     for __tmpSourceDir in ${pathInEos} ${spooldirUpload} ; do
 
 	if [[ "${__tmpSourceDir}" == "/eos"* ]] ; then
-	    gzFiles=`eos find -name "*.tar.gz" ${__tmpSourceDir}`
+	    tarGzFiles=`eos find -name "*.tar.gz" ${__tmpSourceDir}`
 	else
-	    gzFiles=`find ${__tmpSourceDir} -mmin +5 -name "*.tar.gz"`
+	    tarGzFiles=`find ${__tmpSourceDir} -mmin +5 -name "*.tar.gz"`
 	fi
 	
 	log ".tar.gz files in ${__tmpSourceDir}:"
-	echo "${gzFiles}" | log
+	echo "${tarGzFiles}" | log
 	
-        for gzFile in ${gzFiles} ; do
+        for tmpTarGzFile in ${tarGzFiles} ; do
         
-            gzFileName=`basename ${gzFile}`
+	    nForeseen=0
+	    traffic_light || abort 1 "traffic light: red"
+
+            tarGzFileName=`basename ${tmpTarGzFile}`
 
 	    if [[ "${__tmpSourceDir}" == "/eos"* ]] ; then
-		myCommand="xrdcp --cksum adler32 ${EOS_MGM_URL}/${pathInEos}/${gzFileName} ${tmpDirBase}"
-		loopMe
-		if [ $? -ne 0 ] ; then
-        	    log "unable to download ${gzFileName} from EOS ${EOS_MGM_URL}/${pathInEos}"
-        	    continue
-		fi
+		myCommand="xrdcp --cksum adler32 ${EOS_MGM_URL}/${pathInEos}/${tarGzFileName} ${tmpDirBase}"
+		loopMe || abort 3 "unable to download ${tarGzFileName} from EOS ${EOS_MGM_URL}/${pathInEos}"
 	    else
-		myCommand="cp ${gzFile} ${tmpDirBase}"
-		loopMe
-		if [ $? -ne 0 ] ; then
-		    log "unable to download ${gzFileName} from AFS ${spooldirUpload}"
-		    continue
-		fi
+		myCommand="cp ${tmpTarGzFile} ${tmpDirBase}"
+		loopMe || abort 3 "unable to download ${tarGzFileName} from AFS ${spooldirUpload}"
 	    fi
 
-	    spool_EOS_gunzip || continue
+	    spool_EOS_gunzip || abort 3 "problem in gunzipping ${tarGzFileName} - better not to screw up disk quota"
 		
-	    tarFile=${tmpDirBase}/${gzFileName%.gz}
-	    spool_EOS_untar || continue
+	    tarFile=${tmpDirBase}/${tarGzFileName%.gz}
+	    spool_EOS_untar || abort 3 "problem in untaring ${tarFile} - better not to screw up disk quota"
 	    
 	    spool_EOS_descfiles
 		
 	    # clean
 	    if [[ "${__tmpSourceDir}" == "/eos"* ]] ; then
-		eos rm ${pathInEos}/${gzFileName}
+		log "eos rm ${pathInEos}/${tarGzFileName}"
+		eos rm ${pathInEos}/${tarGzFileName}
 	    else
-		rm ${gzFile}
+		rm ${tmpTarGzFile}
 	    fi
-	    rm ${tarFile}
+
         done
 
     done
 }
 
 function spool_EOS_gunzip(){
-    myCommand="gunzip ${tmpDirBase}/${gzFileName}"
+    myCommand="gunzip -f ${tmpDirBase}/${tarGzFileName}"
     if loopMe ; then
 	return 0
     else
-        log "unable to gunzip ${gzFileName}"
-	rm ${tmpDirBase}/${gzFileName}
+	reportMsg="unable to gunzip ${tarGzFileName}"
+        log ${reportMsg}
         return 1
     fi
 }
 
 function spool_EOS_untar(){
     nForeseen=`tar -tvf ${tarFile} | wc -l`
-    # tar -tvf always returns a '.'
-    nForeseen=$(( $nForeseen -1 ))
-    if traffic_light ; then
-	myCommand="tar -xvf ${tarFile} -C ${tmpDirBase}"
-	loopMe
-	if [ $? -ne 0 ] ; then
-            log "unable to untar ${tarFile}"
-	    rm ${tarFile}
-            return 1
-	fi
+    if [ ${nForeseen} -eq 1 ] ; then
+	reportMsg="tar file contains only one file!"
+        log ${reportMsg}
+        local __lerr=1
     else
-	rm ${tarFile}
-        return 2
+	if traffic_light ; then
+	    myCommand="tar -xf ${tarFile} -C ${tmpDirBase}"
+	    if loopMe ; then
+		local __lerr=0
+	    else
+		rm *.desc *.zip
+		reportMsg="unable to untar ${tarFile}"
+		log ${reportMsg}
+		local __lerr=2
+	    fi
+	else
+            local __lerr=3
+	fi
     fi
-    return 0
+    rm ${tarFile}
+    return ${__lerr}
 }
 
 spool_EOS_descfiles(){
@@ -320,28 +332,39 @@ spool_EOS_descfiles(){
 }
 
 function traffic_light(){
-    # nPresent: how many tasks presently in queue
-    # nTreated: how many tasks (factor 2 only wrt WUs) will be submitted now
+    # nPresent: how many tasks presently in queue as from server status page
+    # nTreated: how many tasks (factor 2 only wrt WUs) have been submitted so far - updated by submit_descfile
+    # nForeseen: how many tasks (factor 2 only wrt WUs) will be submitted in the present round
     # 0: green
     # 1: red
-    local __nPresentTemp=`tail -1 ${TLpath} 2> /dev/null | awk '{print ($3)}'`
-    if [ -z "${__nPresentTemp}" ] ; then
-	if [ -z "${nPresent}" ] ; then
-	    log "unable to get number of queued ${applicationDef} tasks from ${TLpath}"
-	    return 2
+    if [ -z "${nPresent}" ] ; then
+	nPresent=${currentHardLimit}
+	local __nPresentTemp=`tail -1 ${TLpath} 2> /dev/null | awk '{if (NF==5) {printf ("%.0f",1.0*$3)}}' 2> /dev/null`
+	if [ -z "${__nPresentTemp}" ] ; then
+	    if [ -z "${nPresent}" ] ; then
+		log "unable to get number of queued ${applicationDef} tasks from ${TLpath}"
+		return 2
+	    else
+		log "unable to get number of queued ${applicationDef} tasks from ${TLpath} - going on with ${nPresent}"
+	    fi
 	else
-	    log "unable to get number of queued ${applicationDef} tasks from ${TLpath} - going on with ${nPresent}"
+	    nPresent=${__nPresentTemp}
 	fi
-    else
-	nPresent=${__nPresentTemp}
     fi
-    local __nTemp=$(( ${nTreated} +${nPresent} +${nForeseen} ))
-    if [ ${__nTemp} -ge ${currentLimit} ] ; then
-	log "traffic light is red (treated+present+foreseen>limit): ${nTreated}+${nPresent}+${nForeseen}>${currentLimit}"
+    if [ ${nForeseen} -eq 0 ] ; then
+	local __currentLimit=${currentLimit}
+	local __limitText="strict_limit"
+    else
+	local __currentLimit=${currentHardLimit}
+	local __limitText="relaxed_limit"
+    fi
+    local __nTemp=$(( ${nTreated} +${nForeseen} +${nPresent} ))
+    if [ ${__nTemp} -ge ${__currentLimit} ] ; then
+	log "traffic light is red (treated+present+foreseen>${__limitText}): ${nTreated}+${nPresent}+${nForeseen}>${__currentLimit}"
 	nResidual=0
 	return 1
     else
-	log "traffic light is green (treated+present+foreseen>limit): ${nTreated}+${nPresent}+${nForeseen}<${currentLimit}"
+	log "traffic light is green (treated+present+foreseen<${__limitText}): ${nTreated}+${nPresent}+${nForeseen}<${__currentLimit}"
 	let nResidual=${currentLimit}+${__nTemp}
 	return 0
     fi
@@ -560,7 +583,7 @@ function loopMe(){
     while [ ${__reply} -ne 0 ] && [ ${__iTrials} -lt ${nMaxRetrial} ] ; do
         let __iTrials+=1
         log "command: ${myCommand} - run at `date` - trial ${__iTrials}"
-        ${myCommand}
+        ${myCommand} 2>&1 | log
         __reply=$?
     done
     if [ ${__reply} -ne 0 ] ; then
@@ -574,9 +597,13 @@ cat <<EOF
 Usage: $(basename $0) [options]
 
         Where options are:
+        -d study_name   - submit only tasks of study_name
         -h              - print usage and exit
+        -m number       - set max no of jobs per study to submit
         -n number       - set max no of jobs to submit this run
 	-k		- Keep .desc.done and .zip contents
+
+        All options but -k do not apply to EOS spooldir
 
 EOF
 }
@@ -627,47 +654,58 @@ nResidual=0
 # log find ${spooldir} -mindepth 3 -maxdepth 3 -mtime +1 -type d -empty -delete -print
 # find ${spooldir} -mindepth 3 -maxdepth 3 -mtime +1 -type d -empty -delete -print | log
 
-# traffic light
+# init traffic light
 currentLimit=`grep -v '#' ${boincdir}/queue_thresholds.txt | awk -v "appName=${applicationDef}" '{if ($1==appName) {print ($2)}}' | tail -1`
 if [ -z "${currentLimit}" ] ; then
-    abort 1 "unable to get threshold of queued ${applicationDef} tasks from ${boincdir}/queue_thresholds.txt"
+    abort 4 "unable to get threshold of queued ${applicationDef} tasks from ${boincdir}/queue_thresholds.txt"
 fi
+currentTolerance=`grep -v '#' ${boincdir}/queue_thresholds.txt | awk -v "appName=${applicationDef}" '{if ($1==appName) {print ($3)}}' | tail -1`
+if [ -z "${currentTolerance=}" ] ; then
+    abort 4 "unable to get tolerance on threshold of queued ${applicationDef} tasks from ${boincdir}/queue_thresholds.txt"
+fi
+let currentHardLimit=${currentLimit}+${currentTolerance}
 nTreated=0
 nForeseen=0
 traffic_light || abort 1 "traffic light: red"
 
 if ! [ -d ${tmpDirBase} ] ; then
-    mkdir -p ${tmpDirBase}
-    if [ $? -ne 0 ] ; then
-	abort 1 "problems in creating ${tmpDirBase} - cannot proceed"
-    fi
+    mkdir -p ${tmpDirBase} || abort 5 "problems in creating ${tmpDirBase} - cannot proceed"
 fi
 origPath=${tmpDirBase}
 log "remaining .tar.gz files in ${tmpDirBase} from previous run"
-for gzFile in `find ${tmpDirBase} -name "*.tar.gz"` ; do
-    gzFileName=`basename ${gzFile}`
-    spool_EOS_gunzip || continue
-    tarFile=${tmpDirBase}/${gzFileName%.gz}
-    spool_EOS_untar || continue
+for tmpTarGzFile in `find ${tmpDirBase} -name "*.tar.gz"` ; do
+    tarGzFileName=`basename ${tmpTarGzFile}`
+    spool_EOS_gunzip || abort 5 "problem in gunzipping ${tarGzFileName} - better not to screw up disk quota"
+    tarFile=${tmpDirBase}/${tarGzFileName%.gz}
+    spool_EOS_untar || abort 5 "problem in untaring ${tarFile} - better not to screw up disk quota"
     spool_EOS_descfiles
-    rm ${tarFile}
+    # clean
+    eos ls -1 ${pathInEos}/${tarGzFileName} 2>&1 > /dev/null
+    if [ $? -eq 0 ] ; then
+	log "eos rm ${pathInEos}/${tarGzFileName}" 
+	eos rm ${pathInEos}/${tarGzFileName}
+    fi
+    ls -1 ${pathInEos}/${tarGzFileName} 2>&1 > /dev/null
+    if [ $? -eq 0 ] ; then
+	log "rm ${spooldirUpload}/${tarGzFileName}"
+	rm ${spooldirUpload}/${tarGzFileName}
+    fi
 done
 log "remaining .tar files in ${tmpDirBase} from previous run"
 for tarFile in `find ${tmpDirBase} -name "*.tar"` ; do
-    spool_EOS_untar || continue
+    spool_EOS_untar || abort 5 "problem in untaring ${tarFile} - better not to screw up disk quota"
     spool_EOS_descfiles
-    rm ${tarFile}
 done
 log "remaining .desc files in ${tmpDirBase} from previous run"
 spool_EOS_descfiles
 
 log run_spool_EOS
 run_spool_EOS
-
-if [ ${nResidual} -gt 0 ] && [ ${maxjobs} -gt ${nResidual} ] ; then
-    log "updating maxjobs from ${maxjobs} to ${nResidual} following limit on max number or queued tasks at ${currentLimit}"
-    maxjobs=${nResidual}
-fi
+ 
+# if [ ${nResidual} -gt 0 ] && [ ${maxjobs} -gt ${nResidual} ] ; then
+#     log "updating maxjobs from ${maxjobs} to ${nResidual} following limit on max number or queued tasks at ${currentLimit}"
+#     maxjobs=${nResidual}
+# fi
 # log run_spool $maxjobs $maxjobs_perStudy $studyName
 # run_spool $maxjobs $maxjobs_perStudy $studyName
 
