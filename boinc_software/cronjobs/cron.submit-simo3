@@ -272,6 +272,7 @@ run_spool_EOS(){
 		
 	    # clean
 	    if [[ "${__tmpSourceDir}" == "/eos"* ]] ; then
+		log "eos rm ${pathInEos}/${tarGzFileName}"
 		eos rm ${pathInEos}/${tarGzFileName}
 	    else
 		rm ${tmpTarGzFile}
