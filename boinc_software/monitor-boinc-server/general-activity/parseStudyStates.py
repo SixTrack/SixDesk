@@ -1,20 +1,29 @@
 #!/usr/bin/python
 
 if ( __name__ == "__main__" ):
+    import sys
 
     iFileName="all_WUs.txt"
     oFileName="studies.txt"
+    if ( len(sys.argv)<3):
+        print " usage: %s [inputFileName] [outputFileName]"%(sys.argv[0])
+        exit(1)
+    else:
+        iFileName=sys.argv[1]
+        oFileName=sys.argv[2]
     lPrintAssimilateState=False
 
     print "parsing %s file..."%(iFileName)
+    # data structure:
+    #   studiesStates[<studyName>]["assimilate_state"][<assimilateStateID>]=N
     studiesStates={}
     headers=None
     with open(iFileName,'r') as iFile:
         for line in iFile.readlines():
-            if ( "name" in line and "assimilate_state" in line):
+            if ( "name" in line and "assimilate_state" in line): # table header
                 headers=line.split()
                 continue
-            elif ( line.startswith("now:") ):
+            elif ( line.startswith("now:") ): # timestamp
                 now=line[len("now:"):].strip()
                 continue
             if (headers is None):
@@ -27,7 +36,7 @@ if ( __name__ == "__main__" ):
                         studiesStates[studyName]={}
                         studiesStates[studyName]['assimilate_state']={}
                 elif(fieldName=="assimilate_state"):
-                    assimilate_state=int(float(datum))
+                    assimilate_state=int(float(datum)+1E-04)
                     if (not studiesStates[studyName]['assimilate_state'].has_key(datum)):
                         studiesStates[studyName]['assimilate_state'][datum]=0
             studiesStates[studyName]['assimilate_state']['%1i'%(assimilate_state)]+=1
@@ -46,14 +55,14 @@ if ( __name__ == "__main__" ):
                 if ( not studiesStates[studyName]['assimilate_state'].has_key(tmpState) ):
                     studiesStates[studyName]['assimilate_state'][tmpState]=0
         with open(oFileName,'w') as oFile:
-            oFile.write("# found %i studies\n"%(len(studiesStates)))
+            oFile.write("# found %i studies in BOINC DB\n"%(len(studiesStates)))
             oFile.write("# status at %s\n"%(now))
-            strOut="# %-58s,"%("study name")
+            strOut="# %-68s,"%("study name")
             if (lPrintAssimilateState): strOut+=", ".join( "assimilate_state=%1s"%(key) for key in sorted(allStates) )+", "
             strOut+="%18s, %14s, %18s" %("total","assimilated [%]", "prog./queue [%]")
             oFile.write('%s\n'%(strOut))
             for studyName in sorted(studiesStates.keys()):
-                strOut="%-60s"%(studyName)
+                strOut="%-70s"%(studyName)
                 if (lPrintAssimilateState): strOut+=" ".join( ( "%19i"%(studiesStates[studyName]['assimilate_state'][key]) for key in sorted(allStates) ) )
                 tot=sum(studiesStates[studyName]['assimilate_state'].values())
                 strOut+=" %18i"%(tot)
