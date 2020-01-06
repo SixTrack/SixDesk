@@ -5,9 +5,9 @@ reset
 # ------------------------------------------------------------------------------
 
 # files
-grepFiles='2019-??/submit*.dat'
+grepFiles='20{19,20}-??/submit*.dat'
 iFileName='submitAll.dat'
-grepFilesAssimilated='2019-??/assimilate*.dat'
+grepFilesAssimilated='20{19,20}-??/assimilate*.dat'
 iFileNameAssimilated='assimilateAll.dat'
 
 # last 24h
