@@ -59,7 +59,7 @@ set y2tics tc rgb 'blue'
 # set y2range [0:*]
 nLines=system("wc -l ".restaFile." | awk '{print ($1)}'")
 plot \
-     '< cat ????-??/server_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
+     '< cat 20{19,20}-??/server_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
      ''               index 0 using 1:($3/1000*M) with linespoints pt 7 ps 1 lt 2 lw 1 lc rgb 'green' title 'ready to send '.gprintf('(x%.1f)',1.0/M),\
      ''               index 0 using 1:6 with linespoints axis x1y2 pt 7 ps 1 lt 2 lw 1 lc rgb 'blue' notitle,\
      restartFile index 0 using 1:(ybar) with impulses lt -1 lw 2 notitle,\
@@ -96,13 +96,13 @@ set title 'users'
 # set yrange [7.5E3/fact:10E3/fact]
 # set y2range [158E3/fact:165E3/fact]
 plot \
-     '< cat ????-??/server_status_????-??.dat' index 0 using 1:($11/fact) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'users with recent credit',\
+     '< cat 20{19,20}-??/server_status_????-??.dat' index 0 using 1:($11/fact) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'users with recent credit',\
      ''               index 0 using 1:($10/fact) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'blue' title 'users with credit'
 set title 'computers'
 # set yrange [21E3/fact:25E3/fact]
 # set y2range [450E3/fact:470E3/fact]
 plot \
-     '< cat ????-??/server_status_????-??.dat' index 0 using 1:($14/fact) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'hosts with recent credit',\
+     '< cat 20{19,20}-??/server_status_????-??.dat' index 0 using 1:($14/fact) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'hosts with recent credit',\
      ''               index 0 using 1:($13/fact) with linespoints axis x1y2 pt 7 ps 1 lt 1 lw 1 lc rgb 'blue' title 'hosts with credit'
 # set yrange [*:*]
 # set y2range [*:*]
@@ -126,7 +126,7 @@ unset y2tics
 set grid xtics ytics lt 0 lw 1 lc rgb 'black'
 # set yrange [70:155]
 plot \
-     '< cat ????-??/server_status_????-??.dat' index 0 using 1:($16/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
+     '< cat 20{19,20}-??/server_status_????-??.dat' index 0 using 1:($16/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
 # set yrange [*:*]
 unset title
 
@@ -146,7 +146,7 @@ unset y2label
 unset y2tics
 set grid xtics ytics lt 0 lw 1 lc rgb 'black'
 plot \
-     '< cat ????-??/server_status_????-??.dat' index 0 using 1:5 with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
+     '< cat 20{19,20}-??/server_status_????-??.dat' index 0 using 1:5 with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' notitle
 unset title
 
 # ------------------------------------------------------------------------------
@@ -168,7 +168,7 @@ set y2tics tc rgb 'blue'
 set xtics rotate by 90 right
 set grid xtics lt 0 lw 1
 plot \
-     '< cat ????-??/SixTrack_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
+     '< cat 20{19,20}-??/SixTrack_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
      ''               index 0 using 1:($3/1000*M) with linespoints pt 7 ps 1 lt 2 lw 1 lc rgb 'green' title 'ready to send '.gprintf('(x%.1f)',1.0/M),\
      ''               index 0 using 1:5 with linespoints axis x1y2 pt 7 ps 1 lt 2 lw 1 lc rgb 'blue' notitle
 unset grid
@@ -198,7 +198,7 @@ set y2tics tc rgb 'blue'
 set xtics rotate by 90 right
 set grid xtics lt 0 lw 1
 plot \
-     '< cat ????-??/sixtracktest_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
+     '< cat 20{19,20}-??/sixtracktest_status_????-??.dat' index 0 using 1:($4/1000) with linespoints pt 7 ps 1 lt 1 lw 1 lc rgb 'red' title 'in progress',\
      ''               index 0 using 1:($3/1000*M) with linespoints pt 7 ps 1 lt 2 lw 1 lc rgb 'green' title 'ready to send '.gprintf('(x%.1f)',1.0/M),\
      ''               index 0 using 1:5 with linespoints axis x1y2 pt 7 ps 1 lt 2 lw 1 lc rgb 'blue' notitle
 unset grid
