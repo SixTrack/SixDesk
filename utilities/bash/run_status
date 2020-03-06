@@ -308,31 +308,31 @@ then
         sixdeskmess -1 "Found $JOBSI JOB_NOT_YET_COMPLETED"
 #MACRO mymess
 
-        rm -f $tmp
-        touch $tmp
-        bjobs -u $LOGNAME -w > blsfjobs 2>$tmp
-        if test $? -ne 0
-        then
+#        rm -f $tmp
+#        touch $tmp
+#        bjobs -u $LOGNAME -w > blsfjobs 2>$tmp
+#        if test $? -ne 0
+#        then
 
-#MACRO mymess 0 Error return from bjobs!!!
-           sixdeskmesslevel=0
-           sixdeskmess -1 "Error return from bjobs!!!"
-#MACRO mymess
+##MACRO mymess 0 Error return from bjobs!!!
+#           sixdeskmesslevel=0
+#           sixdeskmess -1 "Error return from bjobs!!!"
+##MACRO mymess
 
 
-#MACRO myunlock $sixdeskstudy
-           sixdesklockdir=$sixdeskstudy
-           sixdeskunlock
-#MACRO myunlock
+##MACRO myunlock $sixdeskstudy
+#           sixdesklockdir=$sixdeskstudy
+#           sixdeskunlock
+##MACRO myunlock
 
-           rm -f $tmp
+#           rm -f $tmp
 
-#MACRO myexit 4
-           sixdeskexitparam=4
-           sixdeskexit
-#MACRO myexit
+##MACRO myexit 4
+#           sixdeskexitparam=4
+#           sixdeskexit
+##MACRO myexit
 
-        fi
+#        fi
         grep "End of file" $tmp > /dev/null 2>&1
         if test $? -eq 0
         then
