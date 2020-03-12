@@ -251,6 +251,7 @@ then
       sixdesklockdir=$sixdeskstudy
       sixdesklock
 #MACRO mylock
+
       lsfjobs=0
       if test -s "$sixdeskjobs/jobs"
       then
@@ -308,31 +309,6 @@ then
         sixdeskmess -1 "Found $JOBSI JOB_NOT_YET_COMPLETED"
 #MACRO mymess
 
-#        rm -f $tmp
-#        touch $tmp
-#        bjobs -u $LOGNAME -w > blsfjobs 2>$tmp
-#        if test $? -ne 0
-#        then
-
-##MACRO mymess 0 Error return from bjobs!!!
-#           sixdeskmesslevel=0
-#           sixdeskmess -1 "Error return from bjobs!!!"
-##MACRO mymess
-
-
-##MACRO myunlock $sixdeskstudy
-#           sixdesklockdir=$sixdeskstudy
-#           sixdeskunlock
-##MACRO myunlock
-
-#           rm -f $tmp
-
-##MACRO myexit 4
-#           sixdeskexitparam=4
-#           sixdeskexit
-##MACRO myexit
-
-#        fi
         grep "End of file" $tmp > /dev/null 2>&1
         if test $? -eq 0
         then
@@ -368,54 +344,15 @@ then
 #MACRO myexit
 
         fi
-        grep " $LHCDesName""%" blsfjobs > $tmp
-        mv $tmp blsfjobs
-        nlsfjobs=`wc -l blsfjobs`
-        nlsfjobs=`echo "$nlsfjobs" | sed -e 's? *\([0-9]*\).*?\1?'`
-        if test "$nlsfjobs" = ""
-        then
-          nlsfjobs="0"
-        fi
 
-#MACRO mymess 0 LSF bjobs found $nlsfjobs batch jobs (running, pending, or suspended)
-        sixdeskmesslevel=0
-        sixdeskmess -1 "LSF bjobs found $nlsfjobs batch jobs (running, pending, or suspended)"
-#MACRO mymess
-
-# new test for Massimo
-        egrep 'UNKWN|ZOMBI' blsfjobs > $tmp
-        if test $? -eq 0
-        then
-
-#MACRO mymess 0 There appear to be some UNKNOWN or ZOMBIE LSF jobs.
-          sixdeskmesslevel=0
-          sixdeskmess -1 "There appear to be some UNKNOWN or ZOMBIE LSF jobs."
-#MACRO mymess
-
-
-#MACRO mymess 0 You may want to kill them (list appended).
-          sixdeskmesslevel=0
-          sixdeskmess -1 "You may want to kill them (list appended)."
-#MACRO mymess
-
-          while read aline
-          do
-
-#MACRO mymess 0 $aline
-            sixdeskmesslevel=0
-            sixdeskmess -1 "$aline"
-#MACRO mymess
-
-          done < $tmp
-        fi
         rm -f $tmp
         touch $sixdeskjobs/incomplete_jobs
         cp $sixdeskjobs/incomplete_jobs .
         touch $sixdeskjobs/completed_jobs
         cp $sixdeskjobs/completed_jobs .
         cp incomplete_jobs newcompleted_jobs
-        touch blsfjobs
-        while read qrjob
+ 
+	while read qrjob
         do
           qrjob=`echo $qrjob | sed -e's/  */ /g'`
           taskno=`echo $qrjob | cut -d" " -f1`
@@ -446,7 +383,8 @@ then
         sixdeskmess -1 "Found $ncjobs jobs apparently completed"
 #MACRO mymess
 
-        rm -f blsfjobs
+#        rm -f blsfjobs
+
         # Now let us look for really completed lsfjobs....
         rm -f missing_jobs
         touch missing_jobs
