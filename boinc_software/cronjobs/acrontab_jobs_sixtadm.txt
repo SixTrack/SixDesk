@@ -54,3 +54,6 @@
 #
 # query the BOINC production DB and get current status of studies
 24 * * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/monitor-boinc-server/general-activity ; ./queryStudies.sh >> queryStudies.sh.log 2>&1
+#
+# monitor BOINC project space on AFS and EOS
+17 1,7,13,19 * * * lxplus.cern.ch cd /afs/cern.ch/work/s/sixtadm/public/monitor_activity/boinc_software/cronjobs ; ./checkOccupancy.sh >> checkOccupancy.sh.log 2>&1
