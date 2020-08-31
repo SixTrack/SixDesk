@@ -1523,7 +1523,7 @@ function sixdeskSanitizeString(){
 
 function sixdeskSendNotifMail(){
     local __emailSubj=$1
-    local __receiverNames="amereghe"
+    local __receiverNames="sixtadm"
     # do bother user only in case of a real error
     if [ -n "${__emailSubj}" ] ; then
         if [ `echo ${__emailSubj} | grep -e "Error" -e "ERROR" -e "error" -e "Fatal" -e "FATAL" -e "fatal" | wc -l` -gt 0 ] ; then
