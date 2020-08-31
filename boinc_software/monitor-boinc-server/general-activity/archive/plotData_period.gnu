@@ -1,4 +1,4 @@
-period='2020-01'
+period='2020-08'
 iFileName='server_status_'.period
 
 # changes in status page:
