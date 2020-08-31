@@ -184,7 +184,7 @@ EOF
 
 maxjobs=0 # =0: no limits
 maxjobs_perStudy=1000
-maxjobs_perTar=10000 # WUs
+maxjobs_perTar=4000 # WUs - keep number 'low', to avoid 'argument list too long' errors
 studyName=""
 
 while getopts ":hd:m:n:N:"  OPT
