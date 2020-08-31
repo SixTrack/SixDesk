@@ -1,5 +1,5 @@
 # today=system("date +%F")
-today='2020-01-06'
+today='2020-08-31'
 iFileName='submitAll_'.today.'.dat'
 iFileNameAssimilated='assimilateAll_'.today.'.dat'
 oFileName='submitAll_'.today.'.ps'

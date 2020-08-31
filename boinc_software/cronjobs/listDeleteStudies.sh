@@ -77,7 +77,7 @@ for tmpUserName in ${allUsers} ; do
     if [ ${tmpTotOccupancyKB} -gt ${threshOccupancyKB} ] ; then
 	tmpTotOccupancy=`echo ${tmpTotOccupancyKB} | awk '{print ($1/1024**2)}'`
 	echo "sending notification to ${tmpUserName} ..."
-	echo -e "`cat ${SCRIPTDIR}/mail.txt`\n`\du -ch --summarize ${allStudies}`" | sed -e "s/<SixDeskUser>/${tmpUserName}/g" -e "s#<spooldir>#${BOINCspoolDir}#g" -e "s/<xxx>/${oldN}/g" -e "s#<fileList>#${fileList}#g" -e "s/<diskSpace>/${tmpTotOccupancy}/g" | mail -a /tmp/${LOGNAME}/${fileList} -c amereghe@cern.ch -s "old studies in BOINC spooldir ${BOINCspoolDir}" ${tmpUserName}@cern.ch
+	echo -e "`cat ${SCRIPTDIR}/mail.txt`\n`\du -ch --summarize ${allStudies}`" | sed -e "s/<SixDeskUser>/${tmpUserName}/g" -e "s#<spooldir>#${BOINCspoolDir}#g" -e "s/<xxx>/${oldN}/g" -e "s#<fileList>#${fileList}#g" -e "s/<diskSpace>/${tmpTotOccupancy}/g" | mail -a /tmp/${LOGNAME}/${fileList} -c sixtadm@cern.ch -s "old studies in BOINC spooldir ${BOINCspoolDir}" ${tmpUserName}@cern.ch
     fi
     rm /tmp/${LOGNAME}/${fileList}
 done
@@ -86,8 +86,8 @@ errorFiles=""
 [ ! -e /tmp/${LOGNAME}/no_owner_${now}.txt ] || errorFiles="${errorFiles} /tmp/${LOGNAME}/no_owner_${now}.txt"
 [ ! -e /tmp/${LOGNAME}/mismatched_owners_${now}.txt ] || errorFiles="${errorFiles} /tmp/${LOGNAME}/mismatched_owners_${now}.txt"
 if [ -n "${errorFiles}" ] ; then
-    echo "sending error notification to amereghe ..."
-    echo "errors!" | mail -a /tmp/${LOGNAME}/no_owner_${now}.txt -s "old studies in BOINC spooldir ${BOINCspoolDir} - errors!" amereghe@cern.ch
+    echo "sending error notification to sixtadm ..."
+    echo "errors!" | mail -a /tmp/${LOGNAME}/no_owner_${now}.txt -s "old studies in BOINC spooldir ${BOINCspoolDir} - errors!" sixtadm@cern.ch
     rm -f /tmp/${LOGNAME}/no_owner_${now}.txt
     rm -f /tmp/${LOGNAME}/mismatched_owners_${now}.txt
 fi
